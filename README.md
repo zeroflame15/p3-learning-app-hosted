@@ -325,6 +325,45 @@ or `.env.local` only.
   links nothing and leaves the local DB untouched; linking a device
   that has a local-only explorer preserves that explorer.
 
+### Live sync — verified locally, 5 Nov 2026 (not yet deployed)
+
+- **Pull-then-upload:** `syncToServer()` no longer POSTs the local DB
+  as-is. It debounces 800 ms, then `uploadAfterPull()` GETs
+  `/api/progress?code=<family code>`, union-merges the server record
+  into the local DB with `mergeFamilyDB()` (never last-write-wins),
+  and only then POSTs the merged DB. If the server is unconfigured,
+  unreachable, or has no data for the code, it falls back to POSTing
+  the local DB as before. Offline / unlinked behaviour is unchanged:
+  localStorage only, no error shown.
+- **No pull-inside-a-pull:** a shared `syncPulling` guard means a
+  pull never starts a second pull, and an upload requested while a
+  pull is in flight is queued exactly once. `syncFromServer()` uploads
+  its merged result with a direct POST (`postToServer()`), never via
+  `syncToServer()`.
+- **Auto-pull:** every 30 seconds, only while the tab is visible, an
+  explorer is active, and the device is linked with a valid 6-letter
+  family code, `autoPull()` calls `syncFromServer()`. It also runs
+  when the tab becomes visible again (`visibilitychange`).
+- **Safe re-render only:** an auto-pull re-renders only when the
+  route is not `quiz` / `warmup` / `game` and no modal is open. When
+  it is not safe, the merge still happens silently and the next safe
+  render shows it — a child is never interrupted mid-question/game.
+- **Screen-time save:** the existing 60-second save still runs, but
+  it now goes through pull-then-upload, so a device left open can no
+  longer overwrite newer server progress with a stale snapshot.
+- **Honest limit:** this is polling every 30 seconds, not instant
+  push. Worst-case lag for the other device to show new progress is
+  ~30 seconds plus the 800 ms upload debounce (less if the other
+  device is reloaded, opened on the parent page, or its tab just
+  became visible).
+- **Grand Door stays the gate:** Bryan said no to skipping it, so
+  opening the app still goes through the Grand Door picture code
+  even when an explorer already exists on the device. Only the
+  parent page is PIN-guarded, as before.
+- Tests: `tests/sync-live.test.js` (7 tests) covers all of the above
+  as regression checks over `public/index.html`. Suite is now
+  49 tests, 49 passing (was 42).
+
 ## What was NOT verified
 
 - No live Supabase round-trip was made (no project exists here) and no
