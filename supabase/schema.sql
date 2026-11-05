@@ -45,3 +45,21 @@ create policy "service role only" on public.family_progress
 --   live boolean not null default false,
 --   created_at timestamptz not null default now()
 -- );
+
+-- Every flag becomes a test: flagged Pip answers are stored here
+-- (via POST /api/flag) with the auto-generated regression test case.
+create table if not exists public.flag_log (
+  id uuid primary key default gen_random_uuid(),
+  code text,
+  question text not null,
+  pip_answer text not null,
+  correction text,
+  skill_id text,
+  test_case jsonb not null default '{}'::jsonb,
+  status text not null default 'open' check (status in ('open', 'fixed', 'wontfix')),
+  created_at timestamptz not null default now()
+);
+alter table public.flag_log enable row level security;
+drop policy if exists "service role only" on public.flag_log;
+create policy "service role only" on public.flag_log
+  for all using (auth.role() = 'service_role');
