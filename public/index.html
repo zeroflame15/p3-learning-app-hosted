@@ -1119,6 +1119,21 @@ function mergeThreads(aThreads,bThreads){
   });
   return out;
 }
+/* A critter rename must win by WHEN it happened, not by length:
+   the old "longer name wins" rule reverted a rename to a shorter
+   name (Teddy lost to Splash) on the next sync. Each side carries
+   the time it was last renamed; the later rename wins. Names with
+   no timestamp (never renamed) fall back to the old rule. */
+function pickCritterName(a,b){
+  var aAt=Date.parse((a&&a.critterNameAt)||'')||0, bAt=Date.parse((b&&b.critterNameAt)||'')||0;
+  if(aAt||bAt){
+    if(bAt>aAt)return {name:b.critterName, at:b.critterNameAt};
+    if(aAt>bAt)return {name:a.critterName, at:a.critterNameAt};
+  }
+  var an=(a&&a.critterName)||'', bn=(b&&b.critterName)||'';
+  if(an&&bn)return an.length>=bn.length?{name:an, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)}:{name:bn, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)};
+  return {name:an||bn, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)};
+}
 function mergeExplorer(a,b){
   var e=JSON.parse(JSON.stringify(a||b));
   if(!a)return JSON.parse(JSON.stringify(b)); if(!b)return JSON.parse(JSON.stringify(a));
@@ -1170,7 +1185,7 @@ function mergeExplorer(a,b){
   if(clearedAt)e.threads=e.threads.filter(function(t){ var ts=parseInt(String(t.id||'').slice(1),10); return !(ts&&ts<=clearedAt-10000); });
   e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
   e.planner=(a.planner||[]).concat((b.planner||[]).filter(function(f){ return !(a.planner||[]).some(function(x){ return x.t===f.t; }); }));
-  e.critterName=(a.critterName&&b.critterName)?(a.critterName.length>=b.critterName.length?a.critterName:b.critterName):(a.critterName||b.critterName);
+  var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
   return e;
 }
 function mergeFamilyDB(local, server){
@@ -1270,7 +1285,7 @@ function migrateStages(){
 function newExplorer(name, code){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code,
     face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
     flashcards:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
@@ -2116,8 +2131,15 @@ function bindAsk(){
 var STAGES=[['🥚','Frogspawn','A frog is an amphibian: it starts life in water and can live on land as an adult. Frogs lay jelly-like eggs in pond water.'],['🐛','Tadpole','It hatches with gills and a long swimming tail. It eats plants and algae.'],['🐸','Froglet','Legs grow, the tail shrinks, and lungs develop — it is nearly a frog!'],['🐸','Adult Frog','A full frog! It hops on land and swims in water, breathing with lungs and skin.']];
 var STAGE_IMGS=['assets/stage-eggs.webp','assets/stage-tadpole.webp','assets/stage-froglet.webp','assets/stage-frog.webp'];
 var selCritter=null;
+/* Which life-cycle stage the child is LOOKING at in Critter Lab.
+   UI state only — never saved, never synced. It used to be the
+   growth stage itself (e.critterStage), so tapping Frogspawn to
+   look at the eggs overwrote the frog's growth, and the next sync
+   (merge keeps the furthest stage) snapped the view straight back
+   to Adult Frog. The view and the growth stage are separate now. */
+var critterView=null;
 function critterHTML(){
-  var e=ex(); var st=STAGES[e.critterStage];
+  var e=ex(); var view=(critterView==null?e.critterStage:critterView); var st=STAGES[view];
   if(!e.discoveredCritters)e.discoveredCritters=[];
   var visiting=visitingCritters();
   var sel=selCritter?CRITTERS.find(function(c){return c.id===selCritter;}):null;
@@ -2140,11 +2162,11 @@ function critterHTML(){
   }).join('');
   return pageHero('🐸','Critter Lab','Watch your frog grow, then discover many more Singapore critters — pond, garden, sky and night. New visitors are spotlighted every week.','Stage '+(e.critterStage+1)+' of 4 · '+e.discoveredCritters.length+' of '+CRITTERS.length+' critters discovered')
    +'<div class="card"><h3 style="margin-top:0">🐸 Meet '+esc(e.critterName)+'!</h3>'
-   +'<img class="stageimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
+   +'<img class="stageimg" src="'+STAGE_IMGS[view]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
    +'<div class="speech" style="margin-top:14px"><b>'+esc(e.critterName)+'</b> is at the <b>'+st[1]+'</b> stage. '+st[2]+'</div>'
    +'<label class="flabel">Name your critter</label><div style="display:flex;gap:8px"><input class="field" id="critName" value="'+esc(e.critterName)+'" maxlength="16"><button class="btn" id="critSave">Save name</button></div>'
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
-   +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(e.critterStage===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
+   +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
    +'<p class="small muted" style="margin-top:12px">Visit every stage to earn the 🐸 Critter Friend badge.</p></div>'
    + visitingHTML + detail
    +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🔍 Critters to discover</h3><p class="muted" style="font-weight:700;margin:0">Tap any critter to discover it and learn how to spot the real one in Singapore. Discover 5 for the 🔍 Critter Spotter badge, and 12 for the 🌿 Young Naturalist badge!</p><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;margin-top:14px"><span>Discovery collection</span><span>'+e.discoveredCritters.length+' / '+CRITTERS.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.discoveredCritters.length/CRITTERS.length*100)+'%"></div></div></div>'
@@ -2152,7 +2174,7 @@ function critterHTML(){
 }
 function bindCritter(){
   var e=ex(); if(!e.visitedStages)e.visitedStages=[]; if(!e.discoveredCritters)e.discoveredCritters=[];
-  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); e.critterStage=i; if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
+  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); critterView=i; /* Looking at a stage never rewinds growth: the frog only ever grows forward, to the furthest stage explored. */ if(i>e.critterStage)e.critterStage=i; if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
   document.querySelectorAll('[data-critter]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-critter'); var c=CRITTERS.find(function(x){return x.id===id;}); selCritter=id;
     if(e.discoveredCritters.indexOf(id)<0){ e.discoveredCritters.push(id); sndCorrect(); toast('Discovered: '+c.name+'! '+c.e);
       if(e.discoveredCritters.length>=5)awardBadge('spotter','🔍 Critter Spotter');
@@ -2160,7 +2182,7 @@ function bindCritter(){
       if(e.discoveredCritters.length>=CRITTERS.length)confettiStars();
     } else sndPop();
     save(); render(); }; });
-  var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
+  var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
 }
 
 /* ============================================================ TREASURE REALM */
