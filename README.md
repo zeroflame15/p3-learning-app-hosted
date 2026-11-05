@@ -11,8 +11,9 @@ is off, so it loads without a Vercel login). `/api/health` still reads
 `livePip:false, progressSync:false` — Supabase and the Meta Model API key
 are NOT set up yet, so Pip is still canned answers and progress is still
 on-device only until those are added (see "What Bryan still needs to do").
-The family-sync-code change in this folder is implemented and tested
-locally but NOT yet deployed — deploy it with the steps below.
+The family-sync-code change is deployed and live. The under-the-hood
+wiring below (skill pack, agents, rules, flag-to-test) is implemented
+and tested locally but NOT yet deployed — deploy it with the steps below.
 
 ## What is in this folder
 
@@ -22,10 +23,70 @@ locally but NOT yet deployed — deploy it with the steps below.
 | `public/assets/` | Terrarium + critter-stage artwork, Pip otter image. |
 | `api/ask-pip.js` | Serverless function: live AI Pip via Meta Model API (`muse-spark-1.3`). No key → 503 and the app falls back to its canned answers. |
 | `api/progress.js` | Serverless function: GET/POST progress sync via Supabase REST, keyed by family sync code (legacy per-device id still accepted as a fallback key). No Supabase → `{configured:false}` and the app keeps using device storage only. |
-| `api/health.js` | GET: reports which services are configured (no secrets). |
+| `api/health.js` | GET: reports which services are configured (no secrets) + skill pack version and agent counts. |
+| `api/flag.js` | POST: records a flagged Pip answer and returns the auto-generated regression test case; stores it in Supabase `flag_log` when configured, otherwise returns the test case for local storage. |
+| `lib/skills.js` | Versioned P3 skill pack (`skills-v1`): 16 skills, one exact method per Learn topic. The single source Pip (server + client) routes to. |
+| `lib/rules.js` | Plain, tested scoring rules: stars, badges, treasure unlocks, daily fresh sets, warm-up non-repetition. Models explain; code decides. |
+| `lib/agents.js` | Registry of 19 specialist agents (17 on Meta Muse, 2 plain code) + routing. Only Muse Spark 1.3 is live; Image / SAM 3.1 / Voice Transcribe / Spark Open are placeholders. |
+| `lib/flags.js` | `flagToTest`: turns a flagged answer into a regression test case. |
+| `tests/` | Automated test suite — run with `npm test` (see "Tests" below). |
 | `supabase/schema.sql` | One table (`family_progress`, one row per family sync code). Run in Supabase SQL Editor. No camera or location data is stored — ever. |
 | `vercel.json`, `package.json` | Vercel routing / function timeouts. |
 | `.env.example` | Every environment variable needed, with where each comes from. |
+
+## Under the hood (wired in 5 Nov 2026 — NOT yet deployed)
+
+Bryan's principles from the original myKx app, as built here:
+
+- **19 specialist agents, 17 on Meta Muse** (`lib/agents.js`): Maths,
+  English, Science and Chinese Tutors, Spelling/Listening Coaches,
+  Storyteller, Critter Guide, Treasure Guide, Encourager, Flag Checker,
+  Warm-up/Game Coaches, Planner, Parent Summariser, Voice Coach, Image
+  Guide, Vision Guide, Open Model. A question is routed to ONE
+  specialist, which opens the exact skill. **Live today: 15 agents**
+  (13 on Muse Spark 1.3 + 2 plain-code). **Placeholders (4):** Voice
+  Coach (Muse Voice Transcribe), Image Guide (Muse Image), Vision
+  Guide (SAM 3.1), Open Model (Muse Spark Open) — their entries and
+  prompts exist, but no key, account or live call exists for them.
+  Do not claim they are live.
+- **Skills, not search** (`lib/skills.js`, `skills-v1`): 16 skills, one
+  per Learn topic (14) plus Spelling LSCWC and Check Your Work. Each
+  skill has the exact method, steps, a worked example and a watch-out.
+  Ask Pip (server `api/ask-pip.js` and the client fallback) injects
+  the skill method into the prompt and cites the agent + skill with
+  every answer; the app shows "📚 Method: … · Skills v1" under Pip
+  replies and the pack version in Ask Pip and the parent page.
+- **Models explain, code decides** (`lib/rules.js`): every mark is a
+  pure rule — 1 star per correct answer in a 5-question quest, badges
+  (First / Perfect / Brave Tryer / Comeback Kid / Critter Spotter /
+  Young Naturalist), treasure unlock only when stars ≥ cost with
+  exactly that cost deducted, a topic counts as stuck only after TWO
+  stuck runs (<3/5). No model ever marks anything.
+- **Every flag becomes a test**: every Pip reply has a 🚩 Flag this
+  button. Flagging asks what Pip should have said, records the flag
+  (question, Pip's answer, correction, skill) in `DB.flags` and POSTs
+  it to `/api/flag`, which returns an auto-generated regression test
+  case (stored in Supabase `flag_log` when configured, otherwise kept
+  on the device). The PIN parent page lists the latest flags and
+  their tests. The test suite includes tests generated from real
+  flag shapes — a fixed mistake is a passing test.
+
+### Tests
+
+Run `npm test` (Node's built-in runner, no dependencies). After editing
+`lib/skills.js` or `lib/agents.js`, run `node scripts/sync-skills.js`
+to regenerate the embedded skill pack in `public/index.html` — the
+page and the server must never drift apart. **24 test
+cases, 24 passing** (5 Nov 2026) — covering the skill pack (all 14
+topics map to exactly one skill), routing, scoring/badges/treasure
+rules, daily fresh sets (5 unique, stable same day, different the
+next day, over 21 days × 4 topics), warm-up non-repetition against
+the REAL question banks in `public/index.html`, flag-to-test
+generation, and the API handlers with mocked model + Supabase.
+That is **NOT 1,000 tests** — the suite is the scaffolding for the
+1,000-test goal: every new flag adds a regression test case, and
+the count grows from there. Do not claim 1,000 until the suite
+actually has that many passing tests.
 
 ## How it works
 
@@ -115,6 +176,31 @@ or `.env.local` only.
   is **not verified**; if sign-up is region-blocked, an OpenAI-compatible
   key from another provider can be used instead by setting
   `MODEL_API_BASE` / `MODEL_ID` (the code is provider-agnostic).
+
+## What was verified here (locally, 5 Nov 2026)
+
+### Under-the-hood wiring — verified locally, 5 Nov 2026 (not yet deployed)
+
+- `npm run check` passes (all API + lib files); all 5 inline scripts
+  in `public/index.html` parse.
+- `npm test`: **24 test cases, 24 passing** (see "Tests" above for
+  what they cover and the honest count — not 1,000).
+- Mocked `/api/ask-pip`: a "7 x 8?" question is routed to the
+  Maths Tutor + `times-tables` skill, the skill method ("Count in
+  groups… 7 × 8 = 56") is injected into the model prompt, and the
+  reply cites agent + skill + `skills-v1`. No key → 503 as before.
+- Client skill routing extracted verbatim from `public/index.html`
+  and run in Node: 6/6 sample questions route to the right skill,
+  and `recordFlag` stores a flag locally and builds its test case.
+- Mocked `/api/flag`: unconfigured → 200 with the test case and
+  `configured:false`; configured → stores the flag in `flag_log`
+  (code, question, pip answer, correction, skill, test case, `open`).
+- One real content bug was caught by the new tests and fixed: a
+  warm-up question ("Most plants start from a…") repeated quest
+  wording, so it was reworded ("A tiny shoot grows from a…").
+- NOT verified: no real-browser tap-through of the 🚩 Flag button,
+  the skill citation line, or the parent-page flags card; no live
+  Supabase round-trip for `flag_log`; no live Model API call.
 
 ## What was verified here (locally, 5 Nov 2026)
 
