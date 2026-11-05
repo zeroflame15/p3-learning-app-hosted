@@ -1193,7 +1193,13 @@ function go(r){ route=r; window.scrollTo(0,0); render();
 }
 function render(){
   var root=document.getElementById('root');
-  if(!ex()){ root.innerHTML=doorHTML(); bindDoor(); return; }
+  /* Every visit starts at the Grand Door: route 'door' always shows
+     the Door (enter a family code, or pick an existing explorer and
+     tap their picture code), even when this device already has an
+     explorer saved from a previous visit. Previously a saved active
+     explorer fell through to the app shell with no page for 'door',
+     so a fresh load showed an empty screen instead of the Door. */
+  if(route==='door'||!ex()){ root.innerHTML=doorHTML(); bindDoor(); return; }
   var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   root.innerHTML='<div class="app">'
