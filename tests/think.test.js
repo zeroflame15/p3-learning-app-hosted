@@ -8,8 +8,9 @@ const assert = require('node:assert/strict');
 const { GUARDRAILS, guardrailIds, lessonsFromFlags, think, signReply } = require('../lib/think');
 
 test('guardrails exist and cover hint-first, P3 level, no location/camera, code decides', () => {
-  assert.equal(GUARDRAILS.length, 6);
-  assert.deepEqual(guardrailIds(), ['hint-not-answer', 'p3-level', 'under-90-words', 'no-personal-data', 'no-location-no-camera', 'code-decides']);
+  assert.equal(GUARDRAILS.length, 7);
+  assert.deepEqual(guardrailIds(), ['hint-not-answer', 'p3-level', 'under-90-words', 'no-personal-data', 'no-location-no-camera', 'code-decides', 'skill-must-match']);
+  assert.match(GUARDRAILS.find((g) => g.id === 'skill-must-match').rule, /different one/);
   assert.match(GUARDRAILS.find((g) => g.id === 'no-location-no-camera').rule, /No location tracking/);
   assert.match(GUARDRAILS.find((g) => g.id === 'code-decides').rule, /lib\/rules\.js/);
 });

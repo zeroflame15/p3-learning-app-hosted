@@ -11,9 +11,9 @@ test('pack is versioned and labelled P3', () => {
   assert.match(SKILL_PACK_LEVEL, /Primary 3/);
 });
 
-test('16 skills, unique ids, every skill is complete', () => {
-  assert.equal(SKILLS.length, 16);
-  assert.equal(new Set(SKILLS.map((s) => s.id)).size, 16);
+test('17 skills, unique ids, every skill is complete', () => {
+  assert.equal(SKILLS.length, 17);
+  assert.equal(new Set(SKILLS.map((s) => s.id)).size, 17);
   for (const s of SKILLS) {
     assert.ok(s.id && s.subject && s.name && s.method, s.id);
     assert.ok(s.steps.length >= 3, s.id + ' needs >=3 steps');
@@ -42,6 +42,9 @@ test('skillForQuestion routes real questions to the right method', () => {
     ['Yesterday we went to the zoo — why went?', 'tenses'],
     ['Which sentence is correct? Where is my pencil', 'punctuation'],
     ['How does a tadpole become a frog?', 'life-cycle-frog'],
+    ['the life cycle of butterfly', 'life-cycle-butterfly'],
+    ['What does a caterpillar turn into?', 'life-cycle-butterfly'],
+    ['What is the life cycle of a frog?', 'life-cycle-frog'],
     ['Will a magnet attract a steel spoon?', 'magnets'],
     ['Why do plants need sunlight?', 'plants'],
     ['妈妈 means what?', 'chinese-listening'],
@@ -55,6 +58,9 @@ test('skillForQuestion routes real questions to the right method', () => {
     assert.equal(got.id, want, q);
   }
   assert.equal(skillForQuestion('blorp zzz qqq'), null);
+  // A bare "life cycle" with no animal must not hijack into the frog
+  // skill — Pip should answer generally instead of teaching frogs.
+  assert.equal(skillForQuestion('tell me about life cycles'), null);
   assert.ok(skillById('fractions'));
   assert.equal(skillById('nope'), null);
 });
