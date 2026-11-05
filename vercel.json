@@ -1,0 +1,1 @@
+{"$schema":"https://openapi.vercel.sh/vercel.json","functions":{"api/ask-pip.js":{"maxDuration":30},"api/health.js":{"maxDuration":5},"api/progress.js":{"maxDuration":10}}}
