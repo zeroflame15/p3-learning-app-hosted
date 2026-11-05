@@ -1171,7 +1171,13 @@ function mergeFamilyDB(local, server){
     if(byId[e.id]){ var i=merged.explorers.indexOf(byId[e.id]); merged.explorers[i]=mergeExplorer(byId[e.id], e); }
     else merged.explorers.push(JSON.parse(JSON.stringify(e)));
   });
-  if(!merged.explorers.some(function(e){return e.id===merged.activeId;}))merged.activeId=local.activeId||merged.explorers[0].id;
+  /* The active explorer is DEVICE state, not family state: which
+     explorer this device is signed in as must never change because
+     another device uploaded. (Seen live: entering Ask Pip switched
+     the greeting to the first explorer on the family after a sync
+     pull, because the merged record started as the server's copy.) */
+  if(local.activeId&&merged.explorers.some(function(e){return e.id===local.activeId;}))merged.activeId=local.activeId;
+  else if(!merged.explorers.some(function(e){return e.id===merged.activeId;}))merged.activeId=merged.explorers[0].id;
   return merged;
 }
 function syncFromServer(opts){
