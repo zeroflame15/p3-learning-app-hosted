@@ -977,13 +977,57 @@ try{ DEVICE_ID=localStorage.getItem('p3-device-id'); if(!DEVICE_ID){ DEVICE_ID='
    they all read/write the same server row. */
 function syncKey(){ return (DB&&syncCodeValid(DB.syncCode))?DB.syncCode:(DEVICE_ID||null); }
 var syncTimer=null;
+/* Guard shared by the pull and upload paths: while a pull is in
+   flight, no second pull starts, and an upload requested in the
+   meantime is queued once instead of starting a parallel pull. */
+var syncPulling=false, syncUploadPending=false;
 function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} }
+/* Direct POST of the current local DB — no GET first. Used only by
+   syncFromServer() after it has already pulled and merged, so a
+   pull can never trigger another pull (no re-entrancy loop). */
+function postToServer(key){
+  if(!key||!DB)return;
+  try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
+}
+/* Pull-then-upload: before uploading, GET the server record and
+   union-merge it into the local DB (mergeFamilyDB — never
+   last-write-wins), so an upload can never overwrite newer progress
+   made on another linked device with a stale local snapshot. If the
+   server is unconfigured, unreachable, or has no data for this code,
+   fall back to POSTing the local DB exactly as before. Offline /
+   unlinked behaviour is unchanged: localStorage only, no error
+   shown to the user. */
 function syncToServer(){
   var key=syncKey(); if(!key||!DB)return;
   clearTimeout(syncTimer);
-  syncTimer=setTimeout(function(){
-    try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
-  },800);
+  syncTimer=setTimeout(uploadAfterPull,800);
+}
+function uploadAfterPull(){
+  var key=syncKey(); if(!key||!DB)return;
+  if(syncPulling){ syncUploadPending=true; return; }
+  syncPulling=true;
+  var done=function(){
+    syncPulling=false;
+    postToServer(key);
+    /* One queued upload at most: a save that arrived while the pull
+       was in flight gets exactly one more pull-then-upload, then
+       the queue is clear — this cannot loop on its own. */
+    if(syncUploadPending){ syncUploadPending=false; syncToServer(); }
+  };
+  try{
+    fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){ return r.json(); }).then(function(j){
+      try{
+        if(j&&j.configured&&j.data&&j.data.explorers){
+          var before=JSON.stringify(DB);
+          if(!DB.explorers||!DB.explorers.length){ DB=JSON.parse(JSON.stringify(j.data)); ensureSyncCode(); }
+          else { DB=mergeFamilyDB(DB, j.data); ensureSyncCode(); }
+          DB.updatedAt=j.updatedAt||DB.updatedAt||null;
+          if(JSON.stringify(DB)!==before)saveLocal();
+        }
+      }catch(e){}
+      done();
+    }, function(){ done(); });
+  }catch(e){ done(); }
 }
 /* Merge a server family record with the local one — a UNION, never a
    last-write-wins overwrite. Progress in this app only ever grows
@@ -1044,10 +1088,19 @@ function mergeFamilyDB(local, server){
 function syncFromServer(opts){
   opts=opts||{};
   var key=syncKey(); if(!key)return Promise.resolve(false);
+  /* A pull is already in flight (e.g. an upload's pull-then-upload):
+     skip this one — the next auto-pull / save will pick the change up.
+     This also keeps a pull from ever starting a second pull. */
+  if(syncPulling)return Promise.resolve(false);
+  syncPulling=true;
   return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
+    syncPulling=false;
     if(!j||!j.configured||!j.data||!j.data.explorers)return false;
     var server=j.data, localEmpty=!DB.explorers||!DB.explorers.length;
-    if(localEmpty){ DB=JSON.parse(JSON.stringify(server)); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null; saveLocal(); syncToServer(); return true; }
+    /* Upload the merged result with a direct POST (postToServer),
+       NOT syncToServer(): syncToServer pulls first, and calling it
+       here would start another pull from inside a pull. */
+    if(localEmpty){ DB=JSON.parse(JSON.stringify(server)); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null; saveLocal(); postToServer(key); return true; }
     /* Always union-merge: timestamps are NOT trusted as a winner,
        because an open device's per-minute screen-time save keeps
        bumping its local timestamp. The merge keeps the richer side
@@ -1055,9 +1108,21 @@ function syncFromServer(opts){
     var before=JSON.stringify(DB);
     DB=mergeFamilyDB(DB, server); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null;
     var changed=JSON.stringify(DB)!==before;
-    if(changed){ saveLocal(); syncToServer(); }
+    if(changed){ saveLocal(); postToServer(key); }
     return changed;
-  }).catch(function(){ return false; });
+  }).catch(function(){ syncPulling=false; return false; });
+}
+/* Live sync: pull the server record on a timer and when the tab
+   becomes visible again, but re-render only when it is safe to do
+   so — never mid-question, mid-warm-up or mid-game, and never over
+   an open modal. When it is not safe, the merge still happens
+   silently in the background and the next safe render shows it. */
+function isModalOpen(){ var o=document.getElementById('overlay'); return !!(o&&o.classList.contains('open')); }
+function safeToRender(){ return typeof route!=='undefined'&&route!=='quiz'&&route!=='warmup'&&route!=='game'&&!isModalOpen(); }
+function autoPull(){
+  if(typeof document==='undefined'||document.visibilityState!=='visible')return;
+  if(!ex()||!DB||!syncCodeValid(DB.syncCode))return;
+  syncFromServer({}).then(function(changed){ if(changed&&safeToRender())render(); });
 }
 /* Link this device to a family: pull the family record for the code
    and merge it with anything already on this device, then keep it
@@ -2066,6 +2131,14 @@ ensureSyncCode();
 if(typeof syncFromServer==='function')syncFromServer({}).then(function(changed){ if(changed)render(); });
 applyTheme();
 setInterval(function(){ if(ex()&&document.visibilityState==='visible'){ addMinutes(1); save(); } },60000);
+/* Live sync: pull every 30s while the tab is visible, and again
+   whenever the tab comes back into view. autoPull() only re-renders
+   when safe (not mid-quiz/warm-up/game, no modal open). The 60s
+   screen-time save above now goes through pull-then-upload
+   (save -> syncToServer -> uploadAfterPull), so it can no longer
+   overwrite newer server progress with a stale snapshot. */
+setInterval(autoPull,30000);
+document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='visible')autoPull(); });
 render();
 </script>
 </body>
