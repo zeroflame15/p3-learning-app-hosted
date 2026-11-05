@@ -163,3 +163,28 @@ test('no timestamps: longer name wins but borrows no timestamp from the other si
   assert.equal(out.name, 'Splash', 'longer legacy name still wins');
   assert.equal(out.at, null, 'no timestamp is invented for the winner');
 });
+
+/* --- Care must be VISIBLE: the frog reacts, grows bigger, progress shows --- */
+test('care reaction is visual, not just text: frog hops/wiggles and emoji float up', () => {
+  assert.ok(html.includes('@keyframes fxHop'), 'hop keyframes exist');
+  assert.ok(html.includes('@keyframes fxWiggle'), 'wiggle keyframes exist');
+  assert.ok(html.includes('@keyframes fxFloatUp'), 'float-up keyframes exist');
+  assert.ok(html.includes('CARE_FX={feed:'), 'each action has its own floating emoji');
+  const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
+  assert.ok(page.includes('fx-wiggle'), 'clean makes the frog wiggle');
+  assert.ok(page.includes('fx-hop'), 'feed/play make the frog hop');
+  assert.ok(page.includes('fx-float'), 'emoji float up from the frog');
+  const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 3200);
+  assert.ok(bind.includes('careFx={a:id'), 'caring sets the visual reaction');
+  assert.ok(bind.includes('setTimeout(function(){ careFx=null; }, 1700)'), 'the reaction clears after ~1.7s so it never replays on a later re-render');
+});
+
+test('growth is visible: the frog picture gets taller each stage, and a bar shows today’s cares', () => {
+  const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
+  assert.ok(page.includes("150+view*30"), 'the frog picture grows taller with the stage — Frogspawn small, Adult Frog big');
+  assert.ok(page.includes('Growing up — Stage'), 'the growth stage is labelled');
+  assert.ok(page.includes('/3 cares today'), 'today’s care count is shown');
+  assert.ok(page.includes('careTodayCount(e.care)/3*100'), 'a progress bar fills with today’s cares');
+  assert.ok(page.includes('Grew today!'), 'a growth today is celebrated');
+  assert.ok(!page.includes('Today: '), 'the old text-only today line is gone');
+});
