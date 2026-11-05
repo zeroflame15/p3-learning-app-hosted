@@ -1126,13 +1126,24 @@ function mergeThreads(aThreads,bThreads){
    no timestamp (never renamed) fall back to the old rule. */
 function pickCritterName(a,b){
   var aAt=Date.parse((a&&a.critterNameAt)||'')||0, bAt=Date.parse((b&&b.critterNameAt)||'')||0;
-  if(aAt||bAt){
-    if(bAt>aAt)return {name:b.critterName, at:b.critterNameAt};
-    if(aAt>bAt)return {name:a.critterName, at:a.critterNameAt};
+  if(bAt>aAt)return {name:b.critterName, at:b.critterNameAt};
+  if(aAt>bAt)return {name:a.critterName, at:a.critterNameAt};
+  if(aAt&&bAt){
+    /* Same instant, different names: one side is stale — the rename
+       made on THIS device (b, the local copy) wins. Never fall
+       through to the longer-name rule here: it crowns the old name
+       while keeping the new rename's timestamp, and that poisoned
+       pair (old name + new timestamp) then beats every later
+       rename. Seen live: server held 'Splash' stamped with the
+       rename-to-'Ted' time, so 'Ted' could never win again. */
+    return {name:b.critterName, at:b.critterNameAt};
   }
   var an=(a&&a.critterName)||'', bn=(b&&b.critterName)||'';
-  if(an&&bn)return an.length>=bn.length?{name:an, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)}:{name:bn, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)};
-  return {name:an||bn, at:(a&&a.critterNameAt)||(b&&b.critterNameAt)};
+  /* No timestamps on either side (legacy records): longer name wins,
+     but a timestamp travels ONLY with the name it was stamped for —
+     never borrowed from the losing side. */
+  if(an&&bn)return an.length>=bn.length?{name:an, at:(a&&a.critterNameAt)||null}:{name:bn, at:(b&&b.critterNameAt)||null};
+  return {name:an||bn, at:(an?(a&&a.critterNameAt):(b&&b.critterNameAt))||null};
 }
 function mergeExplorer(a,b){
   var e=JSON.parse(JSON.stringify(a||b));
