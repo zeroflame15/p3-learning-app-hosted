@@ -75,24 +75,43 @@ module.exports = async (req, res) => {
     : `You are Pip, a friendly otter tutor for ${name}, a Singapore Primary 3 student (age 8-9). Answer the question directly and simply, in warm language they can read themself. Keep replies under 90 words. Use Singapore P3 level ideas (English, Math, Science, Chinese). If it is a maths question, show one short working step, then the answer. If they ask in Chinese, reply in Chinese with a little pinyin help. End with one tiny follow-up question or encouragement sometimes. Never ask the child to tell you more first, and never deflect with "tell me more" — always try to answer. ${factLine} Never use the $ character, LaTeX, or maths formatting like \\times or \\frac — write maths in plain text, for example 3 x 4 = 12. Never mention being an AI model.`;
   const user = `${historyText ? `Conversation so far:\n${historyText}\n\n` : ''}${name} asks: ${question}`;
 
+  // One retry on a transient model failure (503 "high demand" was
+  // seen live): the free tier recovers quickly, and a single retry
+  // still fits inside the client's 25s hard timeout.
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+  let r = null;
+  let lastStatus = 0;
+  let lastText = '';
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      r = await fetch(`${BASE}/chat/completions`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: user },
+          ],
+          max_tokens: 300,
+          temperature: 0.7,
+        }),
+      });
+      if (r.ok) break;
+      lastStatus = r.status;
+      lastText = await r.text().catch(() => '');
+      if (![502, 503, 504].includes(r.status)) break;
+      if (attempt === 0) await sleep(1500);
+    } catch (e) {
+      console.error('model api fetch failed', e);
+      if (attempt === 0) { await sleep(1500); continue; }
+      return json(res, 502, { error: 'model_api_unreachable', live: false });
+    }
+  }
   try {
-    const r = await fetch(`${BASE}/chat/completions`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-        max_tokens: 300,
-        temperature: 0.7,
-      }),
-    });
-    if (!r.ok) {
-      const text = await r.text().catch(() => '');
-      console.error('model api error', r.status, text.slice(0, 200));
-      return json(res, 502, { error: 'model_api_error', status: r.status, live: false });
+    if (!r || !r.ok) {
+      console.error('model api error', lastStatus, String(lastText).slice(0, 200));
+      return json(res, 502, { error: 'model_api_error', status: lastStatus, live: false });
     }
     const data = await r.json();
     const raw = data?.choices?.[0]?.message?.content?.trim();
