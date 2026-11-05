@@ -1186,6 +1186,8 @@ function mergeExplorer(a,b){
   e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
   e.planner=(a.planner||[]).concat((b.planner||[]).filter(function(f){ return !(a.planner||[]).some(function(x){ return x.t===f.t; }); }));
   var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
+  e.care=mergeCare(a.care,b.care);
+  e.careGrewDay=((a.careGrewDay||'')>(b.careGrewDay||''))?a.careGrewDay:b.careGrewDay;
   return e;
 }
 function mergeFamilyDB(local, server){
@@ -1285,7 +1287,7 @@ function migrateStages(){
 function newExplorer(name, code){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code,
     face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
     flashcards:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
@@ -2131,6 +2133,22 @@ function bindAsk(){
 var STAGES=[['🥚','Frogspawn','A frog is an amphibian: it starts life in water and can live on land as an adult. Frogs lay jelly-like eggs in pond water.'],['🐛','Tadpole','It hatches with gills and a long swimming tail. It eats plants and algae.'],['🐸','Froglet','Legs grow, the tail shrinks, and lungs develop — it is nearly a frog!'],['🐸','Adult Frog','A full frog! It hops on land and swims in water, breathing with lungs and skin.']];
 var STAGE_IMGS=['assets/stage-eggs.webp','assets/stage-tadpole.webp','assets/stage-froglet.webp','assets/stage-frog.webp'];
 var selCritter=null;
+/* Simple critter care (no hunger, no pressure): three kind things
+   the child can do for Splash — feed, clean the pond, play. Each
+   earns 1 star and has a 4-hour cooldown so it can't be farmed.
+   Doing all three in one day grows the frog one stage (once a day).
+   Care is stored per action as {at, day}; the merge keeps the
+   latest care per action across devices. */
+var CARE_ACTIONS=[
+ {id:'feed',e:'🪰',name:'Feed',msg:'Yum! Splash gobbled the flies! 🪰'},
+ {id:'clean',e:'🫧',name:'Clean the pond',msg:'Splish splash! The pond is sparkling! 🫧'},
+ {id:'play',e:'🎾',name:'Play',msg:'Wheee! Splash loves a game of catch! 🎾'}];
+var CARE_COOLDOWN_MS=4*60*60*1000;
+var careMsg=null;
+function careReady(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; return (nowMs||Date.now())-at>=CARE_COOLDOWN_MS; }
+function careReadyInHrs(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; var left=at+CARE_COOLDOWN_MS-(nowMs||Date.now()); return left>0?Math.ceil(left/3600000):0; }
+function careAllToday(care,day){ return CARE_ACTIONS.every(function(a){ return ((care||{})[a.id]||{}).day===day; }); }
+function mergeCare(a,b){ var out={}; ['feed','clean','play'].forEach(function(id){ var p=(a||{})[id], q=(b||{})[id]; if(p||q)out[id]=(p&&q)?((Date.parse(p.at||'')||0)>=(Date.parse(q.at||'')||0)?p:q):(p||q); }); return out; }
 /* Which life-cycle stage the child is LOOKING at in Critter Lab.
    UI state only — never saved, never synced. It used to be the
    growth stage itself (e.critterStage), so tapping Frogspawn to
@@ -2165,6 +2183,10 @@ function critterHTML(){
    +'<img class="stageimg" src="'+STAGE_IMGS[view]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
    +'<div class="speech" style="margin-top:14px"><b>'+esc(e.critterName)+'</b> is at the <b>'+st[1]+'</b> stage. '+st[2]+'</div>'
    +'<label class="flabel">Name your critter</label><div style="display:flex;gap:8px"><input class="field" id="critName" value="'+esc(e.critterName)+'" maxlength="16"><button class="btn" id="critSave">Save name</button></div>'
+   +'<h4 style="margin:20px 0 8px">Care for '+esc(e.critterName)+' — each care earns ⭐ 1 star!</h4>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+CARE_ACTIONS.map(function(a){ var ready=careReady(e.care,a.id,Date.now()); return '<button class="btn'+(ready?'':' ghost')+'" data-care="'+a.id+'" '+(ready?'':'disabled')+'>'+a.e+' '+a.name+(ready?'':' · again in '+careReadyInHrs(e.care,a.id,Date.now())+'h')+'</button>'; }).join('')+'</div>'
+   +'<p class="small muted" style="margin:8px 0 0">Today: '+CARE_ACTIONS.map(function(a){ var done=((e.care||{})[a.id]||{}).day===todayKey(); return a.e+(done?' ✔':' ·'); }).join(' ')+' — do all three today and '+esc(e.critterName)+' grows a little! 🌱</p>'
+   +(careMsg?'<div class="speech" style="margin-top:10px">'+esc(careMsg)+'</div>':'')
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
    +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
    +'<p class="small muted" style="margin-top:12px">Visit every stage to earn the 🐸 Critter Friend badge.</p></div>'
@@ -2183,6 +2205,16 @@ function bindCritter(){
     } else sndPop();
     save(); render(); }; });
   var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
+  document.querySelectorAll('[data-care]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-care'); var a=CARE_ACTIONS.find(function(x){return x.id===id;}); if(!a)return;
+    /* Resolve the explorer fresh: a sync merge replaces the DB
+       object, and a care written through a stale copy would be lost. */
+    var eNow=ex(); if(!eNow||!careReady(eNow.care,id,Date.now()))return;
+    if(!eNow.care)eNow.care={};
+    eNow.care[id]={at:new Date().toISOString(), day:todayKey()};
+    eNow.stars+=1; careMsg=a.msg;
+    /* All three cares in one day: the frog grows one stage, once a day. */
+    if(careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3){ eNow.critterStage++; eNow.careGrewDay=todayKey(); careMsg=a.msg+' And look — '+eNow.critterName+' grew a little! 🌱'; sndFanfare(); } else sndCorrect();
+    save(); render(); }; });
 }
 
 /* ============================================================ TREASURE REALM */
