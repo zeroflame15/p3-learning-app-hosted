@@ -354,34 +354,48 @@ function stopVibe(silent){
   vibeId=null;
   if(!silent)renderTop();
 }
-/* Pip read-aloud: warmest available voice, sentence by sentence */
+/* Pip read-aloud: warmest available voice, sentence by sentence.
+   iPhone Chrome was silent — three iOS quirks, all fixed here:
+   1. getVoices() can stay empty and voiceschanged may never fire,
+      so the old code waited forever for voices and never spoke.
+      Now: speak anyway with the system default voice if none are
+      listed yet.
+   2. cancel() then speak() in the same tick swallows the utterance
+      on iOS. Now: speak starts a beat after a cancel.
+   3. Queued utterances stall on iOS. Now: sentences are chained
+      one at a time — the next starts only when the previous ends. */
 function speakPip(text){
   if(!('speechSynthesis' in window)){ toast('Sorry — this device has no read-aloud voice.'); return; }
-  if(!speechSynthesis.getVoices().length){
-    var once=function(){ speechSynthesis.onvoiceschanged=null; speakPip(text); };
-    speechSynthesis.onvoiceschanged=once;
-    setTimeout(function(){ if(speechSynthesis.onvoiceschanged===once){ speechSynthesis.onvoiceschanged=null; speakPip(text); } },1200);
-    return;
-  }
-  speechSynthesis.cancel();
-  var voices=speechSynthesis.getVoices();
-  function pick(lang){
-    var vs=voices.filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf(lang)===0;});
-    if(!vs.length)vs=voices;
-    var good=['natural','neural','google','samantha','zira','jenny','aria','xiaoxiao','tingting','meijia'];
-    for(var i=0;i<good.length;i++){ var m=vs.filter(function(v){return v.name.toLowerCase().indexOf(good[i])>=0;}); if(m.length)return m[0]; }
-    var bad=['fred','albert','bad news','organ','cellos','zarvox','trinoids','robot'];
-    var ok=vs.filter(function(v){ var n=v.name.toLowerCase(); return !bad.some(function(b){return n.indexOf(b)>=0;}); });
-    return (ok[0]||vs[0]);
-  }
   var isChi=/[\u4e00-\u9fff]/.test(text);
-  var parts=text.match(/[^.!?。！？]+[.!?。！？]*/g)||[text];
-  parts.forEach(function(p){
-    var u=new SpeechSynthesisUtterance(p.trim());
-    var v=pick(isChi?'zh':'en'); if(v)u.voice=v;
+  var parts=(text.match(/[^.!?。！？]+[.!?。！？]*/g)||[text]).map(function(p){ return p.trim(); }).filter(Boolean);
+  if(!parts.length)parts=[text];
+  var warned=false;
+  function pickVoice(){
+    var voices=speechSynthesis.getVoices()||[];
+    var vs=voices.filter(function(v){ return v.lang&&v.lang.toLowerCase().indexOf(isChi?'zh':'en')===0; });
+    if(!vs.length)vs=voices;
+    var good=isChi?['xiaoxiao','tingting','meijia','google']:['natural','neural','google','samantha','zira','jenny','aria'];
+    for(var i=0;i<good.length;i++){ var m=vs.filter(function(v){ return v.name.toLowerCase().indexOf(good[i])>=0; }); if(m.length)return m[0]; }
+    var bad=['fred','albert','bad news','organ','cellos','zarvox','trinoids','robot'];
+    var ok=vs.filter(function(v){ var n=v.name.toLowerCase(); return !bad.some(function(b){ return n.indexOf(b)>=0; }); });
+    return ok[0]||vs[0]||null;
+  }
+  function say(i){
+    if(i>=parts.length)return;
+    var u=new SpeechSynthesisUtterance(parts[i]);
+    var v=pickVoice(); if(v)u.voice=v;
     u.lang=isChi?'zh-CN':'en-SG'; u.rate=0.98; u.pitch=1.12;
+    u.onend=function(){ say(i+1); };
+    u.onerror=function(ev){
+      if(ev&&ev.error&&ev.error!=='canceled'&&ev.error!=='interrupted'){
+        if(!warned){ warned=true; toast('No sound? Check the volume and the silent switch on the side of the phone.'); }
+        say(i+1);
+      }
+    };
     speechSynthesis.speak(u);
-  });
+  }
+  if(speechSynthesis.speaking||speechSynthesis.pending){ speechSynthesis.cancel(); setTimeout(function(){ say(0); },150); }
+  else say(0);
 }
 if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }
 </script>
