@@ -1066,14 +1066,20 @@ function unionObjLatest(a,b){ var o={}; Object.keys(a||{}).forEach(function(k){ 
    keeps repeated identical questions as separate messages), and by
    who+text union otherwise; a real question title wins over the
    "New chat N" placeholder. */
+/* A "Pip is thinking…" bubble is transient UI state, never a real
+   message: it must never survive a merge. It used to be saved and
+   synced like a real reply, so the server's copy resurrected it on
+   every sync — the fallback answer arrived, but the thinking bubble
+   stayed on screen forever alongside it. */
+function isThinkingMsg(m){ return m&&m.who==='pip'&&typeof m.text==='string'&&m.text.indexOf('Pip is thinking')===0; }
 function mergeThreads(aThreads,bThreads){
-  var out=(aThreads||[]).map(function(t){ return JSON.parse(JSON.stringify(t)); });
+  var out=(aThreads||[]).map(function(t){ var c=JSON.parse(JSON.stringify(t)); c.msgs=(c.msgs||[]).filter(function(m){ return !isThinkingMsg(m); }); return c; });
   function sameMsg(m,n){ return m&&n&&m.who===n.who&&m.text===n.text; }
   function isPrefix(shorter,longer){ if(shorter.length>longer.length)return false; for(var i=0;i<shorter.length;i++)if(!sameMsg(shorter[i],longer[i]))return false; return true; }
   (bThreads||[]).forEach(function(t){
     var i=-1; out.forEach(function(x,ix){ if(x.id===t.id)i=ix; });
-    if(i<0){ out.push(JSON.parse(JSON.stringify(t))); return; }
-    var cur=out[i], am=cur.msgs||[], bm=t.msgs||[];
+    if(i<0){ var nt=JSON.parse(JSON.stringify(t)); nt.msgs=(nt.msgs||[]).filter(function(m){ return !isThinkingMsg(m); }); out.push(nt); return; }
+    var cur=out[i], am=cur.msgs||[], bm=(t.msgs||[]).filter(function(m){ return !isThinkingMsg(m); });
     if(isPrefix(am,bm))cur.msgs=JSON.parse(JSON.stringify(bm));
     else if(!isPrefix(bm,am)){
       var seen={}; am.forEach(function(m){ seen[m.who+'\u0000'+m.text]=1; });
@@ -1736,7 +1742,9 @@ function quizDoneHTML(t){
   var msg=perfect?'PERFECT QUEST! Every single one right — Pip is speechless (almost)!':cur.score>=3?'Brilliant! You finished the whole quest!':cur.score>=1?'You finished! Finishing matters — and now you know the tricky bits to practise.':'You finished the quest — that takes courage! Let’s try the Second Chance to grow those brain muscles.';
   var starsHtml=[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('');
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
-  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' and earned ⭐ '+cur.score+' stars!</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
+  var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
+  var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' and earned ⭐ '+earned+' stars!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' — a replay, so no extra stars this time. You already earned them today!';
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
 }
 function bindQuiz(){
   var e=ex(), t=topicById(cur.topicId);
@@ -1775,6 +1783,9 @@ function finishRound(t){
     var firstToday=e.completedDay[cur.topicId]!==todayKey();
     e.completedDay[cur.topicId]=todayKey();
     if(firstToday)e.stars+=cur.score;
+    /* The results screen must say so honestly: a replay earns no
+       extra stars, and "earned ⭐ 5 stars!" on a replay is a lie. */
+    cur.starsEarned=firstToday?cur.score:0;
     e.lastTopic=cur.topicId;
     delete e.progress[cur.topicId];
     if(!e.badges.length)awardBadge('first','🌟 First Quest');
@@ -1908,6 +1919,11 @@ function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memo
 
 /* ============================================================ ASK PIP */
 var activeThread=null;
+/* In-flight Ask Pip questions, by thread id. The "Pip is thinking…"
+   bubble is rendered from here — it is never stored in a thread's
+   messages, never saved, and never synced, so it can never get
+   stuck on screen or be resurrected by a sync merge. */
+var asking={};
 async function askPipLive(text, history, name){
   /* This call must NEVER reject and NEVER hang: a failed or stuck
      model call resolves to null and the caller falls back to Pip's
@@ -1975,7 +1991,7 @@ function askHTML(){
   var th=e.threads.find(function(t){return t.id===activeThread;});
   return '<button class="btn ghost" id="askBack">← All chats</button>'
    +'<div class="card" style="margin-top:12px"><div style="display:flex;gap:10px;align-items:center">'+pipSVG(52,e.glow)+'<div><h3 style="margin:0">'+esc(th.title)+'</h3><span class="small muted">Pip only remembers this chat’s topic</span></div></div>'
-   +'<div class="chatlog" id="chatlog">'+th.msgs.map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br><button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-listen="'+mi+'">🔊 Listen</button>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">🔖 Save</button>':'')+' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-flag="'+mi+'">🚩 Flag this</button>'+(m.skill?'<br><span class="small muted">📚 Method: '+esc(m.skill)+' · Skills v1</span>':'')+(m.signature?'<br><span class="small muted">✍️ Signed: '+esc(m.agent||'Pip')+' · '+esc(m.signature)+'</span>':''):'')+'</div>'; }).join('')+'</div>'
+   +'<div class="chatlog" id="chatlog">'+th.msgs.filter(function(m){ return !isThinkingMsg(m); }).map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br><button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-listen="'+mi+'">🔊 Listen</button>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">🔖 Save</button>':'')+' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-flag="'+mi+'">🚩 Flag this</button>'+(m.skill?'<br><span class="small muted">📚 Method: '+esc(m.skill)+' · Skills v1</span>':'')+(m.signature?'<br><span class="small muted">✍️ Signed: '+esc(m.agent||'Pip')+' · '+esc(m.signature)+'</span>':''):'')+'</div>'; }).join('')+(asking[th.id]?'<div class="msg pip">Pip is thinking… 🦦</div>':'')+'</div>'
    +'<div class="chatbar"><input class="field" id="askInput" placeholder="Ask Pip anything…" maxlength="300"><button class="btn" id="askSend">Ask ➤</button></div>'
    +'<p class="small muted">Pip is a friendly practice buddy built into this app — for big questions, also check with a teacher or grown-up.</p></div>';
 }
@@ -2012,33 +2028,32 @@ function bindAsk(){
     th.msgs.push({who:'kid', text:v});
     if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
     var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
-    /* Remember THIS question's placeholder by index, not by "last
-       message": if the child asks twice quickly, the first reply
-       must replace the first placeholder — the old code only ever
-       updated the last message, so an earlier "Pip is thinking…"
-       stayed on screen forever. */
-    var phIdx=th.msgs.length;
-    th.msgs.push({who:'pip', text:'Pip is thinking… 🦦'});
+    /* The thinking bubble is UI state only (asking[threadId]): it is
+       rendered, never stored in the thread, never saved, never
+       synced. The old code stored it as a message, so a sync merge
+       resurrected it forever — the reply arrived, but "Pip is
+       thinking…" stayed on screen beside it. The reply is found by
+       this thread's own id, not the active thread, so it lands in
+       the chat it was asked in even if the child switched chats. */
+    asking[th.id]=v;
     save(); render();
     var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
     askPipLive(v, hist, e.name).then(function(live){
-      var th2=e.threads.find(function(t){return t.id===activeThread;});
-      if(!th2)return;
-      var last=th2.msgs[phIdx];
-      if(last&&last.who==='pip'&&last.text.indexOf('Pip is thinking')===0){
-        if(live){ last.text=live.reply; last.skill=live.skillName||''; last.skillId=live.skillId||''; last.agent=live.agentName||''; last.agentId=live.agentId||''; last.signature=live.signature||''; last.hintFirst=!!live.hintFirst; last.live=true; }
-        else { last.text=pipReply(v); var sk2=skillForQuestionClient(v); last.skill=sk2?sk2.name:''; last.skillId=sk2?sk2.id:''; last.live=false; }
-      }
+      delete asking[th.id];
+      var th2=e.threads.find(function(t){return t.id===th.id;});
+      if(!th2){ save(); render(); return; }
+      if(live){ th2.msgs.push({who:'pip', text:live.reply, skill:live.skillName||'', skillId:live.skillId||'', agent:live.agentName||'', agentId:live.agentId||'', signature:live.signature||'', hintFirst:!!live.hintFirst, live:true}); }
+      else { var sk2=skillForQuestionClient(v); th2.msgs.push({who:'pip', text:pipReply(v), skill:sk2?sk2.name:'', skillId:sk2?sk2.id:'', live:false}); }
       save(); render();
       var log2=document.getElementById('chatlog'); if(log2)log2.scrollTop=log2.scrollHeight;
     }).catch(function(){
-      /* Never leave "Pip is thinking…" on screen: any failure in
-         the reply path still gets Pip's built-in answer, and the
-         screen still re-renders — a failed reply must never wedge
-         Ask Pip, new chats included. */
+      /* Any failure in the reply path still gets Pip's built-in
+         answer, and the screen still re-renders — a failed reply
+         must never wedge Ask Pip, new chats included. */
       try{
-        var th3=e.threads.find(function(t){return t.id===activeThread;});
-        if(th3){ var m=th3.msgs[phIdx]; if(m&&m.who==='pip'&&m.text.indexOf('Pip is thinking')===0){ m.text=pipReply(v); m.live=false; } }
+        delete asking[th.id];
+        var th3=e.threads.find(function(t){return t.id===th.id;});
+        if(th3){ th3.msgs.push({who:'pip', text:pipReply(v), live:false}); }
         save(); render();
       }catch(e2){}
     });
