@@ -121,6 +121,12 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 @keyframes fall{to{transform:translateY(110vh) rotate(340deg)}}
 .trophy{font-size:4rem;animation:pop .5s ease infinite alternate;display:inline-block}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes fxHop{0%{transform:translateY(0) scale(1)}30%{transform:translateY(-26px) scale(1.05)}55%{transform:translateY(0) scale(1)}75%{transform:translateY(-12px)}100%{transform:translateY(0)}}
+@keyframes fxWiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-5deg) scale(1.03)}75%{transform:rotate(5deg) scale(1.03)}}
+@keyframes fxFloatUp{0%{opacity:0;transform:translateY(8px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-74px) scale(1.2)}}
+.fx-hop{animation:fxHop .95s ease}
+.fx-wiggle{animation:fxWiggle .9s ease-in-out}
+.fx-float{position:absolute;bottom:12px;animation:fxFloatUp 1.4s ease-out forwards;pointer-events:none;font-size:1.7rem;z-index:2}
 .bouncy{animation:bounce 1s ease infinite}
 @media (prefers-reduced-motion: reduce){.trophy,.bouncy,.confetti span{animation:none}}
 
@@ -2156,9 +2162,16 @@ var CARE_ACTIONS=[
  {id:'play',e:'🎾',name:'Play',msg:'Wheee! Splash loves a game of catch! 🎾'}];
 var CARE_COOLDOWN_MS=4*60*60*1000;
 var careMsg=null;
+/* What floats up from the frog when she cares for it — the reaction
+   is VISIBLE, not just words: the frog hops (feed/play) or wiggles
+   (clean) while emoji float up. careFx is UI state only, cleared
+   ~1.7s after the care so a later re-render never replays it. */
+var CARE_FX={feed:['🪰','💕','✨'],clean:['🫧','✨','💧'],play:['🎾','⭐','💕']};
+var careFx=null;
 function careReady(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; return (nowMs||Date.now())-at>=CARE_COOLDOWN_MS; }
 function careReadyInHrs(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; var left=at+CARE_COOLDOWN_MS-(nowMs||Date.now()); return left>0?Math.ceil(left/3600000):0; }
 function careAllToday(care,day){ return CARE_ACTIONS.every(function(a){ return ((care||{})[a.id]||{}).day===day; }); }
+function careTodayCount(care){ var day=todayKey(), n=0; CARE_ACTIONS.forEach(function(a){ if(((care||{})[a.id]||{}).day===day)n++; }); return n; }
 function mergeCare(a,b){ var out={}; ['feed','clean','play'].forEach(function(id){ var p=(a||{})[id], q=(b||{})[id]; if(p||q)out[id]=(p&&q)?((Date.parse(p.at||'')||0)>=(Date.parse(q.at||'')||0)?p:q):(p||q); }); return out; }
 /* Which life-cycle stage the child is LOOKING at in Critter Lab.
    UI state only — never saved, never synced. It used to be the
@@ -2191,12 +2204,17 @@ function critterHTML(){
   }).join('');
   return pageHero('🐸','Critter Lab','Watch your frog grow, then discover many more Singapore critters — pond, garden, sky and night. New visitors are spotlighted every week.','Stage '+(e.critterStage+1)+' of 4 · '+e.discoveredCritters.length+' of '+CRITTERS.length+' critters discovered')
    +'<div class="card"><h3 style="margin-top:0">🐸 Meet '+esc(e.critterName)+'!</h3>'
-   +'<img class="stageimg" src="'+STAGE_IMGS[view]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
+   +'<div style="position:relative;overflow:hidden;border-radius:14px">'
+   +'<img class="stageimg '+(careFx?(careFx.a==='clean'?'fx-wiggle':'fx-hop'):'')+'" style="height:'+(150+view*30)+'px" src="'+STAGE_IMGS[view]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
+   +(careFx?CARE_FX[careFx.a].map(function(em,i){ return '<span class="fx-float" style="left:'+[16,46,72][i]+'%;animation-delay:'+(i*0.18)+'s">'+em+'</span>'; }).join(''):'')
+   +'</div>'
+   +'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>🌱 Growing up — Stage '+(e.critterStage+1)+' of 4</b><span class="small muted">'+(e.careGrewDay===todayKey()?'Grew today! 🎉':careTodayCount(e.care)+'/3 cares today')+'</span></div>'
+   +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(careTodayCount(e.care)/3*100)+'%"></div></div>'
+   +'<p class="small muted" style="margin:6px 0 0">'+(e.careGrewDay===todayKey()?esc(e.critterName)+' grew a little today! Come back tomorrow to grow again. 🌱':(3-careTodayCount(e.care))+' more care'+((3-careTodayCount(e.care))>1?'s':'')+' today and '+esc(e.critterName)+' grows a stage! 🌱')+'</p></div>'
    +'<div class="speech" style="margin-top:14px"><b>'+esc(e.critterName)+'</b> is at the <b>'+st[1]+'</b> stage. '+st[2]+'</div>'
    +'<label class="flabel">Name your critter</label><div style="display:flex;gap:8px"><input class="field" id="critName" value="'+esc(e.critterName)+'" maxlength="16"><button class="btn" id="critSave">Save name</button></div>'
    +'<h4 style="margin:20px 0 8px">Care for '+esc(e.critterName)+' — each care earns ⭐ 1 star!</h4>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+CARE_ACTIONS.map(function(a){ var ready=careReady(e.care,a.id,Date.now()); return '<button class="btn'+(ready?'':' ghost')+'" data-care="'+a.id+'" '+(ready?'':'disabled')+'>'+a.e+' '+a.name+(ready?'':' · again in '+careReadyInHrs(e.care,a.id,Date.now())+'h')+'</button>'; }).join('')+'</div>'
-   +'<p class="small muted" style="margin:8px 0 0">Today: '+CARE_ACTIONS.map(function(a){ var done=((e.care||{})[a.id]||{}).day===todayKey(); return a.e+(done?' ✔':' ·'); }).join(' ')+' — do all three today and '+esc(e.critterName)+' grows a little! 🌱</p>'
    +(careMsg?'<div class="speech" style="margin-top:10px">'+esc(careMsg)+'</div>':'')
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
    +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
@@ -2222,7 +2240,8 @@ function bindCritter(){
     var eNow=ex(); if(!eNow||!careReady(eNow.care,id,Date.now()))return;
     if(!eNow.care)eNow.care={};
     eNow.care[id]={at:new Date().toISOString(), day:todayKey()};
-    eNow.stars+=1; careMsg=a.msg;
+    eNow.stars+=1; careMsg=a.msg; careFx={a:id, k:Date.now()};
+    setTimeout(function(){ careFx=null; }, 1700);
     /* All three cares in one day: the frog grows one stage, once a day. */
     if(careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3){ eNow.critterStage++; eNow.careGrewDay=todayKey(); careMsg=a.msg+' And look — '+eNow.critterName+' grew a little! 🌱'; sndFanfare(); } else sndCorrect();
     save(); render(); }; });
