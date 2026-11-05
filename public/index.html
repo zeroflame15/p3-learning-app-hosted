@@ -1040,6 +1040,35 @@ function uploadAfterPull(){
    before linking. */
 function unionArr(a,b){ var out=(a||[]).slice(); (b||[]).forEach(function(x){ if(out.indexOf(x)<0)out.push(x); }); return out; }
 function unionObjMax(a,b){ var o={}; Object.keys(a||{}).forEach(function(k){ o[k]=a[k]; }); Object.keys(b||{}).forEach(function(k){ o[k]=(o[k]==null?b[k]:Math.max(o[k],b[k])); }); return o; }
+/* Merge two copies of the same Ask Pip thread list. A thread that
+   exists in both copies must keep BOTH sides' messages: the server
+   copy is usually an older snapshot (greeting only), and the local
+   copy has the questions and answers since. The old code kept only
+   the first copy's version of a shared thread, so every
+   pull-then-upload / auto-pull silently wiped the messages asked
+   since the last upload — the chat looked fine while typing, then
+   "all chat gone" a moment later. Messages merge by prefix when one
+   copy is an older snapshot of the other (the normal case, and it
+   keeps repeated identical questions as separate messages), and by
+   who+text union otherwise; a real question title wins over the
+   "New chat N" placeholder. */
+function mergeThreads(aThreads,bThreads){
+  var out=(aThreads||[]).map(function(t){ return JSON.parse(JSON.stringify(t)); });
+  function sameMsg(m,n){ return m&&n&&m.who===n.who&&m.text===n.text; }
+  function isPrefix(shorter,longer){ if(shorter.length>longer.length)return false; for(var i=0;i<shorter.length;i++)if(!sameMsg(shorter[i],longer[i]))return false; return true; }
+  (bThreads||[]).forEach(function(t){
+    var i=-1; out.forEach(function(x,ix){ if(x.id===t.id)i=ix; });
+    if(i<0){ out.push(JSON.parse(JSON.stringify(t))); return; }
+    var cur=out[i], am=cur.msgs||[], bm=t.msgs||[];
+    if(isPrefix(am,bm))cur.msgs=JSON.parse(JSON.stringify(bm));
+    else if(!isPrefix(bm,am)){
+      var seen={}; am.forEach(function(m){ seen[m.who+'\u0000'+m.text]=1; });
+      bm.forEach(function(m){ var k=m.who+'\u0000'+m.text; if(!seen[k]){ seen[k]=1; cur.msgs.push(JSON.parse(JSON.stringify(m))); } });
+    }
+    if(cur.title&&cur.title.indexOf('New chat')===0&&t.title&&t.title.indexOf('New chat')!==0)cur.title=t.title;
+  });
+  return out;
+}
 function mergeExplorer(a,b){
   var e=JSON.parse(JSON.stringify(a||b));
   if(!a)return JSON.parse(JSON.stringify(b)); if(!b)return JSON.parse(JSON.stringify(a));
@@ -1078,7 +1107,7 @@ function mergeExplorer(a,b){
   var clearedAt=Math.max(Date.parse(a.threadsClearedAt||'')||0, Date.parse(b.threadsClearedAt||'')||0);
   if(clearedAt)e.threadsClearedAt=new Date(clearedAt).toISOString();
   e.deletedThreadIds=unionArr(a.deletedThreadIds,b.deletedThreadIds);
-  e.threads=(a.threads||[]).concat((b.threads||[]).filter(function(t){ return !(a.threads||[]).some(function(x){ return x.id===t.id; }); }));
+  e.threads=mergeThreads(a.threads,b.threads);
   if(e.deletedThreadIds.length)e.threads=e.threads.filter(function(t){ return e.deletedThreadIds.indexOf(t.id)<0; });
   if(clearedAt)e.threads=e.threads.filter(function(t){ var ts=parseInt(String(t.id||'').slice(1),10); return !(ts&&ts<=clearedAt-10000); });
   e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
