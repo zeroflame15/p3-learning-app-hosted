@@ -4,17 +4,27 @@
 // its built-in canned answers, so the app still works offline.
 // Env: MODEL_API_KEY (required for live answers), MODEL_ID (default muse-spark-1.3),
 //      MODEL_API_BASE (default https://api.meta.ai/v1).
-// Body: { question: string (max 500), history: [{role:'kid'|'pip', text}], name?: string, fixFlag?: boolean, skillId?: string }
-// Reply: { reply: string, live: true, agent: string, skillId: string|null, skillVersion: string }
+// Body: { question: string (max 500), history: [{role:'kid'|'pip', text}], name?: string, fixFlag?: boolean, skillId?: string, flags?: [...] }
+// Reply: { reply, live: true, agent, agentName, skillId, skillName,
+//   skillVersion, signature, traceId, hintFirst, lessonsApplied }
 // — always under 90 words, P3 level.
-// Skills, not search: the question is routed to ONE specialist agent
-// (lib/agents.js), which opens the EXACT skill method from the versioned
-// skill pack (lib/skills.js). The skill method is injected into the
-// system prompt, and the reply cites which agent + skill were used.
+//
+// How one agent thinks (video, "How one agent thinks"):
+//   question -> ONE specialist (lib/agents.js, the video's 19)
+//   -> opens the exact skill-pack method BY ID (lib/skills.js)
+//   -> thinks inside: instructions + lessons the loop learned
+//      (from flags) + guardrails it can't break (lib/think.js)
+//   -> then code decides marks/mastery/rewards (lib/rules.js —
+//      never the model, and never here)
+//   -> a hint, not the answer (for a learning question with a skill).
+// Every reply is signed and traceable: signature names the agent,
+// the skill and the pack version, plus a trace id.
+// Skills, not search: the question is routed to ONE specialist agent,
+// which opens the EXACT skill method from the versioned skill pack.
 // Models explain; code decides — this function never marks anything.
 
-const { SKILL_PACK_VERSION, skillById, skillForQuestion } = require('../lib/skills');
-const { routeQuestion } = require('../lib/agents');
+const { SKILL_PACK_VERSION } = require('../lib/skills');
+const { think, signReply, GUARDRAILS } = require('../lib/think');
 
 const BASE = process.env.MODEL_API_BASE || 'https://api.meta.ai/v1';
 const MODEL = process.env.MODEL_ID || 'muse-spark-1.3';
@@ -36,21 +46,23 @@ module.exports = async (req, res) => {
   if (!question || question.length > 500) return json(res, 400, { error: 'question required (max 500 chars)' });
   const name = typeof body?.name === 'string' && body.name.trim() ? body.name.trim().slice(0, 40) : 'the student';
   const fixFlag = body?.fixFlag === true;
-  // Route first: one specialist agent + the exact skill method.
-  const routed = routeQuestion(question);
-  const skill = (typeof body?.skillId === 'string' && skillById(body.skillId)) || routed.skill || skillForQuestion(question);
-  const agent = routed.agent;
+  const flags = Array.isArray(body?.flags) ? body.flags : [];
+  // Think first: one specialist + the exact skill method by id.
+  const thought = think(question, { skillId: typeof body?.skillId === 'string' ? body.skillId : null, flags });
+  const agent = thought.agent;
+  const skill = thought.skill;
   const history = Array.isArray(body?.history) ? body.history.slice(-MAX_HISTORY).filter(
     (h) => h && (h.role === 'kid' || h.role === 'pip') && typeof h.text === 'string'
   ) : [];
   const historyText = history.map((h) => `${h.role === 'kid' ? name : 'Pip'}: ${h.text.slice(0, 1000)}`).join('\n');
 
-  const skillMethod = skill
-    ? `Use this exact method (${SKILL_PACK_VERSION} — ${skill.name}): ${skill.method} Steps: ${skill.steps.join(' ')} Example: ${skill.example} Watch out: ${skill.watchOut}`
-    : 'No exact skill matches this question — answer simply at P3 level and say which topic it is, so a skill can be added for it.';
+  const guardrailText = GUARDRAILS.map((g) => g.rule).join(' ');
+  const hintText = thought.hintFirst
+    ? 'Give a HINT first, not the full answer: one small clue and one guiding question, so the child can work it out. Only give the full answer if they say they tried, or ask for it outright.'
+    : 'Explain simply — this is an open question, not a problem to solve, so a clear short explanation is right.';
   const system = fixFlag
-    ? 'You are Pip, a friendly otter tutor for a Singapore Primary 3 student (age 8-9). The student flagged your earlier reply as possibly wrong. Re-check it carefully, admit the mistake warmly if there was one, and give the corrected answer simply. Never be defensive. Keep it under 90 words, simple language, encouraging. ' + skillMethod
-    : `You are Pip, a friendly otter tutor for ${name}, a Singapore Primary 3 student (age 8-9). You are the ${agent.name} specialist. Answer in simple, warm language they can read themself. Keep replies under 90 words. Use Singapore P3 level ideas (English, Math, Science, Chinese). Show working for maths in short steps. If they ask in Chinese, reply in Chinese with a little pinyin help. End with one tiny follow-up question or encouragement sometimes. Never mention being an AI model. ${skillMethod}`;
+    ? `You are Pip, a friendly otter tutor for a Singapore Primary 3 student (age 8-9), acting as the Reviewer — a second model re-checking a flagged reply. The student flagged your earlier reply as possibly wrong. Re-check it carefully against the skill method below, admit the mistake warmly if there was one, and give the corrected answer simply. Never be defensive. Keep it under 90 words, simple language, encouraging. ${thought.instructions.join(' ')} Guardrails you cannot break: ${guardrailText}`
+    : `You are Pip, a friendly otter tutor for ${name}, a Singapore Primary 3 student (age 8-9). You are the ${agent.name} specialist. Answer in simple, warm language they can read themself. Keep replies under 90 words. Use Singapore P3 level ideas (English, Math, Science, Chinese). Show working for maths in short steps. If they ask in Chinese, reply in Chinese with a little pinyin help. End with one tiny follow-up question or encouragement sometimes. Never mention being an AI model. ${thought.instructions.join(' ')} ${hintText} Guardrails you cannot break: ${guardrailText}`;
   const user = fixFlag
     ? `${historyText ? `Conversation so far:\n${historyText}\n\n` : ''}The flagged reply was about: ${question}`
     : `${historyText ? `Conversation so far:\n${historyText}\n\n` : ''}${name} asks: ${question}`;
@@ -77,7 +89,15 @@ module.exports = async (req, res) => {
     const data = await r.json();
     const reply = data?.choices?.[0]?.message?.content?.trim();
     if (!reply) return json(res, 502, { error: 'empty_reply', live: false });
-    return json(res, 200, { reply: reply.slice(0, 1200), live: true, agent: agent.id, agentName: agent.name, skillId: skill ? skill.id : null, skillName: skill ? skill.name : null, skillVersion: SKILL_PACK_VERSION });
+    const signed = signReply(thought);
+    return json(res, 200, {
+      reply: reply.slice(0, 1200), live: true,
+      agent: agent.id, agentName: agent.name,
+      skillId: skill ? skill.id : null, skillName: skill ? skill.name : null,
+      skillVersion: SKILL_PACK_VERSION,
+      signature: signed.signature, traceId: signed.traceId,
+      hintFirst: signed.hintFirst, lessonsApplied: signed.lessonsApplied,
+    });
   } catch (e) {
     console.error('model api fetch failed', e);
     return json(res, 502, { error: 'model_api_unreachable', live: false });
