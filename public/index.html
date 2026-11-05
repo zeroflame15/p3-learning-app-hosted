@@ -1819,6 +1819,7 @@ function askHTML(){
     return pageHero('💬','Ask Pip','Ask about frogs, magnets, fractions, Chinese words — or say “joke” for a giggle. Each topic gets its own chat thread, so frogs never get mixed up with fractions! 📚 Skills v1 — Pip opens the exact P3 method for each topic, and every answer shows which method it used.', e.threads.length+' chat'+(e.threads.length===1?'':'s')+' so far')
      +'<div class="card"><h3 style="margin-top:0">💬 My chats with Pip</h3><p class="muted" style="font-weight:700">Tap a chat to keep talking about that topic, or start a brand-new one.</p>'
      +'<button class="btn" id="newThread">➕ New chat</button>'
+     +(e.threads.length?' <button class="btn ghost" id="clearThreads">🗑 Clear all chats</button>':'')
      +'<div style="margin-top:14px">'+(e.threads.length?e.threads.map(function(t){ return '<button class="threadrow" data-thread="'+t.id+'"><span>💬 '+esc(t.title)+'</span><span class="small muted">'+t.msgs.length+' messages</span></button>'; }).join(''):'<p class="muted" style="font-weight:700">No chats yet — start your first one!</p>')+'</div>'
      +(e.treasures.indexOf('bookmark')>=0&&e.favAnswers.length?'<h4>🔖 Golden Bookmark — saved answers</h4>'+e.favAnswers.map(function(f){return '<div class="feedback ok" style="font-weight:700">'+esc(f)+'</div>';}).join(''):'')
      +'</div>';
@@ -1835,6 +1836,10 @@ function bindAsk(){
   var nt=document.getElementById('newThread'); if(nt)nt.onclick=function(){
     e.threadSeq++; var th={id:'t'+Date.now(), title:'New chat '+(e.threadSeq), msgs:[{who:'pip', text:'Hi '+e.name+'! 🦦 I am Pip. What shall we explore in this chat? One topic per chat keeps my otter brain tidy!'}]};
     e.threads.unshift(th); activeThread=th.id; save(); render();
+  };
+  var ct=document.getElementById('clearThreads'); if(ct)ct.onclick=function(){
+    if(!window.confirm('Clear all chats with Pip? This deletes every Ask Pip chat for this explorer, on all linked devices. Your saved Golden Bookmark answers stay.'))return;
+    e.threads=[]; e.threadSeq=0; activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
   };
   document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ activeThread=b.getAttribute('data-thread'); render(); }; });
   var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
