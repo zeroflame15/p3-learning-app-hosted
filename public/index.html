@@ -1870,8 +1870,13 @@ function genRound(gameId, idx, seed){
   if(!seed){ a=3+((idx*7)%18); b=2+((idx*5)%9); }
   else { var hs=hashStr('num|'+seed+'|'+idx); a=3+(hs%18); b=2+((Math.floor(hs/32))%9); }
   var isMul=idx%2===0;
-  var ans=isMul?a*b:a+b, opts=shuffle([ans,ans+1,ans-1,ans+2].map(function(x){return String(x);}));
-  return {q:(isMul?(a+' × '+b+' = ?'):(a+' + '+b+' = ?')), o:opts, a:opts.indexOf(String(ans)), c:'', j:''};
+  var ans=isMul?a*b:a+b;
+  /* The options must be shuffled ONCE per round, deterministically:
+     gameHTML re-generates the round on every render, and the old
+     Math.random shuffle moved the balloons after every tap — the
+     answer the child picked visibly jumped to another balloon, and
+     the right/wrong highlight landed on the wrong one. */
+  return optsShuffled({q:(isMul?(a+' × '+b+' = ?'):(a+' + '+b+' = ?')), o:[String(ans),String(ans+1),String(ans-1),String(ans+2)], a:0, c:'', j:''}, hashStr('numo|'+seed+'|'+idx));
 }
 function startGame(id){
   var e=ex(); if(!e.playFresh)e.playFresh={};
