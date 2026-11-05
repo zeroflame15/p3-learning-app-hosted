@@ -1049,7 +1049,16 @@ function uploadAfterPull(){
           if(!DB.explorers||!DB.explorers.length){ DB=JSON.parse(JSON.stringify(j.data)); ensureSyncCode(); }
           else { DB=mergeFamilyDB(DB, j.data); ensureSyncCode(); }
           DB.updatedAt=j.updatedAt||DB.updatedAt||null;
-          if(JSON.stringify(DB)!==before)saveLocal();
+          if(JSON.stringify(DB)!==before){
+            saveLocal();
+            /* The merge REPLACES the DB object, so every live closure
+               still holding the old explorer (Ask Pip's send handler
+               included) now points at a detached copy: a question or
+               reply written through it is silently lost when save()
+               serialises the new DB. Re-render when safe so all
+               handlers re-bind to the fresh explorer. */
+            if(safeToRender())render();
+          }
         }
       }catch(e){}
       done();
@@ -2040,7 +2049,12 @@ function bindAsk(){
   var send=document.getElementById('askSend');
   function doSend(){
     var inp=document.getElementById('askInput'); var v=inp.value.trim(); if(!v)return;
-    var th=e.threads.find(function(t){return t.id===activeThread;});
+    /* Resolve the thread from the CURRENT database, not the explorer
+       captured when this page was rendered: a sync merge replaces
+       the DB object, and a thread found in the old detached copy
+       would take the question (and the reply) down with it. */
+    var eNow=ex(); if(!eNow)return;
+    var th=eNow.threads.find(function(t){return t.id===activeThread;});
     /* If the active thread no longer exists (e.g. it was cleared on
        another device), do not crash silently on th.msgs — send the
        user back to the chat list instead of doing nothing. */
@@ -2058,9 +2072,12 @@ function bindAsk(){
     asking[th.id]=v;
     save(); render();
     var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
-    askPipLive(v, hist, e.name).then(function(live){
+    askPipLive(v, hist, eNow.name).then(function(live){
       delete asking[th.id];
-      var th2=e.threads.find(function(t){return t.id===th.id;});
+      /* Fresh explorer again: a sync merge may have replaced the DB
+         while Pip was answering, and the reply must land in the
+         live database, not the detached copy. */
+      var eLive=ex(); var th2=eLive?eLive.threads.find(function(t){return t.id===th.id;}):null;
       if(!th2){ save(); render(); return; }
       if(live){ th2.msgs.push({who:'pip', text:live.reply, skill:live.skillName||'', skillId:live.skillId||'', agent:live.agentName||'', agentId:live.agentId||'', signature:live.signature||'', hintFirst:!!live.hintFirst, live:true}); }
       else { var sk2=skillForQuestionClient(v); th2.msgs.push({who:'pip', text:pipReply(v), skill:sk2?sk2.name:'', skillId:sk2?sk2.id:'', live:false}); }
@@ -2072,7 +2089,7 @@ function bindAsk(){
          must never wedge Ask Pip, new chats included. */
       try{
         delete asking[th.id];
-        var th3=e.threads.find(function(t){return t.id===th.id;});
+        var eLive2=ex(); var th3=eLive2?eLive2.threads.find(function(t){return t.id===th.id;}):null;
         if(th3){ th3.msgs.push({who:'pip', text:pipReply(v), live:false}); }
         save(); render();
       }catch(e2){}
