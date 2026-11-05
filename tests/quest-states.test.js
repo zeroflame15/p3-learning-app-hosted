@@ -115,3 +115,46 @@ test('replay: a completed-today quest or game can start again from its Replay bu
   const home = fnBody('function homeHTML(){');
   assert.ok(home.includes('↻ Replay this quest'), 'Home card offers Replay for today’s finished quest');
 });
+
+/* --- Replay follow-up fixes (seen live 2026-11-05) -------------------
+   A finished run's progress came back from the server on merge, so
+   Replay reopened the finished run at its last question; finishing
+   it again re-awarded 5 stars (5 -> 10 for one quest). */
+
+const mergeExplorer = eval(
+  fnText('function unionArr(a,b){') + '\n' +
+  fnText('function unionObjMax(a,b){') + '\n' +
+  fnText('function unionObjLatest(a,b){') + '\n' +
+  fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
+  '(' + fnText('function mergeExplorer(a,b){') + ')'
+);
+
+test('merge drops stale original-run progress for a completed topic, keeps a fresh replay in progress', () => {
+  const server = explorer({ completedDay: { t1: TODAY, t2: TODAY }, progress: {
+    t1: { idx: 4, score: 4, pool: ['a'], fresh: false },
+    t2: { idx: 1, score: 1, pool: ['b'], fresh: true },
+  }});
+  const local = explorer({ completedDay: { t1: TODAY, t2: TODAY }, progress: {} });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.progress.t1, undefined, 'stale original-run progress is dropped');
+  assert.ok(merged.progress.t2 && merged.progress.t2.idx === 1, 'fresh replay progress survives');
+});
+
+test('merge keeps unfinished original-run progress when the topic was never completed', () => {
+  const server = explorer({ completedDay: {}, progress: { t1: { idx: 2, score: 2, pool: ['a'], fresh: false } } });
+  const local = explorer({ completedDay: {}, progress: {} });
+  const merged = mergeExplorer(server, local);
+  assert.ok(merged.progress.t1 && merged.progress.t1.idx === 2, 'unfinished progress is kept');
+});
+
+test('startQuestFlow discards stale original-run progress for a completed-today quest', () => {
+  const startQ = fnBody('function startQuestFlow(topicId){');
+  assert.ok(startQ.includes("!p.fresh&&e.completedDay&&e.completedDay[topicId]"), 'stale progress is detected');
+  assert.ok(startQ.includes('delete e.progress[topicId]'), 'stale progress is discarded before starting');
+});
+
+test('finishRound awards stars only on the first completion of the day', () => {
+  const finish = fnBody('function finishRound(t){');
+  assert.ok(finish.includes('var firstToday=e.completedDay[cur.topicId]!==todayKey();'), 'first-today is computed before stamping');
+  assert.ok(finish.includes('if(firstToday)e.stars+=cur.score;'), 'stars are gated on first completion today');
+});

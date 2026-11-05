@@ -43,3 +43,40 @@ test('offline fallback answers plant, butterfly and verb questions for real', ()
   assert.ok(clientSrc.includes('metamorphosis'), 'butterfly fallback gives metamorphosis');
   assert.ok(clientSrc.includes('action word'), 'verb fallback defines a verb');
 });
+
+/* --- Ask Pip wedge hardening (seen live 2026-11-05) -----------------
+   A plant question hung on "Pip is thinking…" for 7+ minutes and
+   wedged the whole Ask Pip screen (new chats and Clear all chats
+   went inert) while Gemini returned 503s. The call must never
+   reject and never hang. */
+
+test('askPipLive never rejects and never hangs: hard race timeout plus abort', () => {
+  const start = clientSrc.indexOf('async function askPipLive(');
+  assert.ok(start >= 0, 'askPipLive found');
+  const fn = clientSrc.slice(start, clientSrc.indexOf('\nfunction pipReply(', start));
+  assert.ok(fn.includes('Promise.race([work, hardTimeout(25000)])'), '25s hard race bounds the call');
+  assert.ok(fn.includes('function hardTimeout(ms)'), 'race timeout helper exists');
+  assert.ok(fn.indexOf('skillForQuestionClient(text)') > fn.indexOf('try{'), 'skill lookup is inside the try');
+  assert.ok(fn.includes('catch(e){ return null; }'), 'failures resolve to null, never reject');
+});
+
+test('doSend always clears the placeholder, even if the reply path throws', () => {
+  assert.ok(clientSrc.includes('}).catch(function(){'), 'doSend has a catch on the reply promise');
+  const afterCatch = clientSrc.slice(clientSrc.indexOf('}).catch(function(){'));
+  assert.ok(afterCatch.includes("m.text=pipReply(v)"), 'catch replaces the placeholder with the built-in answer');
+  assert.ok(afterCatch.includes('save(); render();'), 'catch still re-renders so the screen never wedges');
+});
+
+test('server retries once on a transient model failure', () => {
+  assert.ok(askPipSrc.includes('for (let attempt = 0; attempt < 2; attempt++)'), 'two attempts');
+  assert.ok(askPipSrc.includes('[502, 503, 504].includes(r.status)'), 'retries only transient statuses');
+  assert.ok(askPipSrc.includes('await sleep(1500)'), 'waits 1.5s between attempts');
+});
+
+test('the app shell is never served from a stale cache', () => {
+  const vercel = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+  const noCache = (vercel.headers || []).filter((h) =>
+    (h.source === '/' || h.source === '/index.html') &&
+    (h.headers || []).some((x) => x.key === 'Cache-Control' && x.value.includes('no-cache') && x.value.includes('no-store')));
+  assert.equal(noCache.length, 2, 'both / and /index.html send no-cache, no-store');
+});
