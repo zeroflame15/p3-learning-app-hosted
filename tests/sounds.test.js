@@ -55,3 +55,20 @@ test('other taps keep their sounds: tiles still pop, correct answers still chime
   assert.ok(html.includes('function sndCorrect(){'), 'correct-answer chime untouched');
   assert.ok(html.includes('function sndFanfare(){'), 'quest fanfare untouched');
 });
+
+test('keying the 3 picture-code animals plays the sidebar twinkle, not the pop', () => {
+  // New-explorer creation taps ([data-pic]) and returning-explorer
+  // login taps ([data-lpic]) both use the mystery twinkle Bryan
+  // approved for the sidebar (2026-11-05).
+  const picTap = html.match(/document\.querySelectorAll\('\[data-pic\]'\)\.forEach\(function\(b\)\{ b\.onclick=function\(\)\{[^}]*\}/);
+  assert.ok(picTap, 'new-explorer picture tap found');
+  assert.ok(picTap[0].includes('sndMystery()'), 'new-explorer picture tap plays the twinkle');
+  assert.ok(!picTap[0].includes('sndPop()'), 'new-explorer picture tap no longer pops');
+  const loginTap = html.slice(html.indexOf('function showDoorCode(){'));
+  const loginTapBody = loginTap.slice(loginTap.indexOf('[data-lpic]'), loginTap.indexOf('[data-lpic]') + 200);
+  assert.ok(loginTapBody.includes('sndMystery()'), 'login picture tap plays the twinkle');
+  assert.ok(!loginTapBody.includes('sndPop()'), 'login picture tap no longer pops');
+  // The grand entrance on a correct code, and the wrong-code sound, stay.
+  assert.ok(loginTap.includes('sndEntrance()'), 'a correct code still plays the entrance');
+  assert.ok(loginTap.includes('sndWrong()'), 'a wrong code still plays the wrong sound');
+});
