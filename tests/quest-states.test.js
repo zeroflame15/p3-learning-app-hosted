@@ -158,3 +158,11 @@ test('finishRound awards stars only on the first completion of the day', () => {
   assert.ok(finish.includes('var firstToday=e.completedDay[cur.topicId]!==todayKey();'), 'first-today is computed before stamping');
   assert.ok(finish.includes('if(firstToday)e.stars+=cur.score;'), 'stars are gated on first completion today');
 });
+
+test('replay results say honestly that no extra stars were earned', () => {
+  const finish = fnBody('function finishRound(t){');
+  assert.ok(finish.includes('cur.starsEarned=firstToday?cur.score:0;'), 'the run records how many stars it actually earned');
+  const done = fnBody('function quizDoneHTML(t){');
+  assert.ok(done.includes('cur.starsEarned'), 'results screen reads the recorded stars');
+  assert.ok(done.includes('no extra stars this time'), 'a replay says plainly that no extra stars were earned');
+});
