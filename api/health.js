@@ -1,4 +1,9 @@
 // GET /api/health — what is configured on this deployment (no secrets).
+// Also reports the under-the-hood wiring: skill pack version, specialist
+// agent count, and whether the flag log is configured.
+const { SKILL_PACK_VERSION } = require('../lib/skills');
+const { AGENTS, liveAgents, placeholderAgents } = require('../lib/agents');
+
 module.exports = async (req, res) => {
   res.status(200).setHeader('Content-Type', 'application/json');
   res.json({
@@ -6,5 +11,10 @@ module.exports = async (req, res) => {
     livePip: Boolean(process.env.MODEL_API_KEY),
     model: process.env.MODEL_ID || 'muse-spark-1.3',
     progressSync: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY),
+    skillPack: SKILL_PACK_VERSION,
+    agents: AGENTS.length,
+    liveAgents: liveAgents().length,
+    placeholderAgents: placeholderAgents().map((a) => a.id),
+    flagLog: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SECRET_KEY),
   });
 };
