@@ -1468,7 +1468,7 @@ function bindDoor(){
   if(back)back.onclick=function(){ doorMode='pick'; doorSel=null; doorCode=[]; render(); };
   if(doorMode==='create'){
     renderBubbles(document.getElementById('newBubbles'), doorCode);
-    document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndPop(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
+    document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndMystery(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
     document.getElementById('createBtn').onclick=function(){
       var name=document.getElementById('newName').value.trim();
       if(!name){ toast('Pick a magic name first!'); return; }
@@ -1490,7 +1490,7 @@ function showDoorCode(){
    +'<button class="btn ghost" id="loginCancel">Cancel</button>';
   renderBubbles(document.getElementById('loginBubbles'), doorCode);
   document.querySelectorAll('[data-lpic]').forEach(function(b){ b.onclick=function(){
-    sndPop(); doorCode.push(b.getAttribute('data-lpic'));
+    sndMystery(); doorCode.push(b.getAttribute('data-lpic'));
     renderBubbles(document.getElementById('loginBubbles'), doorCode);
     if(doorCode.length===3){
       if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; sndEntrance(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
