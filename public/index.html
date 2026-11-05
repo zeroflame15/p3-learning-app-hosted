@@ -1858,6 +1858,9 @@ async function askPipLive(text, history, name){
 function pipReply(text){
   var s=text.toLowerCase();
   if(s.indexOf('frog')>=0||s.indexOf('tadpole')>=0)return 'Great frog question! 🐸 A frog starts as an egg in water, hatches into a tadpole with gills and a tail, grows legs to become a froglet, and finally a frog that breathes with lungs. My otter cousins cheer them on from the pond bank!';
+  if(s.indexOf('butterfly')>=0||s.indexOf('caterpillar')>=0||s.indexOf('chrysalis')>=0)return 'Butterfly magic! 🦋 A butterfly starts as a tiny egg on a leaf, hatches into a hungry caterpillar, wraps itself in a chrysalis, and pops out with beautiful wings! This big change is called metamorphosis.';
+  if(s.indexOf('plant')>=0||s.indexOf('seed')>=0||s.indexOf('flower')>=0)return 'Plant power! 🌱 A plant starts as a seed, sprouts roots and a little shoot, grows leaves and a stem, then makes flowers — and the flowers make new seeds, so the cycle starts again. Plants make their own food using sunlight, water and air!';
+  if(s.indexOf('verb')>=0)return 'A verb is an action word! 🏃 Run, jump, swim, eat, read — those are all verbs because they tell you what someone or something does. In "Pip swims in the pond", swims is the verb. Can you name three more action words?';
   if(s.indexOf('magnet')>=0)return 'Magnet magic! 🧲 Magnets attract iron and steel — like nails and paperclips — but not plastic, wood or rubber. Same poles push away (repel), opposite poles pull together (attract). Try testing things at home like a real scientist!';
   if(s.indexOf('fraction')>=0||s.indexOf('half')>=0||s.indexOf('quarter')>=0)return 'Fractions are fair sharing! 🍕 The bottom number is how many equal pieces there are, the top number is how many you have. Sneaky secret: fewer pieces means BIGGER pieces — 1/2 of a cake beats 1/4!';
   if(s.indexOf('joke')>=0)return JOKES[Math.floor(Math.random()*JOKES.length)]+' 😂 Want another? Just ask!';
@@ -1866,12 +1869,18 @@ function pipReply(text){
   if(s.indexOf('story')>=0)return 'Once upon a splash, a little otter named Pip found a glowing shell in the river. Inside was not treasure, but a note: “The best treasure is a question.” So Pip asked questions all day long — and that, explorer, is how brains grow. The End! 🐚';
   if(s.indexOf('tired')>=0||s.indexOf('sad')>=0||s.indexOf('hard')>=0)return 'Sending you a big otter hug. 🦦💛 Hard is not bad — hard is where learning lives. Take three slow breaths with me… in… out… Now pick the smallest next step. You have got this, and I am right here.';
   if(s.indexOf('mrt')>=0||s.indexOf('plus')>=0||s.indexOf('add')>=0||s.indexOf('times')>=0)return 'Maths tip from Pip! 🚇 For adding, make a round number first (23 + 7 = 30, then add the rest). For times tables, count in groups and sing them — 7 × 8 = 56 is the famous tricky one. Practise a little every day!';
-  return 'Ooh, interesting question! 🤔 Here is my otter wisdom: break it into tiny pieces, like a fish into bites. First tell me a little more — is it about animals, magnets, numbers, words, or Chinese? I will dive right in!';
+  /* Last resort, used only when the live answer fails: if a skill
+     method matches, answer with it instead of deflecting — a child
+     who asked about plants should get a plant answer, not "tell me
+     more". */
+  var sk=skillForQuestionClient(text);
+  if(sk)return 'Here is what Pip knows! 🦦 '+sk.method+' Try asking me again in a moment — I will dive deeper then!';
+  return 'Ooh, interesting question! 🤔 Pip is still learning about that one — try asking about frogs, butterflies, plants, magnets, fractions, or times tables. Or ask me again in a moment!';
 }
 function askHTML(){
   var e=ex();
   if(!activeThread||!e.threads.find(function(t){return t.id===activeThread;})){
-    return pageHero('💬','Ask Pip','Ask about frogs, magnets, fractions, Chinese words — or say “joke” for a giggle. Each topic gets its own chat thread, so frogs never get mixed up with fractions! 📚 Skills v1 — Pip opens the exact P3 method for each topic, and every answer shows which method it used.', e.threads.length+' chat'+(e.threads.length===1?'':'s')+' so far')
+    return pageHero('💬','Ask Pip','Ask Pip anything — English, Maths, Science, Chinese, or just “tell me a joke”. Pip answers simply, like a friendly tutor, and sums are always worked out exactly. Each topic gets its own chat thread, so frogs never get mixed up with fractions!', e.threads.length+' chat'+(e.threads.length===1?'':'s')+' so far')
      +'<div class="card"><h3 style="margin-top:0">💬 My chats with Pip</h3><p class="muted" style="font-weight:700">Tap a chat to keep talking about that topic, or start a brand-new one.</p>'
      +'<button class="btn" id="newThread">➕ New chat</button>'
      +(e.threads.length?' <button class="btn ghost" id="clearThreads">🗑 Clear all chats</button>':'')
@@ -1919,13 +1928,19 @@ function bindAsk(){
     th.msgs.push({who:'kid', text:v});
     if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
     var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
+    /* Remember THIS question's placeholder by index, not by "last
+       message": if the child asks twice quickly, the first reply
+       must replace the first placeholder — the old code only ever
+       updated the last message, so an earlier "Pip is thinking…"
+       stayed on screen forever. */
+    var phIdx=th.msgs.length;
     th.msgs.push({who:'pip', text:'Pip is thinking… 🦦'});
     save(); render();
     var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
     askPipLive(v, hist, e.name).then(function(live){
       var th2=e.threads.find(function(t){return t.id===activeThread;});
       if(!th2)return;
-      var last=th2.msgs[th2.msgs.length-1];
+      var last=th2.msgs[phIdx];
       if(last&&last.who==='pip'&&last.text.indexOf('Pip is thinking')===0){
         if(live){ last.text=live.reply; last.skill=live.skillName||''; last.skillId=live.skillId||''; last.agent=live.agentName||''; last.agentId=live.agentId||''; last.signature=live.signature||''; last.hintFirst=!!live.hintFirst; last.live=true; }
         else { last.text=pipReply(v); var sk2=skillForQuestionClient(v); last.skill=sk2?sk2.name:''; last.skillId=sk2?sk2.id:''; last.live=false; }
