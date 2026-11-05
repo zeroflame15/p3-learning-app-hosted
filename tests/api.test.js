@@ -40,9 +40,13 @@ test('ask-pip: no key -> 503, empty question -> 400, live reply cites agent + sk
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.live, true);
     assert.match(res.body.reply, /56/);
-    assert.equal(res.body.agent, 'maths-tutor');
+    assert.equal(res.body.agent, 'kix-tutor');
     assert.equal(res.body.skillId, 'times-tables');
     assert.equal(res.body.skillVersion, 'skills-v1');
+    // Every reply is signed and traceable (video: "every reply signed").
+    assert.match(res.body.signature, /^pip:kix-tutor:times-tables:skills-v1:t/);
+    assert.ok(res.body.traceId);
+    assert.equal(res.body.hintFirst, true);
   } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
 });
 
@@ -78,8 +82,70 @@ test('health: reports configuration without secrets', async () => {
   assert.equal(res.body.model, 'muse-spark-1.3');
   assert.equal(res.body.skillPack, 'skills-v1');
   assert.equal(res.body.agents, 19);
-  assert.equal(res.body.liveAgents, 15);
-  assert.deepEqual(res.body.placeholderAgents, ['voice-coach', 'image-guide', 'vision-guide', 'open-model']);
+  assert.equal(res.body.liveAgents, 11);
+  assert.equal(res.body.readyAgents, 2);
+  assert.deepEqual(res.body.placeholderAgents, ['content-curator', 'home-reader', 'outing-scout', 'sidekick-studio', 'talk-to-kix', 'whos-who']);
+});
+
+test('ask-pip: video example routes to Kix Tutor with the P3 Science skill by id', async () => {
+  process.env.MODEL_API_KEY = 'test-key';
+  delete require.cache[require.resolve('../api/ask-pip')];
+  const ask = require('../api/ask-pip');
+  const origFetch = global.fetch;
+  let sent = null;
+  global.fetch = async (_url, init) => {
+    sent = JSON.parse(init.body);
+    return { ok: true, json: async () => ({ choices: [{ message: { content: 'A tadpole grows legs and loses its tail — that is how it becomes a froglet. What changes next?' } }] }) };
+  };
+  try {
+    const res = mockRes();
+    await ask(mockReq('POST', { question: "Why can't Pip hop yet?" }), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.agent, 'kix-tutor');
+    assert.equal(res.body.skillId, 'life-cycle-frog');
+    // The exact skill method is in the prompt, and the reply is a
+    // hint, not the answer: the prompt must say so.
+    assert.match(sent.messages[0].content, /life-cycle-frog/);
+    assert.match(sent.messages[0].content, /HINT first/);
+    assert.match(sent.messages[0].content, /Guardrails/);
+  } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
+});
+
+test('flag: Reviewer + Judge run on every flag; a corrected flag ships', async () => {
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  delete process.env.SUPABASE_SECRET_KEY;
+  process.env.MODEL_API_KEY = 'test-key';
+  delete require.cache[require.resolve('../api/flag')];
+  const flag = require('../api/flag');
+  const origFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({ choices: [{ message: { content: 'CONFIRMED — Pip was wrong. 7 x 8 is 56.' } }] }),
+  });
+  try {
+    const res = mockRes();
+    await flag(mockReq('POST', { question: '7 x 8?', pipAnswer: '54', correction: '56' }), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.loop.review.verdict, 'confirmed-mistake');
+    assert.equal(res.body.loop.review.checkedBy, 'second-model-pass');
+    assert.equal(res.body.loop.proof.proven, true);
+    assert.equal(res.body.loop.judge.verdict, 'ship');
+    assert.equal(res.body.loop.becomesTest, true);
+  } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
+});
+
+test('flag: without a model key the Reviewer queues and the Judge holds', async () => {
+  delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  delete process.env.SUPABASE_SECRET_KEY;
+  delete process.env.MODEL_API_KEY;
+  delete require.cache[require.resolve('../api/flag')];
+  const flag = require('../api/flag');
+  const res = mockRes();
+  await flag(mockReq('POST', { question: '7 x 8?', pipAnswer: '54', correction: '56' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.loop.review.checkedBy, 'queued');
+  assert.equal(res.body.loop.judge.verdict, 'hold');
+  assert.equal(res.body.loop.becomesTest, false);
 });
 
 test('flag: unconfigured server still returns the test case; bad flag -> 400', async () => {

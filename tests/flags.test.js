@@ -9,7 +9,7 @@ test('a flag generates a complete regression test case', () => {
     question: 'What is 7 x 8?',
     pipAnswer: '7 x 8 = 54',
     correction: '7 x 8 = 56',
-    agentId: 'maths-tutor',
+    agentId: 'kix-tutor',
     live: true,
   });
   assert.match(tc.id, /^flag-/);
@@ -17,7 +17,7 @@ test('a flag generates a complete regression test case', () => {
   assert.equal(tc.pipAnswer, '7 x 8 = 54');
   assert.equal(tc.correction, '7 x 8 = 56');
   assert.equal(tc.skillId, 'times-tables');
-  assert.equal(tc.agentId, 'maths-tutor');
+  assert.equal(tc.agentId, 'kix-tutor');
   assert.equal(tc.status, 'open');
   assert.equal(tc.regression.assertNot, '7 x 8 = 54');
   assert.equal(tc.regression.assertSkillId, 'times-tables');
