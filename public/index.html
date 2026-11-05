@@ -211,6 +211,8 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .questcard .progressbar{background:#e8e2d0;border-color:#e8e2d0}
 .questcard .progressbar>div{background:#57b06a}
 .questcard .btn{background:#57b06a;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
+.questcard.done,.gamecard.done{opacity:.55;filter:grayscale(.55)}
+.btn:disabled{cursor:not-allowed;opacity:.75}
 .swapbox{border-radius:16px;padding:10px 8px;text-align:center;font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:.92rem;border:0;width:100%}
 .stageimg{width:100%;height:170px;object-fit:cover;border-radius:14px;display:block}
 .cardimg{width:100%;height:144px;object-fit:cover;display:block}
@@ -310,35 +312,46 @@ function sndCorrect(){ [523,659,784,1047].forEach(function(f,i){ tone(f,i*0.07,0
 function sndWrong(){ tone(220,0,0.18,'sine',0.1); tone(196,0.12,0.22,'sine',0.1); }
 function sndFanfare(){ [523,659,784,1047,784,1047,1319].forEach(function(f,i){ tone(f,i*0.11,0.3,'triangle',0.18); }); [262,330,392].forEach(function(f){ tone(f,0.75,0.7,'sine',0.08); }); }
 function sndPop(){ tone(880,0,0.09,'square',0.06); }
-/* Forest Morning — the ONLY background sound: soft pad + gentle birdsong chirps */
-var forestOn=false, forestNodes=[], forestTimer=null;
-function startForest(){
-  var ac=audio(); if(!ac)return;
-  stopForest(true);
-  var master=ac.createGain(); master.gain.value=0.14; master.connect(ac.destination); forestNodes.push(master);
-  [196,246.9,293.7].forEach(function(f){
-    var o=ac.createOscillator(), g=ac.createGain();
-    o.type='sine'; o.frequency.value=f; g.gain.value=0.05;
-    var lfo=ac.createOscillator(), lg=ac.createGain(); lfo.frequency.value=0.07; lg.gain.value=0.02;
-    lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(master); o.start(); lfo.start();
-    forestNodes.push(o,lfo);
-  });
-  function chirp(){
-    if(!forestOn)return;
-    var base=2200+Math.random()*1400, t=ac.currentTime;
-    for(var i=0;i<3;i++){
-      var o=ac.createOscillator(), g=ac.createGain(); o.type='sine';
-      o.frequency.setValueAtTime(base,t+i*0.16); o.frequency.exponentialRampToValueAtTime(base*1.25,t+i*0.16+0.07);
-      g.gain.setValueAtTime(0.0001,t+i*0.16); g.gain.exponentialRampToValueAtTime(0.05,t+i*0.16+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.16+0.13);
-      o.connect(g); g.connect(master); o.start(t+i*0.16); o.stop(t+i*0.16+0.15);
-    }
-    forestTimer=setTimeout(chirp, 2600+Math.random()*3800);
-  }
-  forestOn=true; chirp();
+/* Mystery selection: a soft, low, slightly eerie shimmer for the
+   sidebar (and bottom bar) — G, then a minor third above it, with
+   a faint high twinkle. Short, so navigation still feels instant. */
+function sndMystery(){
+  tone(110,0,0.7,'sine',0.06);
+  tone(196,0,0.55,'sine',0.12); tone(233.08,0.12,0.6,'sine',0.1);
+  tone(466.16,0.24,0.45,'triangle',0.05);
 }
-function stopForest(silent){
-  forestOn=false; if(forestTimer)clearTimeout(forestTimer);
-  forestNodes.forEach(function(n){ try{n.stop&&n.stop()}catch(e){} try{n.disconnect()}catch(e){} }); forestNodes=[];
+/* Magical grand entrance: a warm low pad, then a rising sparkle
+   arpeggio, then high twinkles and a soft shimmer chord — the
+   Grand Door opening. About 1.4 seconds. */
+function sndEntrance(){
+  tone(261.63,0,1.4,'sine',0.07); tone(329.63,0,1.4,'sine',0.05);
+  [523.25,659.25,783.99,1046.5,1318.5].forEach(function(f,i){ tone(f,i*0.09,0.5,'triangle',0.13); });
+  tone(1567.98,0.45,0.35,'sine',0.07); tone(2093,0.55,0.35,'sine',0.06); tone(2637,0.65,0.4,'sine',0.05);
+  [1046.5,1318.5,1568].forEach(function(f){ tone(f,0.75,0.7,'sine',0.05); });
+}
+/* Vibe Zone — two real audio tracks, played on loop.
+   Forest Morning (the old synthesised pad + chirps) was removed
+   2026-11-05 at Bryan's request and replaced with these two files
+   he sent: a background-music track and jungle birdsong. */
+var VIBES=[
+ {id:'bg-music', name:'Background Music', icon:'🎵', file:'assets/vibe-background-music.mp3', blurb:'The gentle tune Bryan picked — soft and steady for study time.'},
+ {id:'jungle-birds', name:'Jungle Birds', icon:'🐦', file:'assets/vibe-jungle-birds.mp3', blurb:'Birdsong in the jungle — chirps and rustles, like a morning in the trees.'}
+];
+var vibeId=null, vibeAudio=null, lastVibeId='bg-music';
+function vibeById(id){ return VIBES.find(function(v){ return v.id===id; })||null; }
+function vibeName(){ var v=vibeById(vibeId); return v?v.name:null; }
+function startVibe(id){
+  var v=vibeById(id)||VIBES[0]; if(!v)return;
+  stopVibe(true);
+  try{
+    var a=new Audio(v.file); a.loop=true; a.volume=0.5;
+    var p=a.play(); if(p&&p.catch)p.catch(function(){});
+    vibeAudio=a; vibeId=v.id; lastVibeId=v.id;
+  }catch(e){ vibeAudio=null; vibeId=null; }
+}
+function stopVibe(silent){
+  if(vibeAudio){ try{ vibeAudio.pause(); }catch(e){} vibeAudio=null; }
+  vibeId=null;
   if(!silent)renderTop();
 }
 /* Pip read-aloud: warmest available voice, sentence by sentence */
@@ -916,7 +929,7 @@ var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15'];
    (voice / image / SAM / vision / web search / files) have no
    key yet. No location tracking, no camera — ever.
    ============================================================ */
-var SKILL_PACK = {"version":"skills-v1","skills":[{"id":"vocab-story","topicId":"eng-story","subject":"English","name":"Story Words","method":"Read the whole sentence, then pick the word that fits what happened.","keywords":["story","word","vocabulary","hungry","tired","friendly","adjective"]},{"id":"tenses","topicId":"eng-tense","subject":"English","name":"Tenses Trek","method":"Find the time word first (yesterday / every day / tomorrow / now), then pick the verb for that time.","keywords":["tense","yesterday","tomorrow","verb","past","present","future","went","brushes","goes"]},{"id":"story-next","topicId":"eng-story2","subject":"English","name":"Finish the Story","method":"Pick the next sentence that is kind, sensible and keeps the story going.","keywords":["tell me a story","story","next","author","ending","sentence"]},{"id":"punctuation","topicId":"eng-punct","subject":"English","name":"Punctuation Pond","method":"Every sentence starts with a capital letter and ends with the right mark: full stop for telling, ? for asking, ! for strong feeling.","keywords":["punctuation","capital","full stop","question mark","comma","sentence","sentence is correct"]},{"id":"add-subtract","topicId":"math-mrt","subject":"Maths","name":"MRT Numbers — Add & Subtract","method":"Make a round number first, then add the rest. For subtraction, count up from the smaller number.","keywords":["add","plus","subtract","minus","mrt","train","stations","change","total"]},{"id":"money-change","topicId":"math-hawker","subject":"Maths","name":"Hawker Change","method":"Add the dollars first, then the cents. 50 cents + 50 cents = $1.","keywords":["money","change","hawker","chicken rice","dollar","cents","price","cost","$","total"]},{"id":"times-tables","topicId":"math-ntuc","subject":"Maths","name":"Times Tables","method":"Count in groups, and learn the famous tricky ones by heart: 7 × 8 = 56, 6 × 7 = 42.","keywords":["times","multiply","multiplication","table","7 x 8","7 × 8","groups","bags"]},{"id":"fractions","topicId":"math-frac","subject":"Maths","name":"Fractions Feast","method":"Bottom number = how many equal pieces. Top number = how many you have. Fewer pieces = bigger pieces.","keywords":["fraction","half","quarter","pizza","slice","share"]},{"id":"life-cycle-frog","topicId":"sci-frog","subject":"Science","name":"Frog Life Cycle","method":"Egg → tadpole → froglet → frog. Each stage lives differently.","keywords":["frog","tadpole","froglet","egg","amphibian","hop"]},{"id":"life-cycle-butterfly","topicId":null,"subject":"Science","name":"Butterfly Life Cycle","method":"Egg → caterpillar (larva) → chrysalis (pupa) → butterfly. This is metamorphosis — a big change of body.","keywords":["butterfly","caterpillar","chrysalis","pupa","metamorphosis","larva","cocoon","moth"]},{"id":"magnets","topicId":"sci-magnet","subject":"Science","name":"Magnet Lab","method":"Test with a real magnet. Magnets attract iron and steel only. Same poles repel, opposite poles attract.","keywords":["magnet","attract","repel","pole","iron","steel","paperclip"]},{"id":"plants","topicId":"sci-plants","subject":"Science","name":"Garden & Plants","method":"Plants make food with sunlight, water and air. Roots drink, leaves cook.","keywords":["plant","photosynthesis","leaf","root","seed","flower","sunlight","bee"]},{"id":"chinese-listening","topicId":"chi-listen","subject":"Chinese","name":"听一听 Listening","method":"Listen first, say it out loud, then pick. Your ears teach your brain.","keywords":["chinese","华文","listen","听","妈妈","mama","baba","pinyin","苹果"]},{"id":"chinese-family","topicId":"chi-family","subject":"Chinese","name":"家庭 Family Words","method":"Learn family words in pairs: big brother 哥哥, little brother 弟弟, big sister 姐姐, little sister 妹妹.","keywords":["family","哥哥","弟弟","姐姐","妹妹","奶奶","爷爷","家庭","mama","baba","mother","father","brother","sister"]},{"id":"chinese-school","topicId":"chi-school","subject":"Chinese","name":"学校 School Day","method":"School words + the weekly 听写 routine: Tue learn, Wed test, Fri redo missed, Sun recap.","keywords":["school","学校","老师","听写","spelling","书包","读书","同学"]},{"id":"spelling-lscwc","topicId":null,"subject":"English","name":"Spelling — Look, Say, Cover, Write, Check","method":"Look–Say–Cover–Write–Check, one word at a time. Never copy while looking.","keywords":["spelling","spell","lscwc","look say cover","write","word"]},{"id":"check-work","topicId":null,"subject":"English","name":"Check Your Work","method":"Finish, then check: read the question twice, underline the key words, and check backwards.","keywords":["score","well","exam","test","check","study","revise","practice","practise"]}],"agents":[{"id":"kix-tutor","name":"Kix Tutor","feature":"Question player","model":"muse-spark-1.3","status":"live","keywords":["math","plus","minus","times","fraction","money","mrt","add","subtract","multiply","english","tense","verb","punctuation","sentence","story","word","past","future","went","yesterday","science","frog","tadpole","magnet","plant","leaf","root","seed","sky","sun","moon","earth","rain","water","air","chinese","华文","妈妈","mama","baba","听写","拼音","pinyin","老师","spell","spelling","listen","hear","听"],"modelNote":""},{"id":"ask-kix","name":"Ask Kix","feature":"Ask Kix","model":"muse-spark-vision","status":"live","keywords":["what is","what are","why is","why do","how do","tell me","explain","what does","who is","where is"],"modelNote":"Video model: Muse Spark – vision. Vision input not wired yet; text answers run on Muse Spark 1.3."},{"id":"vibe-zone-maker","name":"Vibe Zone maker","feature":"Vibe Zone","model":"muse-spark-1.3","status":"live","keywords":["vibe","music","calm","relax","forest morning","rain sound","play some music","soothing","sleepy"],"modelNote":""},{"id":"talk-to-kix","name":"Talk to Kix","feature":"Talk to Kix","model":"muse-voice-transcribe","status":"placeholder","keywords":["voice","speak","talk to","read aloud","transcribe","hear me","say it","voice chat"],"modelNote":""},{"id":"sidekick-studio","name":"Sidekick Studio","feature":"Sidekick Studio","model":"muse-image-sam-3.1","status":"placeholder","keywords":["sidekick","change my look","change pip","draw","picture","image","show me a picture","avatar","make a picture"],"modelNote":""},{"id":"critter-keeper","name":"Critter Keeper","feature":"Critter Lab","model":"muse-spark-1.3","status":"live","keywords":["critter lab","feed my tadpole","feed my frog","my critter","raise a frog","my tadpole","critter care","pet"],"modelNote":""},{"id":"memory-keeper","name":"Memory Keeper","feature":"Kix’s Notebook","model":"muse-spark-1.3","status":"live","keywords":["notebook","flashcard","remember this","my notes","memory","revise my words"],"modelNote":""},{"id":"screen-time-guardian","name":"Screen-time guardian","feature":"Breaks and balance","model":"code-rules","status":"live","keywords":["screen time","too much screen","take a break","break time","time limit","screen-time"],"modelNote":""},{"id":"tonight","name":"Tonight","feature":"Tonight","model":"muse-spark-1.3","status":"live","keywords":["tonight","evening summary","what did i learn today","what did she learn","parent summary","progress report","how is she doing"],"modelNote":""},{"id":"guardian-brief","name":"Guardian Brief","feature":"Location","model":"muse-spark-1.3","status":"live","keywords":["guardian brief","where is my child","where am i","location","is she home","pick up"],"modelNote":""},{"id":"home-reader","name":"Home Reader","feature":"Sentry","model":"muse-spark-vision","status":"placeholder","keywords":["home reader","sentry","look at my work","check my homework","photo of my work","my drawing"],"modelNote":"Video model: Muse Spark – vision. No camera, no picture sent."},{"id":"whos-who","name":"Who’s who","feature":"Sentry","model":"sam-3.1","status":"placeholder","keywords":["who is in the photo","who’s who","whos who","who is that","who is in this picture"],"modelNote":""},{"id":"outing-scout","name":"Outing Scout","feature":"Do something together","model":"muse-spark-web-search","status":"placeholder","keywords":["outing","do something together","where should we go","find a place","places to go","weekend outing","find somewhere"],"modelNote":""},{"id":"outing-planner","name":"Outing Planner","feature":"Do something together","model":"muse-spark-1.3","status":"live","keywords":["plan our outing","plan tomorrow","plan the weekend","timetable","schedule","homework plan","plan a trip"],"modelNote":""},{"id":"past-paper-scout","name":"Past-paper scout","feature":"New exam papers","model":"code-rules","status":"live","keywords":["past paper","exam paper","new exam","practice paper","test paper"],"modelNote":""},{"id":"content-curator","name":"Content Curator","feature":"New exam papers","model":"muse-spark-files","status":"placeholder","keywords":["curate","new questions","content curator","make new questions","from the exam paper"],"modelNote":""},{"id":"skill-editor","name":"Skill Editor","feature":"Skill packs","model":"muse-spark-1.3","status":"live","keywords":["skill pack","skill editor","the method","which method","skill for"],"modelNote":""},{"id":"reviewer","name":"Reviewer","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["wrong","mistake","flag","incorrect","that answer is wrong","you are wrong","review this"],"modelNote":""},{"id":"judge","name":"Judge","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["judge","should this ship","is the fix good","judge this fix"],"modelNote":""}]};
+var SKILL_PACK = {"version":"skills-v1","skills":[{"id":"vocab-story","topicId":"eng-story","subject":"English","name":"Story Words","method":"Read the whole sentence, then pick the word that fits what happened.","keywords":["story","word","vocabulary","hungry","tired","friendly","adjective"]},{"id":"tenses","topicId":"eng-tense","subject":"English","name":"Tenses Trek","method":"Find the time word first (yesterday / every day / tomorrow / now), then pick the verb for that time.","keywords":["tense","yesterday","tomorrow","verb","past","present","future","went","brushes","goes"]},{"id":"story-next","topicId":"eng-story2","subject":"English","name":"Finish the Story","method":"Pick the next sentence that is kind, sensible and keeps the story going.","keywords":["tell me a story","story","next","author","ending","sentence"]},{"id":"punctuation","topicId":"eng-punct","subject":"English","name":"Punctuation Pond","method":"Every sentence starts with a capital letter and ends with the right mark: full stop for telling, ? for asking, ! for strong feeling.","keywords":["punctuation","capital","full stop","question mark","comma","sentence","sentence is correct"]},{"id":"add-subtract","topicId":"math-mrt","subject":"Maths","name":"MRT Numbers — Add & Subtract","method":"Make a round number first, then add the rest. For subtraction, count up from the smaller number.","keywords":["add","plus","subtract","minus","mrt","train","stations","change","total"]},{"id":"money-change","topicId":"math-hawker","subject":"Maths","name":"Hawker Change","method":"Add the dollars first, then the cents. 50 cents + 50 cents = $1.","keywords":["money","change","hawker","chicken rice","dollar","cents","price","cost","$","total"]},{"id":"times-tables","topicId":"math-ntuc","subject":"Maths","name":"Times Tables","method":"Count in groups, and learn the famous tricky ones by heart: 7 × 8 = 56, 6 × 7 = 42.","keywords":["times","multiply","multiplication","table","7 x 8","7 × 8","groups","bags"]},{"id":"fractions","topicId":"math-frac","subject":"Maths","name":"Fractions Feast","method":"Bottom number = how many equal pieces. Top number = how many you have. Fewer pieces = bigger pieces.","keywords":["fraction","half","quarter","pizza","slice","share"]},{"id":"life-cycle-frog","topicId":"sci-frog","subject":"Science","name":"Frog Life Cycle","method":"Egg → tadpole → froglet → frog. Each stage lives differently.","keywords":["frog","tadpole","froglet","egg","amphibian","hop"]},{"id":"life-cycle-butterfly","topicId":null,"subject":"Science","name":"Butterfly Life Cycle","method":"Egg → caterpillar (larva) → chrysalis (pupa) → butterfly. This is metamorphosis — a big change of body.","keywords":["butterfly","caterpillar","chrysalis","pupa","metamorphosis","larva","cocoon","moth"]},{"id":"magnets","topicId":"sci-magnet","subject":"Science","name":"Magnet Lab","method":"Test with a real magnet. Magnets attract iron and steel only. Same poles repel, opposite poles attract.","keywords":["magnet","attract","repel","pole","iron","steel","paperclip"]},{"id":"plants","topicId":"sci-plants","subject":"Science","name":"Garden & Plants","method":"Plants make food with sunlight, water and air. Roots drink, leaves cook.","keywords":["plant","photosynthesis","leaf","root","seed","flower","sunlight","bee"]},{"id":"chinese-listening","topicId":"chi-listen","subject":"Chinese","name":"听一听 Listening","method":"Listen first, say it out loud, then pick. Your ears teach your brain.","keywords":["chinese","华文","listen","听","妈妈","mama","baba","pinyin","苹果"]},{"id":"chinese-family","topicId":"chi-family","subject":"Chinese","name":"家庭 Family Words","method":"Learn family words in pairs: big brother 哥哥, little brother 弟弟, big sister 姐姐, little sister 妹妹.","keywords":["family","哥哥","弟弟","姐姐","妹妹","奶奶","爷爷","家庭","mama","baba","mother","father","brother","sister"]},{"id":"chinese-school","topicId":"chi-school","subject":"Chinese","name":"学校 School Day","method":"School words + the weekly 听写 routine: Tue learn, Wed test, Fri redo missed, Sun recap.","keywords":["school","学校","老师","听写","spelling","书包","读书","同学"]},{"id":"spelling-lscwc","topicId":null,"subject":"English","name":"Spelling — Look, Say, Cover, Write, Check","method":"Look–Say–Cover–Write–Check, one word at a time. Never copy while looking.","keywords":["spelling","spell","lscwc","look say cover","write","word"]},{"id":"check-work","topicId":null,"subject":"English","name":"Check Your Work","method":"Finish, then check: read the question twice, underline the key words, and check backwards.","keywords":["score","well","exam","test","check","study","revise","practice","practise"]}],"agents":[{"id":"kix-tutor","name":"Kix Tutor","feature":"Question player","model":"muse-spark-1.3","status":"live","keywords":["math","plus","minus","times","fraction","money","mrt","add","subtract","multiply","english","tense","verb","punctuation","sentence","story","word","past","future","went","yesterday","science","frog","tadpole","magnet","plant","leaf","root","seed","sky","sun","moon","earth","rain","water","air","chinese","华文","妈妈","mama","baba","听写","拼音","pinyin","老师","spell","spelling","listen","hear","听"],"modelNote":""},{"id":"ask-kix","name":"Ask Kix","feature":"Ask Kix","model":"muse-spark-vision","status":"live","keywords":["what is","what are","why is","why do","how do","tell me","explain","what does","who is","where is"],"modelNote":"Video model: Muse Spark – vision. Vision input not wired yet; text answers run on Muse Spark 1.3."},{"id":"vibe-zone-maker","name":"Vibe Zone maker","feature":"Vibe Zone","model":"muse-spark-1.3","status":"live","keywords":["vibe","music","calm","relax","calm sounds","jungle birds","play some music","soothing","sleepy"],"modelNote":""},{"id":"talk-to-kix","name":"Talk to Kix","feature":"Talk to Kix","model":"muse-voice-transcribe","status":"placeholder","keywords":["voice","speak","talk to","read aloud","transcribe","hear me","say it","voice chat"],"modelNote":""},{"id":"sidekick-studio","name":"Sidekick Studio","feature":"Sidekick Studio","model":"muse-image-sam-3.1","status":"placeholder","keywords":["sidekick","change my look","change pip","draw","picture","image","show me a picture","avatar","make a picture"],"modelNote":""},{"id":"critter-keeper","name":"Critter Keeper","feature":"Critter Lab","model":"muse-spark-1.3","status":"live","keywords":["critter lab","feed my tadpole","feed my frog","my critter","raise a frog","my tadpole","critter care","pet"],"modelNote":""},{"id":"memory-keeper","name":"Memory Keeper","feature":"Kix’s Notebook","model":"muse-spark-1.3","status":"live","keywords":["notebook","flashcard","remember this","my notes","memory","revise my words"],"modelNote":""},{"id":"screen-time-guardian","name":"Screen-time guardian","feature":"Breaks and balance","model":"code-rules","status":"live","keywords":["screen time","too much screen","take a break","break time","time limit","screen-time"],"modelNote":""},{"id":"tonight","name":"Tonight","feature":"Tonight","model":"muse-spark-1.3","status":"live","keywords":["tonight","evening summary","what did i learn today","what did she learn","parent summary","progress report","how is she doing"],"modelNote":""},{"id":"guardian-brief","name":"Guardian Brief","feature":"Location","model":"muse-spark-1.3","status":"live","keywords":["guardian brief","where is my child","where am i","location","is she home","pick up"],"modelNote":""},{"id":"home-reader","name":"Home Reader","feature":"Sentry","model":"muse-spark-vision","status":"placeholder","keywords":["home reader","sentry","look at my work","check my homework","photo of my work","my drawing"],"modelNote":"Video model: Muse Spark – vision. No camera, no picture sent."},{"id":"whos-who","name":"Who’s who","feature":"Sentry","model":"sam-3.1","status":"placeholder","keywords":["who is in the photo","who’s who","whos who","who is that","who is in this picture"],"modelNote":""},{"id":"outing-scout","name":"Outing Scout","feature":"Do something together","model":"muse-spark-web-search","status":"placeholder","keywords":["outing","do something together","where should we go","find a place","places to go","weekend outing","find somewhere"],"modelNote":""},{"id":"outing-planner","name":"Outing Planner","feature":"Do something together","model":"muse-spark-1.3","status":"live","keywords":["plan our outing","plan tomorrow","plan the weekend","timetable","schedule","homework plan","plan a trip"],"modelNote":""},{"id":"past-paper-scout","name":"Past-paper scout","feature":"New exam papers","model":"code-rules","status":"live","keywords":["past paper","exam paper","new exam","practice paper","test paper"],"modelNote":""},{"id":"content-curator","name":"Content Curator","feature":"New exam papers","model":"muse-spark-files","status":"placeholder","keywords":["curate","new questions","content curator","make new questions","from the exam paper"],"modelNote":""},{"id":"skill-editor","name":"Skill Editor","feature":"Skill packs","model":"muse-spark-1.3","status":"live","keywords":["skill pack","skill editor","the method","which method","skill for"],"modelNote":""},{"id":"reviewer","name":"Reviewer","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["wrong","mistake","flag","incorrect","that answer is wrong","you are wrong","review this"],"modelNote":""},{"id":"judge","name":"Judge","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["judge","should this ship","is the fix good","judge this fix"],"modelNote":""}]};
 function skillForQuestionClient(text){
   var q=String(text||'').toLowerCase();
   if(/\d\s*[x\u00d7*]\s*\d/.test(q))return SKILL_PACK.skills.find(function(x){return x.id==='times-tables';});
@@ -1040,6 +1053,7 @@ function uploadAfterPull(){
    before linking. */
 function unionArr(a,b){ var out=(a||[]).slice(); (b||[]).forEach(function(x){ if(out.indexOf(x)<0)out.push(x); }); return out; }
 function unionObjMax(a,b){ var o={}; Object.keys(a||{}).forEach(function(k){ o[k]=a[k]; }); Object.keys(b||{}).forEach(function(k){ o[k]=(o[k]==null?b[k]:Math.max(o[k],b[k])); }); return o; }
+function unionObjLatest(a,b){ var o={}; Object.keys(a||{}).forEach(function(k){ o[k]=a[k]; }); Object.keys(b||{}).forEach(function(k){ o[k]=(o[k]==null?b[k]:(o[k]>b[k]?o[k]:b[k])); }); return o; }
 /* Merge two copies of the same Ask Pip thread list. A thread that
    exists in both copies must keep BOTH sides' messages: the server
    copy is usually an older snapshot (greeting only), and the local
@@ -1078,6 +1092,8 @@ function mergeExplorer(a,b){
   e.treasures=unionArr(a.treasures,b.treasures);
   e.discoveredCritters=unionArr(a.discoveredCritters,b.discoveredCritters);
   e.completed=unionObjMax(a.completed,b.completed);
+  e.completedDay=unionObjLatest(a.completedDay,b.completedDay);
+  e.playDoneDay=unionObjLatest(a.playDoneDay,b.playDoneDay);
   e.hclMissed=unionArr(a.hclMissed,b.hclMissed);
   e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
   var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
@@ -1205,14 +1221,36 @@ function migrateStages(){
 }
 function newExplorer(name, code){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code,
-    face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, progress:{},
-    playProgress:{}, playFresh:{}, critterName:'Splash', critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
+    face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
+    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
     flashcards:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
 function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
 function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* One state rule for every quest and quiz (Learn quests and Play
+   games alike):
+     not-started     — nothing attempted yet: "Start quest" / "Play"
+     in-progress     — some questions answered, not all: "Resume"
+     completed-today — all questions done today: "✔ Completed",
+                       card greyed out, with a ↻ Replay button
+     fresh-today     — finished on an earlier day: "Start quest" /
+                       "Play" with today's fresh set of questions
+   A quest finished today is done for the day; tomorrow morning it
+   becomes a fresh quest again. Completed-today always wins over a
+   leftover in-progress record (e.g. synced from another device). */
+function questState(e, topicId, dayKey){
+  if(e.completedDay&&e.completedDay[topicId]===dayKey)return 'completed-today';
+  if(e.progress&&e.progress[topicId])return 'in-progress';
+  return (e.completed&&e.completed[topicId])?'fresh-today':'not-started';
+}
+function gameState(e, gameId, dayKey, doneG){
+  if(e.playDoneDay&&e.playDoneDay[gameId]===dayKey)return 'completed-today';
+  var p=e.playProgress&&e.playProgress[gameId];
+  if(p&&!doneG)return 'in-progress';
+  return doneG?'fresh-today':'not-started';
+}
 function addMinutes(n){ var e=ex(); if(!e)return; var k=todayKey(); e.daily[k]=(e.daily[k]||0)+n; e.totalMinutes=(e.totalMinutes||0)+n; }
 function awardBadge(id,label){ var e=ex(); if(!e||e.badges.indexOf(id)>=0)return false; e.badges.push(id); toast('New badge: '+label); return true; }
 function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(function(){t.style.display='none';},2600); }
@@ -1255,13 +1293,13 @@ function render(){
    +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<span class="chip">⭐ '+ex().stars+'</span>'
-   +'<button class="iconbtn '+(forestOn?'on':'')+'" id="tbMusic" title="Forest Morning music" aria-label="Toggle Forest Morning music">🎵</button>'
+   +'<button class="iconbtn '+(vibeId?'on':'')+'" id="tbMusic" title="Background music" aria-label="Toggle background music">🎵</button>'
    +'<button class="avatarbtn" id="tbProfile" aria-label="Open profile menu">'+pipSVG(40,ex().glow)+'</button>'
    +'<div id="menuHolder"></div></div>'
    +'<div class="content" id="content"></div></div></div>'
    +'<nav class="bottomnav">'+btm+'</nav>';
-  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndPop(); go(b.getAttribute('data-go')); }); });
-  document.getElementById('tbMusic').addEventListener('click',function(){ if(forestOn){ stopForest(); } else { startForest(); } renderTop(); });
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndMystery(); go(b.getAttribute('data-go')); }); });
+  document.getElementById('tbMusic').addEventListener('click',function(){ if(vibeId){ stopVibe(); } else { startVibe(lastVibeId); } renderTop(); });
   document.getElementById('tbProfile').addEventListener('click',toggleMenu);
   var c=document.getElementById('content');
   if(route==='home')c.innerHTML=homeHTML(),bindHome();
@@ -1283,7 +1321,7 @@ function toggleMenu(){
   if(h.innerHTML){ h.innerHTML=''; return; }
   var e=ex();
   h.innerHTML='<div class="menu"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+pipSVG(52,e.glow)
-   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+'</div><div class="small muted">Primary 3 explorer · Sound: Forest Morning</div></div></div>'
+   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+'</div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
    +'<button class="mitem" id="mLook">🎨 Change my name &amp; look</button>'
    +'<button class="mitem" id="mSwitch">🔀 Switch explorer</button>'
    +'<button class="mitem" id="mAdd">➕ Add another explorer</button>'
@@ -1374,7 +1412,7 @@ function bindDoor(){
       if(doorCode.length!==3){ toast('Pick exactly 3 pictures for your code!'); return; }
       var e=newExplorer(name, doorCode.slice());
       DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; save();
-      sndFanfare(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
+      sndEntrance(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
     };
   } else {
     document.querySelectorAll('[data-ex]').forEach(function(b){ b.onclick=function(){ doorSel=b.getAttribute('data-ex'); doorCode=[]; showDoorCode(); }; });
@@ -1392,7 +1430,7 @@ function showDoorCode(){
     sndPop(); doorCode.push(b.getAttribute('data-lpic'));
     renderBubbles(document.getElementById('loginBubbles'), doorCode);
     if(doorCode.length===3){
-      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
+      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; sndEntrance(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
       else { sndWrong(); toast('Hmm, those pictures don’t match. Try again!'); doorCode=[]; setTimeout(showDoorCode,600); }
     }
   }; });
@@ -1424,7 +1462,7 @@ function applyTheme(){
   document.documentElement.style.setProperty('--glow', t.glow);
 }
 function greeting(){ var h=new Date().getHours(); return h<12?'Good morning':(h<18?'Good afternoon':'Good evening'); }
-var PIP_SAYS=['Warm up with a quick game in Play? It wakes your brain right up!','Your frog friend is waiting in Critter Lab. One good visit helps it grow!','One quest question at a time. Small hops make a big frog!','Feeling wobbly or sparkling today? Forest Morning is playing in the Vibe Zone.','Try today’s quest — finishing all 5 questions earns a big celebration!'];
+var PIP_SAYS=['Warm up with a quick game in Play? It wakes your brain right up!','Your frog friend is waiting in Critter Lab. One good visit helps it grow!','One quest question at a time. Small hops make a big frog!','Feeling wobbly or sparkling today? A calm sound in the Vibe Zone helps.','Try today’s quest — finishing all 5 questions earns a big celebration!'];
 
 /* Compact terrarium hero for inner pages — same photo, shade, theme
    tint and Pip treatment as the Home hero, so every page feels like
@@ -1463,7 +1501,9 @@ function homeHTML(){
   else if(e.treasures.length){ var lt=TREASURES.filter(function(x){return e.treasures.indexOf(x.id)>=0;}).slice(-1)[0]; if(lt)memory='Pip remembers the day you unlocked the '+esc(lt.name)+'!'; }
   var st=STAGES[e.critterStage];
   var qprog=quest?(e.progress[quest.id]?e.progress[quest.id].idx:0):0;
-  var qdone=quest&&e.completed[quest.id];
+  var qstate=quest?questState(e,quest.id,todayKey()):'';
+  var qdone=qstate==='completed-today';
+  var qfresh=qstate==='fresh-today';
   var compass=e.treasures.indexOf('compass')>=0&&quest? '<p class="small" style="font-weight:800;margin-top:10px">🧭 Star Compass points to: <b>'+esc(quest.name)+'</b> — a great next quest!</p>':'';
   var badgeHTML=e.badges.map(function(b){ var m={'brave':'🦁 Brave Tryer','comeback':'🏆 Comeback Kid','first':'🌟 First Quest','perfect':'💯 Perfect Quest','critter':'🐸 Critter Friend','player':'🎮 Arcade Star','spotter':'🔍 Critter Spotter','naturalist':'🌿 Young Naturalist'}; return m[b]?'<span class="badge">'+m[b]+'</span>':''; }).join('');
   var hero='<section class="heroT"><img class="bg" src="assets/terrarium.webp" alt="Jiyuna’s glowing terrarium at night"><div class="shade"></div><div class="tintwash"></div>'
@@ -1478,12 +1518,13 @@ function homeHTML(){
    + Object.keys(THEMES).map(function(name){ return '<button type="button" class="themechip '+(tname===name?'sel':'')+'" data-theme="'+esc(name)+'" aria-pressed="'+(tname===name)+'">'+esc(name)+'</button>'; }).join('')
    +'</div><div class="themeline">'+t.line+'</div></div>'
    +'</div></section>';
-  var questCard='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
+  var questCard='<section class="questcard'+(qdone?' done':'')+'"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
    +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+quest.icon+' '+esc(quest.name)+'</h2>'
     +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
     +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
     +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
-    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">🏆 Quest complete — amazing exploring!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">🌅 Pip pulled a fresh set of questions for this finished quest this morning — a new set arrives every day. Quests you haven’t finished stay just as you left them.</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Play today’s fresh set</button>'
+    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">✔ Quest complete — amazing exploring!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">A fresh set of questions returns tomorrow morning — or replay today’s set right now if you like!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Replay this quest</button>'
+      : qfresh? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">🏆 You finished this one before — today’s fresh set is ready!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">▶ Start today’s fresh set</button>'
       : '<button class="btn" data-quest="'+quest.id+'" style="margin-top:14px">'+(qprog>0?'Continue the quest':'Start today’s quest')+'</button>')
     +'<p style="margin-top:12px;color:#5b5785;font-weight:600">'+esc(quest.blurb)+'</p>'
     + compass
@@ -1503,7 +1544,7 @@ function homeHTML(){
    +(nextTreasure? '<p class="small muted" style="font-weight:600;margin:6px 0 0">Next: <b style="color:var(--ink)">'+nextTreasure.e+' '+esc(nextTreasure.name)+'</b> — '+esc(nextTreasure.purpose)+' Unlocks at '+nextTreasure.cost+' stars — you have '+e.stars+'. '+(e.stars>=nextTreasure.cost?'You can unlock it now!':'Just '+(nextTreasure.cost-e.stars)+' more to go!')+'</p>' : '<p class="small muted" style="font-weight:600;margin:6px 0 0">You collected every treasure. Amazing exploring!</p>')
    +'<div class="progressbar" style="margin-top:12px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div></button>';
   var creativeCard='<div class="card"><div class="themeslabel" style="color:var(--ink-soft)">Creative zone</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">Make it your own</div>'
-   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" class="tilebtn" data-go2="create">Create Studio<span>Your own flashcards &amp; planner</span></button><button type="button" class="tilebtn" data-go2="play">Play Arcade<span>Neon Strike, Memory Match &amp; more games</span></button><button type="button" class="tilebtn" data-go2="ask">Ask Pip<span>Questions, jokes &amp; Story Time</span></button><button type="button" class="tilebtn" data-go2="vibe">Vibe Zone<span>Forest Morning &amp; the breathing bubble</span></button></div></div>';
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" class="tilebtn" data-go2="create">Create Studio<span>Your own flashcards &amp; planner</span></button><button type="button" class="tilebtn" data-go2="play">Play Arcade<span>Neon Strike, Memory Match &amp; more games</span></button><button type="button" class="tilebtn" data-go2="ask">Ask Pip<span>Questions, jokes &amp; Story Time</span></button><button type="button" class="tilebtn" data-go2="vibe">Vibe Zone<span>Calm sounds &amp; the breathing bubble</span></button></div></div>';
   var jokeLine=e.treasures.indexOf('pearl')>=0? '<div class="card" style="margin-top:16px"><h3>🔮 Joke Pearl — today’s giggle</h3><p style="font-weight:700">'+JOKES[new Date().getDate()%JOKES.length]+'</p></div>':'';
   return '<div class="homegrid">'+hero+questCard+'</div>'
    + planSectionHTML(e, todayPlan, todayEvent)
@@ -1527,24 +1568,27 @@ function learnHTML(){
   var doneCount=Object.keys(e.completed).length;
   var subs=['eng','math','sci','chi'];
   var SUBHEAD={eng:['📖','English','Story words, tenses & punctuation','#1e3a5f'],math:['🔢','Maths','MRT numbers, hawker change & fractions','#4a3a10'],sci:['🔬','Science','Frogs, magnets & garden plants','#1e4034'],chi:['🀄','Chinese','Listening, family & school words','#4c2a33']};
-  return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. 🌅 Finished a quest? Pip pulls a fresh set of questions for it every morning — all 14 topics, every subject. Quests you have not finished stay exactly where you left them.', doneCount+' of 14 quests finished · ⭐ '+e.stars)
+  return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them.', doneCount+' of 14 quests finished · ⭐ '+e.stars)
    + learnPlanBannerHTML(e)
    + hclCardHTML(e)
    + subs.map(function(s){
     var list=TOPICS.filter(function(t){return t.sub===s;});
     var sh=SUBHEAD[s];
     return '<div class="subjecthead"><span class="sdisc" style="background:'+sh[3]+'">'+sh[0]+'</span><div><h3>'+sh[1]+'</h3><div class="small muted">'+sh[2]+'</div></div></div><div class="grid c2">'
-     + list.map(function(t){ var done=e.completed[t.id]; var prog=e.progress[t.id];
-       var pct=done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0);
-       return '<div class="questcard learncard"><div class="iconrow"><span class="qicon">'+t.icon+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
+     + list.map(function(t){ var st=questState(e,t.id,todayKey()); var done=e.completed[t.id]; var prog=e.progress[t.id];
+       var pct=st==='completed-today'?100:(done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0));
+       var count=st==='completed-today'?'5 / 5':(done?done+' / 5':(prog?prog.idx+' / 5':'0 / 5'));
+       var label=st==='completed-today'?'✔ Completed':(st==='in-progress'?'Quest progress':(st==='fresh-today'?'Best score':'Not started'));
+       return '<div class="questcard learncard'+(st==='completed-today'?' done':'')+'"><div class="iconrow"><span class="qicon">'+t.icon+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
        +'<p class="muted" style="font-weight:700;margin:10px 0 0">'+esc(t.blurb)+'</p>'
-       +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+(done?'Best score':(prog?'Quest progress':'Not started'))+'</span><span>'+(done?done:prog?prog.idx:0)+' / 5</span></div>'
+       +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+label+'</span><span>'+count+'</span></div>'
        +'<div class="progressbar" style="margin-top:5px"><div style="width:'+pct+'%"></div></div></div>'
        +(studyPlanFor(new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
-       +(prog?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
+       +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
        +(t.sub==='chi'?'<p class="small muted" style="margin:10px 0 0">🔊 This quest has a Listen button — hear it, then say it out loud!</p>':'')
-       +(done?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions pulled for today</span></p>':'')
-       +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(prog?'▶ Resume quest':(done?'↻ Play today’s fresh set':'▶ Start quest'))+'</button></div>'; }).join('')+'</div>';
+       +(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')
+       +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
+       +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button></div>'; }).join('')+'</div>';
   }).join('');
 }
 function bindLearn(){
@@ -1594,6 +1638,9 @@ function questListFor(t, c){
 var cur=null, warm=null;
 function startQuestFlow(topicId){
   var e=ex();
+  /* A completed quest starts its replay from here: no progress
+     means the warm-up, then today's fresh set; progress means
+     resuming the replay already in progress. */
   if(e.progress[topicId]){ cur=loadProgress(topicId); go('quiz'); }
   else { warm={topicId:topicId, order:shuffle(topicById(topicId).warm.map(function(_,i){return i;})), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; go('warmup'); }
 }
@@ -1710,6 +1757,8 @@ function finishRound(t){
   if(cur.phase==='quest'){
     var prev=e.completed[cur.topicId]||0;
     e.completed[cur.topicId]=Math.max(prev,cur.score);
+    if(!e.completedDay)e.completedDay={};
+    e.completedDay[cur.topicId]=todayKey();
     e.stars+=cur.score; e.lastTopic=cur.topicId;
     delete e.progress[cur.topicId];
     if(!e.badges.length)awardBadge('first','🌟 First Quest');
@@ -1738,11 +1787,11 @@ var gState=null;
 function playHTML(){
   var e=ex();
   var BAND={word:'#1e4034',number:'#4c2a33',memory:'#1e3a5f',sort:'#4a3a10'};
-  return pageHero('✨','Play Arcade','Quick games that secretly train your brain — words, numbers, memory and speedy spotting. Started games resume right where you stopped. 🌅 Finished a game? Fresh rounds are pulled for it every morning — unfinished games keep the exact rounds they started with.','⭐ '+e.stars+' stars')
-   +'<div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds;
-    return '<div class="card gamecard"><div class="gameband" style="background:'+BAND[g.id]+'">'+g.e+'</div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
-    +(p&&!doneG?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(doneG?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — 🌅 fresh rounds pulled today!</span></p>':'')
-    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(p&&!doneG?'▶ Resume game':'▶ Play')+'</button></div></div></div>'; }).join('')+'</div>';
+  return pageHero('✨','Play Arcade','Quick games that secretly train your brain — words, numbers, memory and speedy spotting. Started games resume right where you stopped. ✅ A game you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for fresh rounds. Unfinished games keep the exact rounds they started with.','⭐ '+e.stars+' stars')
+   +'<div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds; var st=gameState(e,g.id,todayKey(),!!doneG);
+    return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:'+BAND[g.id]+'">'+g.e+'</div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
+    +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')+(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh rounds for today!</span></p>':'')
+    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div>';
 }
 function bindPlay(){ document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; }); }
 /* Rounds are generated from a seed. A game still in progress keeps
@@ -1773,6 +1822,7 @@ function startGame(id){
   var p=e.playProgress[id];
   var gDef=GAMES.find(function(x){return x.id===id;});
   var doneP=id==='memory'?(p&&p.won):(p&&p.idx>=gDef.rounds);
+  /* A completed game replays from here with today's fresh rounds. */
   var seed;
   if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ }
   else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
@@ -1834,7 +1884,11 @@ function bindGame(){
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed}; save(); }
+function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed};
+  var gDef=GAMES.find(function(x){return x.id===gState.id;});
+  var doneNow=gState.id==='memory'?!!gState.won:(gState.idx>=gDef.rounds);
+  if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
+  save(); }
 
 /* ============================================================ ASK PIP */
 var activeThread=null;
@@ -2031,15 +2085,21 @@ function bindTreasure(){
 /* ============================================================ VIBE */
 function vibeHTML(){
   var e=ex(); var hasLantern=e.treasures.indexOf('lantern')>=0;
-  return pageHero('🎵','Vibe Zone','Your calm corner of the terrarium — one gentle forest sound, and a breathing bubble when you need a pause.', forestOn?'🎶 Forest Morning is playing':'Quiet right now')
-   +'<div class="card" style="text-align:center"><div style="font-size:3rem">🌲🎶</div><h3>Forest Morning</h3>'
-   +'<p class="muted" style="font-weight:700;max-width:460px;margin:0 auto">The one and only background sound: a soft forest pad with gentle birdsong, made right here in the app. No other sounds — just Forest Morning, the way you asked.</p>'
-   +'<div style="margin:16px"><button class="btn" id="vibeToggle">'+(forestOn?'⏸ Pause Forest Morning':'▶ Play Forest Morning')+'</button></div>'
-   +'<p class="small muted">Music also follows you around the app — use the 🎵 button at the top anytime.</p></div>'
+  var playing=vibeById(vibeId);
+  return pageHero('🎵','Vibe Zone','Your calm corner of the terrarium — pick a sound, and a breathing bubble when you need a pause.', playing?('🎶 '+playing.name+' is playing'):'Quiet right now')
+   +'<div class="grid c2">'+VIBES.map(function(v){
+     var on=vibeId===v.id;
+     return '<div class="card" style="text-align:center"><div style="font-size:3rem">'+v.icon+'</div><h3>'+v.name+'</h3>'
+     +'<p class="muted" style="font-weight:700">'+v.blurb+'</p>'
+     +'<div style="margin:16px"><button class="btn" data-vibe="'+v.id+'">'+(on?'⏸ Pause '+v.name:'▶ Play '+v.name)+'</button></div>'
+     +(on?'<p class="small muted">🎶 Playing now — it follows you around the app. Use the 🎵 button at the top to pause.</p>':'')
+     +'</div>';
+   }).join('')+'</div>'
+   +'<p class="small muted" style="text-align:center">Music also follows you around the app — use the 🎵 button at the top anytime.</p>'
    +(hasLantern?'<div class="card" style="text-align:center;margin-top:16px"><h3>🏮 Focus Lantern — calm breathing</h3><p class="muted" style="font-weight:700">Breathe in as the circle grows, out as it shrinks. Two quiet minutes.</p><div class="breathe" id="breathCircle"></div><button class="btn teal" id="breathBtn">Start breathing break</button><p class="small muted" id="breathMsg"></p></div>':'<div class="card" style="margin-top:16px"><h3>🏮 Focus Lantern</h3><p class="muted" style="font-weight:700">Unlock the Focus Lantern in the Treasure Realm to get a 2-minute calm breathing break here.</p></div>');
 }
 function bindVibe(){
-  document.getElementById('vibeToggle').onclick=function(){ if(forestOn)stopForest(); else startForest(); render(); };
+  document.querySelectorAll('[data-vibe]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-vibe'); if(vibeId===id)stopVibe(); else startVibe(id); render(); }; });
   var bb=document.getElementById('breathBtn');
   if(bb)bb.onclick=function(){
     var c=document.getElementById('breathCircle'), m=document.getElementById('breathMsg'); var n=0; bb.disabled=true;
@@ -2146,7 +2206,7 @@ function parentHTML(){
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
    +'<p style="font-weight:700">✏️ HCL spelling: '+esc(hclStepFor(new Date().getDay(), sel).title)+'. Missed words kept for the Fri/Sun redo: <b>'+((sel.hclMissed&&sel.hclMissed.length)?esc(sel.hclMissed.join('、')):'none right now')+'</b></p>'
    +(doneList.length?'<p class="small" style="font-weight:700">Quests finished: '+doneList.map(esc).join(' · ')+'</p>':'<p class="small muted">No quests finished yet.</p>')
-   +'<p style="font-weight:700">🌅 Daily refresh: every finished quest got a fresh set of questions today, and finished Play games got fresh rounds — all '+TOPICS.length+' topics have a fresh bank, so coverage stays even across English, Maths, Science and Chinese. Quests and games still in progress were left exactly as they were, ready to resume.</p>'
+   +'<p style="font-weight:700">🌅 Daily refresh: a quest or game finished today greys out as completed, but can be replayed any time — a fresh set of questions (or fresh rounds) arrives tomorrow morning, so every day brings something new. All '+TOPICS.length+' topics have a fresh bank, so coverage stays even across English, Maths, Science and Chinese. Quests and games still in progress were left exactly as they were, ready to resume.</p>'
    +'<h4>👀 Worth a look</h4>'+(stuckNames.length?stuckNames.map(function(n){ return '<div class="feedback no" style="font-weight:700">“'+esc(n)+'” needed a few tries. What may help: a short game first, then the quest together — keep it light and early in the day.</div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
    +'<h4>🗓 Pip’s plan for tomorrow</h4><p style="font-weight:700">'+plan+'</p></div>'
    +'<div class="card"><h3>⏱ Screen time</h3><p style="font-weight:800;font-size:1.3rem">'+todayMin+' min today <span class="small muted">· limit '+DB.dailyLimit+' min/day</span></p>'
