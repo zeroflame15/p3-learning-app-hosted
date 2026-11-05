@@ -159,3 +159,34 @@ test('doSend resolves the thread from the live database, not the rendered explor
   assert.ok(fn.includes('var eLive=ex();'), 'the reply path resolves a fresh explorer too');
   assert.ok(fn.includes('var eLive2=ex();'), 'the catch path resolves a fresh explorer too');
 });
+
+test('ask-pip strips markdown so a child never sees literal **bold**', () => {
+  const start = askPipSrc.indexOf('function cleanReply(text) {');
+  assert.ok(start >= 0, 'cleanReply found');
+  const end = askPipSrc.indexOf('\n}\n', start);
+  const cleanReply = eval('(' + askPipSrc.slice(start, end + 2) + ')');
+  assert.equal(
+    cleanReply('A plant starts as a tiny **seed**. It **germinates** into a **seedling**.'),
+    'A plant starts as a tiny seed. It germinates into a seedling.',
+    'bold markers are stripped, words kept'
+  );
+  assert.equal(cleanReply('# Plants\nWater the `seed` daily.'), 'Plants\nWater the seed daily.', 'headings and code ticks are stripped');
+  assert.equal(cleanReply('3 x 4 = 12 and 7 × 8 = 56'), '3 x 4 = 12 and 7 × 8 = 56', 'plain maths is untouched');
+  assert.ok(askPipSrc.includes('markdown like **bold**'), 'the prompt tells the model not to use markdown');
+});
+
+test('the reply signature is hidden from the child chat view but still stored', () => {
+  const ask = clientSrc.slice(clientSrc.indexOf('function askHTML(){'), clientSrc.indexOf('function bindAsk(){'));
+  assert.ok(!ask.includes('Signed:'), 'no Signed line is rendered in the chat');
+  assert.ok(!ask.includes('m.signature'), 'the signature is not shown in the chat view');
+  assert.ok(ask.includes('Method:'), 'the Method line still shows (it names the topic, not the machinery)');
+  assert.ok(clientSrc.includes("signature:live.signature||''"), 'the signature is still stored on the message for tracing');
+});
+
+test('Ask Pip replies have no Listen button (the device voice does not sound nice)', () => {
+  const ask = clientSrc.slice(clientSrc.indexOf('function askHTML(){'), clientSrc.indexOf('function bindAsk(){'));
+  assert.ok(!ask.includes('data-listen'), 'no Listen button is rendered under Pip replies');
+  assert.ok(!ask.includes('🔊 Listen'), 'no Listen label in the chat view');
+  assert.ok(ask.includes('data-flag'), 'Flag this is still there');
+  assert.ok(clientSrc.includes('function speakPip'), 'speakPip still exists for the spelling Listen buttons in Learn');
+});
