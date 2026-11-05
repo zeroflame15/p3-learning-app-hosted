@@ -1098,6 +1098,12 @@ function mergeExplorer(a,b){
   e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
   var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
   Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh}); });
+  /* A finished run's progress must not come back from the server:
+     a delete does not sync, so the server's copy would resurrect
+     a finished quest at its last question. Drop any ORIGINAL-run
+     (non-fresh) progress for a topic that has a completion day.
+     A fresh-set replay in progress (fresh:true) is kept. */
+  Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
   Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck}); });
@@ -1638,10 +1644,15 @@ function questListFor(t, c){
 var cur=null, warm=null;
 function startQuestFlow(topicId){
   var e=ex();
-  /* A completed quest starts its replay from here: no progress
-     means the warm-up, then today's fresh set; progress means
-     resuming the replay already in progress. */
-  if(e.progress[topicId]){ cur=loadProgress(topicId); go('quiz'); }
+  var p=e.progress[topicId];
+  /* A saved record for the ORIGINAL run is stale once that run
+     finished: a delete does not sync, so the server can resurrect
+     it on merge — and Replay then reopened the finished run at
+     its last question instead of starting again. Only a FRESH-set
+     record (a replay already in progress) may resume; a stale
+     one is discarded and the quest starts again from Question 1. */
+  if(p&&!p.fresh&&e.completedDay&&e.completedDay[topicId]){ delete e.progress[topicId]; save(); p=null; }
+  if(p){ cur=loadProgress(topicId); go('quiz'); }
   else { warm={topicId:topicId, order:shuffle(topicById(topicId).warm.map(function(_,i){return i;})), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; go('warmup'); }
 }
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
@@ -1758,8 +1769,13 @@ function finishRound(t){
     var prev=e.completed[cur.topicId]||0;
     e.completed[cur.topicId]=Math.max(prev,cur.score);
     if(!e.completedDay)e.completedDay={};
+    /* Stars are earned once per quest per day: replaying a quest
+       already finished today must not farm stars — a replay that
+       re-awarded 5 stars was seen live. */
+    var firstToday=e.completedDay[cur.topicId]!==todayKey();
     e.completedDay[cur.topicId]=todayKey();
-    e.stars+=cur.score; e.lastTopic=cur.topicId;
+    if(firstToday)e.stars+=cur.score;
+    e.lastTopic=cur.topicId;
     delete e.progress[cur.topicId];
     if(!e.badges.length)awardBadge('first','🌟 First Quest');
     if(cur.score===(cur.pool?cur.pool.length:t.quest.length))awardBadge('perfect','💯 Perfect Quest');
@@ -1893,21 +1909,35 @@ function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memo
 /* ============================================================ ASK PIP */
 var activeThread=null;
 async function askPipLive(text, history, name){
-  var sk=skillForQuestionClient(text);
-  /* A hung model call must never leave "Pip is thinking…" on screen
-     forever: abort after 20s so the caller falls back to Pip's
-     built-in answer instead of showing nothing. */
-  var ctrl=null, timer=null;
-  try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(e){} },20000); }catch(e){ ctrl=null; }
+  /* This call must NEVER reject and NEVER hang: a failed or stuck
+     model call resolves to null and the caller falls back to Pip's
+     built-in answer. Two nets, because one was not enough live —
+     a 7-minute "Pip is thinking…" wedge was seen even with the
+     20s abort in the code (and a stuck reply wedged the whole
+     Ask Pip screen, new chats included):
+     1. AbortController aborts the fetch at 20s.
+     2. A hard 25s race resolves null even if the fetch ignores
+        the abort. The skill lookup is inside the try too: it used
+        to run before it, so a throw there rejected the call and
+        the caller's .then never ran — the placeholder stayed. */
+  function hardTimeout(ms){ return new Promise(function(res){ setTimeout(function(){ res(null); }, ms); }); }
   try{
-    var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10)})};
-    if(ctrl)opts.signal=ctrl.signal;
-    var r=await fetch('/api/ask-pip',opts);
-    if(!r.ok)return null;
-    var j=await r.json();
-    return (j&&j.reply)?{reply:j.reply, agentName:j.agentName||'', agentId:j.agent||'', skillName:j.skillName||(sk?sk.name:''), skillId:j.skillId||(sk?sk.id:''), signature:j.signature||'', traceId:j.traceId||'', hintFirst:!!j.hintFirst}:null;
+    var sk=skillForQuestionClient(text);
+    var ctrl=null, timer=null;
+    try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(e){} },20000); }catch(e){ ctrl=null; }
+    var work=(async function(){
+      try{
+        var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10)})};
+        if(ctrl)opts.signal=ctrl.signal;
+        var r=await fetch('/api/ask-pip',opts);
+        if(!r.ok)return null;
+        var j=await r.json();
+        return (j&&j.reply)?{reply:j.reply, agentName:j.agentName||'', agentId:j.agent||'', skillName:j.skillName||(sk?sk.name:''), skillId:j.skillId||(sk?sk.id:''), signature:j.signature||'', traceId:j.traceId||'', hintFirst:!!j.hintFirst}:null;
+      }catch(e){ return null; }
+      finally{ if(timer)clearTimeout(timer); }
+    })();
+    return await Promise.race([work, hardTimeout(25000)]);
   }catch(e){ return null; }
-  finally{ if(timer)clearTimeout(timer); }
 }
 function pipReply(text){
   var s=text.toLowerCase();
@@ -2001,6 +2031,16 @@ function bindAsk(){
       }
       save(); render();
       var log2=document.getElementById('chatlog'); if(log2)log2.scrollTop=log2.scrollHeight;
+    }).catch(function(){
+      /* Never leave "Pip is thinking…" on screen: any failure in
+         the reply path still gets Pip's built-in answer, and the
+         screen still re-renders — a failed reply must never wedge
+         Ask Pip, new chats included. */
+      try{
+        var th3=e.threads.find(function(t){return t.id===activeThread;});
+        if(th3){ var m=th3.msgs[phIdx]; if(m&&m.who==='pip'&&m.text.indexOf('Pip is thinking')===0){ m.text=pipReply(v); m.live=false; } }
+        save(); render();
+      }catch(e2){}
     });
   }
   if(send)send.onclick=doSend;
