@@ -279,9 +279,11 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 
 <script>
 /* ============================================================
-   Jiyuna's Learning App — static web version
-   All progress is saved on this device only (browser storage),
-   per explorer. Nothing syncs anywhere.
+   Jiyuna's Learning App — hosted version
+   Progress is saved per explorer in browser storage AND synced
+   to the server under a random 6-letter family sync code, so any
+   device linked with that code shares the same family record.
+   No child's real name is ever used as a server identifier.
    ============================================================ */
 
 /* ---------- Cute funny otter Pip (hand-drawn SVG) ---------- */
@@ -897,36 +899,138 @@ var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15'];
 </script>
 <script>
 /* ============================================================
-   STATE — saved on this device only, per explorer
+   STATE — saved per explorer, in browser storage and synced to
+   the server under the family sync code (see the sync block below)
    ============================================================ */
 var LSKEY='jiyuna-learning-web-v1';
 var DB=null;
 /* Hosted: server sync. Device id is a random UUID in this browser only — no
    child's name is ever sent to the server. If the server is not configured
    (/api/progress answers configured:false) everything still works locally. */
+/* --- Family sync code: the key that links devices -----------------
+   A short random 6-letter code (no ambiguous 0/O, 1/I/L). It is NOT a
+   name and it is NOT a password — anyone who knows it can pull the
+   family progress, so grown-ups keep it like a house key and only
+   share it with the family's own devices. The device UUID below is
+   kept only as a fallback key for devices that have never been given
+   a sync code. */
+var SYNC_ALPHABET='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function makeSyncCode(){
+  var c=''; for(var i=0;i<6;i++){ c+=SYNC_ALPHABET[Math.floor(Math.random()*SYNC_ALPHABET.length)]; } return c;
+}
+function normalizeSyncCode(v){ return String(v||'').toUpperCase().replace(/[\s\-]/g,''); }
+function syncCodeValid(v){ return /^[A-Z2-9]{6}$/.test(String(v||'')) && String(v).split('').every(function(ch){ return SYNC_ALPHABET.indexOf(ch)>=0; }); }
+function ensureSyncCode(){
+  if(!DB)return null;
+  if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode();
+  return DB.syncCode;
+}
 var DEVICE_ID=null;
 try{ DEVICE_ID=localStorage.getItem('p3-device-id'); if(!DEVICE_ID){ DEVICE_ID='d-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10); localStorage.setItem('p3-device-id',DEVICE_ID); } }catch(e){}
+/* The server key: the family sync code when one exists, else the
+   per-device fallback id. Every linked device shares the code, so
+   they all read/write the same server row. */
+function syncKey(){ return (DB&&syncCodeValid(DB.syncCode))?DB.syncCode:(DEVICE_ID||null); }
 var syncTimer=null;
+function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} }
 function syncToServer(){
-  if(!DEVICE_ID)return;
+  var key=syncKey(); if(!key||!DB)return;
   clearTimeout(syncTimer);
   syncTimer=setTimeout(function(){
-    try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
+    try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
   },800);
 }
-function syncFromServer(){
-  if(!DEVICE_ID)return;
-  fetch('/api/progress?device='+encodeURIComponent(DEVICE_ID)).then(function(r){return r.json();}).then(function(j){
-    if(j&&j.configured&&j.data&&j.data.explorers&&j.data.explorers.length){
-      var localEmpty=!DB.explorers||!DB.explorers.length;
-      if(localEmpty){ DB=j.data; save(); render(); }
-    }
-  }).catch(function(){});
+/* Merge a server family record with the local one — a UNION, never a
+   last-write-wins overwrite. Progress in this app only ever grows
+   (stars, completed quests, badges, treasures, critter stage), so for
+   an explorer that exists in both copies we keep the richer value of
+   each field; an explorer that exists only on one side is kept. That
+   way a device left open (whose per-minute screen-time save keeps
+   bumping its timestamp) can never wipe out progress made on another
+   device, and linking a device never deletes progress made on it
+   before linking. */
+function unionArr(a,b){ var out=(a||[]).slice(); (b||[]).forEach(function(x){ if(out.indexOf(x)<0)out.push(x); }); return out; }
+function unionObjMax(a,b){ var o={}; Object.keys(a||{}).forEach(function(k){ o[k]=a[k]; }); Object.keys(b||{}).forEach(function(k){ o[k]=(o[k]==null?b[k]:Math.max(o[k],b[k])); }); return o; }
+function mergeExplorer(a,b){
+  var e=JSON.parse(JSON.stringify(a||b));
+  if(!a)return JSON.parse(JSON.stringify(b)); if(!b)return JSON.parse(JSON.stringify(a));
+  e.stars=Math.max(a.stars||0,b.stars||0);
+  e.critterStage=Math.max(a.critterStage||0,b.critterStage||0);
+  e.badges=unionArr(a.badges,b.badges);
+  e.treasures=unionArr(a.treasures,b.treasures);
+  e.discoveredCritters=unionArr(a.discoveredCritters,b.discoveredCritters);
+  e.completed=unionObjMax(a.completed,b.completed);
+  e.hclMissed=unionArr(a.hclMissed,b.hclMissed);
+  e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
+  var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
+  Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh}); });
+  e.progress=prog;
+  var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck}); });
+  e.playProgress=play;
+  var daily={}; Object.keys(a.daily||{}).forEach(function(k){ daily[k]=a.daily[k]; });
+  Object.keys(b.daily||{}).forEach(function(k){ daily[k]=Math.max(daily[k]||0,b.daily[k]); });
+  e.daily=daily; e.totalMinutes=Math.max(a.totalMinutes||0,b.totalMinutes||0);
+  e.mood=Object.assign({},b.mood||{},a.mood||{});
+  e.stuckCount=unionObjMax(a.stuckCount,b.stuckCount);
+  e.threads=(a.threads||[]).concat((b.threads||[]).filter(function(t){ return !(a.threads||[]).some(function(x){ return x.title===t.title; }); }));
+  e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
+  e.planner=(a.planner||[]).concat((b.planner||[]).filter(function(f){ return !(a.planner||[]).some(function(x){ return x.t===f.t; }); }));
+  e.critterName=(a.critterName&&b.critterName)?(a.critterName.length>=b.critterName.length?a.critterName:b.critterName):(a.critterName||b.critterName);
+  return e;
 }
-function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} syncToServer(); }
+function mergeFamilyDB(local, server){
+  if(!server||!server.explorers)return local;
+  if(!local||!local.explorers||!local.explorers.length)return JSON.parse(JSON.stringify(server));
+  var merged=JSON.parse(JSON.stringify(server));
+  merged.syncCode=server.syncCode||local.syncCode||null;
+  merged.parentPin=server.parentPin||local.parentPin||null;
+  merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:(local.dailyLimit!=null?local.dailyLimit:30));
+  merged.stageV=server.stageV||local.stageV||null;
+  merged.updatedAt=(server.updatedAt&&local.updatedAt)?(server.updatedAt>local.updatedAt?server.updatedAt:local.updatedAt):(server.updatedAt||local.updatedAt||null);
+  var byId={}; merged.explorers.forEach(function(e){ byId[e.id]=e; });
+  (local.explorers||[]).forEach(function(e){
+    if(byId[e.id]){ var i=merged.explorers.indexOf(byId[e.id]); merged.explorers[i]=mergeExplorer(byId[e.id], e); }
+    else merged.explorers.push(JSON.parse(JSON.stringify(e)));
+  });
+  if(!merged.explorers.some(function(e){return e.id===merged.activeId;}))merged.activeId=local.activeId||merged.explorers[0].id;
+  return merged;
+}
+function syncFromServer(opts){
+  opts=opts||{};
+  var key=syncKey(); if(!key)return Promise.resolve(false);
+  return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.configured||!j.data||!j.data.explorers)return false;
+    var server=j.data, localEmpty=!DB.explorers||!DB.explorers.length;
+    if(localEmpty){ DB=JSON.parse(JSON.stringify(server)); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null; saveLocal(); syncToServer(); return true; }
+    /* Always union-merge: timestamps are NOT trusted as a winner,
+       because an open device's per-minute screen-time save keeps
+       bumping its local timestamp. The merge keeps the richer side
+       of every field, so nothing either device did is lost. */
+    var before=JSON.stringify(DB);
+    DB=mergeFamilyDB(DB, server); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null;
+    var changed=JSON.stringify(DB)!==before;
+    if(changed){ saveLocal(); syncToServer(); }
+    return changed;
+  }).catch(function(){ return false; });
+}
+/* Link this device to a family: pull the family record for the code
+   and merge it with anything already on this device, then keep it
+   in sync under that code from now on. Returns a promise<boolean>. */
+function linkDevice(rawCode){
+  var code=normalizeSyncCode(rawCode);
+  if(!syncCodeValid(code)){ toast('That code does not look right — it should be 6 letters, like ABC2DE.'); return Promise.resolve(false); }
+  return fetch('/api/progress?code='+encodeURIComponent(code)).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.configured){ toast('Sync is not set up on the server yet — ask a grown-up to finish the Supabase setup first.'); return false; }
+    if(!j.data||!j.data.explorers||!j.data.explorers.length){ toast('No family found for that code. Check the code and try again.'); return false; }
+    DB=mergeFamilyDB(DB, j.data); DB.syncCode=code; DB.updatedAt=j.updatedAt||new Date().toISOString();
+    saveLocal(); syncToServer(); return true;
+  }).catch(function(){ toast('Could not reach the server. Check the connection and try again.'); return false; });
+}
+function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); saveLocal(); syncToServer(); }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); migrateStages(); return; } }catch(e){}
-  DB={explorers:[], parentPin:null, dailyLimit:30, activeId:null};
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
+  DB={explorers:[], parentPin:null, dailyLimit:30, activeId:null, syncCode:makeSyncCode(), updatedAt:null};
   save();
 }
 /* One-time, in-place remap: the Critter Lab now uses the Muse version's
@@ -971,7 +1075,12 @@ function confettiStars(){
 var route='door', parentUnlocked=false, sessionStart=Date.now();
 var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
 var PAGE_TITLES={home:'My Terrarium',learn:'Learn',ask:'Ask Pip',play:'Play Arcade',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
-function go(r){ route=r; if(r!=='parent'){} window.scrollTo(0,0); render(); }
+function go(r){ route=r; window.scrollTo(0,0); render();
+  /* Parent page: pull the latest family record first, so a parent
+     opening the app on their own phone sees the child's newest
+     progress, not a stale copy from this device. */
+  if(r==='parent'){ setTimeout(function(){ syncFromServer({}).then(function(changed){ if(changed)render(); }); },0); }
+}
 function render(){
   var root=document.getElementById('root');
   if(!ex()){ root.innerHTML=doorHTML(); bindDoor(); return; }
@@ -980,7 +1089,7 @@ function render(){
   root.innerHTML='<div class="app">'
    +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+'</div></div></div>'
    + navBtns
-   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">Progress is saved on this device only.</div></aside>'
+   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<span class="chip">⭐ '+ex().stars+'</span>'
    +'<button class="iconbtn '+(forestOn?'on':'')+'" id="tbMusic" title="Forest Morning music" aria-label="Toggle Forest Morning music">🎵</button>'
@@ -1054,10 +1163,16 @@ function doorHTML(){
       h+='<p style="font-weight:800">Who is exploring today? Tap your name, then tap your 3 secret pictures in order.</p>'
        +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face">'+e.face+'</span>'+esc(e.name)+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
        +'<div id="doorCodeArea"></div>'
-       +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>';
+       +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>'
+       +'<button class="btn ghost" id="doorLink" style="margin-left:8px">🔗 Link this device with a family code</button>';
     } else {
       h+='<p style="font-weight:800">Welcome, explorer! Let’s create your very first explorer.</p><button class="btn" id="doorNew">Start creating ✨</button>';
     }
+  } else if(doorMode==='link'){
+    h+='<p style="font-weight:800">Link this device to your family</p>'
+     +'<p class="muted" style="font-weight:700">Ask a grown-up for the 6-letter family sync code (it is on the parent page, under “Family sync”). Type it here and this device will pull down the family’s progress and keep in sync.</p>'
+     +'<label class="flabel">Family sync code</label><input class="field" id="linkCode" placeholder="e.g. ABC2DE" maxlength="7" style="text-align:center;text-transform:uppercase;letter-spacing:2px;font-weight:900">'
+     +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px"><button class="btn" id="linkBtn">Link this device 🔗</button><button class="btn ghost" id="doorBack">Back</button></div>';
   } else {
     h+='<label class="flabel">Choose your magic name</label><input class="field" id="newName" placeholder="e.g. MightyOtter" maxlength="20">'
      +'<label class="flabel">Pick 3 secret pictures for your picture code (remember the order!)</label>'
@@ -1065,7 +1180,7 @@ function doorHTML(){
      +'<div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-pic="'+p+'">'+p+'</button>'; }).join('')+'</div>'
      +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="createBtn">Open my door 🚪</button><button class="btn ghost" id="doorBack">Back</button></div>';
   }
-  h+='<p class="small muted" style="margin-top:16px">Grown-ups: the parent page lives inside the profile menu, protected by a PIN. Progress is saved on this device only.</p></div></div>';
+  h+='<p class="small muted" style="margin-top:16px">Grown-ups: the parent page lives inside the profile menu, protected by a PIN. Progress syncs across devices linked with your family code — or stays on this device if you never link it.</p></div></div>';
   return h;
 }
 function renderBubbles(el, arr){
@@ -1074,6 +1189,15 @@ function renderBubbles(el, arr){
 function bindDoor(){
   var nb=document.getElementById('doorNew');
   if(nb)nb.onclick=function(){ doorMode='create'; doorCode=[]; render(); };
+  var lk=document.getElementById('doorLink');
+  if(lk)lk.onclick=function(){ doorMode='link'; doorCode=[]; render(); };
+  if(doorMode==='link'){
+    document.getElementById('linkBtn').onclick=function(){
+      var v=document.getElementById('linkCode').value;
+      linkDevice(v).then(function(ok){ if(ok){ doorMode='pick'; toast('This device is linked! Welcome to the family terrarium. 🔗'); render(); } });
+    };
+    return;
+  }
   var back=document.getElementById('doorBack');
   if(back)back.onclick=function(){ doorMode='pick'; doorSel=null; doorCode=[]; render(); };
   if(doorMode==='create'){
@@ -1798,8 +1922,12 @@ function parentHTML(){
    +(datEv&&datEv.kind==='due'?' Heads-up: <b>'+esc(datEv.name)+'</b> lands the day after tomorrow, so tomorrow Pip nudges a short revision game — not a full quiz.':'')
    +(tPlan.rest?' It is dance & art day — Pip will not set any extra study.':'');
   var doneList=Object.keys(sel.completed).map(function(id){ var t=topicById(id); return t.icon+' '+t.name+' ('+sel.completed[id]+'/5)'; });
-  return '<h2 style="margin:0;font-size:1.55rem">🌙 Grown-ups — summary &amp; dashboard</h2><p class="muted" style="font-weight:700;margin:5px 0 14px">The evening summary and the full dashboard in one place — quests, screen time, Pip’s plan for tomorrow, and explorer controls. Everything here is from this app, on this device only.</p>'
+  return '<h2 style="margin:0;font-size:1.55rem">🌙 Grown-ups — summary &amp; dashboard</h2><p class="muted" style="font-weight:700;margin:5px 0 14px">The evening summary and the full dashboard in one place — quests, screen time, Pip’s plan for tomorrow, and explorer controls. Everything here is from the linked family, refreshed from the server when you open this page.</p>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+DB.explorers.map(function(x){ return '<button class="btn '+(x.id===sel.id?'':'ghost')+'" data-psel="'+x.id+'">'+esc(x.name)+' · ⭐ '+x.stars+'</button>'; }).join('')+'<span style="flex:1"></span><button class="btn ghost" id="pLock">🔒 Lock</button></div>'
+   +'<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🔗 Family sync — resume on any device</h3>'
+   +'<p style="font-weight:700;margin:6px 0">Family sync code: <b style="font-size:1.4rem;letter-spacing:3px">'+esc(DB.syncCode||'—')+'</b></p>'
+   +'<p class="small muted" style="font-weight:700">On any other device, open this app, tap “Link this device with a family code” at the Grand Door, and type this code. That device pulls down this family’s progress and keeps in sync. Keep the code in the family — anyone with it can see the progress.</p>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="syncCopy">📋 Copy code</button><button class="btn ghost" id="syncRefresh">↻ Refresh from server now</button><span class="small muted" id="syncStatus" style="align-self:center;font-weight:700"></span></div></div>'
    +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
    +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
@@ -1810,7 +1938,7 @@ function parentHTML(){
    +'<h4>🗓 Pip’s plan for tomorrow</h4><p style="font-weight:700">'+plan+'</p></div>'
    +'<div class="card"><h3>⏱ Screen time</h3><p style="font-weight:800;font-size:1.3rem">'+todayMin+' min today <span class="small muted">· limit '+DB.dailyLimit+' min/day</span></p>'
    +(todayMin>DB.dailyLimit?'<div class="feedback no">Over the daily limit today by '+(todayMin-DB.dailyLimit)+' min.</div>':'<p class="small muted" style="font-weight:700">Within today’s limit.</p>')
-   +'<svg viewBox="0 0 330 122" style="width:100%;max-width:330px" role="img" aria-label="Last 7 days screen time chart"><line x1="4" y1="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" x2="326" y2="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" stroke="#ffc94d" stroke-width="2" stroke-dasharray="5 4"/>'+bars+'</svg><p class="small muted">Dashed line = daily limit. This counts time in this app on this device only.</p>'
+   +'<svg viewBox="0 0 330 122" style="width:100%;max-width:330px" role="img" aria-label="Last 7 days screen time chart"><line x1="4" y1="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" x2="326" y2="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" stroke="#ffc94d" stroke-width="2" stroke-dasharray="5 4"/>'+bars+'</svg><p class="small muted">Dashed line = daily limit. This counts time in the app across linked devices.</p>'
    +'<label class="flabel">Daily limit (minutes)</label><div style="display:flex;gap:8px"><input class="field" id="limitIn" type="number" min="5" max="240" value="'+DB.dailyLimit+'"><button class="btn" id="limitSave">Save</button></div>'
    +'<h4 style="margin-top:18px">⚖️ Today’s balance</h4><p style="font-weight:700">Learning quests finished: '+doneList.length+' · Treasures unlocked: '+sel.treasures.length+' · Ask Pip chats: '+sel.threads.length+'</p>'
    +'<h4>🌈 Weekend together idea</h4><p style="font-weight:700">Try a riverside walk or a hawker-centre breakfast together, then let '+esc(sel.name)+' teach you one thing Pip taught her this week — kids love being the teacher!</p></div></div>'
@@ -1818,7 +1946,7 @@ function parentHTML(){
    + DB.explorers.map(function(x){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+x.stars+' · '+Object.keys(x.completed).length+' quests</span><span style="flex:1"></span><button class="btn ghost" data-reset="'+x.id+'">🔑 Reset picture code</button><button class="btn coral" data-remove="'+x.id+'">Remove explorer</button></div>'; }).join('')
    +'<div id="resetArea"></div>'
    +'<h4 style="margin-top:18px">Parent PIN</h4><button class="btn ghost" id="pinChange">Change PIN</button> <span id="pinChangeArea"></span>'
-   +'<p class="small muted" style="margin-top:14px">This page shows only what happens inside this app on this device. There is no location tracking and no camera monitoring in this app.</p></div>';
+   +'<p class="small muted" style="margin-top:14px">This page shows the linked family’s progress, refreshed from the server. There is no location tracking and no camera monitoring in this app.</p></div>';
 }
 var parentSel=null;
 function bindParent(){
@@ -1838,6 +1966,16 @@ function bindParent(){
   }
   document.querySelectorAll('[data-psel]').forEach(function(b){ b.onclick=function(){ parentSel=b.getAttribute('data-psel'); render(); }; });
   document.getElementById('pLock').onclick=function(){ parentUnlocked=false; go('home'); };
+  var cp=document.getElementById('syncCopy'); if(cp)cp.onclick=function(){
+    var code=DB.syncCode||'';
+    function done(){ toast('Family sync code copied: '+code); }
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done,function(){ toast('Code: '+code+' — copy it by hand.'); }); }
+    else toast('Code: '+code+' — copy it by hand.');
+  };
+  var rf=document.getElementById('syncRefresh'); if(rf)rf.onclick=function(){
+    var st=document.getElementById('syncStatus'); if(st)st.textContent='Refreshing…';
+    syncFromServer({}).then(function(changed){ toast(changed?'Progress refreshed from the server.':'Already up to date with the server.'); render(); });
+  };
   document.getElementById('limitSave').onclick=function(){ var v=parseInt(document.getElementById('limitIn').value,10); if(v>=5&&v<=240){ DB.dailyLimit=v; save(); toast('Daily limit saved.'); render(); } };
   document.querySelectorAll('[data-reset]').forEach(function(b){ b.onclick=function(){
     var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-reset');}); var picks=[];
@@ -1848,7 +1986,7 @@ function bindParent(){
   }; });
   document.querySelectorAll('[data-remove]').forEach(function(b){ b.onclick=function(){
     var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-remove');});
-    openModal('<h3 style="margin-top:0">Remove '+esc(target.name)+'?</h3><p style="font-weight:700">This deletes this explorer and all their progress <b>on this device</b>. This cannot be undone.</p><div style="display:flex;gap:10px"><button class="btn coral" id="rmYes">Yes, remove</button><button class="btn ghost" onclick="closeModal()">Keep explorer</button></div>');
+    openModal('<h3 style="margin-top:0">Remove '+esc(target.name)+'?</h3><p style="font-weight:700">This deletes this explorer and all their progress <b>everywhere, on every linked device</b>. This cannot be undone.</p><div style="display:flex;gap:10px"><button class="btn coral" id="rmYes">Yes, remove</button><button class="btn ghost" onclick="closeModal()">Keep explorer</button></div>');
     document.getElementById('rmYes').onclick=function(){ DB.explorers=DB.explorers.filter(function(x){return x.id!==target.id;}); if(DB.activeId===target.id)DB.activeId=DB.explorers.length?DB.explorers[0].id:null; save(); closeModal(); if(!DB.explorers.length){ parentUnlocked=false; go('door'); } else render(); };
   }; });
   document.getElementById('pinChange').onclick=function(){
@@ -1859,7 +1997,11 @@ function bindParent(){
 
 /* ============================================================ BOOT */
 load();
-if(typeof syncFromServer==='function')syncFromServer();
+ensureSyncCode();
+/* First load: pull the family record before the first render when
+   this device is already linked, so the parent page (and Home) show
+   the newest progress, not a stale local copy. */
+if(typeof syncFromServer==='function')syncFromServer({}).then(function(changed){ if(changed)render(); });
 applyTheme();
 setInterval(function(){ if(ex()&&document.visibilityState==='visible'){ addMinutes(1); save(); } },60000);
 render();
