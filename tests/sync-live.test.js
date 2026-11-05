@@ -77,3 +77,38 @@ test('Grand Door is NOT skipped on load: no straight-to-Home', () => {
   assert.ok(html.includes("var route='door'"), 'route must still start at the Grand Door');
   assert.ok(!html.includes("if(ex())route='home'"), 'straight-to-Home must not be present (Bryan said no)');
 });
+
+test('a sync pull never switches which explorer this device is signed in as', () => {
+  // mergeFamilyDB is inline; eval it with its helpers for a real test.
+  function fnText(marker) {
+    const s = html.indexOf(marker);
+    assert.ok(s >= 0, marker + ' not found');
+    const n = html.indexOf('\nfunction ', s + marker.length);
+    const b = n >= 0 ? html.slice(s, n) : html.slice(s);
+    return b.endsWith('\n') ? b.slice(0, -1) : b;
+  }
+  const mergeFamilyDB = eval(
+    fnText('function unionArr(a,b){') + '\n' +
+    fnText('function unionObjMax(a,b){') + '\n' +
+    fnText('function unionObjLatest(a,b){') + '\n' +
+    fnText('function isThinkingMsg(m){') + '\n' +
+    fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
+    fnText('function mergeExplorer(a,b){') + '\n' +
+    '(' + fnText('function mergeFamilyDB(local, server){') + ')'
+  );
+  const mk = (id, activeId) => ({
+    syncCode: 'ABCDEF', parentPin: null, dailyLimit: 30, stageV: null, updatedAt: '2026-11-05T00:00:00.000Z',
+    activeId, explorers: [
+      { id: 'e1', name: 'First', stars: 0, critterStage: 0, badges: [], treasures: [], discoveredCritters: [], completed: {}, completedDay: {}, playDoneDay: {}, hclMissed: [], favAnswers: [], progress: {}, playProgress: {}, daily: {}, totalMinutes: 0, mood: {}, stuckCount: {}, threads: [], threadsClearedAt: null, deletedThreadIds: [], flashcards: [], planner: [], critterName: 'Pip' },
+      { id: 'e2', name: 'Second', stars: 0, critterStage: 0, badges: [], treasures: [], discoveredCritters: [], completed: {}, completedDay: {}, playDoneDay: {}, hclMissed: [], favAnswers: [], progress: {}, playProgress: {}, daily: {}, totalMinutes: 0, mood: {}, stuckCount: {}, threads: [], threadsClearedAt: null, deletedThreadIds: [], flashcards: [], planner: [], critterName: 'Pip' },
+    ],
+  });
+  // This device is signed in as e2; the server record was last
+  // uploaded by a device signed in as e1.
+  const merged = mergeFamilyDB(mk('local', 'e2'), mk('server', 'e1'));
+  assert.equal(merged.activeId, 'e2', 'the local active explorer survives the pull');
+  // If the local active explorer no longer exists, fall back safely.
+  const gone = mk('local', 'e9');
+  const merged2 = mergeFamilyDB(gone, mk('server', 'e1'));
+  assert.equal(merged2.activeId, 'e1', 'a missing local active explorer falls back to the server one');
+});
