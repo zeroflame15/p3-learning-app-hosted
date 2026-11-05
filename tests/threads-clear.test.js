@@ -32,6 +32,7 @@ function fnText(marker) {
 const mergeExplorer = eval(
   fnText('function unionArr(a,b){') + '\n' +
   fnText('function unionObjMax(a,b){') + '\n' +
+  fnText('function unionObjLatest(a,b){') + '\n' +
   fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
   '(' + fnText('function mergeExplorer(a,b){') + ')'
 );
