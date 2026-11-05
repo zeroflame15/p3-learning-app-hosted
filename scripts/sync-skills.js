@@ -13,7 +13,7 @@ let html = fs.readFileSync(htmlPath, 'utf8');
 const data = {
   version: SKILL_PACK_VERSION,
   skills: SKILLS.map((s) => ({ id: s.id, topicId: s.topicId, subject: s.subject, name: s.name, method: s.method, keywords: s.keywords })),
-  agents: AGENTS.map((a) => ({ id: a.id, name: a.name, model: a.model, status: a.status })),
+  agents: AGENTS.map((a) => ({ id: a.id, name: a.name, feature: a.feature, model: a.model, status: a.status, keywords: a.keywords, modelNote: a.modelNote || '' })),
 };
 const next = 'var SKILL_PACK = ' + JSON.stringify(data) + ';';
 const re = /var SKILL_PACK = \{.*?\};\nfunction skillForQuestionClient/s;
