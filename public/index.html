@@ -1203,7 +1203,9 @@ function doorHTML(){
        +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>'
        +'<button class="btn ghost" id="doorLink" style="margin-left:8px">🔗 Link this device with a family code</button>';
     } else {
-      h+='<p style="font-weight:800">Welcome, explorer! Let’s create your very first explorer.</p><button class="btn" id="doorNew">Start creating ✨</button>';
+      h+='<p style="font-weight:800">Welcome, explorer! Let’s create your very first explorer.</p><button class="btn" id="doorNew">Start creating ✨</button>'
+       +'<div style="margin-top:12px"><button class="btn ghost" id="doorLink">🔗 Link this device with a family code</button></div>'
+       +'<p class="small muted" style="margin-top:8px">Already have a family? Tap “Link this device” and type your 6-letter family sync code to pull down your progress.</p>';
     }
   } else if(doorMode==='link'){
     h+='<p style="font-weight:800">Link this device to your family</p>'
