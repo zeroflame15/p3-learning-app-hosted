@@ -131,3 +131,35 @@ test('care UI: three buttons, 1 star each, growth once a day on all three', () =
   assert.ok(merge.includes('mergeCare(a.care,b.care)'), 'care merges across devices');
   assert.ok(merge.includes('careGrewDay'), 'the once-a-day growth marker merges too');
 });
+
+/* --- Rename timestamp must never detach from its name (live bug 2026-11-05) --- */
+/* pickCritterName is already extracted near the top of this file. */
+
+test('rename tie: same timestamp on both sides, the local rename wins — never the old longer name', () => {
+  // Seen live: the server held {name:'Splash', at:'2026-11-05T14:43:02.191Z'}
+  // — the old name wearing the rename-to-'Ted' timestamp — so 'Ted'
+  // could never win again. A tie must go to the device in hand.
+  const out = pickCritterName(
+    { critterName: 'Splash', critterNameAt: '2026-11-05T14:43:02.191Z' },
+    { critterName: 'Ted', critterNameAt: '2026-11-05T14:43:02.191Z' }
+  );
+  assert.equal(out.name, 'Ted', 'local rename wins the tie');
+  assert.equal(out.at, '2026-11-05T14:43:02.191Z', 'the timestamp stays with Ted');
+});
+
+test('a later rename always beats a poisoned old name carrying an old timestamp', () => {
+  const out = pickCritterName(
+    { critterName: 'Splash', critterNameAt: '2026-11-05T14:43:02.191Z' },
+    { critterName: 'Ted', critterNameAt: '2026-11-05T14:50:00.000Z' }
+  );
+  assert.equal(out.name, 'Ted', 'later rename wins even over a stamped old name');
+});
+
+test('no timestamps: longer name wins but borrows no timestamp from the other side', () => {
+  const out = pickCritterName(
+    { critterName: 'Splash', critterNameAt: null },
+    { critterName: 'Ted', critterNameAt: null }
+  );
+  assert.equal(out.name, 'Splash', 'longer legacy name still wins');
+  assert.equal(out.at, null, 'no timestamp is invented for the winner');
+});
