@@ -12,7 +12,7 @@ function mockRes() {
 }
 function mockReq(method, body, query) { return { method, body, query: query || {} }; }
 
-test('ask-pip: no key -> 503, empty question -> 400, live reply cites agent + skill', async () => {
+test('ask-pip: no key -> 503, empty question -> 400, live reply is a simple chatbot answer', async () => {
   delete process.env.MODEL_API_KEY;
   delete require.cache[require.resolve('../api/ask-pip')];
   const ask = require('../api/ask-pip');
@@ -40,17 +40,38 @@ test('ask-pip: no key -> 503, empty question -> 400, live reply cites agent + sk
     assert.equal(res.statusCode, 200);
     assert.equal(res.body.live, true);
     assert.match(res.body.reply, /56/);
-    assert.equal(res.body.agent, 'kix-tutor');
-    assert.equal(res.body.skillId, 'times-tables');
+    // Simple chatbot: one agent, no skill routing.
+    assert.equal(res.body.agent, 'ask-kix');
+    assert.equal(res.body.skillId, null);
     assert.equal(res.body.skillVersion, 'skills-v1');
-    // Every reply is signed and traceable (video: "every reply signed").
-    assert.match(res.body.signature, /^pip:kix-tutor:times-tables:skills-v1:t/);
+    // Every reply is still signed and traceable.
+    assert.match(res.body.signature, /^pip:ask-kix:simple:t/);
     assert.ok(res.body.traceId);
-    assert.equal(res.body.hintFirst, true);
+    assert.equal(res.body.hintFirst, false);
   } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
 });
 
-test('ask-pip: fixFlag re-checks and still cites the skill', async () => {
+test('ask-pip: LaTeX in a model reply is cleaned before it reaches a child', async () => {
+  process.env.MODEL_API_KEY = 'test-key';
+  delete require.cache[require.resolve('../api/ask-pip')];
+  const askLive = require('../api/ask-pip');
+  const origFetch = global.fetch;
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({ choices: [{ message: { content: 'For $3 \\times 4$, add $3$ four times: $3 + 3 + 3 + 3 = 12$.' } }] }),
+  });
+  try {
+    const res = mockRes();
+    await askLive(mockReq('POST', { question: 'what is 3 x 4' }), res);
+    assert.equal(res.statusCode, 200);
+    assert.ok(!res.body.reply.includes('$'), 'no dollar signs left');
+    assert.ok(!res.body.reply.includes('\\times'), 'no LaTeX left');
+    assert.match(res.body.reply, /3 x 4/);
+    assert.match(res.body.reply, /12/);
+  } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
+});
+
+test('ask-pip: fixFlag re-checks simply, no skill routing', async () => {
   process.env.MODEL_API_KEY = 'test-key';
   delete require.cache[require.resolve('../api/ask-pip')];
   const ask = require('../api/ask-pip');
@@ -65,7 +86,8 @@ test('ask-pip: fixFlag re-checks and still cites the skill', async () => {
     await ask(mockReq('POST', { question: '7 x 8 = 54', fixFlag: true }), res);
     assert.equal(res.statusCode, 200);
     assert.match(sent.messages[0].content, /flagged/);
-    assert.equal(res.body.skillId, 'times-tables');
+    assert.equal(res.body.agent, 'ask-kix');
+    assert.equal(res.body.skillId, null);
   } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
 });
 
@@ -87,7 +109,7 @@ test('health: reports configuration without secrets', async () => {
   assert.deepEqual(res.body.placeholderAgents, ['content-curator', 'home-reader', 'outing-scout', 'sidekick-studio', 'talk-to-kix', 'whos-who']);
 });
 
-test('ask-pip: video example routes to Kix Tutor with the P3 Science skill by id', async () => {
+test('ask-pip: simple chatbot answers the frog question directly, no skill routing', async () => {
   process.env.MODEL_API_KEY = 'test-key';
   delete require.cache[require.resolve('../api/ask-pip')];
   const ask = require('../api/ask-pip');
@@ -101,13 +123,13 @@ test('ask-pip: video example routes to Kix Tutor with the P3 Science skill by id
     const res = mockRes();
     await ask(mockReq('POST', { question: "Why can't Pip hop yet?" }), res);
     assert.equal(res.statusCode, 200);
-    assert.equal(res.body.agent, 'kix-tutor');
-    assert.equal(res.body.skillId, 'life-cycle-frog');
-    // The exact skill method is in the prompt, and the reply is a
-    // hint, not the answer: the prompt must say so.
-    assert.match(sent.messages[0].content, /life-cycle-frog/);
-    assert.match(sent.messages[0].content, /HINT first/);
-    assert.match(sent.messages[0].content, /Guardrails/);
+    assert.equal(res.body.agent, 'ask-kix');
+    assert.equal(res.body.skillId, null);
+    // No skill routing, no hint-first machinery in the prompt.
+    assert.ok(!sent.messages[0].content.includes('life-cycle-frog'));
+    assert.ok(!sent.messages[0].content.includes('HINT first'));
+    assert.ok(!sent.messages[0].content.includes('Guardrails'));
+    assert.match(sent.messages[0].content, /Answer the question directly/);
   } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
 });
 
