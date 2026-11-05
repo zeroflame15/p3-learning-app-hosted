@@ -127,6 +127,7 @@ const mergeExplorer = eval(
   fnText('function unionObjLatest(a,b){') + '\n' +
   fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
   fnText('function pickCritterName(a,b){') + '\n' +
+  fnText('function mergeCare(a,b){') + '\n' +
   '(' + fnText('function mergeExplorer(a,b){') + ')'
 );
 

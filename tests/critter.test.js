@@ -62,3 +62,72 @@ test('the stage viewer is separate from the growth stage', () => {
   assert.ok(!withoutGuard.includes('e.critterStage=i'), 'tapping a stage must never overwrite the growth stage outright');
   assert.ok(bind.includes('if(i>e.critterStage)e.critterStage=i'), 'exploring a later stage still grows the frog forward, never backwards');
 });
+
+/* --- Simple care: feed, clean, play (no hunger) --- */
+function grabVar(name) {
+  const start = html.indexOf('var ' + name + '=');
+  assert.ok(start >= 0, name + ' found');
+  const end = html.indexOf('];', start);
+  return html.slice(start, end + 2);
+}
+const CARE_ACTIONS = eval(grabVar('CARE_ACTIONS') + '\n;CARE_ACTIONS');
+const COOLDOWN_SRC = html.match(/var CARE_COOLDOWN_MS=[^;]+;/)[0];
+assert.ok(COOLDOWN_SRC.includes('4*60*60*1000'), 'cooldown is 4 hours in the page source');
+const careReady = eval(COOLDOWN_SRC + '\n' + grab('careReady') + '\n;careReady');
+const careReadyInHrs = eval(COOLDOWN_SRC + '\n' + grab('careReadyInHrs') + '\n;careReadyInHrs');
+const careAllToday = eval('var CARE_ACTIONS=' + JSON.stringify(CARE_ACTIONS) + ';\n' + grab('careAllToday') + '\n;careAllToday');
+const mergeCare = eval(grab('mergeCare') + '\n;mergeCare');
+
+test('care has exactly feed, clean and play — no hunger mechanic', () => {
+  assert.deepEqual(CARE_ACTIONS.map(function(a){ return a.id; }), ['feed', 'clean', 'play']);
+  // No hunger mechanic: no hunger state, no hunger-driven behaviour.
+  // (The word "hungry" itself appears in English vocab questions —
+  // that is content, not a mechanic.)
+  assert.ok(!html.includes('hunger:'), 'no hunger state in the explorer record');
+  assert.ok(!html.includes('e.hunger'), 'no hunger read anywhere');
+});
+
+test('care cooldown is 4 hours: fresh is ready, just-cared is not, old care is ready again', () => {
+  const now = Date.parse('2026-11-05T12:00:00.000Z');
+  assert.ok(careReady({}, 'feed', now), 'never cared: ready');
+  const just = { feed: { at: '2026-11-05T11:00:00.000Z', day: '2026-11-05' } };
+  assert.ok(!careReady(just, 'feed', now), 'cared 1h ago: not ready');
+  assert.equal(careReadyInHrs(just, 'feed', now), 3, 'ready again in 3h');
+  const old = { feed: { at: '2026-11-05T07:00:00.000Z', day: '2026-11-05' } };
+  assert.ok(careReady(old, 'feed', now), 'cared 5h ago: ready again');
+  assert.ok(careReady(old, 'clean', now), 'another action is independent: clean is ready');
+});
+
+test('all three cares today is true only when every action was done today', () => {
+  const day = '2026-11-05';
+  const all = { feed: { at: '2026-11-05T08:00:00.000Z', day }, clean: { at: '2026-11-05T09:00:00.000Z', day }, play: { at: '2026-11-05T10:00:00.000Z', day } };
+  assert.ok(careAllToday(all, day), 'all three today');
+  const missing = { feed: { at: '2026-11-05T08:00:00.000Z', day }, clean: { at: '2026-11-05T09:00:00.000Z', day } };
+  assert.ok(!careAllToday(missing, day), 'play missing');
+  const stale = { feed: { at: '2026-11-04T08:00:00.000Z', day: '2026-11-04' }, clean: { at: '2026-11-05T09:00:00.000Z', day }, play: { at: '2026-11-05T10:00:00.000Z', day } };
+  assert.ok(!careAllToday(stale, day), 'feed was yesterday');
+});
+
+test('care merges by latest time per action, independently', () => {
+  const a = { feed: { at: '2026-11-05T08:00:00.000Z', day: '2026-11-05' }, clean: { at: '2026-11-05T09:00:00.000Z', day: '2026-11-05' } };
+  const b = { feed: { at: '2026-11-05T10:00:00.000Z', day: '2026-11-05' }, play: { at: '2026-11-05T10:30:00.000Z', day: '2026-11-05' } };
+  const merged = mergeCare(a, b);
+  assert.equal(merged.feed.at, '2026-11-05T10:00:00.000Z', 'later feed wins');
+  assert.equal(merged.clean.at, '2026-11-05T09:00:00.000Z', 'clean only on one side is kept');
+  assert.equal(merged.play.at, '2026-11-05T10:30:00.000Z', 'play only on one side is kept');
+});
+
+test('care UI: three buttons, 1 star each, growth once a day on all three', () => {
+  const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
+  assert.ok(page.includes('data-care'), 'care buttons render in Critter Lab');
+  assert.ok(page.includes('each care earns ⭐ 1 star'), 'the star reward is shown');
+  assert.ok(page.includes('again in'), 'cooldown countdown is shown');
+  const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 3000);
+  assert.ok(bind.includes('eNow.stars+=1'), 'each care earns exactly 1 star');
+  assert.ok(bind.includes("careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3"), 'all three today grows the frog one stage, once a day, never past Adult');
+  assert.ok(bind.includes('eNow.critterStage++'), 'growth advances the stage');
+  assert.ok(html.includes('care:{}, careGrewDay:null'), 'new explorers start with empty care');
+  const merge = grab('mergeExplorer');
+  assert.ok(merge.includes('mergeCare(a.care,b.care)'), 'care merges across devices');
+  assert.ok(merge.includes('careGrewDay'), 'the once-a-day growth marker merges too');
+});
