@@ -141,3 +141,21 @@ test('the Ask page renders the thinking bubble from asking state and filters old
   assert.ok(ask.includes("asking[th.id]?'<div class=\"msg pip\">Pip is thinking"), 'bubble renders from asking state');
   assert.ok(ask.includes('filter(function(m){ return !isThinkingMsg(m); })'), 'stored thinking placeholders are filtered out of the chat log');
 });
+
+/* --- Vanishing first send (seen live three times, 2026-11-05) ----
+   A sync merge REPLACES the DB object, but the old code never
+   re-rendered after it — so Ask Pip's send handler kept holding
+   the old detached explorer. A question (and its reply) written
+   through that stale reference was silently lost when save()
+   serialised the new DB, and the chat fell back to its greeting.
+   The send must resolve the thread from the live database. */
+
+test('doSend resolves the thread from the live database, not the rendered explorer', () => {
+  const start = clientSrc.indexOf('function doSend(){');
+  assert.ok(start >= 0, 'doSend found');
+  const fn = clientSrc.slice(start, clientSrc.indexOf('\n  }\n', start));
+  assert.ok(fn.includes('var eNow=ex();'), 'send resolves a fresh explorer');
+  assert.ok(fn.includes('eNow.threads.find'), 'thread is found in the fresh explorer');
+  assert.ok(fn.includes('var eLive=ex();'), 'the reply path resolves a fresh explorer too');
+  assert.ok(fn.includes('var eLive2=ex();'), 'the catch path resolves a fresh explorer too');
+});

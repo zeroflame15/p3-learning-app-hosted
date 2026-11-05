@@ -112,3 +112,8 @@ test('a sync pull never switches which explorer this device is signed in as', ()
   const merged2 = mergeFamilyDB(gone, mk('server', 'e1'));
   assert.equal(merged2.activeId, 'e1', 'a missing local active explorer falls back to the server one');
 });
+
+test('a merge that replaces the DB re-renders, so no handler keeps a detached explorer', () => {
+  const b = bodyOf('uploadAfterPull', 'function uploadAfterPull()');
+  assert.ok(b.includes('if(safeToRender())render();'), 'after a merge that changed the DB, re-render when safe');
+});
