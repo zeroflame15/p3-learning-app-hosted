@@ -15,14 +15,18 @@ function fnBody(marker) {
   return next >= 0 ? html.slice(start, next) : html.slice(start);
 }
 
-test('magical entrance sound exists: warm pad, rising arpeggio, high twinkles', () => {
+test('magical entrance sound exists: low pad, music-box phrase, high sparkle', () => {
   const fn = fnBody('function sndEntrance(){');
-  assert.ok(fn.includes('261.63'), 'low warm pad');
-  assert.ok(fn.includes('[523.25,659.25,783.99,1046.5,1318.5]'), 'rising arpeggio');
-  // The arpeggio must rise, not fall.
-  const notes = [523.25, 659.25, 783.99, 1046.5, 1318.5];
-  for (let i = 1; i < notes.length; i++) assert.ok(notes[i] > notes[i - 1], 'arpeggio rises');
-  assert.ok(fn.includes('2093'), 'high twinkle');
+  assert.ok(fn.includes('130.81'), 'low warm pad');
+  assert.ok(fn.includes('[523.25,659.25,783.99,1046.5,987.77,783.99,659.25,880]'), 'dreamy music-box phrase');
+  assert.ok(fn.includes('celesta('), 'played as celesta notes, not plain tones');
+  assert.ok(fn.includes('2093'), 'high sparkle');
+});
+
+test('the celesta helper is a sine plus a faint 4th harmonic', () => {
+  const fn = fnBody('function celesta(');
+  assert.ok(fn.includes("tone(freq,t0,dur,'sine'"), 'fundamental is a sine');
+  assert.ok(fn.includes('freq*4'), 'a 4th harmonic gives the music-box ring');
 });
 
 test('entrance sound plays on a correct picture code', () => {
@@ -41,7 +45,9 @@ test('sidebar selection uses the mystery sound, not the old pop', () => {
   assert.ok(nav[0].includes('sndMystery()'), 'sidebar selection plays mystery');
   assert.ok(!nav[0].includes('sndPop()'), 'sidebar no longer pops');
   const mystery = fnBody('function sndMystery(){');
-  assert.ok(mystery.includes('233.08'), 'minor third gives the mystery');
+  assert.ok(mystery.includes('celesta(987.77'), 'music-box twinkle');
+  assert.ok(mystery.includes('celesta(1318.5'), 'twinkle rises');
+  assert.ok(mystery.includes('0.18'), 'short — navigation still feels instant');
 });
 
 test('other taps keep their sounds: tiles still pop, correct answers still chime', () => {
