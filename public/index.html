@@ -1062,7 +1062,19 @@ function mergeExplorer(a,b){
   e.daily=daily; e.totalMinutes=Math.max(a.totalMinutes||0,b.totalMinutes||0);
   e.mood=Object.assign({},b.mood||{},a.mood||{});
   e.stuckCount=unionObjMax(a.stuckCount,b.stuckCount);
-  e.threads=(a.threads||[]).concat((b.threads||[]).filter(function(t){ return !(a.threads||[]).some(function(x){ return x.title===t.title; }); }));
+  /* Ask Pip threads merge by id, NOT by title: two chats are often
+     both titled "New chat 1", and merging by title silently dropped
+     the newer one — so a fresh chat's id vanished from DB and Ask
+     did nothing when tapped. A "Clear all chats" is a tombstone:
+     threadsClearedAt records when chats were cleared, and any thread
+     created at or before that moment is dropped on both sides, so a
+     later pull-then-upload / auto-pull can never resurrect cleared
+     chats from the server. Threads created after the clear have a
+     later id timestamp (ids are 't'+Date.now()) and survive. */
+  var clearedAt=Math.max(Date.parse(a.threadsClearedAt||'')||0, Date.parse(b.threadsClearedAt||'')||0);
+  if(clearedAt)e.threadsClearedAt=new Date(clearedAt).toISOString();
+  e.threads=(a.threads||[]).concat((b.threads||[]).filter(function(t){ return !(a.threads||[]).some(function(x){ return x.id===t.id; }); }));
+  if(clearedAt)e.threads=e.threads.filter(function(t){ var ts=parseInt(String(t.id||'').slice(1),10); return !(ts&&ts<=clearedAt); });
   e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
   e.planner=(a.planner||[]).concat((b.planner||[]).filter(function(f){ return !(a.planner||[]).some(function(x){ return x.t===f.t; }); }));
   e.critterName=(a.critterName&&b.critterName)?(a.critterName.length>=b.critterName.length?a.critterName:b.critterName):(a.critterName||b.critterName);
@@ -1793,12 +1805,20 @@ function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memo
 var activeThread=null;
 async function askPipLive(text, history, name){
   var sk=skillForQuestionClient(text);
+  /* A hung model call must never leave "Pip is thinking…" on screen
+     forever: abort after 20s so the caller falls back to Pip's
+     built-in answer instead of showing nothing. */
+  var ctrl=null, timer=null;
+  try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(e){} },20000); }catch(e){ ctrl=null; }
   try{
-    var r=await fetch('/api/ask-pip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10)})});
+    var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10)})};
+    if(ctrl)opts.signal=ctrl.signal;
+    var r=await fetch('/api/ask-pip',opts);
     if(!r.ok)return null;
     var j=await r.json();
     return (j&&j.reply)?{reply:j.reply, agentName:j.agentName||'', agentId:j.agent||'', skillName:j.skillName||(sk?sk.name:''), skillId:j.skillId||(sk?sk.id:''), signature:j.signature||'', traceId:j.traceId||'', hintFirst:!!j.hintFirst}:null;
   }catch(e){ return null; }
+  finally{ if(timer)clearTimeout(timer); }
 }
 function pipReply(text){
   var s=text.toLowerCase();
@@ -1839,7 +1859,7 @@ function bindAsk(){
   };
   var ct=document.getElementById('clearThreads'); if(ct)ct.onclick=function(){
     if(!window.confirm('Clear all chats with Pip? This deletes every Ask Pip chat for this explorer, on all linked devices. Your saved Golden Bookmark answers stay.'))return;
-    e.threads=[]; e.threadSeq=0; activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
+    e.threads=[]; e.threadsClearedAt=new Date().toISOString(); activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
   };
   document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ activeThread=b.getAttribute('data-thread'); render(); }; });
   var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
@@ -1856,6 +1876,10 @@ function bindAsk(){
   function doSend(){
     var inp=document.getElementById('askInput'); var v=inp.value.trim(); if(!v)return;
     var th=e.threads.find(function(t){return t.id===activeThread;});
+    /* If the active thread no longer exists (e.g. it was cleared on
+       another device), do not crash silently on th.msgs — send the
+       user back to the chat list instead of doing nothing. */
+    if(!th){ toast('That chat is gone — start a new chat first.'); activeThread=null; render(); return; }
     th.msgs.push({who:'kid', text:v});
     if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
     var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
