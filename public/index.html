@@ -1,0 +1,1868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>P3 Learning App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:dark;
+  /* Night-terrarium palette — same as the Muse version */
+  --bg:#17163a; --bg2:#1d1b47; --panel:#232154; --panel2:#2c2966;
+  --ink:#f5f1e6; --ink-soft:#b9b4d9; --line:#3a3677;
+  --amber:#ffc94d; --amber-d:#e0a92e; --teal:#57b06a; --teal-soft:#1e4034;
+  --coral:#ff8a7a; --coral-soft:#4c2a33; --sky:#7cc4ff; --sky-soft:#1e3a5f;
+  --green:#8fd18b; --green-soft:#1e4034; --gold:#ffc94d;
+  --nav:#100f2c; --nav-ink:#f5f1e6; --shadow:0 10px 30px rgba(0,0,0,.4);
+  --card:#fffaf0; --card-text:#2a2753;
+  --tint:rgba(46,160,90,.30); --glow:#7be495;
+  --radius:18px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Nunito",system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+h1,h2,h3,.display{font-family:"Fredoka","Nunito",sans-serif}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+a{color:var(--sky)}
+
+/* ---------- Layout ---------- */
+.app{display:flex;min-height:100vh}
+.sidebar{width:228px;flex:0 0 228px;background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh;z-index:30}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.brand .bname{font-family:"Fredoka";font-weight:800;font-size:1.15rem;line-height:1.1}
+.brand .bsub{font-size:.72rem;opacity:.75;font-weight:700}
+.navbtn{display:flex;align-items:center;gap:11px;width:100%;background:transparent;border:0;color:var(--nav-ink);padding:11px 12px;border-radius:12px;font-size:.98rem;font-weight:800;text-align:left;margin-bottom:4px}
+.navbtn .nic{font-size:1.15rem;width:24px;text-align:center}
+.navbtn:hover{background:rgba(255,255,255,.08)}
+.navbtn.active{background:var(--amber);color:#231a02}
+.sidebar .spacer{flex:1}
+.doorlink{font-size:.8rem;opacity:.85;text-align:center;padding:8px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;gap:10px;padding:12px 20px;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:2px solid var(--line)}
+.topbar .page-title{font-family:"Fredoka";font-weight:800;font-size:1.3rem}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:2px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:900;font-size:.9rem}
+.iconbtn{width:42px;height:42px;border-radius:50%;border:2px solid var(--line);background:var(--panel);font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center}
+.iconbtn.on{background:var(--amber);border-color:var(--amber)}
+.avatarbtn{width:46px;height:46px;border-radius:50%;border:3px solid var(--amber);background:var(--panel);padding:0;overflow:hidden;display:inline-flex}
+.content{padding:20px;max-width:1080px;width:100%;margin:0 auto}
+.view{display:none}
+.view.active{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.view.active{animation:none}}
+
+/* ---------- Generic ---------- */
+.card{background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 6px}
+.muted{color:var(--ink-soft)}
+.small{font-size:.85rem}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#231a02;border:0;border-radius:999px;padding:11px 20px;font-weight:900;font-size:1rem;box-shadow:0 4px 0 var(--amber-d)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--amber-d)}
+.btn.teal{background:var(--teal);color:#fff;box-shadow:0 4px 0 #2f6b3a}
+.btn.ghost{background:var(--panel);color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.btn.coral{background:var(--coral);color:#fff;box-shadow:0 4px 0 #9f1239}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.grid{display:grid;gap:16px}
+.grid.c2{grid-template-columns:repeat(2,1fr)}
+.grid.c3{grid-template-columns:repeat(3,1fr)}
+.grid.c4{grid-template-columns:repeat(4,1fr)}
+.pill{display:inline-block;border-radius:999px;padding:3px 11px;font-size:.75rem;font-weight:900}
+.pill.eng{background:var(--sky-soft);color:var(--sky)}
+.pill.math{background:var(--panel2);color:var(--amber-d)}
+.pill.sci{background:var(--green-soft);color:var(--green)}
+.pill.chi{background:var(--coral-soft);color:var(--coral)}
+.pill.done{background:var(--green-soft);color:var(--green)}
+.pill.prog{background:var(--panel2);color:var(--amber-d)}
+.progressbar{height:12px;background:var(--bg);border:2px solid var(--line);border-radius:999px;overflow:hidden}
+.progressbar>div{height:100%;background:var(--teal);border-radius:999px;transition:width .4s}
+
+/* ---------- Door ---------- */
+.doorwrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:
+  linear-gradient(rgba(16,15,44,.62),rgba(16,15,44,.62)), url(assets/terrarium.webp) center/cover no-repeat, var(--bg)}
+.doorcard{max-width:560px;width:100%;text-align:center}
+.doorcard h1{font-size:2.1rem;margin:8px 0 2px}
+.codebubbles{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.codebubbles .bub{width:64px;height:64px;border-radius:50%;border:3px dashed var(--line);background:var(--panel);font-size:1.9rem;display:flex;align-items:center;justify-content:center}
+.codebubbles .bub.filled{border-style:solid;border-color:var(--amber)}
+.picgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:14px 0}
+.picbtn{font-size:1.8rem;padding:10px 0;border-radius:14px;border:2px solid var(--line);background:var(--panel)}
+.picbtn:hover{border-color:var(--amber);transform:scale(1.06)}
+.explorerrow{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:14px 0}
+.explorerchip{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:12px 16px;font-weight:900}
+.explorerchip:hover{border-color:var(--amber)}
+.explorerchip .face{font-size:2rem}
+.field{width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);font-size:1rem;font-weight:700}
+label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
+
+/* ---------- Home / Pip ---------- */
+.hero{display:flex;gap:18px;align-items:center}
+.pipwrap{flex:0 0 128px;text-align:center}
+.pipwrap svg{width:128px;height:128px}
+.pipname{font-family:"Fredoka";font-weight:800}
+.speech{background:var(--panel2);border:2px solid var(--line);border-radius:16px;padding:12px 14px;position:relative;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:2px solid var(--gold);color:var(--ink);border-radius:999px;padding:5px 12px;font-weight:900;font-size:.85rem;margin:3px}
+
+/* ---------- Quiz ---------- */
+.optbtn{display:block;width:100%;text-align:left;background:var(--panel);border:2.5px solid var(--line);border-radius:14px;padding:14px 16px;font-size:1.05rem;font-weight:800;color:var(--ink);margin-bottom:10px}
+.optbtn:hover{border-color:var(--sky)}
+.optbtn.picked{border-color:var(--sky);background:var(--sky-soft)}
+.optbtn.right{border-color:var(--green);background:var(--green-soft);animation:pop .35s ease}
+.optbtn.wrong{border-color:var(--coral);background:var(--coral-soft)}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.045)}100%{transform:scale(1)}}
+.feedback{border-radius:14px;padding:14px 16px;font-weight:800;margin:10px 0}
+.feedback.ok{background:var(--green-soft)}
+.feedback.no{background:var(--coral-soft)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
+.confetti span{position:absolute;top:-40px;font-size:1.5rem;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(340deg)}}
+.trophy{font-size:4rem;animation:pop .5s ease infinite alternate;display:inline-block}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.bouncy{animation:bounce 1s ease infinite}
+@media (prefers-reduced-motion: reduce){.trophy,.bouncy,.confetti span{animation:none}}
+
+/* ---------- Play ---------- */
+.memgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;max-width:440px}
+.memcard{aspect-ratio:1;border-radius:14px;border:2.5px solid var(--line);background:var(--nav);color:#fff;font-size:1.7rem;display:flex;align-items:center;justify-content:center;font-weight:900}
+.memcard.open{background:var(--panel);color:var(--ink)}
+.memcard.matched{background:var(--green-soft);border-color:var(--green)}
+.bigq{font-size:1.5rem;font-weight:900;text-align:center;padding:10px}
+
+/* ---------- Ask Pip ---------- */
+.threadrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.threadrow.active{border-color:var(--amber)}
+.chatlog{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto;padding:6px 2px}
+.msg{max-width:82%;padding:11px 14px;border-radius:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
+.msg.kid{align-self:flex-end;background:var(--sky);color:#fff;border-bottom-right-radius:4px}
+.msg.pip{align-self:flex-start;background:var(--panel2);border:2px solid var(--line);border-bottom-left-radius:4px}
+.chatbar{display:flex;gap:8px;margin-top:12px}
+.chatbar input{flex:1}
+
+/* ---------- Critter / Treasure ---------- */
+.stage{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border-radius:14px;border:2.5px solid var(--line);background:var(--panel);font-weight:900;font-size:.85rem;text-align:center}
+.stage .se{font-size:2.2rem}
+.stage.sel{border-color:var(--teal);background:var(--teal-soft)}
+.treasure{display:flex;gap:14px;align-items:flex-start}
+.treasure .te{font-size:2.4rem;flex:0 0 auto}
+
+/* ---------- Parent ---------- */
+table.ledger{width:100%;border-collapse:collapse}
+table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--line);text-align:left;font-weight:700}
+.pinDots{display:flex;gap:10px;justify-content:center;margin:14px 0}
+.pinDots .d{width:18px;height:18px;border-radius:50%;border:3px solid var(--ink-soft)}
+.pinDots .d.f{background:var(--amber);border-color:var(--amber)}
+.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;justify-content:center}
+.keypad button{padding:14px 0;font-size:1.25rem;font-weight:900;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--ink)}
+
+/* ---------- Menu / modal ---------- */
+.menu{position:absolute;top:64px;right:16px;width:290px;background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;z-index:60}
+.menu button.mitem{display:flex;gap:10px;align-items:center;width:100%;background:var(--panel2);border:0;border-radius:12px;padding:13px;font-weight:900;font-size:.98rem;color:var(--ink);margin-bottom:8px;text-align:left}
+.overlay{position:fixed;inset:0;background:rgba(8,10,30,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+.overlay.open{display:flex}
+.modal{background:var(--panel);border-radius:20px;max-width:480px;width:100%;padding:22px;max-height:90vh;overflow-y:auto;border:2px solid var(--line)}
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--nav);color:#fff;padding:11px 20px;border-radius:999px;font-weight:900;z-index:95;display:none;box-shadow:var(--shadow)}
+.bottomnav{display:none}
+.starsRow{font-size:1.6rem;letter-spacing:4px}
+
+/* ---------- Pip: 3D animated otter (Mira-style) ---------- */
+.otter3d{display:inline-block;animation:otterFloat 3.2s ease-in-out infinite;transform-style:preserve-3d;perspective:600px;vertical-align:middle}
+.otter3d .otter-ring{display:block;width:100%;height:100%;border-radius:50%;overflow:hidden;position:relative;animation:otterTilt 5s ease-in-out infinite}
+.otter3d img{width:100%;height:100%;object-fit:cover;object-position:50% 32%;display:block;transform:scale(1.22)}
+.otter3d .otter-shine{position:absolute;inset:0;border-radius:50%;background:linear-gradient(125deg,rgba(255,255,255,.38) 0%,rgba(255,255,255,0) 42%);pointer-events:none}
+@keyframes otterFloat{0%,100%{transform:translateY(0) rotate(-1.6deg)}50%{transform:translateY(-7px) rotate(1.6deg)}}
+@keyframes otterTilt{0%,100%{transform:rotateY(-7deg) rotateX(3deg)}50%{transform:rotateY(7deg) rotateX(-3deg)}}
+.otter3d .eye{transform-box:fill-box;transform-origin:center;animation:otterBlink 4.4s infinite}
+@keyframes otterBlink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+.otter3d .pawwave{transform-box:fill-box;transform-origin:20% 85%;animation:otterWave 2.6s ease-in-out infinite}
+@keyframes otterWave{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-22deg)}}
+.otter3d .leafsway{transform-box:fill-box;transform-origin:50% 100%;animation:leafSway 3s ease-in-out infinite}
+@keyframes leafSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(6deg)}}
+.otter3d .earl{transform-box:fill-box;transform-origin:80% 80%;animation:earWig 5s ease-in-out infinite}
+.otter3d .earr{transform-box:fill-box;transform-origin:20% 80%;animation:earWig 5s ease-in-out infinite reverse}
+@keyframes earWig{0%,88%,100%{transform:rotate(0)}92%{transform:rotate(-9deg)}96%{transform:rotate(7deg)}}
+.otter3d .tongue{transform-box:fill-box;transform-origin:50% 0;animation:tongueWig 3.4s ease-in-out infinite}
+@keyframes tongueWig{0%,100%{transform:rotate(-2deg) scaleY(1)}50%{transform:rotate(3deg) scaleY(1.08)}}
+@media (prefers-reduced-motion: reduce){.otter3d,.otter3d .eye,.otter3d .pawwave,.otter3d .leafsway,.otter3d .earl,.otter3d .earr,.otter3d .tongue{animation:none}}
+/* ---------- Home: terrarium hero + weekly theme (mirrors the Muse version) ---------- */
+.disc{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sidecritter{background:var(--panel);border-radius:var(--radius);padding:14px}
+.homegrid{display:grid;gap:20px}
+.cardrow{display:grid;gap:16px;margin-top:20px}
+@media (min-width:900px){
+  .homegrid{grid-template-columns:3fr 2fr}
+  .cardrow{grid-template-columns:repeat(3,1fr)}
+}
+.heroT{position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow);min-height:340px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff}
+.heroT img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.heroT .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(16,15,44,.95),rgba(16,15,44,.35) 55%,transparent)}
+.heroT .tintwash{position:absolute;inset:0;background:linear-gradient(to top,var(--tint),transparent 70%);box-shadow:inset 0 0 90px var(--tint);transition:background .7s,box-shadow .7s}
+.heroT .inner{position:relative;padding:22px}
+.heroT .bubble{background:rgba(0,0,0,.35);border-radius:16px;padding:12px 14px;font-weight:600;color:#f5f1e6;max-width:460px}
+.heroT .memory{background:rgba(0,0,0,.35);border-radius:16px;padding:10px 14px;font-weight:700;font-size:.9rem;color:#ffe9a8;max-width:460px;margin-top:8px}
+.themeslabel{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,241,230,.8)}
+.themechip{border:0;border-radius:999px;padding:8px 15px;font-weight:700;font-size:.92rem;background:rgba(0,0,0,.4);color:#fff;transition:transform .15s;font-family:"Fredoka","Nunito",sans-serif}
+.themechip.sel{background:var(--gold);color:#2a2753;transform:scale(1.05);box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+.themeline{margin-top:10px;font-size:.92rem;font-weight:700;color:var(--glow)}
+.questcard{background:var(--card);color:var(--card-text);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.questcard .muted{color:#6d6899}
+.questcard .progressbar{background:#e8e2d0;border-color:#e8e2d0}
+.questcard .progressbar>div{background:#57b06a}
+.questcard .btn{background:#57b06a;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
+.swapbox{border-radius:16px;padding:10px 8px;text-align:center;font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:.92rem;border:0;width:100%}
+.stageimg{width:100%;height:170px;object-fit:cover;border-radius:14px;display:block}
+.cardimg{width:100%;height:144px;object-fit:cover;display:block}
+.stage .simg{width:100%;height:64px;object-fit:cover;border-radius:10px}
+.tilebtn{display:block;width:100%;text-align:left;background:rgba(0,0,0,.25);border:0;border-radius:16px;padding:12px 14px;color:var(--ink);font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:1rem}
+.tilebtn span{display:block;font-family:"Nunito",sans-serif;font-size:.78rem;font-weight:700;color:var(--ink-soft);margin-top:2px}
+.breathe{width:120px;height:120px;border-radius:50%;background:var(--teal);opacity:.75;margin:14px auto;transition:transform 4s ease-in-out}
+/* ---------- Inner pages: same terrarium treatment as Home ---------- */
+.pagehero{position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow);color:#fff;margin-bottom:18px}
+.pagehero img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pagehero .shade{position:absolute;inset:0;background:linear-gradient(to top,rgba(16,15,44,.94),rgba(16,15,44,.45) 60%,rgba(16,15,44,.25))}
+.pagehero .tintwash{position:absolute;inset:0;background:linear-gradient(to top,var(--tint),transparent 75%);box-shadow:inset 0 0 90px var(--tint)}
+.pagehero .inner{position:relative;padding:20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.pagehero .heroicon{font-size:2.5rem;background:rgba(0,0,0,.35);border-radius:18px;width:70px;height:70px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.pagehero h2{margin:0;font-size:1.55rem;color:#fff;line-height:1.15}
+.pagehero p{margin:5px 0 0;font-weight:700;color:#e9e5ff;max-width:540px}
+.pagehero .herostat{background:rgba(0,0,0,.35);border-radius:14px;padding:8px 14px;font-weight:900;font-size:.92rem;color:#ffe9a8}
+.flowhero{display:flex;gap:12px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;box-shadow:var(--shadow)}
+.subjecthead{display:flex;align-items:center;gap:11px;margin:24px 0 12px}
+.subjecthead .sdisc{width:44px;height:44px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;flex:0 0 auto}
+.subjecthead h3{margin:0;font-size:1.25rem}
+.subjecthead .small{font-weight:700}
+.learncard{display:flex;flex-direction:column}
+.learncard .iconrow{display:flex;align-items:center;gap:10px}
+.learncard .qicon{width:46px;height:46px;border-radius:14px;background:#efe9dc;display:inline-flex;align-items:center;justify-content:center;font-size:1.45rem;flex:0 0 auto}
+.gamecard{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.gameband{height:104px;display:flex;align-items:center;justify-content:center;font-size:3.4rem}
+.gamecard .gbody{padding:16px;display:flex;flex-direction:column;flex:1}
+.tdisc{width:62px;height:62px;border-radius:50%;background:var(--panel2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex:0 0 auto}
+.tdisc.owned{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,201,77,.28)}
+.flashcard{display:block;width:100%;background:var(--card);color:var(--card-text);border:0;border-radius:14px;padding:16px;font-weight:900;font-size:1.05rem;min-height:76px;box-shadow:var(--shadow);text-align:center}
+.flashcard.back{background:#ffe9a8;color:#2a2753}
+.flashcard .fside{display:block;font-size:.7rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:.6;margin-bottom:4px}
+.plannerow{display:flex;gap:10px;align-items:center;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-weight:800}
+.plannerow .ptext{flex:1}
+.plannerow.done .ptext{text-decoration:line-through;opacity:.65}
+.tickbtn{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--amber);background:transparent;color:var(--amber);font-weight:900;flex:0 0 auto;font-size:1rem;line-height:1}
+.tickbtn.done{background:var(--teal);border-color:var(--teal);color:#fff}
+.delbtn{background:transparent;border:0;color:var(--ink-soft);font-size:1.05rem;flex:0 0 auto;padding:4px}
+@media (max-width:820px){
+  .bottomnav button{font-size:.6rem}
+  .bottomnav button .nic{font-size:1.1rem}
+  .pagehero .inner{padding:16px}
+  .pagehero h2{font-size:1.3rem}
+}
+@media (max-width:820px){
+  .sidebar{display:none}
+  .bottomnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--nav);z-index:40;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .bottomnav button{flex:1;background:transparent;border:0;color:var(--nav-ink);font-size:.66rem;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:10px}
+  .bottomnav button .nic{font-size:1.2rem}
+  .bottomnav button.active{background:var(--amber);color:#231a02}
+  .content{padding:16px 14px 96px}
+  .grid.c2,.grid.c3,.grid.c4{grid-template-columns:1fr}
+  .grid.c3.keep2{grid-template-columns:repeat(2,1fr)}
+  .hero{flex-direction:column;text-align:center}
+  .picgrid{grid-template-columns:repeat(4,1fr)}
+  .topbar{padding:10px 14px}
+  .topbar .page-title{font-size:1.1rem}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="confetti" id="confetti" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================================================
+   Jiyuna's Learning App — static web version
+   All progress is saved on this device only (browser storage),
+   per explorer. Nothing syncs anywhere.
+   ============================================================ */
+
+/* ---------- Cute funny otter Pip (hand-drawn SVG) ---------- */
+function pipSVG(size, glow){
+  glow = glow || '#ffb020';
+  return '<span class="otter3d" style="width:'+size+'px;height:'+size+'px">'
+   + '<span class="otter-ring" style="box-shadow:0 0 0 3px '+glow+', 0 12px 22px rgba(15,20,50,.35), inset 0 -14px 24px rgba(0,0,0,.18)">'
+   + '<img src="assets/pip-otter.png" alt="Pip the otter" width="'+size+'" height="'+size+'" draggable="false">'
+   + '<span class="otter-shine"></span></span></span>';
+}
+/* ---------- Sound engine (WebAudio, no files) ---------- */
+var AC=null;
+function audio(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC&&AC.state==='suspended')AC.resume(); return AC; }
+function tone(freq,t0,dur,type,vol){
+  var ac=audio(); if(!ac)return;
+  var o=ac.createOscillator(), g=ac.createGain();
+  o.type=type||'sine'; o.frequency.value=freq;
+  var s=ac.currentTime+t0;
+  g.gain.setValueAtTime(0.0001,s); g.gain.exponentialRampToValueAtTime(vol||0.16,s+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,s+dur);
+  o.connect(g); g.connect(ac.destination); o.start(s); o.stop(s+dur+0.05);
+}
+function sndCorrect(){ [523,659,784,1047].forEach(function(f,i){ tone(f,i*0.07,0.22,'triangle',0.18); }); tone(1319,0.3,0.3,'sine',0.14); tone(1568,0.38,0.34,'sine',0.1); }
+function sndWrong(){ tone(220,0,0.18,'sine',0.1); tone(196,0.12,0.22,'sine',0.1); }
+function sndFanfare(){ [523,659,784,1047,784,1047,1319].forEach(function(f,i){ tone(f,i*0.11,0.3,'triangle',0.18); }); [262,330,392].forEach(function(f){ tone(f,0.75,0.7,'sine',0.08); }); }
+function sndPop(){ tone(880,0,0.09,'square',0.06); }
+/* Forest Morning — the ONLY background sound: soft pad + gentle birdsong chirps */
+var forestOn=false, forestNodes=[], forestTimer=null;
+function startForest(){
+  var ac=audio(); if(!ac)return;
+  stopForest(true);
+  var master=ac.createGain(); master.gain.value=0.14; master.connect(ac.destination); forestNodes.push(master);
+  [196,246.9,293.7].forEach(function(f){
+    var o=ac.createOscillator(), g=ac.createGain();
+    o.type='sine'; o.frequency.value=f; g.gain.value=0.05;
+    var lfo=ac.createOscillator(), lg=ac.createGain(); lfo.frequency.value=0.07; lg.gain.value=0.02;
+    lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(master); o.start(); lfo.start();
+    forestNodes.push(o,lfo);
+  });
+  function chirp(){
+    if(!forestOn)return;
+    var base=2200+Math.random()*1400, t=ac.currentTime;
+    for(var i=0;i<3;i++){
+      var o=ac.createOscillator(), g=ac.createGain(); o.type='sine';
+      o.frequency.setValueAtTime(base,t+i*0.16); o.frequency.exponentialRampToValueAtTime(base*1.25,t+i*0.16+0.07);
+      g.gain.setValueAtTime(0.0001,t+i*0.16); g.gain.exponentialRampToValueAtTime(0.05,t+i*0.16+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.16+0.13);
+      o.connect(g); g.connect(master); o.start(t+i*0.16); o.stop(t+i*0.16+0.15);
+    }
+    forestTimer=setTimeout(chirp, 2600+Math.random()*3800);
+  }
+  forestOn=true; chirp();
+}
+function stopForest(silent){
+  forestOn=false; if(forestTimer)clearTimeout(forestTimer);
+  forestNodes.forEach(function(n){ try{n.stop&&n.stop()}catch(e){} try{n.disconnect()}catch(e){} }); forestNodes=[];
+  if(!silent)renderTop();
+}
+/* Pip read-aloud: warmest available voice, sentence by sentence */
+function speakPip(text){
+  if(!('speechSynthesis' in window)){ toast('Sorry — this device has no read-aloud voice.'); return; }
+  if(!speechSynthesis.getVoices().length){
+    var once=function(){ speechSynthesis.onvoiceschanged=null; speakPip(text); };
+    speechSynthesis.onvoiceschanged=once;
+    setTimeout(function(){ if(speechSynthesis.onvoiceschanged===once){ speechSynthesis.onvoiceschanged=null; speakPip(text); } },1200);
+    return;
+  }
+  speechSynthesis.cancel();
+  var voices=speechSynthesis.getVoices();
+  function pick(lang){
+    var vs=voices.filter(function(v){return v.lang&&v.lang.toLowerCase().indexOf(lang)===0;});
+    if(!vs.length)vs=voices;
+    var good=['natural','neural','google','samantha','zira','jenny','aria','xiaoxiao','tingting','meijia'];
+    for(var i=0;i<good.length;i++){ var m=vs.filter(function(v){return v.name.toLowerCase().indexOf(good[i])>=0;}); if(m.length)return m[0]; }
+    var bad=['fred','albert','bad news','organ','cellos','zarvox','trinoids','robot'];
+    var ok=vs.filter(function(v){ var n=v.name.toLowerCase(); return !bad.some(function(b){return n.indexOf(b)>=0;}); });
+    return (ok[0]||vs[0]);
+  }
+  var isChi=/[\u4e00-\u9fff]/.test(text);
+  var parts=text.match(/[^.!?。！？]+[.!?。！？]*/g)||[text];
+  parts.forEach(function(p){
+    var u=new SpeechSynthesisUtterance(p.trim());
+    var v=pick(isChi?'zh':'en'); if(v)u.voice=v;
+    u.lang=isChi?'zh-CN':'en-SG'; u.rate=0.98; u.pitch=1.12;
+    speechSynthesis.speak(u);
+  });
+}
+if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }
+</script>
+<script>
+/* ============================================================
+   CONTENT — 14 Primary 3 topics. Each quest = 5 questions.
+   warm = fresh warm-up bank (never repeats quest wording).
+   retry = "cousin" questions for the Second Chance round.
+   Q format: [question, [options], correctIndex, clue, pipJoke]
+   ============================================================ */
+function Q(q,o,a,c,j){return{q:q,o:o,a:a,c:c,j:j};}
+var TOPICS=[
+{id:'eng-story',sub:'eng',subName:'English',icon:'📖',name:'Story Words',blurb:'Pick the best word to finish each mini story.',
+ quest:[Q('Mina was so hungry she ate her noodles in two minutes. She was really ___.',['starving','sleepy','gentle','proud'],0,'Think: super, super hungry!','Why did the noodle blush? It saw the salad dressing! 🍜'),
+ Q('The tortoise moved very slowly, but it never stopped. It was ___.',['lazy','steady','rude','shiny'],1,'It kept going and going, like a good MRT train.','Slow and steady — just like me chasing a fish!'),
+ Q('“Please lower your voice,” whispered Miss Tan. “We are in the ___.”',['library','market','playground','beach'],0,'Shhh… where must we be extra quiet?','Libraries are my favourite quiet ponds!'),
+ Q('After running 10 laps, Ben’s legs felt wobbly and ___.',['tired','hungry','itchy','loud'],0,'His legs did lots of work!','My legs get wobbly after otter aerobics too!'),
+ Q('The puppy wagged its tail and licked Ana’s hand. It was very ___.',['fierce','friendly','grumpy','stormy'],1,'Wagging tails mean “I like you!”','Wagging tails and otter hugs — same team!')],
+ warm:[Q('Which word means the opposite of “hot”?',['cold','warm','spicy','bright'],0,'','',''),
+ Q('A baby cat is called a ___.',['cub','kitten','puppy','calf'],1,'','',''),
+ Q('Which word describes a very big elephant?',['tiny','huge','thin','quiet'],1,'','',''),
+ Q('We use our ___ to smell flowers.',['ears','nose','knees','elbows'],1,'','','')],
+ retry:[Q('Raj finished all his homework and checked it twice. He was very ___.',['careful','careless','noisy','silly'],0,'He checked twice — that is the clue!',''),
+ Q('The library book was so exciting that Sara could not stop reading. It was ___.',['boring','thrilling','empty','broken'],1,'Exciting books make your heart go thump!',''),
+ Q('“Thank you for helping me,” said Tom ___.',['rudely','politely','angrily','lazily'],1,'Saying thank you nicely is…?','')]},
+{id:'eng-tense',sub:'eng',subName:'English',icon:'⏰',name:'Tenses Trek',blurb:'Yesterday, today or tomorrow? Pick the right verb.',
+ quest:[Q('Yesterday, we ___ to the zoo by bus.',['go','goes','went','going'],2,'Yesterday = past tense. Go becomes…?','Past tense is like yesterday’s snacks — already eaten!'),
+ Q('She ___ her teeth every morning.',['brush','brushes','brushed','brushing'],1,'Every morning = habit. She needs an -es!','Even otters brush… okay, we mostly splash.'),
+ Q('Tomorrow, they ___ a kite at Marina Barrage.',['fly','flew','will fly','flies'],2,'Tomorrow = future. We add “will”.','Future kites! I call that tomorrow-wind!'),
+ Q('Look! The monkey ___ a banana right now.',['eat','eats','is eating','ate'],2,'Right now = -ing time!','That monkey eats faster than me. Almost.'),
+ Q('Last night, Dad ___ a yummy laksa.',['cook','cooked','cooks','cooking'],1,'Last night already happened.','Laksa last night? Lucky Dad!')],
+ warm:[Q('He ___ football every Saturday.',['play','plays','played','playing'],1,'','',''),
+ Q('We ___ a movie last Friday.',['watch','watches','watched','watching'],2,'','',''),
+ Q('The baby ___ now, please be quiet.',['sleep','is sleeping','slept','sleeps'],1,'','',''),
+ Q('Next week, I ___ Primary 4!',['am','will be','was','were'],1,'','','')],
+ retry:[Q('Yesterday, the class ___ a song together.',['sing','sings','sang','singing'],2,'Sing in the past becomes…?',''),
+ Q('My sister ___ her homework after dinner every day.',['do','does','did','doing'],1,'Every day habit + sister = does.',''),
+ Q('Right now, the birds ___ in the tree.',['is chirping','are chirping','chirped','chirp yesterday'],1,'Birds = they = are.','')]},
+{id:'eng-story2',sub:'eng',subName:'English',icon:'✏️',name:'Finish the Story',blurb:'You are the author! Choose the best next sentence.',
+ quest:[Q('Kai found a tiny door behind the library shelf. He pushed it open and…',['…the door was closed.','…saw a garden where books grew on trees!','…ate a sandwich.','…it was bedtime.'],1,'A magical story needs a magical surprise!','Books on trees? Leaf me alone, that’s amazing! 🌳'),
+ Q('It started to rain heavily. Mei quickly…',['…took off her shoes to swim.','…opened her umbrella and ran to the void deck.','…watered the plants.','…wore her sunglasses.'],1,'Rain + smart move = stay dry!','Void deck to the rescue — Singapore style!'),
+ Q('The little robot beeped sadly. Its battery was flat. So Zara…',['…plugged it in and waited kindly.','…threw it away at once.','…shouted at it.','…gave it a bath.'],0,'Kind Zara helps, not throws!','Be kind to robots. They remember. Beep.'),
+ Q('“I can’t reach the top shelf!” said Ali. His big sister…',['…laughed and walked away.','…stood on a stool and got the book for him.','…hid the book.','…took a nap.'],1,'Good sisters help!','Stool + sister = shelf defeated!'),
+ Q('The class plant finally grew a flower. Everyone…',['…cheered and took a photo.','…pulped it.','…forgot about it.','…painted it black.'],0,'A first flower is a celebration!','Hooray for tiny flowers!')],
+ warm:[Q('Sam was late, so he…',['…ran to the bus stop.','…read a long book.','…planted a tree.','…fed the cat slowly.'],0,'','',''),
+ Q('The soup was too hot. Lily…',['…blew on it gently.','…poured it on the floor.','…added ice cubes to her hair.','…ate it in one gulp.'],0,'','',''),
+ Q('A stray kitten followed Ben home. Ben…',['…gave it some water.','…ran away screaming.','…taught it maths.','…sold his shoes.'],0,'','',''),
+ Q('The wind blew stronger and stronger. The kite…',['…dove into the sea.','…climbed higher into the sky.','…turned into a fish.','…fell asleep.'],1,'','','')],
+ retry:[Q('Hana lost her water bottle at recess. She…',['…checked the lost-and-found box.','…bought a new school.','…cried at the bottle.','…blamed the bottle.'],0,'Lost thing? First place to check!',''),
+ Q('The baby bird fell from the nest. The children…',['…called a teacher to help it.','…kept it as a toy.','…hid it in a bag.','…painted it blue.'],0,'Wild babies need grown-up help.',''),
+ Q('Omar practised piano every day. Soon he…',['…forgot all the songs.','…could play the song smoothly.','…ate the piano.','…sold his fingers.'],1,'Practice makes… smooth!','')]},
+{id:'eng-punct',sub:'eng',subName:'English',icon:'❗',name:'Punctuation Pond',blurb:'Full stops, question marks and capital letters.',
+ quest:[Q('Which sentence is correct?',['where is my pencil','Where is my pencil?','where is my pencil?','Where is my pencil'],1,'Questions start big and end with…?','Question marks are like hooks for answers!'),
+ Q('Pick the missing mark: “Wow ___ That was an amazing goal!”',['.','?','!',','],2,'“Wow!” shows strong feeling!','WOW! See? Excitement needs the tall mark!'),
+ Q('Which name needs a capital letter?',['singapore','table','apple','happy'],0,'Special names of places start BIG.','Singapore deserves a capital S!'),
+ Q('Choose the correct sentence:',['I like apples oranges and bananas.','I like apples, oranges and bananas.','I like, apples oranges, and bananas','I like apples oranges and, bananas.'],1,'Lists use commas to separate items.','Commas are tiny pauses — breathe there!'),
+ Q('“can you help me” — what is missing?',['Nothing','A capital letter and a question mark','Only a full stop','A comma'],1,'It is a question, and sentences start big.','Two fixes! Capital + question mark!')],
+ warm:[Q('Every sentence starts with a ___ letter.',['small','capital','backwards','invisible'],1,'','',''),
+ Q('A telling sentence ends with a ___.',['?','!','full stop',','],2,'','',''),
+ Q('Which is a question?',['The cat is black.','Is the cat black?','The cat is black!','cat black the'],1,'','',''),
+ Q('Names of people start with a ___ letter.',['capital','tiny','sleepy','round'],0,'','','')],
+ retry:[Q('Pick the correct sentence:',['my friend is named Priya.','My friend is named priya.','My friend is named Priya.','my friend is named Priya'],2,'Two capitals needed here!',''),
+ Q('Missing mark: “Stop ___ You dropped your wallet!”',['.','!','?',','],1,'Shouting a warning = strong feeling.',''),
+ Q('Which sentence uses commas correctly?',['I bought rice, eggs and milk.','I bought, rice eggs and milk','I bought rice eggs, and, milk.','I, bought rice eggs and milk.'],0,'Commas go between list items.','')]},
+{id:'math-mrt',sub:'math',subName:'Maths',icon:'🚇',name:'MRT Numbers',blurb:'Count stations, add and subtract along the line.',
+ quest:[Q('The train travels 14 stations, then 9 more. How many stations in all?',['21','23','25','19'],1,'14 + 9. Count on: 14, 15… or make 20 first!','All aboard the number train! Choo choo!'),
+ Q('There were 46 passengers. 18 got off at Orchard. How many are left?',['26','28','32','24'],1,'46 − 18. Take away 10, then 8.','28 passengers still riding!'),
+ Q('A ride costs $1.30. You pay with $2. Your change is…',['$0.60','$0.70','$0.80','$1.70'],1,'$2.00 − $1.30 = ?','Change jingles like tiny bells!'),
+ Q('Trains come every 6 minutes. How many trains in 30 minutes?',['4','5','6','36'],1,'30 ÷ 6 = ? Count in sixes!','5 trains! Toot toot ×5!'),
+ Q('Station A to B is 7 stops, B to C is 7 stops, C to D is 7 stops. A to D is…',['14 stops','21 stops','24 stops','10 stops'],1,'7 + 7 + 7 = 3 × 7.','Three sevens make twenty-one!')],
+ warm:[Q('12 + 8 = ?',['18','20','22','19'],1,'','',''),
+ Q('30 − 7 = ?',['21','22','23','24'],2,'','',''),
+ Q('5 × 3 = ?',['12','15','18','8'],1,'','',''),
+ Q('Half of 20 is…',['5','10','15','40'],1,'','','')],
+ retry:[Q('A bus carries 23 children, then picks up 17 more. Total children?',['38','40','42','36'],1,'23 + 17. Make 30 first: 23+7=30, +10 more.',''),
+ Q('You have $5. A train card top-up costs $3.40. Change?',['$1.40','$1.60','$2.60','$0.60'],1,'$5.00 − $3.40.',''),
+ Q('Every 4 minutes a bus leaves. How many in 20 minutes?',['4','5','6','24'],1,'20 ÷ 4.','')]},
+{id:'math-hawker',sub:'math',subName:'Maths',icon:'🍜',name:'Hawker Change',blurb:'Chicken rice, roti prata and making change.',
+ quest:[Q('Chicken rice costs $3.50 and a drink $1.50. Total?',['$4.50','$5.00','$5.50','$4.00'],1,'50 cents + 50 cents = $1!','$3 + $1 + $1 = $5. Yummy maths!'),
+ Q('You pay $10 for a $6.80 meal. Your change is…',['$3.20','$4.20','$3.80','$2.20'],0,'$10 − $6.80. Start from $6.80 up to $10.','Count up: 6.80 → 7.00 → 10.00!'),
+ Q('One roti prata costs $1.20. Three cost…',['$2.40','$3.20','$3.60','$4.20'],2,'$1.20 × 3. 12 × 3 = 36!','Three pratas! Flip flip flip!'),
+ Q('A stall sells 8 plates an hour. In 5 hours it sells…',['35 plates','40 plates','45 plates','13 plates'],1,'8 × 5 = ?','40 plates — busy uncle!'),
+ Q('Noodles $4.20, egg $0.80, teh $1.00. Total?',['$5.80','$6.00','$6.20','$5.00'],1,'Add the cents first: 20+80+0 = 100 cents = $1.','$4 + $1 + $1 = $6 exactly!')],
+ warm:[Q('$2.50 + $2.50 = ?',['$4.00','$4.50','$5.00','$5.50'],2,'','',''),
+ Q('$1 × 4 = ?',['$3','$4','$5','$14'],1,'','',''),
+ Q('$10 − $2.50 = ?',['$7.00','$7.50','$8.00','$8.50'],1,'','',''),
+ Q('Two drinks at $1 each cost…',['$1','$2','$3','$11'],1,'','','')],
+ retry:[Q('Char kway teow $4.50 plus lime juice $1.50 totals…',['$5.50','$6.00','$6.50','$5.00'],1,'50 + 50 cents = $1 again!',''),
+ Q('Pay $5 for a $3.60 snack. Change?',['$1.20','$1.40','$2.40','$0.40'],1,'$5.00 − $3.60.',''),
+ Q('Satay is $0.90 a stick. Five sticks cost…',['$4.00','$4.50','$5.40','$3.60'],1,'9 × 5 = 45, so 90¢ × 5 = $4.50.','')]},
+{id:'math-ntuc',sub:'math',subName:'Maths',icon:'🛒',name:'NTUC Totals',blurb:'Shopping basket multiplication and totals.',
+ quest:[Q('Apples come in bags of 6. You buy 4 bags. How many apples?',['18','20','24','30'],2,'6 × 4 = ? Count in sixes!','24 crunchy apples!'),
+ Q('One carton of milk is $2. Three cartons cost…',['$5','$6','$7','$23'],1,'2 × 3. Easy-peasy!','Milk maths, mooo-velous!'),
+ Q('A basket has 36 eggs shared equally into 4 trays. Each tray has…',['8 eggs','9 eggs','10 eggs','12 eggs'],1,'36 ÷ 4 = ? 4 × 9 = 36!','Nine per tray — no cracks!'),
+ Q('Bread $1.80 + jam $3.20 = ?',['$4.80','$5.00','$5.20','$4.00'],1,'80 + 20 cents = $1.','$1 + $3 + $1 = $5!'),
+ Q('There are 7 shelves with 8 cans each. Total cans?',['48','54','56','64'],2,'7 × 8. Remember: 56!','7 × 8 = 56 — a famous tricky one!')],
+ warm:[Q('3 × 4 = ?',['10','12','14','7'],1,'','',''),
+ Q('20 ÷ 5 = ?',['3','4','5','6'],1,'','',''),
+ Q('9 + 9 + 9 = ?',['18','27','29','19'],1,'','',''),
+ Q('100 cents = $___',['$0.10','$1','$10','$100'],1,'','','')],
+ retry:[Q('Oranges in bags of 5. Six bags hold…',['25','30','35','11'],1,'5 × 6 — count in fives!',''),
+ Q('48 grapes shared by 6 friends. Each gets…',['6','7','8','9'],2,'48 ÷ 6. 6 × 8 = 48!',''),
+ Q('Rice $4.60 + oil $2.40 = ?',['$6.80','$7.00','$7.20','$6.00'],1,'60 + 40 cents = $1.','')]},
+{id:'math-frac',sub:'math',subName:'Maths',icon:'🍕',name:'Fractions Feast',blurb:'Halves, quarters and sharing fairly.',
+ quest:[Q('A pizza is cut into 8 equal slices. You eat 2. What fraction did you eat?',['2/8','8/2','2/6','1/2'],0,'Eaten slices on top, total slices below!','2 out of 8 — still 6 left for me, right?'),
+ Q('Which is bigger: 1/2 or 1/4 of the same cake?',['1/4','1/2','They are equal','Cannot tell'],1,'Fewer pieces = bigger pieces!','Half a cake beats a quarter — trust an otter!'),
+ Q('3/4 of a ribbon is used. What fraction is left?',['1/4','2/4','3/4','4/4'],0,'4/4 − 3/4 = ?','One quarter left — a tiny tail of ribbon!'),
+ Q('Which fraction means “one whole”?',['1/2','3/4','4/4','2/4'],2,'Top equals bottom = whole!','4/4 = the whole yummy thing!'),
+ Q('Half of 16 muffins is…',['6','7','8','9'],2,'16 ÷ 2.','8 muffins! Share? Please?')],
+ warm:[Q('A cake cut in 2 equal parts: each part is…',['1/4','1/2','1/3','2/2'],1,'','',''),
+ Q('Which shows quarters?',['Cut into 2','Cut into 3','Cut into 4 equal parts','Cut into 5'],2,'','',''),
+ Q('1/2 + 1/2 = ?',['1/4','2/2 = 1 whole','1/2','2/4 only'],1,'','',''),
+ Q('Half of 10 is…',['2','4','5','20'],2,'','','')],
+ retry:[Q('A watermelon is cut into 6 equal pieces. You eat 1. Fraction eaten?',['1/6','6/1','1/5','5/6'],0,'One out of six total.',''),
+ Q('Which is smaller: 1/3 or 1/2 of the same pie?',['1/2','1/3','Equal','1/3 is bigger'],1,'More pieces = smaller slices!',''),
+ Q('You use 1/2 of a string. Left over is…',['1/4','3/4','1/2','2/2'],2,'Whole (2/2) minus 1/2.','')]},
+{id:'sci-frog',sub:'sci',subName:'Science',icon:'🐸',name:'Frog Life Cycle',blurb:'From egg to frog — how living things grow.',
+ quest:[Q('What is the correct order of a frog’s life cycle?',['Frog → egg → tadpole','Egg → tadpole → froglet → frog','Tadpole → egg → frog','Egg → frog → tadpole'],1,'It starts as a tiny egg in water!','Ribbit! I cheer for every tadpole!'),
+ Q('A tadpole breathes using its…',['lungs','gills','nose','skin only'],1,'Tadpoles live in water like fish!','Gills are underwater breathing gear!'),
+ Q('What does a young tadpole mostly eat?',['Insects','Plants and algae','Other frogs','Sand'],1,'Tiny tadpoles munch green plant bits.','Salad days for baby tadpoles!'),
+ Q('When a tadpole grows legs, it becomes a…',['fish','froglet','snake','duck'],1,'Legs + shrinking tail = froglet!','Almost a frog — keep hopping!'),
+ Q('Adult frogs breathe with…',['gills only','lungs and skin','feathers','roots'],1,'Grown frogs use lungs, and skin helps too!','Frogs are amazing double-breathers!')],
+ warm:[Q('Frog eggs are laid in…',['trees','water','sand dunes','nests in the sky'],1,'','',''),
+ Q('A tadpole has a long ___ for swimming.',['tail','wing','horn','shell'],0,'','',''),
+ Q('Frogs are in the animal group called…',['birds','amphibians','insects','fish'],1,'','',''),
+ Q('Baby frogs are called…',['cubs','tadpoles','chicks','pups'],1,'','','')],
+ retry:[Q('Which stage comes right after egg?',['Frog','Froglet','Tadpole','Cocoon'],2,'It hatches into a swimmer with a tail!',''),
+ Q('As a froglet grows, its tail gets…',['longer','shorter','feathered','striped'],1,'The tail shrinks away in the end.',''),
+ Q('An adult frog mostly lives…',['only deep in the sea','on land and in water','only in the desert','only underground'],1,'Amphibians do both!','')]},
+{id:'sci-magnet',sub:'sci',subName:'Science',icon:'🧲',name:'Magnet Lab',blurb:'What sticks, what doesn’t, and pushing poles.',
+ quest:[Q('Which of these will a magnet attract?',['Plastic ruler','Iron nail','Wooden block','Rubber eraser'],1,'Magnets love iron and steel!','Nails stick, rubbers don’t — magnet rules!'),
+ Q('Two north poles of magnets pushed together will…',['stick tightly','push away (repel)','melt','disappear'],1,'Same poles push away!','Like two otters wanting the same fish — push!'),
+ Q('A paperclip is made of steel. A magnet will…',['repel it','attract it','make it float forever','turn it blue'],1,'Steel is magnetic!','Click! Paperclip captured!'),
+ Q('Which is the best way to test if something is magnetic?',['Taste it','Bring a magnet near it','Drop it','Shake it hard'],1,'Scientists test with the real tool!','Test it like a real scientist!'),
+ Q('The ends of a magnet are called its…',['tips','poles','corners','handles'],1,'North pole and south pole!','Poles are the magnet’s strong hands!')],
+ warm:[Q('A magnet can attract a…',['glass cup','steel spoon','paper book','candle'],1,'','',''),
+ Q('Opposite poles (N and S) will…',['repel','attract','sing','sleep'],1,'','',''),
+ Q('Which object is magnetic?',['Coin made of iron','Leaf','Plastic cup','Sock'],0,'','',''),
+ Q('Magnets work through…',['nothing','paper and thin card','thick concrete only','water never'],1,'','','')],
+ retry:[Q('Which will NOT stick to a magnet?',['Safety pin','Iron screw','Aluminium foil ball','Steel needle'],2,'Aluminium is a sneaky non-magnetic metal!',''),
+ Q('If two south poles meet, they…',['attract','repel','stick forever','become one pole'],1,'Same poles = repel. Always!',''),
+ Q('A fridge magnet sticks because the fridge door has…',['glue','steel inside','ice','batteries'],1,'Steel inside the door!','')]},
+{id:'sci-plants',sub:'sci',subName:'Science',icon:'🌱',name:'Garden & Plants',blurb:'Void-deck gardens, roots, leaves and sunlight.',
+ quest:[Q('Plants make their own food using…',['moonlight only','sunlight, water and air','soil as food','insects only'],1,'Photosynthesis needs sun + water + air.','Plants are tiny chefs cooking with sunlight!'),
+ Q('The part of the plant that drinks water from the soil is the…',['flower','leaf','root','fruit'],2,'Underground drinker!','Roots are the plant’s straws!'),
+ Q('A plant kept in a dark cupboard will most likely…',['grow faster','turn yellow and weak','make more flowers','grow bigger leaves'],1,'No sunlight = no food-making!','Plants need their sunny breakfast!'),
+ Q('Seeds need ___ to start growing (germinate).',['water and warmth','only darkness','ice','wind only'],0,'A drink and cosy warmth wake seeds up!','Wake up, little seed!'),
+ Q('Bees help flowers by…',['eating all the leaves','carrying pollen between flowers','watering them','singing to them'],1,'Pollination! Bees are flower postmen.','Buzz buzz — pollen delivery!')],
+ warm:[Q('Leaves are usually green because of…',['paint','chlorophyll','soil','rain'],1,'','',''),
+ Q('Plants give us ___ to breathe.',['smoke','oxygen','dust','steam'],1,'','',''),
+ Q('The stem’s job is to…',['hold the plant up','eat insects','make seeds sleep','drink rain'],0,'','',''),
+ Q('Most plants start from a…',['stone','seed','twig of plastic','bubble'],1,'','','')],
+ retry:[Q('To help a wilting plant, first give it…',['more darkness','water','a loud song','ice cream'],1,'Wilting usually means thirsty!',''),
+ Q('Which plant part makes seeds?',['Root','Flower','Trunk','Thorn'],1,'Flowers lead to fruits and seeds!',''),
+ Q('A plant on a sunny window grows towards the…',['floor','light','door','cat'],1,'Plants lean to the light!','')]},
+{id:'chi-listen',sub:'chi',subName:'Chinese',icon:'👂',name:'听一听 Listening',blurb:'Tap Listen, hear the word, pick the right picture word.',
+ quest:[Q('Listen: mā ma（妈妈）means…',['father','mother','teacher','friend'],1,'“Mā ma” — the first word many babies say!','妈妈 is the warmest word!'),
+ Q('Listen: píng guǒ（苹果）is a…',['banana 香蕉','apple 苹果','orange 橙子','grape 葡萄'],1,'Red, round and crunchy!','An apple a day keeps Pip playful!'),
+ Q('Listen: xiè xie（谢谢）means…',['hello','goodbye','thank you','sorry'],2,'We say it when someone helps us!','Say 谢谢 with a big smile!'),
+ Q('Listen: xué xiào（学校）is a…',['school','library','park','shop'],0,'Where you learn every day!','学校 — see you at the gate!'),
+ Q('Listen: dà（大）means…',['small','big','fast','happy'],1,'大 looks like a person stretching wide!','Stretch your arms — 大!')],
+ warm:[Q('你好 (nǐ hǎo) means…',['good night','hello','thank you','goodbye'],1,'','',''),
+ Q('水 (shuǐ) is…',['fire','water','rice','milk'],1,'','',''),
+ Q('一、二、三 — the next number is…',['四 (sì)','九 (jiǔ)','十 (shí)','七 (qī)'],0,'','',''),
+ Q('猫 (māo) is a…',['dog','cat','bird','fish'],1,'','','')],
+ retry:[Q('Listen: bà ba（爸爸）means…',['mother','grandfather','father','brother'],2,'Bà ba is dad!',''),
+ Q('Listen: zài jiàn（再见）means…',['goodbye','please','yes','come here'],0,'We say it when we leave school!',''),
+ Q('Listen: kuài lè（快乐）means…',['sad','happy','tired','hungry'],1,'乐 looks joyful already!','')]},
+{id:'chi-family',sub:'chi',subName:'Chinese',icon:'🏠',name:'家庭 Family Words',blurb:'Words for the people at home.',
+ quest:[Q('哥哥 (gē ge) is your…',['younger sister','elder brother','father','uncle'],1,'哥 is for the big brother!','Elder brother = 哥哥!'),
+ Q('妹妹 (mèi mei) is your…',['elder sister','mother','younger sister','aunt'],2,'妹 is the little sister.','妹妹 loves story time!'),
+ Q('奶奶 (nǎi nai) is your…',['grandmother (father’s side)','teacher','cousin','neighbour'],0,'Nǎi nai makes the best soup!','Grandma’s soup wins every time!'),
+ Q('姐姐 (jiě jie) is your…',['elder sister','younger brother','grandmother','friend'],0,'姐 is big sister!','姐姐 to the rescue!'),
+ Q('弟弟 (dì di) is your…',['elder brother','father','younger brother','grandfather'],2,'弟 is the little brother.','弟弟 = little brother!')],
+ warm:[Q('家 (jiā) means…',['school','home / family','car','book'],1,'','',''),
+ Q('妈妈 (mā ma) is…',['mother','father','sister','baby'],0,'','',''),
+ Q('爸爸 (bà ba) is…',['uncle','father','brother','grandpa'],1,'','',''),
+ Q('我 (wǒ) means…',['you','I / me','he','we'],1,'','','')],
+ retry:[Q('爷爷 (yé ye) is your…',['grandfather (father’s side)','uncle','brother','teacher'],0,'Yé ye tells great stories!',''),
+ Q('朋友 (péng you) means…',['family','friend','classmate only','stranger'],1,'朋 has two moons together!',''),
+ Q('爱 (ài) means…',['to eat','to love','to run','to read'],1,'爱 is a big warm word!','')]},
+{id:'chi-school',sub:'chi',subName:'Chinese',icon:'🎒',name:'学校 School Day',blurb:'Classroom words and weekly spelling practice.',
+ quest:[Q('老师 (lǎo shī) means…',['student','teacher','principal','librarian'],1,'We greet 老师 every morning!','老师好! Say it brightly!'),
+ Q('书包 (shū bāo) is your…',['pencil','school bag','textbook','water bottle'],1,'书 (book) + 包 (bag)!','Pack your 书包 tonight!'),
+ Q('读书 (dú shū) means…',['to write','to read','to draw','to sing'],1,'书 is book — so 读书 is…?','Reading = 读书!'),
+ Q('今天星期三，我们有华文课。“华文” is…',['Maths','Chinese language','Science','Art'],1,'华文 is your Chinese lesson!','Wednesday is 华文 day!'),
+ Q('听写 (tīng xiě) means…',['free play','spelling test (listen & write)','story time','nap time'],1,'听 = listen, 写 = write!','Listen carefully, write neatly!')],
+ warm:[Q('同学 (tóng xué) is a…',['teacher','classmate','cook','driver'],1,'','',''),
+ Q('笔 (bǐ) is a…',['pen / pencil','book','ruler','bag'],0,'','',''),
+ Q('早上好 (zǎo shang hǎo) means…',['good night','good morning','thank you','see you'],1,'','',''),
+ Q('作业 (zuò yè) is…',['homework','breakfast','a game','a song'],0,'','','')],
+ retry:[Q('写字 (xiě zì) means…',['to write words','to read aloud','to count','to draw pictures'],0,'写 = write, 字 = words!',''),
+ Q('朋友借给我一本书。这本书是 ___.',['a song','a book 本书','a bag','a pen'],1,'书 always means book!',''),
+ Q('上课 (shàng kè) means…',['class starts / attend class','go home','eat lunch','play outside'],0,'课 is a lesson!','')]}
+];
+/* ============================================================
+   FRESH DAILY BANK — extra questions for EVERY one of the 14
+   topics (10 each). Once a quest is finished, Pip pulls a fresh
+   set of 5 for it every morning from quest + fresh combined,
+   so finished quests never just repeat yesterday's questions.
+   Quests still in progress are never touched — their saved set
+   stays exactly as it was. Warm-up and Second Chance questions
+   stay in their own banks, so they never repeat quest questions.
+   ============================================================ */
+var FRESH_BANK={
+'eng-story':[Q('When the thunder crashed, little Zoe hid under her blanket. She felt ___.',['brave','frightened','proud','hungry'],1,'Thunder can be scary!',''),
+Q('Sam carried his grandmother’s heavy bag all the way home. He is very ___.',['helpful','selfish','sleepy','rude'],0,'Helping carry = helpful.',''),
+Q('The cake smelled so good that everyone wanted a slice. It was ___.',['awful','delicious','broken','silent'],1,'Yummy smell, yummy taste!',''),
+Q('After practising every day, Lily played the piano piece without a single mistake. She felt ___.',['proud','ashamed','bored','lost'],0,'Doing something well makes us…?',''),
+Q('The old bridge shook in the strong wind. It did not look ___.',['safe','wet','new','tall'],0,'Shaking bridges are scary to cross.',''),
+Q('Ben found a wallet on the floor and handed it to the teacher. He was ___.',['sneaky','honest','greedy','lazy'],1,'Giving back what is not yours = honest.',''),
+Q('The movie was so funny that the whole class kept giggling. It was ___.',['boring','hilarious','silent','scary'],1,'Super funny = hilarious!',''),
+Q('It was past midnight but Arun was still wide awake reading. He was not ___ at all.',['sleepy','thirsty','noisy','late'],0,'Wide awake is the opposite of…?',''),
+Q('Mei’s little brother drew on her homework and she had to redo it. She felt ___.',['delighted','annoyed','grateful','relaxed'],1,'Having to redo work is annoying!',''),
+Q('The baby bird was too weak to fly, so the children built it a soft nest. They were ___.',['cruel','gentle','careless','proud'],1,'Soft and caring = gentle.','')],
+'eng-tense':[Q('Right now, the children ___ in the pool.',['swim','swims','are swimming','swam'],2,'Right now = -ing with are.',''),
+Q('Last Sunday, we ___ a sandcastle at East Coast.',['build','builds','built','building'],2,'Past of build is built!',''),
+Q('My mother ___ rice every Friday.',['cook','cooks','cooked','will cook'],1,'Every Friday habit + mother = -s.',''),
+Q('Tomorrow morning, I ___ my teeth before school.',['brush','brushed','will brush','brushes'],2,'Tomorrow = will.',''),
+Q('Look! The cat ___ up the tree!',['climb','is climbing','climbed','climbs yesterday'],1,'Happening right now!',''),
+Q('Yesterday, the rain ___ all afternoon.',['fall','falls','fell','falling now'],2,'Past of fall is fell.',''),
+Q('He ___ his bag to school every day.',['carry','carries','carried','carrying yesterday'],1,'Habit + he = carries.',''),
+Q('Next year, she ___ in Primary 4.',['is','was','will be','were'],2,'Next year = future.',''),
+Q('Last night, the baby ___ for an hour.',['cry','cries','cried','crying'],2,'Last night = past.',''),
+Q('At this moment, Dad ___ dinner in the kitchen.',['cook','cooks','is cooking','cooked'],2,'At this moment = -ing.','')],
+'eng-story2':[Q('The treasure map showed an X under the big rain tree. So the children…',['…went home to sleep.','…started digging carefully under the tree.','…threw the map into the sea.','…forgot about it.'],1,'X marks the spot — dig!',''),
+Q('Sarah’s ice cream was melting fast in the hot sun. She…',['…ate it quickly before it dripped everywhere.','…put it in her pocket.','…watched it melt slowly for fun.','…gave it a jacket.'],0,'Hot sun + ice cream = hurry!',''),
+Q('The lift stopped between floors. Mr Lim stayed calm and…',['…pressed the alarm bell and waited for help.','…kicked the doors angrily.','…took a nap on the floor.','…climbed out through the roof.'],0,'Stay calm and press the bell.',''),
+Q('“Your shoelaces are untied,” Nina told her friend. Her friend…',['…ran even faster.','…stopped to tie them before walking on.','…took off her shoes and threw them away.','…ignored her and tripped on purpose.'],1,'Untied laces? Tie them first!',''),
+Q('The class hamster escaped from its cage! Everyone…',['…searched the classroom corners quietly.','…screamed and ran out of school.','…fed it to the cat.','…opened all the windows wider.'],0,'Quiet searching finds hamsters.',''),
+Q('It was Grandpa’s birthday. The grandchildren…',['…hid his cake.','…sang him a birthday song together.','…ate all his presents.','…switched off all the lights forever.'],1,'Birthdays need songs!',''),
+Q('The library book was due tomorrow. After finishing it, Ravi…',['…packed it into his school bag to return it.','…drew moustaches on every page.','…hid it under his bed.','…used it as an umbrella.'],0,'Due tomorrow = return it.',''),
+Q('Strong waves pushed the little boat towards the rocks. The fisherman…',['…jumped into the sea.','…steered hard away from the rocks.','…took photos calmly.','…went to sleep.'],1,'Steer away from danger!',''),
+Q('Mei Ling had practised her speech many times. On stage, she…',['…forgot to walk up.','…spoke clearly and smiled at the audience.','…hid behind the curtain.','…read her friend’s speech instead.'],1,'Practice makes her ready!',''),
+Q('The seedling bent towards the window every day. It was reaching for…',['…the television.','…the sunlight.','…a glass of milk.','…the doorbell.'],1,'Plants reach for light!','')],
+'eng-punct':[Q('Which sentence is correct?',['what a beautiful rainbow','What a beautiful rainbow!','what a beautiful Rainbow','What a beautiful, rainbow'],1,'Strong feeling + capital start!',''),
+Q('Pick the missing mark: “Hurry ___ The bus is leaving!”',['.','?','!',','],2,'Hurrying shows urgency!',''),
+Q('Which word needs a capital letter?',['tuesday','chair','river','song'],0,'Days of the week start BIG.',''),
+Q('Choose the correct sentence:',['My pets are a cat a dog and a fish.','My pets are a cat, a dog and a fish.','My pets, are a cat a dog, and a fish','My pets are a cat a dog, and fish.'],1,'Commas separate list items.',''),
+Q('“where do you live” needs…',['nothing','a capital letter and a question mark','only a comma','an exclamation mark'],1,'It asks something + starts a sentence.',''),
+Q('Which is a telling sentence?',['The door is closed.','Is the door closed?','What a loud door!','door the close'],0,'A telling sentence ends with a full stop.',''),
+Q('Pick the correct sentence:',['her name is Aisha.','Her name is aisha.','Her name is Aisha.','her Name is Aisha.'],2,'Person names start BIG too.',''),
+Q('Missing mark: “Ouch ___ That stone was sharp!”',['.','?','!',','],2,'Ouch shows strong feeling!',''),
+Q('Which sentence uses commas correctly?',['For lunch I had rice soup, and bread','For lunch, I had rice soup and bread.','For lunch I had, rice, soup and, bread.','For lunch I had rice, soup and bread.'],3,'Commas go between the food items.',''),
+Q('A question always ends with a ___.',['full stop','comma','question mark','capital letter'],2,'Questions end with…?','')]
+};
+FRESH_BANK['math-mrt']=[Q('The train travels 12 stations, then 15 more. How many stations in all?',['25','27','29','17'],1,'12 + 15.',''),
+Q('There were 52 passengers. 24 got off. How many are left?',['26','28','30','76'],1,'52 − 24.',''),
+Q('A ride costs $1.60. You pay with $5. Your change is…',['$3.40','$3.60','$4.40','$2.40'],0,'$5.00 − $1.60.',''),
+Q('Buses come every 5 minutes. How many buses in 35 minutes?',['5','6','7','40'],2,'35 ÷ 5.',''),
+Q('One trip takes 9 minutes. Four trips take…',['13 min','27 min','36 min','45 min'],2,'9 × 4.',''),
+Q('38 children are on a bus. 19 more board. Total now?',['47','57','67','19'],1,'38 + 19.',''),
+Q('A platform has 6 rows of 7 chairs. Total chairs?',['13','36','42','47'],2,'6 × 7.',''),
+Q('You wait 3 minutes, then ride 21 minutes, then walk 6 minutes. Total time?',['27 min','30 min','33 min','18 min'],1,'3 + 21 + 6.',''),
+Q('A train card has $8. A $2.50 ride is taken. Left on the card?',['$5.50','$6.50','$5.00','$10.50'],0,'$8.00 − $2.50.',''),
+Q('From station 14, you ride 8 stops. You reach station…',['20','21','22','6'],2,'14 + 8.','')];
+FRESH_BANK['math-hawker']=[Q('Nasi lemak costs $3.80 and a drink $1.20. Total?',['$4.80','$5.00','$5.20','$4.00'],1,'80 + 20 cents = $1.',''),
+Q('You pay $10 for a $7.40 meal. Change?',['$2.40','$2.60','$3.60','$3.40'],1,'$10 − $7.40.',''),
+Q('One prata costs $1.50. Four cost…',['$4.50','$5.00','$6.00','$6.50'],2,'$1.50 × 4.',''),
+Q('A stall sells 9 plates an hour. In 6 hours…',['15 plates','45 plates','54 plates','60 plates'],2,'9 × 6.',''),
+Q('Mee goreng $4.50, egg $0.70, drink $1.30. Total?',['$6.50','$6.00','$5.50','$7.50'],0,'Cents: 50+70+30 = 150 = $1.50.',''),
+Q('Satay is $0.80 a stick. Six sticks cost…',['$4.20','$4.80','$5.40','$4.00'],1,'8 × 6 = 48.',''),
+Q('You have $5. Lunch costs $3.90. Change?',['$1.10','$2.10','$1.90','$0.90'],0,'$5.00 − $3.90.',''),
+Q('Two aunties share a $9 bill equally. Each pays…',['$3.50','$4.00','$4.50','$5.50'],2,'9 ÷ 2.',''),
+Q('A drink stall sells cups at $1.20. Ten cups earn…',['$10','$11','$12','$1.20'],2,'$1.20 × 10.',''),
+Q('Chicken rice $3.50 plus extra rice $0.50 plus cucumber $0.30 totals…',['$4.00','$4.30','$4.50','$3.80'],1,'50 + 30 cents = 80 cents.','')];
+FRESH_BANK['math-ntuc']=[Q('Eggs come in trays of 10. You buy 3 trays. Total eggs?',['13','20','30','33'],2,'10 × 3.',''),
+Q('One packet of biscuits is $3. Four packets cost…',['$7','$12','$13','$34'],1,'3 × 4.',''),
+Q('24 stickers shared equally by 8 children. Each gets…',['2','3','4','16'],1,'24 ÷ 8.',''),
+Q('Shampoo $5.40 + soap $1.60 = ?',['$6.80','$7.00','$7.20','$6.00'],1,'40 + 60 cents = $1.',''),
+Q('There are 9 rows with 5 bottles each. Total bottles?',['14','40','45','95'],2,'9 × 5.',''),
+Q('A bag of rice costs $6. You pay with $20. Change?',['$12','$13','$14','$26'],2,'20 − 6.',''),
+Q('Toothpaste $2.80, toothbrush $2.20. Total?',['$4.80','$5.00','$5.20','$4.00'],1,'80 + 20 cents = $1.',''),
+Q('56 plums packed into boxes of 7. Boxes needed?',['7','8','9','49'],1,'56 ÷ 7.',''),
+Q('One toy costs $4. Mia buys 5 toys and pays…',['$9','$15','$20','$45'],2,'4 × 5.',''),
+Q('Detergent was $9.90, now $2 off. New price?',['$7.90','$8.90','$11.90','$7.00'],0,'9.90 − 2.','')];
+FRESH_BANK['math-frac']=[Q('A cake is cut into 4 equal slices. You eat 1. Fraction eaten?',['1/4','4/1','1/3','3/4'],0,'One out of four.',''),
+Q('Which is bigger: 1/3 or 1/2 of the same pie?',['1/3','1/2','Equal','Cannot tell'],1,'Fewer pieces = bigger pieces.',''),
+Q('You drink 2/5 of a bottle. What fraction is left?',['2/5','3/5','5/5','1/5'],1,'5/5 − 2/5.',''),
+Q('Which fraction is the same as one half?',['2/4','1/4','3/4','4/2'],0,'2 out of 4 = half.',''),
+Q('A quarter of 20 stickers is…',['4','5','10','2'],1,'20 ÷ 4.',''),
+Q('A rope is cut into 3 equal parts. Each part is…',['1/2','1/3','3/1','2/3'],1,'Three equal parts = thirds.',''),
+Q('Which shows three quarters shaded?',['1/4 shaded','2/4 shaded','3/4 shaded','4/4 shaded'],2,'Three out of four parts.',''),
+Q('Half of a pizza plus half of the same pizza makes…',['half a pizza','one whole pizza','two pizzas','a quarter pizza'],1,'1/2 + 1/2 = 1.',''),
+Q('6/6 of a pie is…',['half the pie','one whole pie','no pie','six pies'],1,'Top equals bottom = whole.',''),
+Q('A third of 18 marbles is…',['3','6','9','2'],1,'18 ÷ 3.','')];
+FRESH_BANK['sci-frog']=[Q('Frogspawn are protected by a coat of…',['shell','jelly','fur','scales'],1,'The eggs sit in clear jelly.',''),
+Q('A tadpole swims using its…',['legs','tail','wings','fins on its head'],1,'It wiggles its long tail.',''),
+Q('Which animal is also an amphibian?',['Toad','Duck','Fish','Snail'],0,'Toads are amphibians too.',''),
+Q('A froglet’s lungs help it breathe…',['underwater only','air on land','through its tail','in the egg'],1,'Lungs are for breathing air.',''),
+Q('Adult frogs catch insects with their…',['long sticky tongue','sharp teeth','claws','beak'],0,'Out flicks the sticky tongue!',''),
+Q('Why do frogs live near water?',['To watch boats','Their eggs and babies need water','To drink coffee','To hide from rain'],1,'Eggs and tadpoles live in water.',''),
+Q('A tadpole’s gills take in ___ from the water.',['sand','oxygen','sunlight','pollen'],1,'Tadpoles breathe oxygen from water.',''),
+Q('The change from tadpole to frog is called…',['hibernation','metamorphosis','photosynthesis','pollination'],1,'A big body change = metamorphosis.',''),
+Q('Which frog stage has no legs at all?',['Froglet','Adult frog','Young tadpole','Every stage'],2,'Legs only grow later!',''),
+Q('Frogs are good for gardens because they eat…',['flowers','pests like mosquitoes','soil','seeds only'],1,'Frogs are pest controllers!','')];
+FRESH_BANK['sci-magnet']=[Q('Which of these can a magnet attract?',['Gold ring','Steel scissors','Plastic comb','Wooden spoon'],1,'Steel is magnetic.',''),
+Q('A north pole and a south pole put together will…',['repel','attract','melt','float away'],1,'Opposites attract!',''),
+Q('Which material lets a magnet still work through it?',['Thick steel plate','Thin paper','A brick wall','A metal door'],1,'Magnets work through thin paper and card.',''),
+Q('A compass needle points north because Earth acts like a giant…',['battery','magnet','mirror','spring'],1,'Earth is like a huge magnet!',''),
+Q('If a magnet is broken into two pieces, each piece will have…',['only a north pole','only a south pole','both a north and a south pole','no poles at all'],2,'Every piece gets both poles.',''),
+Q('Which is a use of magnets at home?',['Cooking rice','Holding a fridge door shut','Growing plants','Making rain'],1,'Fridge doors use magnets!',''),
+Q('To pick up many pins quickly, the best tool is a…',['magnet','ruler','sponge','mirror'],0,'Pins are steel — magnet time!',''),
+Q('Two magnets snap together suddenly. Their facing poles must be…',['the same','opposite','broken','painted'],1,'Opposites attract and snap!',''),
+Q('Which should you keep away from strong magnets?',['Iron nail','Bank card with a stripe','Paperclip','Steel spoon'],1,'Magnets can spoil card stripes.',''),
+Q('The strongest parts of a bar magnet are at its…',['middle','ends (the poles)','top surface','paint'],1,'The poles are at the ends.','')];
+FRESH_BANK['sci-plants']=[Q('Which part of the plant makes seeds?',['Root','Stem','Flower','Leaf vein'],2,'Flowers lead to seeds.',''),
+Q('A plant’s leaves are important because they…',['make food for the plant','drink water from the soil','hold seeds underground','scare insects away'],0,'Leaves cook food with sunlight.',''),
+Q('What do plants take in from the air for making food?',['Smoke','Carbon dioxide','Dust','Steam'],1,'Plants breathe in carbon dioxide.',''),
+Q('A seed planted in dry soil with no water will most likely…',['grow at once','not germinate','turn into a tree overnight','make flowers'],1,'Seeds need water to wake up.',''),
+Q('Which is the best place for a potted plant?',['Dark storeroom','Sunny corridor','Closed box','Under a bed'],1,'Plants need sunlight.',''),
+Q('Roots grow downwards to find…',['sunlight','water and minerals','insects','wind'],1,'Roots hunt for water below.',''),
+Q('Fruits are important to a plant because they…',['look pretty','protect and carry the seeds','make leaves green','drink rain'],1,'Seeds travel inside fruits.',''),
+Q('A plant that gets water but NO light for weeks will…',['grow taller and greener','become weak and pale','make many more seeds','grow roots in the air'],1,'No light = no food-making.',''),
+Q('Which helps spread a dandelion’s seeds?',['Wind','Fish','Magnets','Frogs'],0,'Fluffy seeds ride the wind!',''),
+Q('We can eat the roots of which plant?',['Carrot','Rose','Grass','Fern'],0,'Carrots are roots!','')];
+FRESH_BANK['chi-listen']=[Q('Listen: shū（书）means…',['book','bag','pen','desk'],0,'书 is in 读书 and 书包!',''),
+Q('Listen: péng you（朋友）means…',['teacher','friend','family','doctor'],1,'朋友 = friend.',''),
+Q('Listen: zǎo shang（早上）means…',['night','morning','afternoon','evening'],1,'早上好 = good morning!',''),
+Q('Listen: xiǎo（小）means…',['big','small','tall','new'],1,'小 is the opposite of 大.',''),
+Q('Listen: māo（猫）is a…',['dog','bird','cat','fish'],2,'猫 says “meow”!',''),
+Q('Listen: kàn shū（看书）means…',['to sing','to read a book','to write','to draw'],1,'看 = look, 书 = book.',''),
+Q('Listen: hǎo chī（好吃）means…',['yummy / tasty','hungry','thirsty','sleepy'],0,'吃 = eat, 好吃 = tasty!',''),
+Q('Listen: xià yǔ（下雨）means…',['it is sunny','it is raining','it is windy','it is snowing'],1,'雨 = rain.',''),
+Q('Listen: kāi xīn（开心）means…',['angry','tired','happy','afraid'],2,'开心 = a happy, open heart!',''),
+Q('Listen: huí jiā（回家）means…',['go to school','go home','go shopping','go to sleep'],1,'家 = home.','')];
+FRESH_BANK['chi-family']=[Q('伯伯 (bó bo) is your…',['father’s elder brother','mother','younger sister','son'],0,'伯伯 is dad’s elder brother.',''),
+Q('叔叔 (shū shu) is your…',['grandmother','father’s younger brother','cousin','teacher'],1,'叔叔 is dad’s younger brother.',''),
+Q('姑姑 (gū gu) is your…',['father’s sister','mother’s brother','elder brother','baby'],0,'姑姑 is dad’s sister.',''),
+Q('外婆 (wài pó) is your…',['grandmother (mother’s side)','aunt','sister','neighbour'],0,'外婆 is mum’s mother.',''),
+Q('表哥 (biǎo gē) is your…',['elder male cousin','father','younger brother','grandpa'],0,'表哥 is an older boy cousin.',''),
+Q('宝宝 (bǎo bao) means…',['baby','teacher','friend','doctor'],0,'宝宝 is a little baby.',''),
+Q('儿子 (ér zi) means…',['daughter','son','nephew','uncle'],1,'儿子 is a son.',''),
+Q('女儿 (nǚ ér) means…',['son','daughter','mother','sister'],1,'女 = girl.',''),
+Q('家人 (jiā rén) means…',['classmates','family members','neighbours','teachers'],1,'家 + 人 = family people.',''),
+Q('双胞胎 (shuāng bāo tāi) means…',['twins','cousins','friends','classmates'],0,'双 = double!','')];
+FRESH_BANK['chi-school']=[Q('同学 (tóng xué) means…',['teacher','classmate','principal','cook'],1,'同 = same, 学 = learn.',''),
+Q('校长 (xiào zhǎng) is the…',['principal','librarian','student','janitor'],0,'校长 leads the school.',''),
+Q('课本 (kè běn) is a…',['textbook','school bag','pencil case','timetable'],0,'课本 is your lesson book.',''),
+Q('休息 (xiū xi) means…',['to rest / take a break','to run','to write','to sing'],0,'休息 is rest time.',''),
+Q('问题 (wèn tí) means…',['answer','question / problem','homework','story'],1,'有问题 = have a question.',''),
+Q('回答 (huí dá) means…',['to ask','to answer','to read','to draw'],1,'回答问题 = answer a question.',''),
+Q('图书馆 (tú shū guǎn) is the…',['canteen','school hall','library','office'],2,'书 = books — a place full of books.',''),
+Q('操场 (cāo chǎng) is the…',['school field','classroom','library','toilet'],0,'We exercise at the 操场.',''),
+Q('铅笔 (qiān bǐ) is a…',['pen','pencil','eraser','ruler'],1,'铅笔 has a wooden body.',''),
+Q('认真 (rèn zhēn) means…',['careless','serious and earnest','lazy','noisy'],1,'认真学习 = study earnestly.','')];
+TOPICS.forEach(function(t){ t.fresh=FRESH_BANK[t.id]||[]; });
+var SUBJECTS={eng:'English',math:'Maths',sci:'Science',chi:'Chinese'};
+var PRAISE=['Brilliant work, superstar! 🌟','You did it! Pip is doing a happy otter wiggle!','Fantastic! Your brain just levelled up!','Woohoo! High-five from Pip! ✋','Amazing effort — I am so proud of you!','You are on fire (the good, learning kind)! 🔥'];
+var ENCOURAGE=['Oops — even otters drop fish sometimes! Try again!','Good try! Mistakes are brain-growing seeds. 🌱','Nearly there! Have another splash at it!','That was brave! Brave tries make smart brains.'];
+var TREASURE_CATS=[
+ {id:'helpers',e:'🦦',name:'Pip’s Helpers',blurb:'Tools that help you learn, focus and remember.'},
+ {id:'fun',e:'🎉',name:'Fun & Stories',blurb:'Jokes, stories, riddles and play ideas from Pip.'},
+ {id:'gear',e:'🎒',name:'Explorer Gear',blurb:'Kit for spotting, exploring and challenges out and about.'},
+ {id:'calm',e:'🌿',name:'Calm & Kindness',blurb:'Breathing, quiet time and small kind missions.'},
+ {id:'sg',e:'🇸🇬',name:'Singapore Specials',blurb:'Treasures inspired by Singapore — MRT, hawker food, orchids and parks.'}];
+var TREASURES=[
+ {id:'shell',cat:'helpers',e:'🐚',name:'Listening Shell',cost:10,purpose:'Unlocks Pip’s Story Time — Pip reads a mini story aloud in Ask Pip.',use:'Ask Pip to tell you a story in Ask Pip — the Listening Shell is what lets Pip read it aloud with the Listen button.'},
+ {id:'magnifier',cat:'helpers',e:'🔍',name:'Wonder Magnifier',cost:12,purpose:'Reveals one hidden nature fun fact every day.',use:'Today’s magnifier fact: a dragonfly can fly forwards, backwards and sideways — like a tiny helicopter with wings!'},
+ {id:'compass',cat:'gear',e:'🧭',name:'Star Compass',cost:15,purpose:'Points to your best next quest on the Home page.',use:'Look on Home — the Star Compass line under Today’s Quest points to a great next quest for you.'},
+ {id:'stone',cat:'calm',e:'💚',name:'Kindness Stone',cost:16,purpose:'Gives you one small kindness mission for today.',use:'Today’s kindness mission: say thank you to someone who helps you — a bus driver, a cleaner, a teacher or someone at home — and watch for their smile.'},
+ {id:'storybook',cat:'fun',e:'📚',name:'Story Crystal',cost:18,purpose:'Unlocks a brand-new mini story prompt from Pip.',use:'Story prompt: one rainy evening, your umbrella whispered, “Take me somewhere I have never been…” What happens next? Tell or write 3 more sentences!'},
+ {id:'pearl',cat:'fun',e:'🔮',name:'Joke Pearl',cost:20,purpose:'Unlocks a brand-new silly joke from Pip every day on Home.',use:'Your Joke Pearl joke lives on Home — a new giggle appears there every day.'},
+ {id:'wand',cat:'helpers',e:'🪄',name:'Word Wizard Wand',cost:22,purpose:'Gives you a tricky new word to try in a sentence each day.',use:'Today’s wizard word: “enormous” — bigger than big! Try it: “The enormous elephant… ” Now finish the sentence your way.'},
+ {id:'binoculars',cat:'gear',e:'🔭',name:'Explorer Binoculars',cost:24,purpose:'Unlocks a spot-it challenge you can play anywhere.',use:'Spot-it challenge: find 3 round things, 2 green things and 1 thing that makes a sound — at home, at the void deck or in a park.'},
+ {id:'lantern',cat:'calm',e:'🏮',name:'Focus Lantern',cost:25,purpose:'Unlocks a 2-minute calm breathing break in Vibe.',use:'Head to the Vibe Zone — your Focus Lantern breathing circle is waiting there whenever you need a calm pause.'},
+ {id:'orchid',cat:'sg',e:'🌺',name:'Orchid Charm',cost:26,purpose:'Unlocks a Singapore flower fact and a drawing prompt.',use:'Singapore fact: the Vanda Miss Joaquim is Singapore’s national flower, chosen because it blooms all year round. Drawing prompt: draw it with pink-purple petals!'},
+ {id:'riddle',cat:'fun',e:'🧩',name:'Riddle Ruby',cost:28,purpose:'Unlocks a daily riddle — guess before you peek at the answer.',use:'Today’s riddle: I have keys but open no locks. What am I? … A piano! Try asking this one at dinner tonight.'},
+ {id:'map',cat:'sg',e:'🗺️',name:'MRT Treasure Map',cost:30,purpose:'Unlocks bonus MRT maths challenges in Learn.',use:'Try the MRT Numbers quest in Learn — count the stations between two stops on a real journey you know, like home to the library.'},
+ {id:'backpack',cat:'gear',e:'🎒',name:'Adventure Backpack',cost:32,purpose:'Unlocks a packing-checklist game for trips and school days.',use:'Packing game: for a rainy park trip, pack 5 things in your head — then check: did you remember water and a cap? Play it again for a beach trip!'},
+ {id:'feather',cat:'calm',e:'🪶',name:'Calm Feather',cost:36,purpose:'Unlocks a 1-minute quiet listening exercise.',use:'Quiet listening: sit still for 1 minute and count every different sound you can hear — birds, fan, voices, rain. How many did you find?'},
+ {id:'song',cat:'fun',e:'🥁',name:'Rhythm Drum',cost:38,purpose:'Unlocks a clap-along rhythm pattern to copy and invent.',use:'Copy Pip’s rhythm: clap-clap, stomp, clap-clap, stomp! Now invent your own 4-beat pattern and teach it to someone.'},
+ {id:'bookmark',cat:'helpers',e:'🔖',name:'Golden Bookmark',cost:40,purpose:'Saves your favourite Ask Pip answers so you can re-read them anytime.',use:'In any Ask Pip chat, tap Save on a Pip answer — it will be kept under your Golden Bookmark on the Ask Pip page.'},
+ {id:'timer',cat:'helpers',e:'⏳',name:'Focus Timer Gem',cost:45,purpose:'Unlocks a 5-minute focus sprint for homework time.',use:'Focus sprint: pick one small task, work on only that for 5 minutes, then take a stretch. Small sprints finish big homework, step by step.'},
+ {id:'torch',cat:'gear',e:'🔦',name:'Firefly Torch',cost:48,purpose:'Unlocks a shadow-play challenge for a wall at home.',use:'Shadow play: shine a light on a wall and make a frog shadow with your hands. Can you make it hop? Can you make a butterfly?'},
+ {id:'merlion',cat:'sg',e:'🦁',name:'Merlion Medal',cost:50,purpose:'Unlocks a Singapore story prompt about the Merlion.',use:'Story prompt: the Merlion has a lion’s head and a fish’s body. If it could talk for one day, what would it tell visitors about Singapore?'},
+ {id:'theatre',cat:'fun',e:'🎭',name:'Puppet Theatre Ticket',cost:55,purpose:'Unlocks a play idea — act out a quest with toys or puppets.',use:'Play idea: pick two toys. One is the teacher, one is the student. Act out today’s quest — the student must explain the answer out loud!'},
+ {id:'kite',cat:'gear',e:'🪁',name:'Sky Kite',cost:60,purpose:'Unlocks a wind-watching challenge and a sky story prompt.',use:'Wind watching: look at leaves, flags and clouds. Is today a kite day, a calm day or a stormy day? How can you tell just by watching?'},
+ {id:'hawker',cat:'sg',e:'🍜',name:'Hawker Hero Badge',cost:65,purpose:'Unlocks a hawker-centre counting challenge for your next meal out.',use:'Hawker challenge: next meal out, count how many stalls sell drinks, and work out the change from $10 for your meal — real hawker maths!'},
+ {id:'rainbow',cat:'calm',e:'🌈',name:'Rainbow Ribbon',cost:70,purpose:'Unlocks a gratitude prompt — name 3 good things about today.',use:'Gratitude moment: name 3 good things about today — one you saw, one you tasted, and one someone did for you. Say them out loud like a rainbow list.'},
+ {id:'gardenleaf',cat:'sg',e:'🌳',name:'Gardens Explorer Leaf',cost:80,purpose:'Unlocks a nature-walk bingo for your next park visit.',use:'Nature bingo for your next park visit: spot a butterfly, a smooth leaf, a rough bark tree, a bird sound and something red. Five finds wins!'}];
+/* ---------- Critters to discover ----------
+   A whole collection beyond the companion frog, grouped by where
+   they live. Which critters are “visiting this week” rotates
+   automatically every Monday from the calendar, so there is
+   always something new to spot without an app update. */
+var CRITTER_CATS=[
+ {id:'pond',e:'💧',name:'Pond Pals',blurb:'Critters that live in and around pond water.'},
+ {id:'garden',e:'🌼',name:'Garden Guests',blurb:'Critters in gardens, void-deck planters and parks.'},
+ {id:'sky',e:'🌙',name:'Sky & Night Flyers',blurb:'Critters that fly, glide or come out at dusk.'}];
+var CRITTERS=[
+ {id:'dragonfly',cat:'pond',e:'🪰',name:'Scarlet Dragonfly',habitat:'Pond edges and drains with plants',fact:'Dragonflies have lived on Earth since before the dinosaurs! Their babies live underwater and climb out when they are ready to fly.',spot:'Look for red or blue dragonflies resting on sticks and leaves beside a pond on a sunny morning.'},
+ {id:'slider',cat:'pond',e:'🐢',name:'Red-eared Slider',habitat:'Ponds and reservoirs',fact:'This turtle loves to bask in the sun on rocks and logs to warm up. It slides quickly into the water when it is surprised — splash!',spot:'Spot them sunbathing in a neat row on rocks at places like MacRitchie or a neighbourhood pond.'},
+ {id:'kingfisher',cat:'pond',e:'🐦',name:'Common Kingfisher',habitat:'Rivers, canals and pond banks',fact:'A tiny, brilliant blue bird that dives like an arrow to catch fish. Its long beak works like a pair of chopsticks!',spot:'Watch a quiet canal railing — kingfishers sit very still, then dive in a flash of blue.'},
+ {id:'pondsnail',cat:'pond',e:'🐌',name:'Pond Snail',habitat:'On pond plants and rocks',fact:'Pond snails carry their spiral home on their back and munch algae, helping to keep the pond clean.',spot:'Peek at leaves just under the water surface — tiny spiral shells are snail homes.'},
+ {id:'tilapia',cat:'pond',e:'🐟',name:'Tilapia',habitat:'Ponds and reservoirs',fact:'Tilapia parents are amazing — some carry their babies in their mouth to keep them safe!',spot:'Look for groups of grey fish fanning the water near a pond edge.'},
+ {id:'ottercr',cat:'pond',e:'🦦',name:'Smooth-coated Otter',habitat:'Rivers and reservoirs around Singapore',fact:'Singapore’s famous otters travel in family groups, hold paws while they rest, and chirp to talk to each other — just like Pip!',spot:'Otter families are sometimes seen along the Singapore River and Bishan-Ang Mo Kio Park early in the morning.'},
+ {id:'butterfly',cat:'garden',e:'🦋',name:'Common Mormon Butterfly',habitat:'Gardens with lime and curry leaf plants',fact:'Its caterpillars munch on lime leaves, then rest in a chrysalis before bursting out as a big black-and-white butterfly.',spot:'Check garden plants on a sunny day — big slow butterflies are often Mormon butterflies.'},
+ {id:'bee',cat:'garden',e:'🐝',name:'Asian Honey Bee',habitat:'Flower gardens and park trees',fact:'One bee visits about 50 to 100 flowers on a single trip, carrying pollen that helps make fruits and seeds.',spot:'Watch a flowering bush and count how many flowers one bee visits in a minute.'},
+ {id:'ladybird',cat:'garden',e:'🐞',name:'Ladybird Beetle',habitat:'Garden leaves and stems',fact:'A ladybird is a gardener’s best friend — it can eat hundreds of tiny plant pests in one day.',spot:'Look under leaves in a planter — red-and-black dots that move are ladybirds at work.'},
+ {id:'caterpillar',cat:'garden',e:'🐛',name:'Lime Caterpillar',habitat:'Lime and citrus leaves',fact:'This green caterpillar looks like bird poo when it is tiny — a clever disguise! Later it becomes a beautiful swallowtail butterfly.',spot:'Gently check lime leaves for a fat green caterpillar — look, but please do not touch.'},
+ {id:'grasshopper',cat:'garden',e:'🦗',name:'Grasshopper',habitat:'Grassy fields and garden lawns',fact:'Grasshoppers hear with ears on their tummy, and their back legs work like springs for super jumps.',spot:'Walk slowly through grass and watch for little green jumpers springing away.'},
+ {id:'weaverant',cat:'garden',e:'🐜',name:'Weaver Ant',habitat:'Trees in parks and gardens',fact:'Weaver ants sew leaves together using silk from their babies, building a leafy nest high in a tree.',spot:'Look up into mango or rain trees for balls of leaves stitched together — but give the ants their space, they can bite!'},
+ {id:'sunbird',cat:'sky',e:'🐤',name:'Olive-backed Sunbird',habitat:'Gardens and parks with flowers',fact:'Singapore’s tiny sunbird hovers like a hummingbird and sips nectar with a long curved beak. The male has a shiny blue-black throat.',spot:'Listen for a high, squeaky song near red flowers like hibiscus and ixora.'},
+ {id:'owl',cat:'sky',e:'🦉',name:'Collared Scops Owl',habitat:'Park trees, comes out at night',fact:'This tiny owl is only about as tall as a water bottle! It sleeps in trees in the day, perfectly hidden by its bark-coloured feathers.',spot:'At dusk in a big park, listen for a soft, single “woop” repeated every few seconds.'},
+ {id:'fruitbat',cat:'sky',e:'🦇',name:'Fruit Bat',habitat:'Roosts in trees, flies at dusk',fact:'Fruit bats are gardeners of the night — as they fly between trees they spread seeds and pollen for durian, mango and many other plants.',spot:'Just after sunset, watch the sky for large, slow, flapping silhouettes between trees.'},
+ {id:'firefly',cat:'sky',e:'✨',name:'Firefly',habitat:'Dark, damp places near mangroves',fact:'A firefly’s glow is a light it makes inside its own body — no battery needed! Each kind flashes its own special pattern.',spot:'Fireflies need real darkness, so they are rare in bright Singapore — mangrove walks at night are the best chance.'},
+ {id:'seaeagle',cat:'sky',e:'🦅',name:'White-bellied Sea Eagle',habitat:'Coasts and reservoirs',fact:'One of Singapore’s biggest birds of prey, with wings wider than a grown-up is tall. It swoops down to snatch fish from the water.',spot:'Look up on a coastal walk at East Coast or Woodlands — a huge white-and-grey bird soaring in circles.'},
+ {id:'squirrel',cat:'sky',e:'🐿️',name:'Plantain Squirrel',habitat:'Park trees and garden branches',fact:'Not a flyer, but a champion leaper! It races along branches and leaps between trees, using its bushy tail as a balance pole.',spot:'In any park, watch the branches — a quick orange-brown squirrel with a stripe is probably this one.'}];
+function critterWeekNum(){ return Math.floor(Date.now()/(7*24*3600*1000)); }
+function visitingCritters(){
+  var w=critterWeekNum(), out=[], used={};
+  for(var k=0;k<3;k++){ var idx=(w*3+k*5)%CRITTERS.length; var guard=0; while(used[idx]&&guard<CRITTERS.length){ idx=(idx+1)%CRITTERS.length; guard++; } used[idx]=1; out.push(CRITTERS[idx]); }
+  return out;
+}
+function daysToMonday(){ var d=new Date(); var add=(8-d.getDay())%7; return add===0?7:add; }
+/* ============================================================
+   INTEGRATED PLAN — school schedule + Primary 4 study timetable
+   + this app, as one system. The timetable decides each day's
+   Today's quest subjects; the school schedule lives in the
+   planner and shapes Pip's nudges; the HCL spelling routine
+   (Tue learn → Wed test → Fri redo missed → Sun recap) runs in
+   Learn. All of it is computed from the calendar, so it rolls
+   forward by itself week after week.
+   ============================================================ */
+var SCHOOL_EVENTS={
+ '11-09':{e:'🪔',name:'Deepavali — school closed',kind:'closure',note:'No school today. A gentle family day — reading and play are enough.'},
+ '11-11':{e:'🗂️',name:'Admin Day — school closed',kind:'closure',note:'No school today. Teachers are planning; explorers can play, read and rest.'},
+ '11-18':{e:'💻',name:'Post-Learning Journey SLS package due',kind:'due',note:'The SLS package is due today — keep the afternoon light once it is handed in.'},
+ '11-19':{e:'🎓',name:'P6 Graduation — school closed',kind:'closure',note:'No school today for the younger levels. Light play and reading only.'},
+ '11-20':{e:'🎒',name:'P1 Orientation — school closed',kind:'closure',note:'No school today — the school is welcoming next year’s P1 children.'}};
+function mdKey(d){ return String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function schoolEventFor(d){ return SCHOOL_EVENTS[mdKey(d)]||null; }
+var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function fmtDate(d){ return DOWS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]; }
+function nextSchoolEvents(n){
+  var out=[], now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  Object.keys(SCHOOL_EVENTS).forEach(function(k){ var p=k.split('-'); var occ=new Date(now.getFullYear(),+p[0]-1,+p[1]); if(occ<today)occ=new Date(now.getFullYear()+1,+p[0]-1,+p[1]); out.push({date:occ,ev:SCHOOL_EVENTS[k]}); });
+  out.sort(function(a,b){ return a.date-b.date; }); return out.slice(0,n||5);
+}
+var STUDY_PLAN={
+ 0:{label:'Sunday review',subs:[],review:true,study:'30–45 min gentle review',note:'Recap the week in Learn and redo any missed 听写 words.'},
+ 1:{label:'English + Maths',subs:['eng','math'],study:'Study 3:00–4:30pm',note:'School ends ~2pm, then lunch and a shower before study time.'},
+ 2:{label:'Science + Chinese',subs:['sci','chi'],study:'Study 3:00–4:30pm',note:'Chinese day — start learning this week’s 听写 list in Learn.'},
+ 3:{label:'Light study, then Higher Chinese',subs:['chi'],light:true,study:'Light study 3:00–4:00pm · Higher Chinese 5:00–7:00pm',note:'Keep it light before HCL class — and do the quick 听写 self-test first.'},
+ 4:{label:'Maths + Science',subs:['math','sci'],study:'Study 3:00–4:30pm',note:'School ends ~2pm, then lunch and a shower before study time.'},
+ 5:{label:'English + Chinese + weekly review',subs:['eng','chi'],study:'Study 3:00–4:30pm',note:'Redo any missed 听写 words, then a quick review of the whole week.'},
+ 6:{label:'Dance & art day',subs:[],rest:true,study:'Dance 12:00–1:00pm · Art 1:30–3:00pm',note:'No extra study after dance and art — play a game or visit your critter instead!'}};
+function studyPlanFor(dow){ return STUDY_PLAN[dow]; }
+function planTopics(plan){
+  if(plan.rest)return [];
+  if(plan.review||!plan.subs.length)return TOPICS.slice();
+  return TOPICS.filter(function(t){ return plan.subs.indexOf(t.sub)>=0; });
+}
+var HCL_WORDS=[{w:'听写',p:'tīng xiě',m:'spelling — listen & write'},{w:'老师',p:'lǎo shī',m:'teacher'},{w:'学校',p:'xué xiào',m:'school'},{w:'书包',p:'shū bāo',m:'school bag'},{w:'读书',p:'dú shū',m:'to read books'},{w:'作业',p:'zuò yè',m:'homework'},{w:'同学',p:'tóng xué',m:'classmate'},{w:'认真',p:'rèn zhēn',m:'serious & earnest'}];
+function hclStepFor(dow, e){
+  var missed=(e&&e.hclMissed&&e.hclMissed.length)?HCL_WORDS.filter(function(x){ return e.hclMissed.indexOf(x.w)>=0; }):[];
+  if(dow===2)return {key:'learn',title:'Tuesday — learn the list',text:'Listen to each word, say it out loud 3 times, then write it once. Slow and neat wins!',words:HCL_WORDS,test:false};
+  if(dow===3)return {key:'test',title:'Wednesday — quick self-test before HCL class (5–7pm)',text:'A fast check before class: hear each word, say it, write it. Tap “Missed it” honestly — Pip keeps those words safe for Friday.',words:HCL_WORDS,test:true};
+  if(dow===5)return {key:'redo',title:'Friday — redo the missed words',text:missed.length?'These are the words marked missed earlier this week. Crack these and the week is yours!':'No missed words saved this week — do a quick victory lap through the whole list!',words:missed.length?missed:HCL_WORDS,test:true};
+  if(dow===0)return {key:'recap',title:'Sunday — spelling recap',text:missed.length?'One gentle recap of the missed words, then the spelling week is done.':'Full-list recap — say each word out loud like a spelling champion.',words:missed.length?missed:HCL_WORDS,test:true};
+  return {key:'next',title:'Spelling routine: Tue learn → Wed test → Fri redo → Sun recap',text:'Today is a listening day: tap any word to hear it and say it out loud. The next step in the routine is coming up this week.',words:HCL_WORDS,test:false};
+}
+var hclTest=null;
+function planSectionHTML(e, plan, ev){
+  if(!e.mood)e.mood={};
+  var tk=todayKey(), mood=e.mood[tk]||'';
+  var tmr=new Date(); tmr.setDate(tmr.getDate()+1); var tEv=schoolEventFor(tmr);
+  var monday=new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); monday.setHours(0,0,0,0);
+  var weekCells='';
+  for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); var p=studyPlanFor(d.getDay()); var wev=schoolEventFor(d); var isToday=d.toDateString()===new Date().toDateString();
+    weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?'🌴 Dance & art — no study':p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+'</div>';
+  }
+  var moodBtns=[['😀','Great'],['🙂','Okay'],['😐','Meh'],['😟','Wobbly']].map(function(m){ return '<button type="button" class="themechip" data-mood="'+m[1]+'" aria-pressed="'+(mood===m[1])+'" style="background:'+(mood===m[1]?'var(--gold)':'var(--panel2)')+';color:'+(mood===m[1]?'#2a2753':'var(--ink)')+';border:2px solid var(--line)">'+m[0]+' '+m[1]+'</button>'; }).join('');
+  return '<section class="card" style="margin-top:20px"><div class="themeslabel" style="color:var(--ink-soft)">📅 My week — one plan for school, study & play</div>'
+   +'<h3 style="margin:6px 0 4px;font-size:1.3rem">Today: '+esc(plan.label)+'</h3>'
+   +'<p style="font-weight:700;margin:0">🏫 School ends ~2:00pm → 🍽️ lunch & shower → 📚 '+esc(plan.study)+'</p>'
+   +'<p class="small muted" style="font-weight:700;margin:6px 0 0">'+esc(plan.note)+' Today’s quest above is picked from today’s study subjects, so the app and the timetable are the same plan.</p>'
+   +(ev?'<div class="feedback '+(ev.kind==='closure'?'ok':'no')+'" style="margin-top:12px">'+ev.e+' <b>'+esc(ev.name)+'</b> — '+esc(ev.note)+'</div>':'')
+   +(!ev&&tEv&&tEv.kind==='due'?'<div class="feedback no" style="margin-top:12px">💻 <b>Tomorrow: '+esc(tEv.name)+'.</b> Pip’s nudge: do a short revision game today — not a full quiz — so tomorrow feels easy.</div>':'')
+   +(plan.rest?'<div class="feedback ok" style="margin-top:12px">🌴 <b>No extra study today.</b> Dance (12–1pm) and art (1:30–3pm) are the day’s adventures. If you feel like it, play a game in Play or say hello to your critter — that is all Pip asks!</div>':'')
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'+weekCells+'</div>'
+   +'<div style="margin-top:16px;border-top:2px dashed var(--line);padding-top:12px"><b>🌈 How are you feeling today?</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+moodBtns+'</div>'+(mood?'<p class="small" style="font-weight:800;margin:8px 0 0">Pip noted: feeling '+esc(mood)+' today. '+(mood==='Wobbly'?'A breathing break in Vibe might help — and tell a grown-up too. 💛':'Lovely — Pip will remember for the evening summary.')+'</p>':'<p class="small muted" style="font-weight:700;margin:8px 0 0">Tap one — Pip shares it in the grown-ups’ evening summary.</p>')+'</div>'
+   +'</section>';
+}
+function schoolScheduleHTML(e){
+  var ups=nextSchoolEvents(5);
+  return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">🗓️ School schedule — what’s coming</h3>'
+   +'<p class="muted" style="font-weight:700;margin:0 0 10px">School dates live here in your planner, so the app knows what is coming — a closure means a gentle day, and an SLS due date means Pip nudges a short revision game the day before, not a full quiz.</p>'
+   + ups.map(function(u){ var txt=fmtDate(u.date)+' — '+u.ev.name; var added=e.planner.some(function(p){ return p.t===txt; });
+     return '<div class="plannerow"><span style="font-size:1.3rem">'+u.ev.e+'</span><span class="ptext">'+esc(fmtDate(u.date))+' — '+esc(u.ev.name)+'<span class="small muted" style="display:block;font-weight:700">'+esc(u.ev.note)+'</span></span>'+(added?'<span class="pill done">In planner ✔</span>':'<button type="button" class="btn" data-addplan="'+esc(txt)+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Add to planner</button>')+'</div>'; }).join('')
+   +'<p class="small" style="font-weight:800;margin:10px 0 0">Weekly enrichment: ✏️ Higher Chinese — Wednesdays 5:00–7:00pm · 💃 Dance — Saturdays 12:00–1:00pm · 🎨 Art — Saturdays 1:30–3:00pm</p></div>';
+}
+function learnPlanBannerHTML(e){
+  var plan=studyPlanFor(new Date().getDay()); var ev=schoolEventFor(new Date());
+  var tmr=new Date(); tmr.setDate(tmr.getDate()+1); var tEv=schoolEventFor(tmr);
+  return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">📅 Today’s study plan — '+esc(plan.label)+'</h3>'
+   +'<p style="font-weight:700;margin:0">'+esc(plan.study)+'. Quests in today’s subjects wear a <span class="pill done">Today’s plan</span> tag — start with those, they ARE today’s study block.</p>'
+   +(ev?'<p style="font-weight:800;margin:8px 0 0">'+ev.e+' '+esc(ev.name)+' — '+esc(ev.note)+'</p>':'')
+   +(!ev&&tEv&&tEv.kind==='due'?'<p style="font-weight:800;margin:8px 0 0">💻 Tomorrow: '+esc(tEv.name)+'. Pip suggests a short Play revision game after today’s quests — not another full quiz.</p>':'')
+   +(plan.rest?'<p style="font-weight:800;margin:8px 0 0">🌴 It’s dance & art day — no study quests needed. Anything you play today is pure bonus!</p>':'')
+   +'</div>';
+}
+function hclCardHTML(e){
+  if(!e.hclMissed)e.hclMissed=[];
+  var step=hclStepFor(new Date().getDay(), e);
+  var head='<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>';
+  if(hclTest){
+    if(hclTest.idx>=hclTest.words.length){
+      return head+'<div class="feedback ok" style="margin-top:12px">🎉 Self-test finished! '+(e.hclMissed.length?'Words to redo on Friday / Sunday: <b>'+esc(e.hclMissed.join('、'))+'</b>':'No missed words — perfect list!')+'</div><button class="btn" id="hclDone" style="margin-top:6px">Done ✔</button></div>';
+    }
+    var w=hclTest.words[hclTest.idx];
+    return head+'<div style="text-align:center;margin-top:14px"><div style="font-size:2.6rem;font-weight:900;font-family:\'Fredoka\'">'+esc(w.w)+'</div><div class="muted" style="font-weight:800">'+esc(w.p)+' · '+esc(w.m)+'</div>'
+     +'<p style="font-weight:700">Word '+(hclTest.idx+1)+' of '+hclTest.words.length+' — listen, say it out loud, write it down, then be honest:</p>'
+     +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn teal" data-hcllisten="'+esc(w.w)+'">🔊 Listen & say it</button><button class="btn" id="hclGot">✔ I got it</button><button class="btn coral" id="hclMiss">Missed it</button></div></div></div>';
+  }
+  return head+'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'
+   + step.words.map(function(w){ return '<span class="chip" style="padding:7px 10px">'+esc(w.w)+' <span class="small muted">'+esc(w.p)+'</span> <button type="button" class="delbtn" data-hcllisten="'+esc(w.w)+'" aria-label="Listen to '+esc(w.w)+'">🔊</button></span>'; }).join('')
+   +'</div>'
+   +(e.hclMissed.length?'<p class="small" style="font-weight:800;margin:10px 0 0">📌 Missed words saved for Friday & Sunday: '+esc(e.hclMissed.join('、'))+'</p>':'')
+   +(step.test?'<div style="margin-top:12px"><button class="btn" id="hclStart">▶ Start the self-test</button></div>':'<p class="small muted" style="font-weight:700;margin:10px 0 0">Routine: <b style="color:var(--ink)">Tue</b> learn · <b style="color:var(--ink)">Wed</b> quick test before HCL · <b style="color:var(--ink)">Fri</b> redo missed · <b style="color:var(--ink)">Sun</b> recap.</p>')
+   +'</div>';
+}
+var JOKES=['Why did the frog sit on the MRT? It wanted to go ribbit-ing fast!','What do otters use to e-mail? Their otter-space!','Why was the maths book sad? Too many problems!','What room has no doors? A mushroom!','Why did the student eat her homework? The teacher said it was a piece of cake!','What do you call a sleeping bull? A bull-dozer!'];
+var PIC_CHOICES=['🦊','🐢','🦉','🐠','🦋','🐞','🍓','⭐','🌙','🚀','🎈','🍕'];
+var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15'];
+</script>
+<script>
+/* ============================================================
+   STATE — saved on this device only, per explorer
+   ============================================================ */
+var LSKEY='jiyuna-learning-web-v1';
+var DB=null;
+/* Hosted: server sync. Device id is a random UUID in this browser only — no
+   child's name is ever sent to the server. If the server is not configured
+   (/api/progress answers configured:false) everything still works locally. */
+var DEVICE_ID=null;
+try{ DEVICE_ID=localStorage.getItem('p3-device-id'); if(!DEVICE_ID){ DEVICE_ID='d-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10); localStorage.setItem('p3-device-id',DEVICE_ID); } }catch(e){}
+var syncTimer=null;
+function syncToServer(){
+  if(!DEVICE_ID)return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(function(){
+    try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
+  },800);
+}
+function syncFromServer(){
+  if(!DEVICE_ID)return;
+  fetch('/api/progress?device='+encodeURIComponent(DEVICE_ID)).then(function(r){return r.json();}).then(function(j){
+    if(j&&j.configured&&j.data&&j.data.explorers&&j.data.explorers.length){
+      var localEmpty=!DB.explorers||!DB.explorers.length;
+      if(localEmpty){ DB=j.data; save(); render(); }
+    }
+  }).catch(function(){});
+}
+function save(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} syncToServer(); }
+function load(){
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); migrateStages(); return; } }catch(e){}
+  DB={explorers:[], parentPin:null, dailyLimit:30, activeId:null};
+  save();
+}
+/* One-time, in-place remap: the Critter Lab now uses the Muse version's
+   4 life-cycle stages (was 5). Progress, stars and badges are untouched —
+   only the stage index is translated, once, and the data is saved back
+   under the same key. */
+function migrateStages(){
+  if(!DB||DB.stageV===2)return;
+  var map={0:0,1:1,2:2,3:2,4:3};
+  (DB.explorers||[]).forEach(function(e){
+    if(typeof e.critterStage==='number')e.critterStage=(map[e.critterStage]!=null?map[e.critterStage]:0);
+    if(e.visitedStages)e.visitedStages=e.visitedStages.map(function(i){ return map[i]!=null?map[i]:0; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+  });
+  DB.stageV=2; save();
+}
+function newExplorer(name, code){
+  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code,
+    face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, progress:{},
+    playProgress:{}, playFresh:{}, critterName:'Splash', critterStage:0, discoveredCritters:[], theme:'Frog Pond', treasures:[],
+    threads:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
+    flashcards:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], created:Date.now() };
+}
+function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
+function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
+function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addMinutes(n){ var e=ex(); if(!e)return; var k=todayKey(); e.daily[k]=(e.daily[k]||0)+n; e.totalMinutes=(e.totalMinutes||0)+n; }
+function awardBadge(id,label){ var e=ex(); if(!e||e.badges.indexOf(id)>=0)return false; e.badges.push(id); toast('New badge: '+label); return true; }
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(function(){t.style.display='none';},2600); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+function confettiStars(){
+  var c=document.getElementById('confetti'); c.innerHTML='';
+  var syms=['⭐','✨','🌟','💫','🎉'];
+  for(var i=0;i<36;i++){ var s=document.createElement('span'); s.textContent=syms[i%syms.length];
+    s.style.left=(Math.random()*98)+'%'; s.style.animationDuration=(1.4+Math.random()*1.4)+'s'; s.style.animationDelay=(Math.random()*0.5)+'s';
+    c.appendChild(s); }
+  setTimeout(function(){ c.innerHTML=''; },3600);
+}
+
+/* ============================================================
+   ROUTER / SHELL
+   ============================================================ */
+var route='door', parentUnlocked=false, sessionStart=Date.now();
+var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
+var PAGE_TITLES={home:'My Terrarium',learn:'Learn',ask:'Ask Pip',play:'Play Arcade',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
+function go(r){ route=r; if(r!=='parent'){} window.scrollTo(0,0); render(); }
+function render(){
+  var root=document.getElementById('root');
+  if(!ex()){ root.innerHTML=doorHTML(); bindDoor(); return; }
+  var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
+  var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
+  root.innerHTML='<div class="app">'
+   +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+'</div></div></div>'
+   + navBtns
+   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">Progress is saved on this device only.</div></aside>'
+   +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
+   +'<span class="chip">⭐ '+ex().stars+'</span>'
+   +'<button class="iconbtn '+(forestOn?'on':'')+'" id="tbMusic" title="Forest Morning music" aria-label="Toggle Forest Morning music">🎵</button>'
+   +'<button class="avatarbtn" id="tbProfile" aria-label="Open profile menu">'+pipSVG(40,ex().glow)+'</button>'
+   +'<div id="menuHolder"></div></div>'
+   +'<div class="content" id="content"></div></div></div>'
+   +'<nav class="bottomnav">'+btm+'</nav>';
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndPop(); go(b.getAttribute('data-go')); }); });
+  document.getElementById('tbMusic').addEventListener('click',function(){ if(forestOn){ stopForest(); } else { startForest(); } renderTop(); });
+  document.getElementById('tbProfile').addEventListener('click',toggleMenu);
+  var c=document.getElementById('content');
+  if(route==='home')c.innerHTML=homeHTML(),bindHome();
+  else if(route==='learn')c.innerHTML=learnHTML(),bindLearn();
+  else if(route==='play')c.innerHTML=playHTML(),bindPlay();
+  else if(route==='ask')c.innerHTML=askHTML(),bindAsk();
+  else if(route==='critter')c.innerHTML=critterHTML(),bindCritter();
+  else if(route==='treasure')c.innerHTML=treasureHTML(),bindTreasure();
+  else if(route==='vibe')c.innerHTML=vibeHTML(),bindVibe();
+  else if(route==='create')c.innerHTML=createHTML(),bindCreate();
+  else if(route==='parent')c.innerHTML=parentHTML(),bindParent();
+  else if(route==='quiz')c.innerHTML=quizHTML(),bindQuiz();
+  else if(route==='warmup')c.innerHTML=warmupHTML(),bindWarmup();
+  else if(route==='game')c.innerHTML=gameHTML(),bindGame();
+}
+function renderTop(){ render(); }
+function toggleMenu(){
+  var h=document.getElementById('menuHolder'); if(!h)return;
+  if(h.innerHTML){ h.innerHTML=''; return; }
+  var e=ex();
+  h.innerHTML='<div class="menu"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+pipSVG(52,e.glow)
+   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+'</div><div class="small muted">Primary 3 explorer · Sound: Forest Morning</div></div></div>'
+   +'<button class="mitem" id="mLook">🎨 Change my name &amp; look</button>'
+   +'<button class="mitem" id="mSwitch">🔀 Switch explorer</button>'
+   +'<button class="mitem" id="mAdd">➕ Add another explorer</button>'
+   +'<button class="mitem" id="mParent">🌙 Grown-ups: evening summary</button>'
+   +'<button class="mitem" id="mClose" style="background:transparent">✕ Close menu</button></div>';
+  document.getElementById('mClose').onclick=function(){h.innerHTML='';};
+  document.getElementById('mSwitch').onclick=function(){ DB.activeId=null; save(); parentUnlocked=false; go('door'); };
+  document.getElementById('mAdd').onclick=function(){ DB.activeId=null; save(); doorMode='create'; go('door'); };
+  document.getElementById('mParent').onclick=function(){ h.innerHTML=''; go('parent'); };
+  document.getElementById('mLook').onclick=function(){ h.innerHTML=''; openLookModal(); };
+}
+function openLookModal(){
+  var e=ex();
+  openModal('<h3 style="margin-top:0">Change my name &amp; look 🎨</h3>'
+   +'<label class="flabel">Magic name</label><input class="field" id="lkName" value="'+esc(e.name)+'" maxlength="20">'
+   +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
+   +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
+   +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
+  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ e.glow=b.getAttribute('data-g'); save(); openLookModal(); render(); }; });
+  document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ e.badge=b.getAttribute('data-b'); save(); openLookModal(); }; });
+  document.getElementById('lkSave').onclick=function(){ var v=document.getElementById('lkName').value.trim(); if(v)e.name=v; save(); closeModal(); render(); toast('Looking great, '+e.name+'!'); };
+}
+function openModal(html){
+  var o=document.getElementById('overlay'); if(!o){ o=document.createElement('div'); o.className='overlay'; o.id='overlay'; document.body.appendChild(o); }
+  o.innerHTML='<div class="modal">'+html+'</div>'; o.classList.add('open');
+  o.onclick=function(ev){ if(ev.target===o)closeModal(); };
+}
+function closeModal(){ var o=document.getElementById('overlay'); if(o)o.classList.remove('open'); }
+
+/* ============================================================
+   GRAND DOOR — magic name + 3-picture code
+   ============================================================ */
+var doorMode='pick', doorSel=null, doorCode=[];
+function doorHTML(){
+  var h='<div class="doorwrap"><div class="doorcard card">'
+   + pipSVG(120,'#ffb020')
+   +'<h1>The Grand Door</h1><p class="muted" style="font-weight:600;margin:2px 0 6px">Every explorer who enters the terrarium has a <b style="color:var(--ink)">magic name</b> and a <b style="color:var(--ink)">picture code</b> — no email needed. Pip the otter keeps the door.</p>';
+  if(doorMode==='pick'){
+    if(DB.explorers.length){
+      h+='<p style="font-weight:800">Who is exploring today? Tap your name, then tap your 3 secret pictures in order.</p>'
+       +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face">'+e.face+'</span>'+esc(e.name)+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
+       +'<div id="doorCodeArea"></div>'
+       +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>';
+    } else {
+      h+='<p style="font-weight:800">Welcome, explorer! Let’s create your very first explorer.</p><button class="btn" id="doorNew">Start creating ✨</button>';
+    }
+  } else {
+    h+='<label class="flabel">Choose your magic name</label><input class="field" id="newName" placeholder="e.g. MightyOtter" maxlength="20">'
+     +'<label class="flabel">Pick 3 secret pictures for your picture code (remember the order!)</label>'
+     +'<div class="codebubbles" id="newBubbles"></div>'
+     +'<div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-pic="'+p+'">'+p+'</button>'; }).join('')+'</div>'
+     +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="createBtn">Open my door 🚪</button><button class="btn ghost" id="doorBack">Back</button></div>';
+  }
+  h+='<p class="small muted" style="margin-top:16px">Grown-ups: the parent page lives inside the profile menu, protected by a PIN. Progress is saved on this device only.</p></div></div>';
+  return h;
+}
+function renderBubbles(el, arr){
+  el.innerHTML=[0,1,2].map(function(i){ return '<div class="bub '+(arr[i]?'filled':'')+'">'+(arr[i]||'·')+'</div>'; }).join('');
+}
+function bindDoor(){
+  var nb=document.getElementById('doorNew');
+  if(nb)nb.onclick=function(){ doorMode='create'; doorCode=[]; render(); };
+  var back=document.getElementById('doorBack');
+  if(back)back.onclick=function(){ doorMode='pick'; doorSel=null; doorCode=[]; render(); };
+  if(doorMode==='create'){
+    renderBubbles(document.getElementById('newBubbles'), doorCode);
+    document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndPop(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
+    document.getElementById('createBtn').onclick=function(){
+      var name=document.getElementById('newName').value.trim();
+      if(!name){ toast('Pick a magic name first!'); return; }
+      if(doorCode.length!==3){ toast('Pick exactly 3 pictures for your code!'); return; }
+      var e=newExplorer(name, doorCode.slice());
+      DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; save();
+      sndFanfare(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
+    };
+  } else {
+    document.querySelectorAll('[data-ex]').forEach(function(b){ b.onclick=function(){ doorSel=b.getAttribute('data-ex'); doorCode=[]; showDoorCode(); }; });
+  }
+}
+function showDoorCode(){
+  var area=document.getElementById('doorCodeArea'); if(!area)return;
+  var target=DB.explorers.find(function(e){return e.id===doorSel;});
+  area.innerHTML='<p style="font-weight:900">Hello, '+esc(target.name)+'! Tap your 3 secret pictures:</p>'
+   +'<div class="codebubbles" id="loginBubbles"></div>'
+   +'<div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-lpic="'+p+'">'+p+'</button>'; }).join('')+'</div>'
+   +'<button class="btn ghost" id="loginCancel">Cancel</button>';
+  renderBubbles(document.getElementById('loginBubbles'), doorCode);
+  document.querySelectorAll('[data-lpic]').forEach(function(b){ b.onclick=function(){
+    sndPop(); doorCode.push(b.getAttribute('data-lpic'));
+    renderBubbles(document.getElementById('loginBubbles'), doorCode);
+    if(doorCode.length===3){
+      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
+      else { sndWrong(); toast('Hmm, those pictures don’t match. Try again!'); doorCode=[]; setTimeout(showDoorCode,600); }
+    }
+  }; });
+  document.getElementById('loginCancel').onclick=function(){ doorSel=null; doorCode=[]; render(); };
+}
+</script>
+<script>
+/* ============================================================
+   WEEKLY THEMES — picking one visibly re-skins Home + accents,
+   and the choice is saved per explorer.
+   ============================================================ */
+/* The same five weekly themes as the Muse version: picking one tints
+   the Home terrarium scene and shows the theme's line in its glow colour. */
+var THEMES={
+ 'Frog Pond':{tint:'rgba(46,160,90,.30)',glow:'#7be495',line:'Splash! This week we hop around the Frog Pond.'},
+ 'Magnet Lab':{tint:'rgba(214,64,84,.28)',glow:'#ff9d8a',line:'Snap! This week we experiment in the Magnet Lab.'},
+ 'Star Garden':{tint:'rgba(240,178,60,.30)',glow:'#ffd97a',line:'Twinkle! This week we grow ideas in the Star Garden.'},
+ 'Ocean Deep':{tint:'rgba(38,116,210,.34)',glow:'#7cc4ff',line:'Whoosh! This week we dive into the Ocean Deep.'},
+ 'Sky Castle':{tint:'rgba(140,96,220,.30)',glow:'#c9a8ff',line:'Wheee! This week we float up to the Sky Castle.'}
+};
+/* Themes saved by older web builds keep working — they resolve to the
+   matching Muse-version theme, so no saved choice is ever lost. */
+var THEME_ALIAS={'Ocean Dive':'Ocean Deep','Garden Party':'Star Garden','Space Adventure':'Sky Castle','Dino Discovery':'Magnet Lab'};
+function themeName(e){ var n=e&&e.theme; if(THEME_ALIAS[n])n=THEME_ALIAS[n]; return THEMES[n]?n:'Frog Pond'; }
+function themeOf(e){ return THEMES[themeName(e)]; }
+function applyTheme(){
+  var e=ex(); if(!e)return; var t=themeOf(e);
+  document.documentElement.style.setProperty('--tint', t.tint);
+  document.documentElement.style.setProperty('--glow', t.glow);
+}
+function greeting(){ var h=new Date().getHours(); return h<12?'Good morning':(h<18?'Good afternoon':'Good evening'); }
+var PIP_SAYS=['Warm up with a quick game in Play? It wakes your brain right up!','Your frog friend is waiting in Critter Lab. One good visit helps it grow!','One quest question at a time. Small hops make a big frog!','Feeling wobbly or sparkling today? Forest Morning is playing in the Vibe Zone.','Try today’s quest — finishing all 5 questions earns a big celebration!'];
+
+/* Compact terrarium hero for inner pages — same photo, shade, theme
+   tint and Pip treatment as the Home hero, so every page feels like
+   the same terrarium. */
+function pageHero(icon, title, sub, stat){
+  return '<section class="pagehero"><img class="bg" src="assets/terrarium.webp" alt=""><div class="shade"></div><div class="tintwash"></div>'
+   +'<div class="inner"><div class="heroicon">'+icon+'</div><div style="flex:1;min-width:220px"><h2>'+title+'</h2><p>'+sub+'</p></div>'
+   +(stat?'<div class="herostat">'+stat+'</div>':'')
+   + pipSVG(64, ex().glow)
+   +'</div></section>';
+}
+
+/* ============================================================ HOME */
+function homeHTML(){
+  var e=ex(), t=themeOf(e), tname=themeName(e);
+  var doneCount=Object.keys(e.completed).length;
+  var unfinished=TOPICS.filter(function(x){return !e.completed[x.id];});
+  /* The study timetable IS the daily plan: Today's quest is picked
+     from today's study subjects (Mon English+Maths, Tue Science+
+     Chinese, Wed light/Chinese, Thu Maths+Science, Fri English+
+     Chinese+review). Sunday reviews anything unfinished — or, if
+     all is done, a finished quest's fresh set. Saturday is rest. */
+  var todayPlan=studyPlanFor(new Date().getDay());
+  var todayEvent=schoolEventFor(new Date());
+  var planPool=planTopics(todayPlan).filter(function(x){return !e.completed[x.id];});
+  if(todayPlan.review&&!planPool.length)planPool=TOPICS.slice();
+  var poolForPick=planPool.length?planPool:unfinished;
+  var picks=todayPlan.rest?[]:[poolForPick[e.swapIdx%Math.max(poolForPick.length,1)], poolForPick[(e.swapIdx+1)%Math.max(poolForPick.length,1)]].filter(Boolean);
+  if(!picks.length&&!todayPlan.rest)picks=[TOPICS[e.swapIdx%TOPICS.length]];
+  var quest=picks[0], alt=picks[1];
+  var nextTreasure=TREASURES.find(function(x){return e.treasures.indexOf(x.id)<0;});
+  var dayIdx=Math.floor(Date.now()/86400000);
+  var pipSays=PIP_SAYS[dayIdx%PIP_SAYS.length];
+  var memory='';
+  if(e.lastTopic&&topicById(e.lastTopic)&&e.completed[e.lastTopic])memory='Pip remembers: you finished '+esc(topicById(e.lastTopic).name)+' — what a superstar!';
+  else if(e.treasures.length){ var lt=TREASURES.filter(function(x){return e.treasures.indexOf(x.id)>=0;}).slice(-1)[0]; if(lt)memory='Pip remembers the day you unlocked the '+esc(lt.name)+'!'; }
+  var st=STAGES[e.critterStage];
+  var qprog=quest?(e.progress[quest.id]?e.progress[quest.id].idx:0):0;
+  var qdone=quest&&e.completed[quest.id];
+  var compass=e.treasures.indexOf('compass')>=0&&quest? '<p class="small" style="font-weight:800;margin-top:10px">🧭 Star Compass points to: <b>'+esc(quest.name)+'</b> — a great next quest!</p>':'';
+  var badgeHTML=e.badges.map(function(b){ var m={'brave':'🦁 Brave Tryer','comeback':'🏆 Comeback Kid','first':'🌟 First Quest','perfect':'💯 Perfect Quest','critter':'🐸 Critter Friend','player':'🎮 Arcade Star','spotter':'🔍 Critter Spotter','naturalist':'🌿 Young Naturalist'}; return m[b]?'<span class="badge">'+m[b]+'</span>':''; }).join('');
+  var hero='<section class="heroT"><img class="bg" src="assets/terrarium.webp" alt="Jiyuna’s glowing terrarium at night"><div class="shade"></div><div class="tintwash"></div>'
+   +'<div class="inner"><div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap"><div>'+pipSVG(88,e.glow)+'</div>'
+   +'<div style="flex:1;min-width:230px"><h1 style="margin:0;font-size:2rem;line-height:1.15;color:#fff">'+greeting()+', '+esc(e.name)+'!</h1>'
+   +'<div class="bubble" style="margin-top:8px">Pip says: “'+pipSays+'”</div>'
+   +(memory?'<div class="memory">'+memory+'</div>':'')
+   +'<div class="bubble" style="margin-top:8px">You have finished <b>'+doneCount+' of 14 quests</b> and collected <b>⭐ '+e.stars+' stars</b>. '+(doneCount>=14?'You finished EVERYTHING — legendary explorer!':'Ready for today’s adventure?')+'</div>'
+   +'</div></div>'
+   +'<div style="margin-top:18px"><div class="themeslabel">This week’s theme: '+esc(tname)+'</div>'
+   +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px" role="group" aria-label="Pick this week’s theme">'
+   + Object.keys(THEMES).map(function(name){ return '<button type="button" class="themechip '+(tname===name?'sel':'')+'" data-theme="'+esc(name)+'" aria-pressed="'+(tname===name)+'">'+esc(name)+'</button>'; }).join('')
+   +'</div><div class="themeline">'+t.line+'</div></div>'
+   +'</div></section>';
+  var questCard='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
+   +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+quest.icon+' '+esc(quest.name)+'</h2>'
+    +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
+    +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
+    +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
+    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">🏆 Quest complete — amazing exploring!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">🌅 Pip pulled a fresh set of questions for this finished quest this morning — a new set arrives every day. Quests you haven’t finished stay just as you left them.</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Play today’s fresh set</button>'
+      : '<button class="btn" data-quest="'+quest.id+'" style="margin-top:14px">'+(qprog>0?'Continue the quest':'Start today’s quest')+'</button>')
+    +'<p style="margin-top:12px;color:#5b5785;font-weight:600">'+esc(quest.blurb)+'</p>'
+    + compass
+    +(alt? '<div style="margin-top:14px;border-top:2px dashed #e8e2d0;padding-top:12px"><p style="font-weight:700;color:#6d6899;margin:0 0 8px">Or pick today’s adventure — your call!</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><span class="swapbox" style="background:#e5f4e3;color:#2f7a3d">'+esc(quest.name)+'<span style="display:block;font-size:.75rem;font-weight:700">Today’s pick</span></span><button type="button" class="swapbox" id="swapAlt" style="background:#efe9dc;color:#2a2753;cursor:pointer">'+esc(alt.name)+'<span style="display:block;font-size:.75rem;font-weight:700;color:#6d6899">Swap to this one</span></button></div></div>':'')
+    : '<p style="margin-top:8px;font-weight:700">Today’s quest is being planted… check back in a moment.</p>')
+   +'</section>';
+  if(todayPlan.rest){
+    questCard='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🌴 Today — rest day</div>'
+     +'<h2 style="margin:8px 0 2px;font-size:1.55rem">No quest today — it’s dance & art day!</h2>'
+     +'<p style="font-weight:700;margin:8px 0 0">💃 Dance 12:00–1:00pm · 🎨 Art 1:30–3:00pm. The timetable says <b>no extra study</b> after that, and Pip agrees. If you’d like a little terrarium time, play a game or visit your critter — purely for fun.</p>'
+     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button type="button" class="btn" data-go2="play">✨ Play a game</button><button type="button" class="btn" data-go2="critter" style="background:#efe9dc;color:#2a2753;box-shadow:0 4px 0 #d8d0ba">🐸 Visit my critter</button></div></section>';
+  } else if(todayEvent&&todayEvent.kind==='closure'){
+    questCard=questCard.replace('🍃 Today’s quest','🍃 Today’s quest — school is closed today, so this one is gentle & optional');
+  }
+  var critterCard='<button type="button" data-go2="critter" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink)"><img class="cardimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">Your companion critter</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p><p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'</div></button>';
+  var treasureCard='<button type="button" data-go2="treasure" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;color:var(--ink)"><div class="themeslabel" style="color:var(--ink-soft)">Treasure Realm</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+e.treasures.length+' of '+TREASURES.length+' collected</div>'
+   +(nextTreasure? '<p class="small muted" style="font-weight:600;margin:6px 0 0">Next: <b style="color:var(--ink)">'+nextTreasure.e+' '+esc(nextTreasure.name)+'</b> — '+esc(nextTreasure.purpose)+' Unlocks at '+nextTreasure.cost+' stars — you have '+e.stars+'. '+(e.stars>=nextTreasure.cost?'You can unlock it now!':'Just '+(nextTreasure.cost-e.stars)+' more to go!')+'</p>' : '<p class="small muted" style="font-weight:600;margin:6px 0 0">You collected every treasure. Amazing exploring!</p>')
+   +'<div class="progressbar" style="margin-top:12px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div></button>';
+  var creativeCard='<div class="card"><div class="themeslabel" style="color:var(--ink-soft)">Creative zone</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">Make it your own</div>'
+   +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button type="button" class="tilebtn" data-go2="create">Create Studio<span>Your own flashcards &amp; planner</span></button><button type="button" class="tilebtn" data-go2="play">Play Arcade<span>Neon Strike, Memory Match &amp; more games</span></button><button type="button" class="tilebtn" data-go2="ask">Ask Pip<span>Questions, jokes &amp; Story Time</span></button><button type="button" class="tilebtn" data-go2="vibe">Vibe Zone<span>Forest Morning &amp; the breathing bubble</span></button></div></div>';
+  var jokeLine=e.treasures.indexOf('pearl')>=0? '<div class="card" style="margin-top:16px"><h3>🔮 Joke Pearl — today’s giggle</h3><p style="font-weight:700">'+JOKES[new Date().getDate()%JOKES.length]+'</p></div>':'';
+  return '<div class="homegrid">'+hero+questCard+'</div>'
+   + planSectionHTML(e, todayPlan, todayEvent)
+   +'<div class="cardrow">'+critterCard+treasureCard+creativeCard+'</div>'
+   + jokeLine;
+}
+function bindHome(){
+  document.querySelectorAll('[data-theme]').forEach(function(b){ b.onclick=function(){
+    var name=b.getAttribute('data-theme'); var e=ex(); e.theme=name; save(); applyTheme(); sndCorrect();
+    toast('Theme changed to '+name+'!'); render();
+  }; });
+  document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
+  document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ sndPop(); go(b.getAttribute('data-go2')); }; });
+  var sw=document.getElementById('swapAlt'); if(sw)sw.onclick=function(){ ex().swapIdx+=1; save(); sndPop(); render(); };
+  document.querySelectorAll('[data-mood]').forEach(function(b){ b.onclick=function(){ var e=ex(); if(!e.mood)e.mood={}; e.mood[todayKey()]=b.getAttribute('data-mood'); save(); sndCorrect(); toast('Pip noted how you feel today 💛'); render(); }; });
+}
+
+/* ============================================================ LEARN + WARM-UP + QUIZ */
+function learnHTML(){
+  var e=ex();
+  var doneCount=Object.keys(e.completed).length;
+  var subs=['eng','math','sci','chi'];
+  var SUBHEAD={eng:['📖','English','Story words, tenses & punctuation','#1e3a5f'],math:['🔢','Maths','MRT numbers, hawker change & fractions','#4a3a10'],sci:['🔬','Science','Frogs, magnets & garden plants','#1e4034'],chi:['🀄','Chinese','Listening, family & school words','#4c2a33']};
+  return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. 🌅 Finished a quest? Pip pulls a fresh set of questions for it every morning — all 14 topics, every subject. Quests you have not finished stay exactly where you left them.', doneCount+' of 14 quests finished · ⭐ '+e.stars)
+   + learnPlanBannerHTML(e)
+   + hclCardHTML(e)
+   + subs.map(function(s){
+    var list=TOPICS.filter(function(t){return t.sub===s;});
+    var sh=SUBHEAD[s];
+    return '<div class="subjecthead"><span class="sdisc" style="background:'+sh[3]+'">'+sh[0]+'</span><div><h3>'+sh[1]+'</h3><div class="small muted">'+sh[2]+'</div></div></div><div class="grid c2">'
+     + list.map(function(t){ var done=e.completed[t.id]; var prog=e.progress[t.id];
+       var pct=done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0);
+       return '<div class="questcard learncard"><div class="iconrow"><span class="qicon">'+t.icon+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
+       +'<p class="muted" style="font-weight:700;margin:10px 0 0">'+esc(t.blurb)+'</p>'
+       +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+(done?'Best score':(prog?'Quest progress':'Not started'))+'</span><span>'+(done?done:prog?prog.idx:0)+' / 5</span></div>'
+       +'<div class="progressbar" style="margin-top:5px"><div style="width:'+pct+'%"></div></div></div>'
+       +(studyPlanFor(new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
+       +(prog?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
+       +(t.sub==='chi'?'<p class="small muted" style="margin:10px 0 0">🔊 This quest has a Listen button — hear it, then say it out loud!</p>':'')
+       +(done?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions pulled for today</span></p>':'')
+       +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(prog?'▶ Resume quest':(done?'↻ Play today’s fresh set':'▶ Start quest'))+'</button></div>'; }).join('')+'</div>';
+  }).join('');
+}
+function bindLearn(){
+  document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
+  var e=ex(); if(!e.hclMissed)e.hclMissed=[];
+  document.querySelectorAll('[data-hcllisten]').forEach(function(b){ b.onclick=function(){ speakPip(b.getAttribute('data-hcllisten')); toast('Listen… now say it out loud like Pip!'); }; });
+  var hs=document.getElementById('hclStart'); if(hs)hs.onclick=function(){ var step=hclStepFor(new Date().getDay(), e); hclTest={words:step.words, idx:0}; sndPop(); render(); };
+  var hd=document.getElementById('hclDone'); if(hd)hd.onclick=function(){ hclTest=null; render(); };
+  var hg=document.getElementById('hclGot'); if(hg)hg.onclick=function(){ var w=hclTest.words[hclTest.idx]; e.hclMissed=e.hclMissed.filter(function(x){return x!==w.w;}); hclTest.idx++; sndCorrect(); save(); render(); };
+  var hm=document.getElementById('hclMiss'); if(hm)hm.onclick=function(){ var w=hclTest.words[hclTest.idx]; if(e.hclMissed.indexOf(w.w)<0)e.hclMissed.push(w.w); hclTest.idx++; sndWrong(); save(); toast('Saved for Friday & Sunday redo 💪'); render(); };
+}
+
+/* ---------- Daily fresh-set engine ----------
+   poolQuestions: the questions a daily fresh set may draw from —
+   the topic's quest questions plus its fresh bank. Warm-up and
+   Second Chance banks are deliberately NOT in the pool, so they
+   never repeat quest questions. dailyPoolIndices picks 5 for a
+   given calendar day, deterministically: the same day always
+   gives the same set, and if (rarely) it would match yesterday's
+   set exactly, a different mix is pulled instead. Once a set is
+   started it is stored in the quest's saved progress, so an
+   unfinished quest keeps that exact set across days, untouched. */
+function poolQuestions(t){ return t.quest.concat(t.fresh||[]); }
+function hashStr(s){ var h=2166136261; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return h>>>0; }
+function seededShuffle(arr, seed){ var a=arr.slice(), s=(seed>>>0)||1; function rnd(){ s=(Math.imul(s,1664525)+1013904223)>>>0; return s/4294967296; } for(var i=a.length-1;i>0;i--){ var j=Math.floor(rnd()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
+function dateKeyOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dailyPoolIndices(t, dayStr, salt){
+  var n=poolQuestions(t).length, idx=[], take=Math.min(5,n), i;
+  for(i=0;i<n;i++)idx.push(i);
+  function pull(ds, extra){ return seededShuffle(idx, hashStr(salt+'|'+t.id+'|'+ds+(extra||''))).slice(0,take); }
+  var todaySet=pull(dayStr), y=new Date(dayStr+'T12:00:00'); y.setDate(y.getDate()-1);
+  var yest=pull(dateKeyOf(y));
+  var same=todaySet.every(function(v){ return yest.indexOf(v)>=0; })&&yest.every(function(v){ return todaySet.indexOf(v)>=0; });
+  if(same&&n>take){ var alt=pull(dayStr,'|alt'); if(alt.some(function(v){ return todaySet.indexOf(v)<0; }))todaySet=alt; }
+  return todaySet;
+}
+function optsShuffled(q, seed){
+  var order=seededShuffle(q.o.map(function(_,i){return i;}), seed);
+  return {q:q.q, o:order.map(function(i){return q.o[i];}), a:order.indexOf(q.a), c:q.c, j:q.j};
+}
+function questListFor(t, c){
+  if(c.phase!=='quest')return t.retry;
+  if(!c.pool||!c.pool.length)return t.quest;
+  var pool=poolQuestions(t);
+  return c.pool.map(function(pi){ var q=pool[pi]; if(!q)return null; return c.fresh?optsShuffled(q, hashStr(t.id+'#'+pi)):q; }).filter(Boolean);
+}
+var cur=null, warm=null;
+function startQuestFlow(topicId){
+  var e=ex();
+  if(e.progress[topicId]){ cur=loadProgress(topicId); go('quiz'); }
+  else { warm={topicId:topicId, order:shuffle(topicById(topicId).warm.map(function(_,i){return i;})), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; go('warmup'); }
+}
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
+function loadProgress(topicId){
+  var p=ex().progress[topicId];
+  /* A saved, unfinished quest resumes with the exact set it started
+     with (p.pool), whatever the date is now — it is never re-pulled.
+     Progress saved by older builds has no pool: it means the
+     original quest set, in order. */
+  return {topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh};
+}
+function persistProgress(){
+  var e=ex(); if(!cur||cur.phase!=='quest')return;
+  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh}; save();
+}
+function warmupHTML(){
+  var t=topicById(warm.topicId);
+  if(warm.idx>=warm.order.length){
+    return '<div class="card" style="text-align:center"><div style="font-size:3rem">🔥</div><h2>Warm-up complete!</h2><p style="font-weight:800">You got '+warm.correct+' of '+warm.order.length+' warm-up questions right. Your brain is warmed up and ready!</p><p class="muted" style="font-weight:700">Psst — those were practice questions. The quest has its own fresh questions!</p><button class="btn" id="wuStart">Start the quest ▶</button></div>';
+  }
+  var q=t.warm[warm.order[warm.idx]];
+  return '<div class="flowhero">'+pipSVG(40,ex().glow)+'<div><b style="font-family:\'Fredoka\'">🔥 Brain warm-up</b><div class="small muted">Fresh practice questions for '+esc(t.name)+' — the quest itself has different ones!</div></div></div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🔥 Brain warm-up · '+esc(t.name)+'</span><span class="chip">⏱ <span id="wuTime">'+warm.left+'</span>s</span><span class="chip">Question '+(warm.idx+1)+' of '+warm.order.length+'</span></div>'
+   +'<h3 style="margin-top:14px">'+esc(q.q)+'</h3>'
+   +'<div id="wuOpts">'+q.o.map(function(o,i){ var cls='optbtn'; if(warm.answered){ if(i===q.a)cls+=' right'; else if(i===warm.picked)cls+=' wrong'; } else if(i===warm.picked)cls+=' picked'; return '<button class="'+cls+'" data-wopt="'+i+'" '+(warm.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
+   +'<div id="wuFb">'+(warm.answered?('<div class="feedback '+(warm.picked===q.a?'ok':'no')+'">'+(warm.picked===q.a?'Correct! Warm brain, go go go! 🔥':'Not quite — the answer is “'+esc(q.o[q.a])+'”. Warm-up tries still count!')+'</div><button class="btn" id="wuNext">'+(warm.idx+1>=warm.order.length?'Finish warm-up':'Next ▶')+'</button>'):'')+'</div>'
+   +'<button class="btn ghost" id="wuSkip" style="margin-top:10px">Skip warm-up</button></div>';
+}
+function bindWarmup(){
+  if(warm.timer)clearInterval(warm.timer);
+  if(warm.idx<warm.order.length){
+    warm.timer=setInterval(function(){ warm.left--; var el=document.getElementById('wuTime'); if(el)el.textContent=warm.left; if(warm.left<=0){ clearInterval(warm.timer); warm.idx=warm.order.length; render(); } },1000);
+  }
+  document.querySelectorAll('[data-wopt]').forEach(function(b){ b.onclick=function(){
+    var i=parseInt(b.getAttribute('data-wopt'),10); var q=topicById(warm.topicId).warm[warm.order[warm.idx]];
+    warm.picked=i; warm.answered=true; if(i===q.a){ warm.correct++; sndCorrect(); } else sndWrong(); render();
+  }; });
+  var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ warm.idx++; warm.picked=null; warm.answered=false; render(); };
+  var sk=document.getElementById('wuSkip'); if(sk)sk.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
+  var st=document.getElementById('wuStart'); if(st)st.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
+}
+function beginQuest(topicId){
+  var e=ex(), t=topicById(topicId);
+  /* Finished this quest before? Pull today's fresh set — a new mix
+     every morning. Never finished it? The original set, as always.
+     Either way the set is locked into the saved progress at once,
+     so pausing mid-quest never changes the questions. */
+  var isDone=!!e.completed[topicId];
+  var pool=isDone?dailyPoolIndices(t, todayKey(), e.id):[0,1,2,3,4];
+  cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone};
+  persistProgress(); go('quiz');
+}
+function quizHTML(){
+  var e=ex(), t=topicById(cur.topicId);
+  var list=questListFor(t, cur);
+  if(cur.idx>=list.length) return quizDoneHTML(t);
+  var q=list[cur.idx];
+  var left=list.length-cur.idx-1;
+  var listenBtn=t.sub==='chi'?'<button class="btn teal" id="qListen" style="margin-bottom:12px">🔊 Listen — then say it out loud!</button>':'';
+  var fb='';
+  if(cur.answered){
+    if(cur.picked===q.a) fb='<div class="feedback ok">'+PRAISE[(cur.idx+e.stars)%PRAISE.length]+'</div>';
+    else if(cur.phase==='quest') fb='<div class="feedback no"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div>'+esc(q.j||'Oops!')+'<br>💡 Tiny clue: '+esc(q.c)+'<br><span class="small">The right answer is “'+esc(q.o[q.a])+'”. Read the clue once more — it will stick!</span></div></div></div>';
+    else fb='<div class="feedback no">Good brave try! The right answer is “'+esc(q.o[q.a])+'”. '+(q.c?('Clue: '+esc(q.c)):'')+'</div>';
+    fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
+  }
+  return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+t.icon+' '+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!'))+'</div></div></div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+t.icon+' '+esc(t.name)+(cur.phase==='retry'?' · Second Chance':'')+'</span><span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
+   +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
+   +'<h3 style="font-size:1.3rem">'+esc(q.q)+'</h3>'+listenBtn
+   +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
+   +'<div id="qFb">'+fb+'</div>'
+   +'<button class="btn ghost" id="qQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
+}
+function quizDoneHTML(t){
+  var e=ex();
+  if(cur.phase==='retry'){
+    return '<div class="card" style="text-align:center"><div class="trophy">🌟</div><h2>Second Chance complete!</h2><p style="font-weight:800">You got '+cur.score+' of '+t.retry.length+' cousin questions right. Coming back and trying again is exactly how champions learn!</p><button class="btn" id="doneHome">Back to Learn 📚</button></div>';
+  }
+  var perfect=cur.score===(cur.pool?cur.pool.length:t.quest.length);
+  var msg=perfect?'PERFECT QUEST! Every single one right — Pip is speechless (almost)!':cur.score>=3?'Brilliant! You finished the whole quest!':cur.score>=1?'You finished! Finishing matters — and now you know the tricky bits to practise.':'You finished the quest — that takes courage! Let’s try the Second Chance to grow those brain muscles.';
+  var starsHtml=[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('');
+  var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' and earned ⭐ '+cur.score+' stars!</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
+}
+function bindQuiz(){
+  var e=ex(), t=topicById(cur.topicId);
+  var list=questListFor(t, cur);
+  var done=cur.idx>=list.length;
+  if(done){
+    var dh=document.getElementById('doneHome'); if(dh)dh.onclick=function(){ cur=null; go('learn'); };
+    var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
+    return;
+  }
+  var q=list[cur.idx];
+  var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); speakPip(m?m[0]:q.q); toast('Listen… now say it out loud like Pip!'); };
+  document.querySelectorAll('[data-qopt]').forEach(function(b){ b.onclick=function(){
+    var i=parseInt(b.getAttribute('data-qopt'),10); cur.picked=i; cur.answered=true;
+    if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest')cur.wrong.push(cur.idx); }
+    if(cur.phase==='quest')persistProgress(); else save();
+    render();
+  }; });
+  var nx=document.getElementById('qNext'); if(nx)nx.onclick=function(){
+    cur.idx++; cur.picked=null; cur.answered=false;
+    if(cur.idx>=list.length){ finishRound(t); }
+    if(cur.phase==='quest'&&cur.idx<list.length)persistProgress();
+    render();
+  };
+  var qt=document.getElementById('qQuit'); if(qt)qt.onclick=function(){ if(cur.phase==='quest')persistProgress(); toast('Saved! This quest will resume right where you stopped.'); cur=null; go('learn'); };
+}
+function finishRound(t){
+  var e=ex();
+  if(cur.phase==='quest'){
+    var prev=e.completed[cur.topicId]||0;
+    e.completed[cur.topicId]=Math.max(prev,cur.score);
+    e.stars+=cur.score; e.lastTopic=cur.topicId;
+    delete e.progress[cur.topicId];
+    if(!e.badges.length)awardBadge('first','🌟 First Quest');
+    if(cur.score===(cur.pool?cur.pool.length:t.quest.length))awardBadge('perfect','💯 Perfect Quest');
+    /* Weak-spot rule: a topic only counts as a wobbly weak spot
+       after she gets stuck on it TWICE. One wobbly run is just a
+       bad day — the second one is what Pip plans around. */
+    if(cur.score<3){ if(!e.stuckCount)e.stuckCount={}; e.stuckCount[cur.topicId]=(e.stuckCount[cur.topicId]||0)+1; if(e.stuckCount[cur.topicId]>=2){ if(!e.stuck)e.stuck=[]; if(e.stuck.indexOf(cur.topicId)<0)e.stuck.push(cur.topicId); } }
+    else { if(e.stuck)e.stuck=e.stuck.filter(function(x){return x!==cur.topicId;}); if(e.stuckCount)delete e.stuckCount[cur.topicId]; }
+    save(); sndFanfare(); confettiStars();
+  } else {
+    e.stars+=cur.score;
+    if(cur.score>=Math.ceil(t.retry.length/2))awardBadge('comeback','🏆 Comeback Kid');
+    if(e.stuck)e.stuck=e.stuck.filter(function(x){return x!==cur.topicId;});
+    save(); sndFanfare(); confettiStars();
+  }
+}
+
+/* ============================================================ PLAY ARCADE */
+var GAMES=[
+ {id:'word',e:'🌷',name:'Word Garden',blurb:'Grow flowers by picking the right word.',rounds:6},
+ {id:'number',e:'🎈',name:'Number Pop',blurb:'Pop balloons with quick mental maths.',rounds:6},
+ {id:'memory',e:'🃏',name:'Memory Match',blurb:'Flip cards and find the matching pairs.',rounds:0},
+ {id:'sort',e:'🧺',name:'Speed Sort',blurb:'Spot the odd one out, speedy explorer!',rounds:6}];
+var gState=null;
+function playHTML(){
+  var e=ex();
+  var BAND={word:'#1e4034',number:'#4c2a33',memory:'#1e3a5f',sort:'#4a3a10'};
+  return pageHero('✨','Play Arcade','Quick games that secretly train your brain — words, numbers, memory and speedy spotting. Started games resume right where you stopped. 🌅 Finished a game? Fresh rounds are pulled for it every morning — unfinished games keep the exact rounds they started with.','⭐ '+e.stars+' stars')
+   +'<div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds;
+    return '<div class="card gamecard"><div class="gameband" style="background:'+BAND[g.id]+'">'+g.e+'</div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
+    +(p&&!doneG?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(doneG?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — 🌅 fresh rounds pulled today!</span></p>':'')
+    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(p&&!doneG?'▶ Resume game':'▶ Play')+'</button></div></div></div>'; }).join('')+'</div>';
+}
+function bindPlay(){ document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; }); }
+/* Rounds are generated from a seed. A game still in progress keeps
+   the seed it started with (seed 0 = the original rounds, for games
+   saved by older builds), so its questions never change mid-game.
+   A finished game gets a fresh seed every morning, so its rounds
+   are new each day — Word Garden also draws from the fresh bank. */
+function genRound(gameId, idx, seed){
+  seed=seed||0;
+  if(gameId==='word'){
+    var pool=TOPICS[0].quest.concat(TOPICS[0].fresh||[], TOPICS[1].quest, TOPICS[1].fresh||[]);
+    if(!seed)return pool[idx%pool.length];
+    var order=seededShuffle(pool.map(function(_,i){return i;}), hashStr('word|'+seed));
+    return optsShuffled(pool[order[idx%order.length]], hashStr('wo|'+seed+'|'+idx));
+  }
+  if(gameId==='sort'){ var sets=[[ '🍎 Apple',['🍎','🍌','🍇','🐶'] ],[ '🚗 Car',['🚗','🚌','🚲','🍕'] ],[ '🐸 Frog',['🐸','🐢','🦁','🚀'] ],[ '📚 Book',['📚','✏️','🖍️','🍔'] ],[ '🌧 Rainy',['🌧','⛈','☔','🏖'] ],[ '🐟 Fish',['🐟','🐙','🦀','🍩'] ]];
+    if(!seed){ var s0=sets[idx%sets.length]; return {q:'Which one does NOT belong?', o:s0[1], a:3, c:'', j:''}; }
+    var s=sets[(idx+seed)%sets.length]; return optsShuffled({q:'Which one does NOT belong?', o:s[1], a:3, c:'', j:''}, hashStr('so|'+seed+'|'+idx)); }
+  var a, b;
+  if(!seed){ a=3+((idx*7)%18); b=2+((idx*5)%9); }
+  else { var hs=hashStr('num|'+seed+'|'+idx); a=3+(hs%18); b=2+((Math.floor(hs/32))%9); }
+  var isMul=idx%2===0;
+  var ans=isMul?a*b:a+b, opts=shuffle([ans,ans+1,ans-1,ans+2].map(function(x){return String(x);}));
+  return {q:(isMul?(a+' × '+b+' = ?'):(a+' + '+b+' = ?')), o:opts, a:opts.indexOf(String(ans)), c:'', j:''};
+}
+function startGame(id){
+  var e=ex(); if(!e.playFresh)e.playFresh={};
+  var p=e.playProgress[id];
+  var gDef=GAMES.find(function(x){return x.id===id;});
+  var doneP=id==='memory'?(p&&p.won):(p&&p.idx>=gDef.rounds);
+  var seed;
+  if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ }
+  else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
+  if(id==='memory'){ gState={id:id, deck:shuffle(['🐸','🐸','🦦','🦦','🍓','🍓','⭐','⭐','🚀','🚀','🦋','🦋']), open:[], matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
+  else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } }
+  gState.seed=seed;
+  if(id==='memory'){
+    if(doneP){ gState.matched=[]; gState.moves=0; }
+    else if(p&&p.deck&&p.deck.length===12)gState.deck=p.deck.slice();
+  }
+  go('game');
+}
+function gameHTML(){
+  var e=ex(); var g=GAMES.find(function(x){return x.id===gState.id;});
+  if(gState.id==='memory'){
+    if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p><button class="btn" id="gBack">Back to Play 🎮</button></div>';
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div></div>'
+     +'<div class="card"><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
+  }
+  if(gState.idx>=gState.rounds){
+    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(100,e.glow)+'</div><div class="trophy">🏆</div><h2>'+g.name+' complete!</h2><div class="starsRow">'+[1,2,3,4,5,6].map(function(i){return i<=gState.score?'⭐':'☆';}).join('')+'</div><p style="font-weight:900">Score: '+gState.score+' / '+gState.rounds+' — you earned ⭐ '+gState.score+' stars!</p><button class="btn" id="gBack">Back to Play 🎮</button></div>';
+  }
+  var q=genRound(gState.id, gState.idx, gState.seed);
+  return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div></div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
+   +'<div class="bigq">'+esc(q.q)+'</div>'
+   + q.o.map(function(o,i){ var cls='optbtn'; if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; } return '<button class="'+cls+'" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')
+   +(gState.answered?'<div class="feedback '+(gState.picked===q.a?'ok':'no')+'">'+(gState.picked===q.a?PRAISE[gState.idx%PRAISE.length]:ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(q.o[q.a])+'”.')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
+   +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
+}
+function bindGame(){
+  var e=ex();
+  var back=document.getElementById('gBack'); if(back)back.onclick=function(){ gState=null; go('play'); };
+  var quit=document.getElementById('gQuit'); if(quit)quit.onclick=function(){ saveGameProgress(); toast('Saved! Tap the game anytime to resume.'); gState=null; go('play'); };
+  if(gState.id==='memory'){
+    document.querySelectorAll('[data-mem]').forEach(function(b){ b.onclick=function(){
+      if(gState.lock)return; var i=parseInt(b.getAttribute('data-mem'),10);
+      if(gState.matched.indexOf(i)>=0||gState.open.indexOf(i)>=0)return;
+      sndPop(); gState.open.push(i);
+      if(gState.open.length===2){ gState.moves++;
+        if(gState.deck[gState.open[0]]===gState.deck[gState.open[1]]){ gState.matched=gState.matched.concat(gState.open); gState.open=[]; sndCorrect(); saveGameProgress(); }
+        else { gState.lock=true; setTimeout(function(){ gState.open=[]; gState.lock=false; saveGameProgress(); render(); },750); }
+      }
+      saveGameProgress(); render();
+    }; });
+    if(gState.matched.length>=12&&!gState.won){ gState.won=true; e.stars+=6; awardBadge('player','🎮 Arcade Star'); saveGameProgress(); sndFanfare(); confettiStars(); }
+    return;
+  }
+  if(gState.idx>=gState.rounds)return;
+  var q=genRound(gState.id, gState.idx, gState.seed);
+  document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
+    var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
+    if(i===q.a){ gState.score++; sndCorrect(); } else sndWrong();
+    saveGameProgress(); render();
+  }; });
+  var nx=document.getElementById('gNext'); if(nx)nx.onclick=function(){
+    gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
+    if(gState.idx>=gState.rounds){ ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+    render();
+  };
+}
+function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed}; save(); }
+
+/* ============================================================ ASK PIP */
+var activeThread=null;
+async function askPipLive(text, history, name){
+  try{
+    var r=await fetch('/api/ask-pip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false})});
+    if(!r.ok)return null;
+    var j=await r.json();
+    return (j&&j.reply)?j.reply:null;
+  }catch(e){ return null; }
+}
+function pipReply(text){
+  var s=text.toLowerCase();
+  if(s.indexOf('frog')>=0||s.indexOf('tadpole')>=0)return 'Great frog question! 🐸 A frog starts as an egg in water, hatches into a tadpole with gills and a tail, grows legs to become a froglet, and finally a frog that breathes with lungs. My otter cousins cheer them on from the pond bank!';
+  if(s.indexOf('magnet')>=0)return 'Magnet magic! 🧲 Magnets attract iron and steel — like nails and paperclips — but not plastic, wood or rubber. Same poles push away (repel), opposite poles pull together (attract). Try testing things at home like a real scientist!';
+  if(s.indexOf('fraction')>=0||s.indexOf('half')>=0||s.indexOf('quarter')>=0)return 'Fractions are fair sharing! 🍕 The bottom number is how many equal pieces there are, the top number is how many you have. Sneaky secret: fewer pieces means BIGGER pieces — 1/2 of a cake beats 1/4!';
+  if(s.indexOf('joke')>=0)return JOKES[Math.floor(Math.random()*JOKES.length)]+' 😂 Want another? Just ask!';
+  if(s.indexOf('妈')>=0||s.indexOf('chinese')>=0||s.indexOf('华文')>=0||s.indexOf('听写')>=0)return '华文小帮手来了！Try this: 妈妈 (mā ma) = mother, 谢谢 (xiè xie) = thank you, 听写 (tīng xiě) = spelling — listen, then write. Say each word out loud three times; your ears teach your brain!';
+  if(s.indexOf('hello')>=0||s.indexOf('hi')>=0)return 'Hello hello! 🦦 I am Pip, your otter buddy. Ask me about frogs, magnets, fractions, Chinese words — or say “joke” for a giggle!';
+  if(s.indexOf('story')>=0)return 'Once upon a splash, a little otter named Pip found a glowing shell in the river. Inside was not treasure, but a note: “The best treasure is a question.” So Pip asked questions all day long — and that, explorer, is how brains grow. The End! 🐚';
+  if(s.indexOf('tired')>=0||s.indexOf('sad')>=0||s.indexOf('hard')>=0)return 'Sending you a big otter hug. 🦦💛 Hard is not bad — hard is where learning lives. Take three slow breaths with me… in… out… Now pick the smallest next step. You have got this, and I am right here.';
+  if(s.indexOf('mrt')>=0||s.indexOf('plus')>=0||s.indexOf('add')>=0||s.indexOf('times')>=0)return 'Maths tip from Pip! 🚇 For adding, make a round number first (23 + 7 = 30, then add the rest). For times tables, count in groups and sing them — 7 × 8 = 56 is the famous tricky one. Practise a little every day!';
+  return 'Ooh, interesting question! 🤔 Here is my otter wisdom: break it into tiny pieces, like a fish into bites. First tell me a little more — is it about animals, magnets, numbers, words, or Chinese? I will dive right in!';
+}
+function askHTML(){
+  var e=ex();
+  if(!activeThread||!e.threads.find(function(t){return t.id===activeThread;})){
+    return pageHero('💬','Ask Pip','Ask about frogs, magnets, fractions, Chinese words — or say “joke” for a giggle. Each topic gets its own chat thread, so frogs never get mixed up with fractions!', e.threads.length+' chat'+(e.threads.length===1?'':'s')+' so far')
+     +'<div class="card"><h3 style="margin-top:0">💬 My chats with Pip</h3><p class="muted" style="font-weight:700">Tap a chat to keep talking about that topic, or start a brand-new one.</p>'
+     +'<button class="btn" id="newThread">➕ New chat</button>'
+     +'<div style="margin-top:14px">'+(e.threads.length?e.threads.map(function(t){ return '<button class="threadrow" data-thread="'+t.id+'"><span>💬 '+esc(t.title)+'</span><span class="small muted">'+t.msgs.length+' messages</span></button>'; }).join(''):'<p class="muted" style="font-weight:700">No chats yet — start your first one!</p>')+'</div>'
+     +(e.treasures.indexOf('bookmark')>=0&&e.favAnswers.length?'<h4>🔖 Golden Bookmark — saved answers</h4>'+e.favAnswers.map(function(f){return '<div class="feedback ok" style="font-weight:700">'+esc(f)+'</div>';}).join(''):'')
+     +'</div>';
+  }
+  var th=e.threads.find(function(t){return t.id===activeThread;});
+  return '<button class="btn ghost" id="askBack">← All chats</button>'
+   +'<div class="card" style="margin-top:12px"><div style="display:flex;gap:10px;align-items:center">'+pipSVG(52,e.glow)+'<div><h3 style="margin:0">'+esc(th.title)+'</h3><span class="small muted">Pip only remembers this chat’s topic</span></div></div>'
+   +'<div class="chatlog" id="chatlog">'+th.msgs.map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br><button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-listen="'+mi+'">🔊 Listen</button>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">🔖 Save</button>':''):'')+'</div>'; }).join('')+'</div>'
+   +'<div class="chatbar"><input class="field" id="askInput" placeholder="Ask Pip anything…" maxlength="300"><button class="btn" id="askSend">Ask ➤</button></div>'
+   +'<p class="small muted">Pip is a friendly practice buddy built into this app — for big questions, also check with a teacher or grown-up.</p></div>';
+}
+function bindAsk(){
+  var e=ex();
+  var nt=document.getElementById('newThread'); if(nt)nt.onclick=function(){
+    e.threadSeq++; var th={id:'t'+Date.now(), title:'New chat '+(e.threadSeq), msgs:[{who:'pip', text:'Hi '+e.name+'! 🦦 I am Pip. What shall we explore in this chat? One topic per chat keeps my otter brain tidy!'}]};
+    e.threads.unshift(th); activeThread=th.id; save(); render();
+  };
+  document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ activeThread=b.getAttribute('data-thread'); render(); }; });
+  var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
+  document.querySelectorAll('[data-listen]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); speakPip(th.msgs[parseInt(b.getAttribute('data-listen'),10)].text); }; });
+  document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; if(e.favAnswers.indexOf(txt)<0)e.favAnswers.push(txt); save(); toast('Saved to your Golden Bookmark! 🔖'); }; });
+  var send=document.getElementById('askSend');
+  function doSend(){
+    var inp=document.getElementById('askInput'); var v=inp.value.trim(); if(!v)return;
+    var th=e.threads.find(function(t){return t.id===activeThread;});
+    th.msgs.push({who:'kid', text:v});
+    if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
+    var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
+    th.msgs.push({who:'pip', text:'Pip is thinking… 🦦'});
+    save(); render();
+    var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
+    askPipLive(v, hist, e.name).then(function(live){
+      var th2=e.threads.find(function(t){return t.id===activeThread;});
+      if(!th2)return;
+      var last=th2.msgs[th2.msgs.length-1];
+      if(last&&last.who==='pip'&&last.text.indexOf('Pip is thinking')===0)last.text=live||pipReply(v);
+      save(); render();
+      var log2=document.getElementById('chatlog'); if(log2)log2.scrollTop=log2.scrollHeight;
+    });
+  }
+  if(send)send.onclick=doSend;
+  var inp=document.getElementById('askInput'); if(inp)inp.addEventListener('keydown',function(ev){ if(ev.key==='Enter')doSend(); });
+  var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
+}
+
+/* ============================================================ CRITTER LAB */
+var STAGES=[['🥚','Frogspawn','A frog is an amphibian: it starts life in water and can live on land as an adult. Frogs lay jelly-like eggs in pond water.'],['🐛','Tadpole','It hatches with gills and a long swimming tail. It eats plants and algae.'],['🐸','Froglet','Legs grow, the tail shrinks, and lungs develop — it is nearly a frog!'],['🐸','Adult Frog','A full frog! It hops on land and swims in water, breathing with lungs and skin.']];
+var STAGE_IMGS=['assets/stage-eggs.webp','assets/stage-tadpole.webp','assets/stage-froglet.webp','assets/stage-frog.webp'];
+var selCritter=null;
+function critterHTML(){
+  var e=ex(); var st=STAGES[e.critterStage];
+  if(!e.discoveredCritters)e.discoveredCritters=[];
+  var visiting=visitingCritters();
+  var sel=selCritter?CRITTERS.find(function(c){return c.id===selCritter;}):null;
+  var detail='';
+  if(sel){
+    var found=e.discoveredCritters.indexOf(sel.id)>=0;
+    detail='<div class="card" style="margin-top:16px;border-color:var(--teal)"><div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap"><div style="font-size:3.2rem">'+sel.e+'</div><div style="flex:1;min-width:220px"><h3 style="margin:0">'+esc(sel.name)+' '+(found?'<span class="pill done">✔ Discovered</span>':'<span class="pill prog">New discovery!</span>')+'</h3>'
+     +'<p class="small muted" style="font-weight:800;margin:4px 0">Where it lives: '+esc(sel.habitat)+'</p>'
+     +'<p style="font-weight:700;margin:6px 0">'+esc(sel.fact)+'</p>'
+     +'<p style="font-weight:700;margin:6px 0">🔍 <b>How to spot it:</b> '+esc(sel.spot)+'</p></div></div></div>';
+  }
+  var visitingHTML='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">✨ Visiting this week</h3><p class="muted" style="font-weight:700;margin:0 0 12px">New visitors arrive every Monday — a different set of critters is spotlighted each week, so keep checking back! Next new visitors in <b style="color:var(--ink)">'+daysToMonday()+' day'+(daysToMonday()===1?'':'s')+'</b>.</p>'
+   +'<div class="grid c3 keep2">'+visiting.map(function(c){ var found=e.discoveredCritters.indexOf(c.id)>=0; return '<button type="button" class="stage '+(found?'sel':'')+'" data-critter="'+c.id+'"><span class="se">'+c.e+'</span>'+esc(c.name)+'<span class="small muted">'+(found?'✔ Discovered':'Tap to discover')+'</span></button>'; }).join('')+'</div></div>';
+  var collectionHTML=CRITTER_CATS.map(function(cat){
+    var list=CRITTERS.filter(function(c){return c.cat===cat.id;});
+    var foundN=list.filter(function(c){return e.discoveredCritters.indexOf(c.id)>=0;}).length;
+    return '<div class="subjecthead"><span class="sdisc" style="background:var(--panel2)">'+cat.e+'</span><div><h3>'+esc(cat.name)+'</h3><div class="small muted">'+esc(cat.blurb)+' · '+foundN+' of '+list.length+' discovered</div></div></div>'
+     +'<div class="grid c3 keep2">'+list.map(function(c){ var found=e.discoveredCritters.indexOf(c.id)>=0; var isVisiting=visiting.some(function(v){return v.id===c.id;});
+       return '<button type="button" class="stage '+(found?'sel':'')+'" data-critter="'+c.id+'" style="'+(found?'':'opacity:.92')+'"><span class="se">'+(found?c.e:'❓')+'</span>'+(found?esc(c.name):'Undiscovered critter')+'<span class="small muted">'+(found?esc(c.habitat):(isVisiting?'✨ Visiting this week — tap to discover!':'Tap to discover'))+'</span></button>'; }).join('')+'</div>';
+  }).join('');
+  return pageHero('🐸','Critter Lab','Watch your frog grow, then discover many more Singapore critters — pond, garden, sky and night. New visitors are spotlighted every week.','Stage '+(e.critterStage+1)+' of 4 · '+e.discoveredCritters.length+' of '+CRITTERS.length+' critters discovered')
+   +'<div class="card"><h3 style="margin-top:0">🐸 Meet '+esc(e.critterName)+'!</h3>'
+   +'<img class="stageimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
+   +'<div class="speech" style="margin-top:14px"><b>'+esc(e.critterName)+'</b> is at the <b>'+st[1]+'</b> stage. '+st[2]+'</div>'
+   +'<label class="flabel">Name your critter</label><div style="display:flex;gap:8px"><input class="field" id="critName" value="'+esc(e.critterName)+'" maxlength="16"><button class="btn" id="critSave">Save name</button></div>'
+   +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
+   +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(e.critterStage===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
+   +'<p class="small muted" style="margin-top:12px">Visit every stage to earn the 🐸 Critter Friend badge.</p></div>'
+   + visitingHTML + detail
+   +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🔍 Critters to discover</h3><p class="muted" style="font-weight:700;margin:0">Tap any critter to discover it and learn how to spot the real one in Singapore. Discover 5 for the 🔍 Critter Spotter badge, and 12 for the 🌿 Young Naturalist badge!</p><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;margin-top:14px"><span>Discovery collection</span><span>'+e.discoveredCritters.length+' / '+CRITTERS.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.discoveredCritters.length/CRITTERS.length*100)+'%"></div></div></div>'
+   + collectionHTML;
+}
+function bindCritter(){
+  var e=ex(); if(!e.visitedStages)e.visitedStages=[]; if(!e.discoveredCritters)e.discoveredCritters=[];
+  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); e.critterStage=i; if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
+  document.querySelectorAll('[data-critter]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-critter'); var c=CRITTERS.find(function(x){return x.id===id;}); selCritter=id;
+    if(e.discoveredCritters.indexOf(id)<0){ e.discoveredCritters.push(id); sndCorrect(); toast('Discovered: '+c.name+'! '+c.e);
+      if(e.discoveredCritters.length>=5)awardBadge('spotter','🔍 Critter Spotter');
+      if(e.discoveredCritters.length>=12)awardBadge('naturalist','🌿 Young Naturalist');
+      if(e.discoveredCritters.length>=CRITTERS.length)confettiStars();
+    } else sndPop();
+    save(); render(); }; });
+  var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
+}
+
+/* ============================================================ TREASURE REALM */
+function treasureHTML(){
+  var e=ex();
+  var catSections=TREASURE_CATS.map(function(cat){
+    var list=TREASURES.filter(function(t){return t.cat===cat.id;});
+    if(!list.length)return '';
+    var ownedN=list.filter(function(t){return e.treasures.indexOf(t.id)>=0;}).length;
+    return '<div class="subjecthead"><span class="sdisc" style="background:var(--panel2)">'+cat.e+'</span><div><h3>'+esc(cat.name)+'</h3><div class="small muted">'+esc(cat.blurb)+' · '+ownedN+' of '+list.length+' unlocked</div></div></div>'
+     +'<div class="grid c2">'+list.map(function(t){ var owned=e.treasures.indexOf(t.id)>=0;
+       return '<div class="card"><div class="treasure"><div class="tdisc '+(owned?'owned':'')+'">'+t.e+'</div><div style="flex:1"><h3 style="margin:0">'+esc(t.name)+'</h3><p style="font-weight:700;margin:6px 0">'+esc(t.purpose)+'</p>'+(owned?'<span class="pill done">✔ Unlocked</span><div style="margin-top:8px"><button class="btn teal" data-use="'+t.id+'">Use it ✨</button></div>':'<span class="pill prog">Costs ⭐ '+t.cost+'</span><div style="margin-top:8px"><button class="btn" data-treasure="'+t.id+'" '+(e.stars<t.cost?'disabled':'')+'>Unlock for '+t.cost+' ⭐</button>'+(e.stars<t.cost?'<span class="small muted"> ('+(t.cost-e.stars)+' more stars needed)</span>':'')+'</div>')+'</div></div></div>'; }).join('')+'</div>';
+  }).join('');
+  var next=TREASURES.filter(function(t){return e.treasures.indexOf(t.id)<0;}).sort(function(a,b){return a.cost-b.cost;})[0];
+  return pageHero('💎','Treasure Realm','Every treasure DOES something — no collecting just for collecting! Treasures are sorted into categories below. Spend quest stars to unlock each one, then tap “Use it” to use its power.', '⭐ '+e.stars+' stars · '+e.treasures.length+' of '+TREASURES.length+' unlocked')
+   +'<div class="card"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem"><span>Treasure collection — '+TREASURE_CATS.length+' categories, '+TREASURES.length+' treasures</span><span>'+e.treasures.length+' / '+TREASURES.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div>'
+   +(next?'<p class="small muted" style="font-weight:700;margin:10px 0 0">Next closest treasure: <b style="color:var(--ink)">'+next.e+' '+esc(next.name)+'</b> in '+esc((TREASURE_CATS.find(function(c){return c.id===next.cat;})||{}).name||'')+' — '+next.cost+' ⭐ ('+(e.stars>=next.cost?'you can unlock it now!':(next.cost-e.stars)+' more stars to go')+'). More treasures are in every category below — keep questing to collect them all!</p>':'<p class="small" style="font-weight:800;margin:10px 0 0">You collected every treasure in every category. Legendary explorer! 🏆</p>')
+   +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'+TREASURE_CATS.map(function(cat){ var list=TREASURES.filter(function(t){return t.cat===cat.id;}); var ownedN=list.filter(function(t){return e.treasures.indexOf(t.id)>=0;}).length; return '<span class="pill '+(ownedN===list.length?'done':'prog')+'">'+cat.e+' '+esc(cat.name)+': '+ownedN+'/'+list.length+'</span>'; }).join('')+'</div></div>'
+   + catSections;
+}
+function bindTreasure(){
+  document.querySelectorAll('[data-treasure]').forEach(function(b){ b.onclick=function(){ var e=ex(); var t=TREASURES.find(function(x){return x.id===b.getAttribute('data-treasure');}); if(e.stars>=t.cost&&e.treasures.indexOf(t.id)<0){ e.stars-=t.cost; e.treasures.push(t.id); save(); sndFanfare(); confettiStars(); toast(t.name+' unlocked! '+t.purpose); render(); } }; });
+  document.querySelectorAll('[data-use]').forEach(function(b){ b.onclick=function(){ var t=TREASURES.find(function(x){return x.id===b.getAttribute('data-use');}); openModal('<div style="text-align:center;font-size:3rem">'+t.e+'</div><h3 style="margin:6px 0;text-align:center">'+esc(t.name)+'</h3><p style="font-weight:700">'+esc(t.use||t.purpose)+'</p><div style="text-align:center;margin-top:14px"><button class="btn" onclick="closeModal()">Lovely! ✨</button></div>'); sndPop(); }; });
+}
+
+/* ============================================================ VIBE */
+function vibeHTML(){
+  var e=ex(); var hasLantern=e.treasures.indexOf('lantern')>=0;
+  return pageHero('🎵','Vibe Zone','Your calm corner of the terrarium — one gentle forest sound, and a breathing bubble when you need a pause.', forestOn?'🎶 Forest Morning is playing':'Quiet right now')
+   +'<div class="card" style="text-align:center"><div style="font-size:3rem">🌲🎶</div><h3>Forest Morning</h3>'
+   +'<p class="muted" style="font-weight:700;max-width:460px;margin:0 auto">The one and only background sound: a soft forest pad with gentle birdsong, made right here in the app. No other sounds — just Forest Morning, the way you asked.</p>'
+   +'<div style="margin:16px"><button class="btn" id="vibeToggle">'+(forestOn?'⏸ Pause Forest Morning':'▶ Play Forest Morning')+'</button></div>'
+   +'<p class="small muted">Music also follows you around the app — use the 🎵 button at the top anytime.</p></div>'
+   +(hasLantern?'<div class="card" style="text-align:center;margin-top:16px"><h3>🏮 Focus Lantern — calm breathing</h3><p class="muted" style="font-weight:700">Breathe in as the circle grows, out as it shrinks. Two quiet minutes.</p><div class="breathe" id="breathCircle"></div><button class="btn teal" id="breathBtn">Start breathing break</button><p class="small muted" id="breathMsg"></p></div>':'<div class="card" style="margin-top:16px"><h3>🏮 Focus Lantern</h3><p class="muted" style="font-weight:700">Unlock the Focus Lantern in the Treasure Realm to get a 2-minute calm breathing break here.</p></div>');
+}
+function bindVibe(){
+  document.getElementById('vibeToggle').onclick=function(){ if(forestOn)stopForest(); else startForest(); render(); };
+  var bb=document.getElementById('breathBtn');
+  if(bb)bb.onclick=function(){
+    var c=document.getElementById('breathCircle'), m=document.getElementById('breathMsg'); var n=0; bb.disabled=true;
+    m.textContent='Breathe in…';
+    var iv=setInterval(function(){ n++; if(n%2===1){ c.style.transform='scale(1.45)'; m.textContent='Breathe in…'; } else { c.style.transform='scale(1)'; m.textContent='…and out.'; } if(n>=30){ clearInterval(iv); m.textContent='Done! Calm and ready. 🌿'; bb.disabled=false; } },4000);
+  };
+}
+
+/* ============================================================ CREATE STUDIO
+   The explorer's own flashcards and planner checklist. Saved per
+   explorer in the same on-device store as everything else — older
+   explorers get the new fields filled in on first visit. */
+var fcFlip={};
+function createHTML(){
+  var e=ex();
+  if(!e.flashcards)e.flashcards=[];
+  if(!e.planner)e.planner=[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}];
+  var planDone=e.planner.filter(function(p){return p.d;}).length;
+  var cards=e.flashcards.length
+   ? e.flashcards.map(function(f,i){
+       var back=!!fcFlip[i];
+       return '<div style="margin-bottom:10px"><button type="button" class="flashcard '+(back?'back':'')+'" data-flip="'+i+'"><span class="fside">'+(back?'Answer — tap to flip back':'Question — tap to flip')+'</span>'+esc(back?f.b:f.f)+'</button>'
+        +'<div style="text-align:right;margin-top:4px"><button type="button" class="delbtn" data-fcdel="'+i+'" aria-label="Delete this flashcard">🗑 Delete card</button></div></div>';
+     }).join('')
+   : '<div class="feedback ok" style="font-weight:700">No flashcards yet — make your first one below! Try a tricky times table (7 × 8 = ?), a spelling word, or a 华文 word you want to remember.</div>';
+  var planRows=e.planner.length
+   ? e.planner.map(function(p,i){
+       return '<div class="plannerow '+(p.d?'done':'')+'"><button type="button" class="tickbtn '+(p.d?'done':'')+'" data-plan="'+i+'" aria-label="Tick off: '+esc(p.t)+'">'+(p.d?'✔':'')+'</button><span class="ptext">'+esc(p.t)+'</span><button type="button" class="delbtn" data-pldel="'+i+'" aria-label="Remove plan item">✕</button></div>';
+     }).join('')
+   : '<p class="muted" style="font-weight:700">Your planner is empty — add your first plan below!</p>';
+  return pageHero('🎨','Create Studio','This corner is all yours: make your own flashcards to practise tricky bits, and plan your day like a real explorer.', e.flashcards.length+' flashcards · '+planDone+' of '+e.planner.length+' plans done')
+   + schoolScheduleHTML(e)
+   +'<div class="grid c2">'
+   +'<div class="card"><h3 style="margin-top:0">🃏 My flashcards</h3><p class="muted" style="font-weight:700">Write a question on the front and the answer on the back. Tap a card to flip it over — no peeking before you guess!</p>'
+   + cards
+   +'<label class="flabel">Front — the question</label><input class="field" id="fcFront" placeholder="e.g. What is 7 × 8?" maxlength="90">'
+   +'<label class="flabel">Back — the answer</label><input class="field" id="fcBack" placeholder="e.g. 56!" maxlength="90">'
+   +'<div style="margin-top:14px"><button class="btn" id="fcAdd">➕ Add flashcard</button></div></div>'
+   +'<div class="card"><h3 style="margin-top:0">📋 My planner</h3><p class="muted" style="font-weight:700">Plan your day, then tap the circle when each thing is done. Pip cheers for every tick!</p>'
+   +'<div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem"><span>Today’s plans</span><span>'+planDone+' / '+e.planner.length+' done</span></div>'
+   +'<div class="progressbar" style="margin:6px 0 14px"><div style="width:'+(e.planner.length?Math.round(planDone/e.planner.length*100):0)+'%"></div></div>'
+   + planRows
+   +'<label class="flabel">Add a plan</label><div style="display:flex;gap:8px"><input class="field" id="plNew" placeholder="e.g. Practise piano for 10 minutes" maxlength="70"><button class="btn" id="plAdd" style="flex:0 0 auto">Add</button></div></div>'
+   +'</div>';
+}
+function bindCreate(){
+  var e=ex();
+  if(!e.planner)e.planner=[];
+  document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
+  document.querySelectorAll('[data-flip]').forEach(function(b){ b.onclick=function(){ var i=b.getAttribute('data-flip'); fcFlip[i]=!fcFlip[i]; sndPop(); render(); }; });
+  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
+  document.getElementById('fcAdd').onclick=function(){
+    var f=document.getElementById('fcFront').value.trim(), bk=document.getElementById('fcBack').value.trim();
+    if(!f||!bk){ toast('Write both sides of the card first!'); return; }
+    e.flashcards.push({f:f,b:bk}); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
+  };
+  document.querySelectorAll('[data-plan]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-plan'),10); e.planner[i].d=!e.planner[i].d; if(e.planner[i].d)sndCorrect(); else sndPop(); save(); render(); }; });
+  document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-pldel'),10); e.planner.splice(i,1); save(); render(); }; });
+  document.getElementById('plAdd').onclick=function(){
+    var v=document.getElementById('plNew').value.trim(); if(!v){ toast('Type a plan first!'); return; }
+    e.planner.push({t:v,d:false}); save(); sndPop(); toast('Plan added! You have got this. 📋'); render();
+  };
+  var pln=document.getElementById('plNew'); if(pln)pln.addEventListener('keydown',function(ev){ if(ev.key==='Enter')document.getElementById('plAdd').click(); });
+}
+
+/* ============================================================ PARENT PAGE */
+var pinBuf='';
+function parentHTML(){
+  if(!DB.parentPin){
+    return '<div class="card" style="max-width:440px;margin:0 auto;text-align:center"><h3>🌙 Grown-ups — set your PIN</h3><p class="muted" style="font-weight:700">First time here: choose a 4-digit PIN so only grown-ups can open this page.</p><input class="field" id="pinNew" type="password" inputmode="numeric" maxlength="4" placeholder="4-digit PIN" style="text-align:center"><input class="field" id="pinNew2" type="password" inputmode="numeric" maxlength="4" placeholder="Type it again" style="text-align:center;margin-top:10px"><div style="margin-top:14px"><button class="btn" id="pinSet">Set PIN &amp; open</button></div></div>';
+  }
+  if(!parentUnlocked){
+    var dots=[0,1,2,3].map(function(i){ return '<div class="d '+(pinBuf.length>i?'f':'')+'"></div>'; }).join('');
+    return '<div class="card" style="max-width:440px;margin:0 auto;text-align:center"><h3>🌙 Grown-ups only</h3><p class="muted" style="font-weight:700">Enter the 4-digit parent PIN.</p><div class="pinDots">'+dots+'</div><div class="keypad">'+[1,2,3,4,5,6,7,8,9,'',0,'⌫'].map(function(k){ return k===''?'<span></span>':'<button data-key="'+k+'">'+k+'</button>'; }).join('')+'</div></div>';
+  }
+  var sel=DB.explorers.find(function(x){return x.id===parentSel;})||ex()||DB.explorers[0];
+  if(!sel)return '<div class="card"><p style="font-weight:800">No explorers yet. Create one at the Grand Door first.</p></div>';
+  parentSel=sel.id;
+  var tk=todayKey(); var todayMin=sel.daily[tk]||0;
+  var days=[]; for(var i=6;i>=0;i--){ var d=new Date(); d.setDate(d.getDate()-i); var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); days.push({label:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()], v:sel.daily[k]||0}); }
+  var maxV=Math.max(DB.dailyLimit, Math.max.apply(null,days.map(function(d){return d.v;})) ,1);
+  var bars=days.map(function(d,i){ var h=Math.round(d.v/maxV*90); return '<g><rect x="'+(i*44+8)+'" y="'+(100-h)+'" width="26" height="'+h+'" rx="5" fill="'+(d.v>DB.dailyLimit?'#ff8a7a':'#57b06a')+'"/><text x="'+(i*44+21)+'" y="116" text-anchor="middle" font-size="10" fill="currentColor">'+d.label+'</text><text x="'+(i*44+21)+'" y="'+(94-h)+'" text-anchor="middle" font-size="9" fill="currentColor">'+(d.v||'')+'</text></g>'; }).join('');
+  var stuckNames=(sel.stuck||[]).map(function(id){ var t=topicById(id); return t?t.name:id; });
+  var tmrD=new Date(); tmrD.setDate(tmrD.getDate()+1); var tPlan=studyPlanFor(tmrD.getDay()); var tEv=schoolEventFor(tmrD);
+  var datD=new Date(); datD.setDate(datD.getDate()+2); var datEv=schoolEventFor(datD);
+  var plan=(stuckNames.length? 'Weak spot (stuck twice): <b>'+esc(stuckNames[0])+'</b>. Tomorrow’s study block becomes a gentle one for it — start with a <b>3-minute Play warm-up game</b> on that topic, not a full quiz, then one short quest together if she is up for it.' : 'No weak spots right now (a topic only counts after she is stuck on it twice). Tomorrow, follow the timetable and let '+esc(sel.name)+' pick the quest within it — choice keeps motivation high.')
+   +' Tomorrow is <b>'+esc(fmtDate(tmrD))+'</b>: <b>'+esc(tPlan.label)+'</b> · '+esc(tPlan.study)+'.'
+   +(tEv?' School note for tomorrow: <b>'+esc(tEv.name)+'</b> — '+esc(tEv.note):'')
+   +(datEv&&datEv.kind==='due'?' Heads-up: <b>'+esc(datEv.name)+'</b> lands the day after tomorrow, so tomorrow Pip nudges a short revision game — not a full quiz.':'')
+   +(tPlan.rest?' It is dance & art day — Pip will not set any extra study.':'');
+  var doneList=Object.keys(sel.completed).map(function(id){ var t=topicById(id); return t.icon+' '+t.name+' ('+sel.completed[id]+'/5)'; });
+  return '<h2 style="margin:0;font-size:1.55rem">🌙 Grown-ups — summary &amp; dashboard</h2><p class="muted" style="font-weight:700;margin:5px 0 14px">The evening summary and the full dashboard in one place — quests, screen time, Pip’s plan for tomorrow, and explorer controls. Everything here is from this app, on this device only.</p>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+DB.explorers.map(function(x){ return '<button class="btn '+(x.id===sel.id?'':'ghost')+'" data-psel="'+x.id+'">'+esc(x.name)+' · ⭐ '+x.stars+'</button>'; }).join('')+'<span style="flex:1"></span><button class="btn ghost" id="pLock">🔒 Lock</button></div>'
+   +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
+   +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
+   +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
+   +'<p style="font-weight:700">✏️ HCL spelling: '+esc(hclStepFor(new Date().getDay(), sel).title)+'. Missed words kept for the Fri/Sun redo: <b>'+((sel.hclMissed&&sel.hclMissed.length)?esc(sel.hclMissed.join('、')):'none right now')+'</b></p>'
+   +(doneList.length?'<p class="small" style="font-weight:700">Quests finished: '+doneList.map(esc).join(' · ')+'</p>':'<p class="small muted">No quests finished yet.</p>')
+   +'<p style="font-weight:700">🌅 Daily refresh: every finished quest got a fresh set of questions today, and finished Play games got fresh rounds — all '+TOPICS.length+' topics have a fresh bank, so coverage stays even across English, Maths, Science and Chinese. Quests and games still in progress were left exactly as they were, ready to resume.</p>'
+   +'<h4>👀 Worth a look</h4>'+(stuckNames.length?stuckNames.map(function(n){ return '<div class="feedback no" style="font-weight:700">“'+esc(n)+'” needed a few tries. What may help: a short game first, then the quest together — keep it light and early in the day.</div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
+   +'<h4>🗓 Pip’s plan for tomorrow</h4><p style="font-weight:700">'+plan+'</p></div>'
+   +'<div class="card"><h3>⏱ Screen time</h3><p style="font-weight:800;font-size:1.3rem">'+todayMin+' min today <span class="small muted">· limit '+DB.dailyLimit+' min/day</span></p>'
+   +(todayMin>DB.dailyLimit?'<div class="feedback no">Over the daily limit today by '+(todayMin-DB.dailyLimit)+' min.</div>':'<p class="small muted" style="font-weight:700">Within today’s limit.</p>')
+   +'<svg viewBox="0 0 330 122" style="width:100%;max-width:330px" role="img" aria-label="Last 7 days screen time chart"><line x1="4" y1="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" x2="326" y2="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" stroke="#ffc94d" stroke-width="2" stroke-dasharray="5 4"/>'+bars+'</svg><p class="small muted">Dashed line = daily limit. This counts time in this app on this device only.</p>'
+   +'<label class="flabel">Daily limit (minutes)</label><div style="display:flex;gap:8px"><input class="field" id="limitIn" type="number" min="5" max="240" value="'+DB.dailyLimit+'"><button class="btn" id="limitSave">Save</button></div>'
+   +'<h4 style="margin-top:18px">⚖️ Today’s balance</h4><p style="font-weight:700">Learning quests finished: '+doneList.length+' · Treasures unlocked: '+sel.treasures.length+' · Ask Pip chats: '+sel.threads.length+'</p>'
+   +'<h4>🌈 Weekend together idea</h4><p style="font-weight:700">Try a riverside walk or a hawker-centre breakfast together, then let '+esc(sel.name)+' teach you one thing Pip taught her this week — kids love being the teacher!</p></div></div>'
+   +'<div class="card" style="margin-top:16px"><h3>🧑‍🤝‍🧑 Explorers on this device</h3>'
+   + DB.explorers.map(function(x){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+x.stars+' · '+Object.keys(x.completed).length+' quests</span><span style="flex:1"></span><button class="btn ghost" data-reset="'+x.id+'">🔑 Reset picture code</button><button class="btn coral" data-remove="'+x.id+'">Remove explorer</button></div>'; }).join('')
+   +'<div id="resetArea"></div>'
+   +'<h4 style="margin-top:18px">Parent PIN</h4><button class="btn ghost" id="pinChange">Change PIN</button> <span id="pinChangeArea"></span>'
+   +'<p class="small muted" style="margin-top:14px">This page shows only what happens inside this app on this device. There is no location tracking and no camera monitoring in this app.</p></div>';
+}
+var parentSel=null;
+function bindParent(){
+  if(!DB.parentPin){
+    document.getElementById('pinSet').onclick=function(){ var a=document.getElementById('pinNew').value.trim(), b=document.getElementById('pinNew2').value.trim();
+      if(!/^\d{4}$/.test(a)){ toast('PIN must be exactly 4 digits.'); return; } if(a!==b){ toast('The two PINs don’t match.'); return; }
+      DB.parentPin=a; parentUnlocked=true; save(); render(); };
+    return;
+  }
+  if(!parentUnlocked){
+    document.querySelectorAll('[data-key]').forEach(function(b){ b.onclick=function(){ var k=b.getAttribute('data-key');
+      if(k==='⌫')pinBuf=pinBuf.slice(0,-1); else if(pinBuf.length<4)pinBuf+=k;
+      if(pinBuf.length===4){ if(pinBuf===DB.parentPin){ parentUnlocked=true; pinBuf=''; render(); return; } toast('Wrong PIN — try again.'); pinBuf=''; }
+      render();
+    }; });
+    return;
+  }
+  document.querySelectorAll('[data-psel]').forEach(function(b){ b.onclick=function(){ parentSel=b.getAttribute('data-psel'); render(); }; });
+  document.getElementById('pLock').onclick=function(){ parentUnlocked=false; go('home'); };
+  document.getElementById('limitSave').onclick=function(){ var v=parseInt(document.getElementById('limitIn').value,10); if(v>=5&&v<=240){ DB.dailyLimit=v; save(); toast('Daily limit saved.'); render(); } };
+  document.querySelectorAll('[data-reset]').forEach(function(b){ b.onclick=function(){
+    var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-reset');}); var picks=[];
+    var area=document.getElementById('resetArea');
+    area.innerHTML='<div class="card" style="margin-top:12px"><h4>New picture code for '+esc(target.name)+'</h4><p class="small muted" style="font-weight:700">Tap 3 pictures in order — this becomes the new code.</p><div class="codebubbles" id="rsBubbles"></div><div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-rpic="'+p+'">'+p+'</button>'; }).join('')+'</div></div>';
+    renderBubbles(document.getElementById('rsBubbles'), picks);
+    document.querySelectorAll('[data-rpic]').forEach(function(pb){ pb.onclick=function(){ if(picks.length<3)picks.push(pb.getAttribute('data-rpic')); renderBubbles(document.getElementById('rsBubbles'), picks); if(picks.length===3){ target.code=picks.slice(); save(); toast('Picture code reset for '+target.name+'.'); area.innerHTML=''; } }; });
+  }; });
+  document.querySelectorAll('[data-remove]').forEach(function(b){ b.onclick=function(){
+    var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-remove');});
+    openModal('<h3 style="margin-top:0">Remove '+esc(target.name)+'?</h3><p style="font-weight:700">This deletes this explorer and all their progress <b>on this device</b>. This cannot be undone.</p><div style="display:flex;gap:10px"><button class="btn coral" id="rmYes">Yes, remove</button><button class="btn ghost" onclick="closeModal()">Keep explorer</button></div>');
+    document.getElementById('rmYes').onclick=function(){ DB.explorers=DB.explorers.filter(function(x){return x.id!==target.id;}); if(DB.activeId===target.id)DB.activeId=DB.explorers.length?DB.explorers[0].id:null; save(); closeModal(); if(!DB.explorers.length){ parentUnlocked=false; go('door'); } else render(); };
+  }; });
+  document.getElementById('pinChange').onclick=function(){
+    document.getElementById('pinChangeArea').innerHTML='<span style="display:inline-flex;gap:6px;margin-left:8px"><input class="field" id="pinCh" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN" style="width:170px"><button class="btn" id="pinChSave">Save PIN</button></span>';
+    document.getElementById('pinChSave').onclick=function(){ var v=document.getElementById('pinCh').value.trim(); if(!/^\d{4}$/.test(v)){ toast('PIN must be exactly 4 digits.'); return; } DB.parentPin=v; save(); toast('Parent PIN changed.'); render(); };
+  };
+}
+
+/* ============================================================ BOOT */
+load();
+if(typeof syncFromServer==='function')syncFromServer();
+applyTheme();
+setInterval(function(){ if(ex()&&document.visibilityState==='visible'){ addMinutes(1); save(); } },60000);
+render();
+</script>
+</body>
+</html>
