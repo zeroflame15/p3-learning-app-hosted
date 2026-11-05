@@ -3,9 +3,10 @@
   "name": "p3-learning-app-hosted",
   "private": true,
   "scripts": {
-    "check": "node --check api/ask-pip.js && node --check api/progress.js && node --check api/health.js && node --check api/flag.js && node --check lib/skills.js && node --check lib/rules.js && node --check lib/agents.js && node --check lib/flags.js",
+    "check": "node --check api/ask-pip.js && node --check api/progress.js && node --check api/health.js && node --check api/flag.js && node --check lib/skills.js && node --check lib/rules.js && node --check lib/agents.js && node --check lib/flags.js && node --check lib/think.js && node --check lib/feedback.js && node --check scripts/run-nightly.js",
     "dev": "npx serve public -l 3000",
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "test:nightly": "node scripts/run-nightly.js"
   },
   "version": "1.0.0"
 }

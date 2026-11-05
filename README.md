@@ -4,16 +4,19 @@ A direct-link web app for Jiyuna: no Muse menus, live AI Pip, and progress
 saved on a server so it syncs across devices and the parent dashboard can be
 checked remotely.
 
-**Status: DEPLOYED and live at https://p3-learning-app-hosted.vercel.app/**
-(via Vercel project `p3-learning-app-hosted` and the public GitHub repo
-https://github.com/zeroflame15/p3-learning-app-hosted; Vercel Authentication
-is off, so it loads without a Vercel login). `/api/health` still reads
+**Status: DEPLOYED and live at https://jyn-learning.vercel.app/**
+(via Vercel project `jyn-learning`, renamed from `p3-learning-app-hosted`,
+and the public GitHub repo https://github.com/zeroflame15/p3-learning-app-hosted;
+Vercel Authentication is off, so it loads without a Vercel login. The old
+URL https://p3-learning-app-hosted.vercel.app/ still works and serves the
+same app.) `/api/health` still reads
 `livePip:false, progressSync:false` — Supabase and the Meta Model API key
 are NOT set up yet, so Pip is still canned answers and progress is still
 on-device only until those are added (see "What Bryan still needs to do").
 The family-sync-code change is deployed and live. The under-the-hood
-wiring below (skill pack, agents, rules, flag-to-test) is implemented
-and tested locally but NOT yet deployed — deploy it with the steps below.
+wiring below (skill pack, agents, rules, flag-to-test) and the video
+alignment below it are implemented and tested locally but NOT yet
+deployed — deploy them with the steps below.
 
 ## What is in this folder
 
@@ -27,66 +30,137 @@ and tested locally but NOT yet deployed — deploy it with the steps below.
 | `api/flag.js` | POST: records a flagged Pip answer and returns the auto-generated regression test case; stores it in Supabase `flag_log` when configured, otherwise returns the test case for local storage. |
 | `lib/skills.js` | Versioned P3 skill pack (`skills-v1`): 16 skills, one exact method per Learn topic. The single source Pip (server + client) routes to. |
 | `lib/rules.js` | Plain, tested scoring rules: stars, badges, treasure unlocks, daily fresh sets, warm-up non-repetition. Models explain; code decides. |
-| `lib/agents.js` | Registry of 19 specialist agents (17 on Meta Muse, 2 plain code) + routing. Only Muse Spark 1.3 is live; Image / SAM 3.1 / Voice Transcribe / Spark Open are placeholders. |
+| `lib/agents.js` | Registry of the video's 19 specialist agents (17 on Meta Muse, 2 plain code) + routing, by feature. Live: 11. Ready: Reviewer + Judge. Placeholders: 6. |
+| `lib/think.js` | "How one agent thinks": skill by id + instructions + lessons learned + guardrails, hint-first, and the signed/traceable reply. |
+| `lib/feedback.js` | The feedback loop: Reviewer second-model check, code proves the fix, Judge ships/holds. |
 | `lib/flags.js` | `flagToTest`: turns a flagged answer into a regression test case. |
+| `scripts/run-nightly.js` | Nightly runner: re-runs the full suite + every flag-derived regression test, writes `tests/nightly-report.json`. No cron is scheduled by this repo. |
 | `tests/` | Automated test suite — run with `npm test` (see "Tests" below). |
 | `supabase/schema.sql` | One table (`family_progress`, one row per family sync code). Run in Supabase SQL Editor. No camera or location data is stored — ever. |
 | `vercel.json`, `package.json` | Vercel routing / function timeouts. |
 | `.env.example` | Every environment variable needed, with where each comes from. |
 
-## Under the hood (wired in 5 Nov 2026 — NOT yet deployed)
+## Under the hood — aligned to the myKx video (5 Nov 2026, NOT yet deployed)
 
-Bryan's principles from the original myKx app, as built here:
+Reference: "Can an AI tutor fix Singapore's birth rate? I built one for
+my 3 kids | myKx" — https://www.youtube.com/watch?v=LiW64t2Dxes
+(Bryan's idea took reference from this video; align especially the
+specialists/agents from 2:15 onwards — chapter 2:08 "Inside myKx:
+19 agents on Meta Muse"). The video description confirms the chapters
+and the principles; the timed-text caption endpoint returned empty, so
+the agent names/models below are taken from the video's own
+"A specialist for every feature" slide, which Bryan shared as
+screenshots. If the spoken words at 2:15 differ anywhere from the
+slide, the slide is what this build follows.
 
-- **19 specialist agents, 17 on Meta Muse** (`lib/agents.js`): Maths,
-  English, Science and Chinese Tutors, Spelling/Listening Coaches,
-  Storyteller, Critter Guide, Treasure Guide, Encourager, Flag Checker,
-  Warm-up/Game Coaches, Planner, Parent Summariser, Voice Coach, Image
-  Guide, Vision Guide, Open Model. A question is routed to ONE
-  specialist, which opens the exact skill. **Live today: 15 agents**
-  (13 on Muse Spark 1.3 + 2 plain-code). **Placeholders (4):** Voice
-  Coach (Muse Voice Transcribe), Image Guide (Muse Image), Vision
-  Guide (SAM 3.1), Open Model (Muse Spark Open) — their entries and
-  prompts exist, but no key, account or live call exists for them.
-  Do not claim they are live.
-- **Skills, not search** (`lib/skills.js`, `skills-v1`): 16 skills, one
-  per Learn topic (14) plus Spelling LSCWC and Check Your Work. Each
-  skill has the exact method, steps, a worked example and a watch-out.
-  Ask Pip (server `api/ask-pip.js` and the client fallback) injects
-  the skill method into the prompt and cites the agent + skill with
-  every answer; the app shows "📚 Method: … · Skills v1" under Pip
-  replies and the pack version in Ask Pip and the parent page.
-- **Models explain, code decides** (`lib/rules.js`): every mark is a
-  pure rule — 1 star per correct answer in a 5-question quest, badges
-  (First / Perfect / Brave Tryer / Comeback Kid / Critter Spotter /
-  Young Naturalist), treasure unlock only when stars ≥ cost with
-  exactly that cost deducted, a topic counts as stuck only after TWO
-  stuck runs (<3/5). No model ever marks anything.
-- **Every flag becomes a test**: every Pip reply has a 🚩 Flag this
-  button. Flagging asks what Pip should have said, records the flag
-  (question, Pip's answer, correction, skill) in `DB.flags` and POSTs
-  it to `/api/flag`, which returns an auto-generated regression test
-  case (stored in Supabase `flag_log` when configured, otherwise kept
-  on the device). The PIN parent page lists the latest flags and
-  their tests. The test suite includes tests generated from real
-  flag shapes — a fixed mistake is a passing test.
+### The 19 specialists — the video's exact list
+
+| Feature | Specialist | Model (video) | Status here |
+|---|---|---|---|
+| Question player | Kix Tutor | Muse Spark 1.3 | live |
+| Ask Kix | Ask Kix | Muse Spark – vision | live* |
+| Vibe Zone | Vibe Zone maker | Muse Spark | live |
+| Talk to Kix | Talk to Kix | Muse Voice Transcribe | placeholder |
+| Sidekick Studio | Sidekick Studio | Muse Image + SAM 3.1 | placeholder |
+| Critter Lab | Critter Keeper | Muse Spark | live |
+| Kix's Notebook | Memory Keeper | Muse Spark | live |
+| Breaks and balance | Screen-time guardian | plain rules | live |
+| Tonight | Tonight | Muse Spark | live |
+| Location | Guardian Brief | Muse Spark | live† |
+| Sentry | Home Reader | Muse Spark – vision | placeholder† |
+| Sentry | Who's who | SAM 3.1 | placeholder† |
+| Do something together | Outing Scout | Muse Spark – web search | placeholder |
+| Do something together | Outing Planner | Muse Spark | live |
+| New exam papers | Past-paper scout | plain rules | live |
+| New exam papers | Content Curator | Muse Spark – files | placeholder |
+| Skill packs | Skill Editor | Muse Spark | live |
+| Feedback loop | Reviewer | Muse Spark Open, ready | ready |
+| Feedback loop | Judge | Muse Spark Open, ready | ready |
+
+19 specialists, 17 on Meta Muse, 2 plain code. **Live: 11. Ready: 2.
+Placeholder: 6.** `*` Ask Kix: the video's model is Muse Spark –
+vision; vision input is not wired yet, so today it answers by text
+on Muse Spark 1.3. `†` Guardian Brief / Home Reader / Who's who are
+present as agents because the video names them, but **no location
+tracking and no camera, ever** — Guardian Brief briefs from progress
+data only, and Home Reader / Who's who never receive a picture.
+
+### Mismatches found (and fixed) in the previous registry
+
+The previous `lib/agents.js` had the right count (19) but the wrong
+agents: it was organised by school subject (Maths Tutor, English
+Tutor, Science Tutor, Chinese Tutor, Spelling/Listening Coaches,
+Storyteller, Critter Guide, Treasure Guide, Encourager, Flag Checker,
+Warm-up/Game Coaches, Planner, Parent Summariser, Voice Coach, Image
+Guide, Vision Guide, Open Model). None of those names was the video's
+— Kix Tutor, Ask Kix, Vibe Zone maker, Talk to Kix, Sidekick Studio,
+Critter Keeper, Memory Keeper, Screen-time guardian, Tonight,
+Guardian Brief, Home Reader, Who's who, Outing Scout, Outing
+Planner, Past-paper scout, Content Curator, Skill Editor, Reviewer
+and Judge were all missing, and the two Muse Spark Open agents
+(Reviewer, Judge) were collapsed into one "Open Model" placeholder.
+Models were also wrong in places: Ask Kix is Muse Spark – vision
+(not plain Muse Spark), Sidekick Studio is Muse Image + SAM 3.1
+together (not two separate agents), Outing Scout needs web search,
+Content Curator needs files, and Screen-time guardian / Past-paper
+scout are plain rules (the previous registry's two plain-code agents
+were Treasure Guide and Warm-up Coach, which are not in the video).
+All of that is now aligned in `lib/agents.js`; routing is by feature
+first (a critter-care question goes to Critter Keeper, a flagged
+answer to Reviewer), a learning question with an exact skill goes to
+Kix Tutor, and an open question with no skill goes to Ask Kix.
+
+### How one agent thinks (`lib/think.js`)
+
+The video's slide, implemented: a question goes to ONE specialist
+(Kix Tutor for a Question-player question) → it opens the skill pack
+(P3 Science) and reads the exact method **by id** → it thinks inside:
+*My instructions* + *Lessons the loop learned* (from flagged
+answers for that skill) + *Guardrails it can't break* (hint, not the
+answer; P3 level; under 90 words; no personal data; no location /
+camera; code decides) → then **code decides** marks / mastery /
+rewards (`lib/rules.js`, never the model) → **a hint, not the
+answer** (for a learning question with a skill; open questions get a
+short explanation). Every reply is **signed and traceable**:
+`pip:<agent>:<skill>:skills-v1:<traceId>` — the signature is
+returned by `/api/ask-pip` and shown under the reply in the app.
+
+### A continuous eval and feedback loop (`lib/feedback.js`, `api/flag.js`)
+
+Kix replies (signed, traceable) → a kid flags it (one tap, in their
+own words) → **Reviewer checks** (a second model reads the case;
+when a model key is configured, `/api/flag` runs the Reviewer prompt
+as a second model pass — labelled honestly as a second pass, since
+Muse Spark Open has no key yet; without a key the review is queued,
+never faked) → **code proves the fix** (`proveFix`: reproduced,
+re-tested, no regressions) → **Judge ships or holds** (ships only
+when the Reviewer confirmed the mistake AND code proved the fix;
+ships as a new version, undoable by reverting it) → **it becomes a
+test**: the flag's regression test case lands in
+`tests/flag-cases.json` and is re-run by the nightly runner.
+
+**Nightly re-run:** `npm run test:nightly` (`scripts/run-nightly.js`)
+re-runs the full suite, including every flag-derived regression test,
+and writes `tests/nightly-report.json`. **No nightly cron is
+scheduled by this repo** — schedule one (Vercel Cron, GitHub Action,
+or a local cron) separately, and do not claim a nightly run happens
+until one actually is.
 
 ### Tests
 
 Run `npm test` (Node's built-in runner, no dependencies). After editing
 `lib/skills.js` or `lib/agents.js`, run `node scripts/sync-skills.js`
 to regenerate the embedded skill pack in `public/index.html` — the
-page and the server must never drift apart. **24 test
-cases, 24 passing** (5 Nov 2026) — covering the skill pack (all 14
-topics map to exactly one skill), routing, scoring/badges/treasure
-rules, daily fresh sets (5 unique, stable same day, different the
-next day, over 21 days × 4 topics), warm-up non-repetition against
-the REAL question banks in `public/index.html`, flag-to-test
-generation, and the API handlers with mocked model + Supabase.
-That is **NOT 1,000 tests** — the suite is the scaffolding for the
-1,000-test goal: every new flag adds a regression test case, and
-the count grows from there. Do not claim 1,000 until the suite
-actually has that many passing tests.
+page and the server must never drift apart. **42 test
+cases, 42 passing** (5 Nov 2026) — the previous 24 plus new tests for
+the video agent list and routing (including "Why can't Pip hop
+yet?" → Kix Tutor + `life-cycle-frog`), the think flow (skill by id,
+lessons, guardrails, signed replies), the feedback loop (Reviewer /
+Judge / prove-fix), and the flag regression cases. That is **NOT
+1,000 tests** — the suite is the scaffolding for the 1,000-test goal:
+every new flag adds a regression test case, and the count grows from
+there. Do not claim 1,000 until the suite actually has that many
+passing tests.
 
 ## How it works
 
@@ -121,9 +195,10 @@ actually has that many passing tests.
 
 ## What Bryan still needs to do (in order)
 
-1. **Vercel — DONE.** Connected; project `p3-learning-app-hosted` is
-   deployed at https://p3-learning-app-hosted.vercel.app/ from the
-   GitHub repo https://github.com/zeroflame15/p3-learning-app-hosted.
+1. **Vercel — DONE.** Connected; project `jyn-learning` (renamed from
+   `p3-learning-app-hosted`) is deployed at https://jyn-learning.vercel.app/
+   from the GitHub repo https://github.com/zeroflame15/p3-learning-app-hosted
+   (repo name unchanged; old URL still works).
 2. **Create a Supabase project** — free account at https://supabase.com,
    new project, then run `supabase/schema.sql` in its SQL Editor (this
    creates the `family_progress` table — if you ran the earlier
@@ -183,12 +258,18 @@ or `.env.local` only.
 
 - `npm run check` passes (all API + lib files); all 5 inline scripts
   in `public/index.html` parse.
-- `npm test`: **24 test cases, 24 passing** (see "Tests" above for
-  what they cover and the honest count — not 1,000).
-- Mocked `/api/ask-pip`: a "7 x 8?" question is routed to the
-  Maths Tutor + `times-tables` skill, the skill method ("Count in
-  groups… 7 × 8 = 56") is injected into the model prompt, and the
-  reply cites agent + skill + `skills-v1`. No key → 503 as before.
+- `npm test`: **42 test cases, 42 passing** (see "Tests" above for
+  what they cover and the honest count — not 1,000). `npm run
+  test:nightly`: 42 passing, 0 failing, 2 flag cases re-run.
+- Mocked `/api/ask-pip`: a "7 x 8?" question is routed to
+  Kix Tutor + `times-tables` skill, the skill method ("Count in
+  groups… 7 × 8 = 56") is injected into the model prompt, the prompt
+  says to give a HINT first, and the reply is signed
+  (`pip:kix-tutor:times-tables:skills-v1:<trace>`). No key → 503.
+- Mocked `/api/flag` with a model key: the Reviewer second-model pass
+  returns CONFIRMED for a corrected flag, code proves the fix, and
+  the Judge ships it; without a key the review is queued and the
+  Judge holds — never faked.
 - Client skill routing extracted verbatim from `public/index.html`
   and run in Node: 6/6 sample questions route to the right skill,
   and `recordFlag` stores a flag locally and builds its test case.
