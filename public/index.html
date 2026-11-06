@@ -1200,8 +1200,31 @@ function mergeExplorer(a,b){
   e.threads=mergeThreads(a.threads,b.threads);
   if(e.deletedThreadIds.length)e.threads=e.threads.filter(function(t){ return e.deletedThreadIds.indexOf(t.id)<0; });
   if(clearedAt)e.threads=e.threads.filter(function(t){ var ts=parseInt(String(t.id||'').slice(1),10); return !(ts&&ts<=clearedAt-10000); });
-  e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.q===f.q; }); }));
-  e.planner=(a.planner||[]).concat((b.planner||[]).filter(function(f){ return !(a.planner||[]).some(function(x){ return x.t===f.t; }); }));
+  /* Flashcards merge by front+back: the old check compared a field
+     cards never had ({f,b}), so both sides were undefined and every
+     local card after the first was dropped on sync. Deleted cards are
+     tombstoned so the server copy cannot resurrect them. */
+  e.deletedFlashcards=unionArr(a.deletedFlashcards,b.deletedFlashcards);
+  e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.f===f.f && x.b===f.b; }); }));
+  if(e.deletedFlashcards.length)e.flashcards=e.flashcards.filter(function(f){ return e.deletedFlashcards.indexOf(f.f+'\u0000'+f.b)<0; });
+  /* Planner merges by title with done = either side done: the old
+     keep-server-only rule reverted a local tick (server d:false beat
+     local d:true). Deleted plans are tombstoned so the server copy
+     cannot resurrect them. */
+  e.deletedPlanner=unionArr(a.deletedPlanner,b.deletedPlanner);
+  var _pl=(a.planner||[]).map(function(p){ return {t:p.t,d:!!p.d}; });
+  (b.planner||[]).forEach(function(p){ var i=-1; _pl.forEach(function(x,ix){ if(x.t===p.t)i=ix; }); if(i<0)_pl.push({t:p.t,d:!!p.d}); else _pl[i].d=_pl[i].d||!!p.d; });
+  if(e.deletedPlanner.length)_pl=_pl.filter(function(p){ return e.deletedPlanner.indexOf(p.t)<0; });
+  e.planner=_pl;
+  /* Explorer name/look: the old merge started from the server copy and
+     never took the local name/glow/badge, so a rename reverted on the
+     next sync. Later timestamp wins; a tie goes to b (local), same as
+     the critter rename rule; with no timestamps on either side the
+     server copy stays (legacy explorers). */
+  var _nAtA=Date.parse((a&&a.nameAt)||'')||0, _nAtB=Date.parse((b&&b.nameAt)||'')||0;
+  if(_nAtB>_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; } else if(_nAtA>_nAtB){ if(a.name!=null)e.name=a.name; e.nameAt=a.nameAt; } else if(_nAtA&&_nAtB&&_nAtB===_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; }
+  var _lAtA=Date.parse((a&&a.lookAt)||'')||0, _lAtB=Date.parse((b&&b.lookAt)||'')||0;
+  if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; e.lookAt=b.lookAt; }
   var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
   e.care=mergeCare(a.care,b.care);
   e.careGrewDay=((a.careGrewDay||'')>(b.careGrewDay||''))?a.careGrewDay:b.careGrewDay;
@@ -1302,11 +1325,11 @@ function migrateStages(){
   DB.stageV=2; save();
 }
 function newExplorer(name, code){
-  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code,
+  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, nameAt:null, lookAt:null,
     face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
-    flashcards:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
+    flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
 function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
@@ -1422,9 +1445,9 @@ function openLookModal(){
    +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
    +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
    +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
-  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ e.glow=b.getAttribute('data-g'); save(); openLookModal(); render(); }; });
-  document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ e.badge=b.getAttribute('data-b'); save(); openLookModal(); }; });
-  document.getElementById('lkSave').onclick=function(){ var v=document.getElementById('lkName').value.trim(); if(v)e.name=v; save(); closeModal(); render(); toast('Looking great, '+e.name+'!'); };
+  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var g=b.getAttribute('data-g'); if(e.glow!==g){ e.glow=g; e.lookAt=new Date().toISOString(); } save(); openLookModal(); render(); }; });
+  document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var bd=b.getAttribute('data-b'); if(e.badge!==bd){ e.badge=bd; e.lookAt=new Date().toISOString(); } save(); openLookModal(); }; });
+  document.getElementById('lkSave').onclick=function(){ var v=document.getElementById('lkName').value.trim(); if(v&&v!==e.name){ e.name=v; e.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+e.name+'!'); };
 }
 function openModal(html){
   var o=document.getElementById('overlay'); if(!o){ o=document.createElement('div'); o.className='overlay'; o.id='overlay'; document.body.appendChild(o); }
@@ -2336,19 +2359,22 @@ function createHTML(){
 function bindCreate(){
   var e=ex();
   if(!e.planner)e.planner=[];
-  document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
+  if(!e.flashcards)e.flashcards=[];
+  if(!e.deletedFlashcards)e.deletedFlashcards=[];
+  if(!e.deletedPlanner)e.deletedPlanner=[];
+  document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==txt; }); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
   document.querySelectorAll('[data-flip]').forEach(function(b){ b.onclick=function(){ var i=b.getAttribute('data-flip'); fcFlip[i]=!fcFlip[i]; sndPop(); render(); }; });
-  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
+  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); var _c=e.flashcards[i]; if(_c){ var _k=_c.f+'\u0000'+_c.b; if(e.deletedFlashcards.indexOf(_k)<0)e.deletedFlashcards.push(_k); } e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
   document.getElementById('fcAdd').onclick=function(){
     var f=document.getElementById('fcFront').value.trim(), bk=document.getElementById('fcBack').value.trim();
     if(!f||!bk){ toast('Write both sides of the card first!'); return; }
-    e.flashcards.push({f:f,b:bk}); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
+    e.flashcards.push({f:f,b:bk}); e.deletedFlashcards=e.deletedFlashcards.filter(function(k){ return k!==f+'\u0000'+bk; }); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
   };
   document.querySelectorAll('[data-plan]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-plan'),10); e.planner[i].d=!e.planner[i].d; if(e.planner[i].d)sndCorrect(); else sndPop(); save(); render(); }; });
-  document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-pldel'),10); e.planner.splice(i,1); save(); render(); }; });
+  document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-pldel'),10); var _p=e.planner[i]; if(_p&&e.deletedPlanner.indexOf(_p.t)<0)e.deletedPlanner.push(_p.t); e.planner.splice(i,1); save(); render(); }; });
   document.getElementById('plAdd').onclick=function(){
     var v=document.getElementById('plNew').value.trim(); if(!v){ toast('Type a plan first!'); return; }
-    e.planner.push({t:v,d:false}); save(); sndPop(); toast('Plan added! You have got this. 📋'); render();
+    e.planner.push({t:v,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==v; }); save(); sndPop(); toast('Plan added! You have got this. 📋'); render();
   };
   var pln=document.getElementById('plNew'); if(pln)pln.addEventListener('keydown',function(ev){ if(ev.key==='Enter')document.getElementById('plAdd').click(); });
 }
