@@ -1393,7 +1393,7 @@ function render(){
   var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   root.innerHTML='<div class="app">'
-   +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+'</div></div></div>'
+   +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
    +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
@@ -1426,7 +1426,7 @@ function toggleMenu(){
   if(h.innerHTML){ h.innerHTML=''; return; }
   var e=ex();
   h.innerHTML='<div class="menu"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+pipSVG(52,e.glow)
-   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+'</div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
+   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+' '+(e.badge||'⭐')+'</div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
    +'<button class="mitem" id="mLook">🎨 Change my name &amp; look</button>'
    +'<button class="mitem" id="mSwitch">🔀 Switch explorer</button>'
    +'<button class="mitem" id="mAdd">➕ Add another explorer</button>'
@@ -1445,9 +1445,16 @@ function openLookModal(){
    +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
    +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
    +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
-  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var g=b.getAttribute('data-g'); if(e.glow!==g){ e.glow=g; e.lookAt=new Date().toISOString(); } save(); openLookModal(); render(); }; });
-  document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var bd=b.getAttribute('data-b'); if(e.badge!==bd){ e.badge=bd; e.lookAt=new Date().toISOString(); } save(); openLookModal(); }; });
-  document.getElementById('lkSave').onclick=function(){ var v=document.getElementById('lkName').value.trim(); if(v&&v!==e.name){ e.name=v; e.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+e.name+'!'); };
+  /* Glow/badge taps must NEVER rebuild the modal: rebuilding it from the
+     saved name threw away a name the child had just typed but not saved
+     yet. Update only the outlines in place, and keep the typed name.
+     They must also NEVER write to the explorer captured when the modal
+     opened: the background sync (~800ms after a save) replaces the
+     whole DB object, so that captured copy is detached and a write to
+     it is silently lost. Resolve the live explorer fresh on every tap. */
+  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(live.glow!==g){ live.glow=g; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var bd=b.getAttribute('data-b'); if(live.badge!==bd){ live.badge=bd; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.badgePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--amber)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
 }
 function openModal(html){
   var o=document.getElementById('overlay'); if(!o){ o=document.createElement('div'); o.className='overlay'; o.id='overlay'; document.body.appendChild(o); }
@@ -1467,7 +1474,7 @@ function doorHTML(){
   if(doorMode==='pick'){
     if(DB.explorers.length){
       h+='<p style="font-weight:800">Who is exploring today? Tap your name, then tap your 3 secret pictures in order.</p>'
-       +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face">'+e.face+'</span>'+esc(e.name)+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
+       +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face">'+e.face+'</span>'+esc(e.name)+' '+(e.badge||'⭐')+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
        +'<div id="doorCodeArea"></div>'
        +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>'
        +'<button class="btn ghost" id="doorLink" style="margin-left:8px">🔗 Link this device with a family code</button>';
@@ -1613,7 +1620,7 @@ function homeHTML(){
   var badgeHTML=e.badges.map(function(b){ var m={'brave':'🦁 Brave Tryer','comeback':'🏆 Comeback Kid','first':'🌟 First Quest','perfect':'💯 Perfect Quest','critter':'🐸 Critter Friend','player':'🎮 Arcade Star','spotter':'🔍 Critter Spotter','naturalist':'🌿 Young Naturalist'}; return m[b]?'<span class="badge">'+m[b]+'</span>':''; }).join('');
   var hero='<section class="heroT"><img class="bg" src="assets/terrarium.webp" alt="Jiyuna’s glowing terrarium at night"><div class="shade"></div><div class="tintwash"></div>'
    +'<div class="inner"><div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap"><div>'+pipSVG(88,e.glow)+'</div>'
-   +'<div style="flex:1;min-width:230px"><h1 style="margin:0;font-size:2rem;line-height:1.15;color:#fff">'+greeting()+', '+esc(e.name)+'!</h1>'
+   +'<div style="flex:1;min-width:230px"><h1 style="margin:0;font-size:2rem;line-height:1.15;color:#fff">'+greeting()+', '+esc(e.name)+' '+(e.badge||'⭐')+'!</h1>'
    +'<div class="bubble" style="margin-top:8px">Pip says: “'+pipSays+'”</div>'
    +(memory?'<div class="memory">'+memory+'</div>':'')
    +'<div class="bubble" style="margin-top:8px">You have finished <b>'+doneCount+' of 14 quests</b> and collected <b>⭐ '+e.stars+' stars</b>. '+(doneCount>=14?'You finished EVERYTHING — legendary explorer!':'Ready for today’s adventure?')+'</div>'
