@@ -149,6 +149,38 @@ test('merge keeps unfinished original-run progress when the topic was never comp
   assert.ok(merged.progress.t1 && merged.progress.t1.idx === 2, 'unfinished progress is kept');
 });
 
+/* --- Resume double-count fix (seen live 2026-11-07) -----------------
+   Number Pop saved & quit at round 5, resumed at round 5, and
+   re-answering round 5 counted twice: 7/6 with 7 stars. The saved
+   progress never recorded that the round was already answered, and
+   the timer always restarted. saveGameProgress now stores
+   answered/picked/elapsed, startGame restores them, and the merge
+   keeps them — so a resumed round shows its feedback and Next, and
+   can never be scored twice. */
+test('merge keeps a resumed round answered, with its pick and elapsed time', () => {
+  const server = explorer({ playProgress: { number: { idx: 4, score: 4, seed: 777, answered: true, picked: 2, elapsed: 60 } } });
+  const local = explorer({ playProgress: { number: { idx: 4, score: 3, seed: 777, answered: false, picked: null, elapsed: 55 } } });
+  const merged = mergeExplorer(server, local);
+  const p = merged.playProgress.number;
+  assert.equal(p.idx, 4, 'same round');
+  assert.equal(p.score, 4, 'higher score wins');
+  assert.equal(p.answered, true, 'the answered round stays answered');
+  assert.equal(p.picked, 2, 'the winning pick is kept');
+  assert.equal(p.elapsed, 60, 'the longer elapsed time is kept');
+});
+
+test('merge takes the answered state from the advanced side, never re-opens a scored round', () => {
+  const server = explorer({ playProgress: { number: { idx: 5, score: 5, seed: 777, answered: false, picked: null, elapsed: 90 } } });
+  const local = explorer({ playProgress: { number: { idx: 4, score: 4, seed: 777, answered: true, picked: 1, elapsed: 70 } } });
+  const merged = mergeExplorer(server, local);
+  const p = merged.playProgress.number;
+  assert.equal(p.idx, 5, 'advanced round wins');
+  assert.equal(p.score, 5, 'score is the max');
+  assert.equal(p.answered, false, 'the advanced side has not answered round 5 yet');
+  assert.equal(p.picked, null, 'no pick carried over to the new round');
+  assert.equal(p.elapsed, 90, 'elapsed is the max');
+});
+
 test('startQuestFlow discards stale original-run progress for a completed-today quest', () => {
   const startQ = fnBody('function startQuestFlow(topicId){');
   assert.ok(startQ.includes("!p.fresh&&e.completedDay&&e.completedDay[topicId]"), 'stale progress is detected');
