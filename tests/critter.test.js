@@ -52,7 +52,7 @@ test('the stage viewer is separate from the growth stage', () => {
   assert.ok(html.includes('var critterView=null;'), 'a view-only stage variable exists');
   const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
   assert.ok(page.includes('var view=(critterView==null?e.critterStage:critterView)'), 'the page shows the viewed stage, defaulting to the growth stage');
-  assert.ok(page.includes("STAGE_IMGS[view]"), 'the big picture follows the viewed stage');
+  assert.ok(page.includes("frogSVG(view)"), 'the big picture follows the viewed stage (layered SVG art per stage)');
   assert.ok(page.includes("(view===i?'sel':'')"), 'the selected thumbnail follows the viewed stage');
   const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 2000);
   assert.ok(bind.includes('critterView=i'), 'tapping a stage sets the view');
