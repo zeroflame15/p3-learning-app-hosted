@@ -102,46 +102,71 @@ test('recordPlayBest keeps the fastest time (best-ever, across days)', () => {
   assert.equal(e.playBest.sort, undefined);
 });
 
-test('leaderboard has one board per game, ranked by fastest time', () => {
-  var todayKey = function () { return TODAY; }; // eslint-disable-line no-unused-vars
+test('leaderboard has one board per game, family and friends together, ranked by fastest time', () => {
   var GAMES = GAMES9; // eslint-disable-line no-unused-vars
   var DB = { // eslint-disable-line no-unused-vars
     explorers: [
-      { name: 'Jiyuna', face: '🦦', stars: 40, playDoneDay: { word: TODAY, memory: TODAY },
+      { id: 'e1', name: 'Jiyuna', face: '🦦', stars: 40, friends: ['XYZ789', 'MNP456', 'QQQ111'], deletedFriends: [], friendCode: 'ABC2DE',
+        playDoneDay: { word: TODAY, memory: TODAY },
         playBest: { word: { secs: 65, day: TODAY }, number: { secs: 30, day: TODAY } } },
       { name: 'Sibling', face: '🐸', stars: 55, playDoneDay: {},
         playBest: { memory: { secs: 120, day: TODAY } } },
       { name: 'Cousin', face: '🦁', stars: 10, playDoneDay: { sort: TODAY },
         playBest: { sort: { secs: 45, day: TODAY }, word: { secs: 50, day: TODAY } } },
     ],
+    activeId: 'e1',
   };
+  var friendsCache = [ // eslint-disable-line no-unused-vars
+    { code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { word: { secs: 40 }, number: { secs: 25 } } },
+    { code: 'MNP456', name: 'Mei', stars: 5, bestTimes: { sort: { secs: 44 } } },
+    { code: 'QQQ111', name: 'Ned', stars: 0, bestTimes: {} },
+  ];
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
   const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
-  const familyBoardHTML = eval('(' + fnText('function familyBoardHTML(){') + ')');
-  const out = familyBoardHTML();
-  assert.ok(out.indexOf('Family leaderboard') >= 0, 'leaderboard heading present');
+  const playBoardHTML = eval('(' + fnText('function playBoardHTML(){') + ')');
+  const out = playBoardHTML();
+  assert.ok(out.indexOf('🏆 Leaderboard') >= 0, 'one combined leaderboard heading');
+  assert.ok(out.indexOf('Family leaderboard') < 0 && out.indexOf('Friends leaderboard') < 0, 'no separate family/friends boards any more');
   assert.ok(out.indexOf('Fastest time wins') >= 0, 'ranked by time, not stars');
+  assert.ok(out.indexOf('family and friends together') >= 0, 'the board says it combines everyone');
   assert.ok(out.indexOf('Most stars wins') < 0, 'old stars ranking is gone');
   for (const name of ['Word Garden', 'Number Pop', 'Memory Match', 'Speed Sort']) {
     assert.ok(out.indexOf(name) >= 0, 'a board for ' + name);
   }
   assert.ok(out.indexOf('Scramble') < 0, 'no board for a game nobody has timed');
-  // Word Garden: Cousin (50s) beats Jiyuna (65s) despite fewer stars.
+  // Word Garden: friend Kai (40s) beats Cousin (50s) and Jiyuna (65s).
   const iWord = out.indexOf('Word Garden'), iNum = out.indexOf('Number Pop');
   const wordBoard = out.slice(iWord, iNum);
-  assert.ok(wordBoard.indexOf('Cousin') >= 0 && wordBoard.indexOf('Jiyuna') >= 0, 'both word players listed');
-  assert.ok(wordBoard.indexOf('Cousin') < wordBoard.indexOf('Jiyuna'), 'Word Garden ranked fastest first: Cousin 50s, Jiyuna 65s');
+  assert.ok(wordBoard.indexOf('Kai') >= 0 && wordBoard.indexOf('Cousin') >= 0 && wordBoard.indexOf('Jiyuna') >= 0, 'family and friends share the board');
+  assert.ok(wordBoard.indexOf('Kai') < wordBoard.indexOf('Cousin'), 'Word Garden ranked fastest first: friend Kai 40s, Cousin 50s');
+  assert.ok(wordBoard.indexOf('Cousin') < wordBoard.indexOf('Jiyuna'), 'Cousin 50s before Jiyuna 65s');
   assert.ok(wordBoard.indexOf('Sibling') < 0, 'Sibling has no Word Garden time, so not on that board');
-  assert.ok(wordBoard.indexOf('⏱ 50s') >= 0, 'fastest word time shown');
+  assert.ok(wordBoard.indexOf('⏱ 40s') >= 0, 'fastest word time shown');
   assert.ok(wordBoard.indexOf('🥇') >= 0, 'medal for the fastest');
+  assert.ok(wordBoard.indexOf('👥 Friend') >= 0, 'friend rows carry the Friend tag');
+  assert.ok(wordBoard.indexOf('🦦') >= 0, 'family rows still show the face');
   // Sibling's 55 stars do not put him first anywhere — time does.
   const iMem = out.indexOf('Memory Match');
   assert.ok(out.slice(iMem).indexOf('Sibling') >= 0, 'Sibling tops the Memory board on time (2m 00s)');
   assert.ok(out.indexOf('⏱ 2m 00s') >= 0, 'Sibling memory time shown');
   assert.ok(out.indexOf('⭐ 55 stars') >= 0, 'stars still shown as a small extra');
+  // Speed Sort: friend Mei (44s) beats Cousin (45s).
+  const iSort = out.indexOf('Speed Sort');
+  const sortBoard = out.slice(iSort);
+  assert.ok(sortBoard.indexOf('Mei') < sortBoard.indexOf('Cousin'), 'Mei 44s beats Cousin 45s on Speed Sort');
+  // Ned has no timed game: on the waiting line, not on a board.
+  assert.ok(out.indexOf('Ned — no timed games yet.') >= 0, 'a friend with no times sits on the waiting line');
+  assert.ok(out.indexOf('id="frCode"') >= 0 && out.indexOf('id="frSend"') >= 0, 'add-a-friend row stays on the board');
   DB = { explorers: [] };
-  assert.equal(familyBoardHTML(), '', 'no explorers, no leaderboard section');
-  DB = { explorers: [{ name: 'Nobody', face: '🦦', stars: 0, playBest: {} }] };
-  assert.equal(familyBoardHTML(), '', 'explorers with no timed games, no leaderboard section');
+  const noEx = playBoardHTML();
+  assert.ok(noEx.indexOf('Pick an explorer') >= 0, 'no explorers: the board says to pick one first');
+  DB = { explorers: [{ id: 'e1', name: 'Nobody', face: '🦦', stars: 0, friends: [], deletedFriends: [], playBest: {} }], activeId: 'e1' };
+  friendsCache = [];
+  const noTimes = playBoardHTML();
+  assert.ok(noTimes.indexOf('No timed games yet') >= 0, 'nobody timed anything: the board invites the first run');
+  assert.ok(noTimes.indexOf('No friends yet') >= 0, 'and it says there are no friends yet');
 });
 
 test('playHTML renders arcade cards with theme line, gradient band, best time and leaderboard', () => {
@@ -159,7 +184,10 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   var ex = function () { return DB.explorers[0]; }; // eslint-disable-line no-unused-vars
   const gameState = eval('(' + fnText('function gameState(e, gameId, dayKey, doneG){') + ')'); // eslint-disable-line no-unused-vars
   const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
-  const familyBoardHTML = eval('(' + fnText('function familyBoardHTML(){') + ')'); // eslint-disable-line no-unused-vars
+  var friendsCache = null; // eslint-disable-line no-unused-vars
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  const playBoardHTML = eval('(' + fnText('function playBoardHTML(){') + ')'); // eslint-disable-line no-unused-vars
   const playHTML = eval('(' + fnText('function playHTML(){') + ')');
   const out = playHTML();
   for (const id of GAME_IDS) assert.ok(out.indexOf('data-game="' + id + '"') >= 0, 'card for ' + id);
@@ -171,7 +199,7 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   assert.ok(out.indexOf('⏱ Best: 1m 05s') >= 0, 'best time on the finished game card');
   assert.ok(out.indexOf('⏱ No time yet — be the first!') >= 0, 'empty best time invites the first run');
   assert.ok(out.indexOf('✔ Completed — replay any time!') >= 0, 'completed-today state still renders');
-  assert.ok(out.indexOf('Family leaderboard') >= 0, 'leaderboard section at the bottom');
+  assert.ok(out.indexOf('🏆 Leaderboard') >= 0, 'combined leaderboard section in the side column');
   assert.ok(out.indexOf('Memory Match') >= 0, 'a board for the game Sibling timed');
   assert.ok(out.indexOf('Sibling') >= 0, 'leaderboard lists the other explorer');
   // The leaderboards sit in a right-hand column, after the games.
@@ -184,35 +212,10 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   assert.ok(css.indexOf('@media (max-width:900px)') >= 0 && css.indexOf('.playwrap{flex-direction:column}') >= 0, 'boards stack under the games on narrow screens');
 });
 
-test('friends hook is present verbatim and safe when friendsBoardHTML is undefined', () => {
-  const hook = "+(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')";
-  assert.ok(html.indexOf(hook) >= 0, 'exact friends hook text present at the end of playHTML');
-  var todayKey = function () { return TODAY; }; // eslint-disable-line no-unused-vars
-  var GAMES = GAMES9; // eslint-disable-line no-unused-vars
-  var DB = { explorers: [{ name: 'Jiyuna', face: '🦦', stars: 0, playProgress: {}, playDoneDay: {}, playBest: {} }] }; // eslint-disable-line no-unused-vars
-  var pageHero = function () { return ''; }; // eslint-disable-line no-unused-vars
-  var ex = function () { return DB.explorers[0]; }; // eslint-disable-line no-unused-vars
-  const gameState = eval('(' + fnText('function gameState(e, gameId, dayKey, doneG){') + ')'); // eslint-disable-line no-unused-vars
-  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
-  const familyBoardHTML = eval('(' + fnText('function familyBoardHTML(){') + ')'); // eslint-disable-line no-unused-vars
-  const playHTML = eval('(' + fnText('function playHTML(){') + ')');
-  let out;
-  assert.doesNotThrow(function () { out = playHTML(); }, 'playHTML must not throw when friendsBoardHTML is undefined');
-  assert.ok(out.indexOf('friendsBoardHTML') < 0, 'no hook output when the friends feature is absent');
-});
-
-test('friends hook plugs the friends board in when friendsBoardHTML exists', () => {
-  var todayKey = function () { return TODAY; }; // eslint-disable-line no-unused-vars
-  var GAMES = GAMES9; // eslint-disable-line no-unused-vars
-  var DB = { explorers: [{ name: 'Jiyuna', face: '🦦', stars: 0, playProgress: {}, playDoneDay: {}, playBest: {} }] }; // eslint-disable-line no-unused-vars
-  var pageHero = function () { return ''; }; // eslint-disable-line no-unused-vars
-  var ex = function () { return DB.explorers[0]; }; // eslint-disable-line no-unused-vars
-  var friendsBoardHTML = function () { return '<div class="friendsboard">FRIENDS</div>'; }; // eslint-disable-line no-unused-vars
-  const gameState = eval('(' + fnText('function gameState(e, gameId, dayKey, doneG){') + ')'); // eslint-disable-line no-unused-vars
-  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
-  const familyBoardHTML = eval('(' + fnText('function familyBoardHTML(){') + ')'); // eslint-disable-line no-unused-vars
-  const playHTML = eval('(' + fnText('function playHTML(){') + ')');
-  assert.ok(playHTML().indexOf('<div class="friendsboard">FRIENDS</div>') >= 0, 'friends board output appended');
+test('playHTML calls the combined board directly; no separate friends board remains', () => {
+  assert.ok(html.indexOf('friendsBoardHTML') < 0, 'the old separate friends board is gone from the page');
+  assert.ok(html.indexOf('learnFriendsBoardHTML') < 0, 'the old separate Learn friends board is gone too');
+  assert.ok(html.indexOf("'<aside class=\"playside\">'+playBoardHTML()") >= 0, 'playHTML renders the combined board in the side column');
 });
 
 test('timer wiring: startGame stamps startedAt, in-game flowhero has theme class and timer chip', () => {
