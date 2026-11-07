@@ -116,3 +116,60 @@ test('saveGameProgress stores the answered state and elapsed time for every game
   assert.equal(p.picked, 1, 'pick stored');
   assert.ok(p.elapsed >= 41 && p.elapsed <= 43, 'elapsed stored (~42s, got ' + p.elapsed + 's)');
 });
+
+test('resuming Memory Match restores the face-up cards and flips back a miss', () => {
+  var gState = null; // eslint-disable-line no-unused-vars
+  var deck = ['🐸', '🦦', '🍓', '⭐', '🚀', '🦋', '🐸', '🦦', '🍓', '⭐', '🚀', '🦋'];
+  var explorer = { // eslint-disable-line no-unused-vars
+    id: 'e1', name: 'Jiyuna', stars: 49, playBest: {}, playDoneDay: {}, playFresh: {},
+    playProgress: { memory: { matched: [], moves: 1, won: false, seed: 777, deck: deck.slice(), open: [0, 5], elapsed: 33 } },
+  };
+  var DB = { explorers: [explorer], activeId: 'e1' }; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers.find(function (e) { return e.id === DB.activeId; }) || null; } // eslint-disable-line no-unused-vars
+  var GAMES = [{ id: 'memory', name: 'Memory Match', rounds: 6 }]; // eslint-disable-line no-unused-vars
+  function todayKey() { return '2026-11-07'; } // eslint-disable-line no-unused-vars
+  function save() {} // eslint-disable-line no-unused-vars
+  function go() {} // eslint-disable-line no-unused-vars
+  function render() {} // eslint-disable-line no-unused-vars
+  function shuffle(a) { return a.slice(); } // eslint-disable-line no-unused-vars
+  var timers = [];
+  function setTimeout(fn) { timers.push(fn); return timers.length; } // eslint-disable-line no-unused-vars
+  const startGame = eval('(' + fnText('function startGame(id){') + ')');
+  startGame('memory');
+  assert.deepEqual(gState.open, [0, 5], 'the two flipped cards come back face-up');
+  assert.deepEqual(gState.deck, deck, 'the same deck is restored');
+  assert.equal(gState.moves, 1, 'move count kept');
+  const elapsed = Math.round((Date.now() - gState.startedAt) / 1000);
+  assert.ok(elapsed >= 32 && elapsed <= 35, 'the clock resumes at ~33s, not 0 (got ' + elapsed + 's)');
+  assert.equal(gState.lock, true, 'taps are locked while the resumed miss is showing');
+  assert.equal(timers.length, 1, 'the 750ms flip-back is re-armed on resume');
+  // The flip-back fires: the miss turns face-down again and play unlocks.
+  const saveGameProgress = eval('(' + fnSaveGame() + ')');
+  timers[0]();
+  assert.deepEqual(gState.open, [], 'the mismatched pair flips back down');
+  assert.equal(gState.lock, false, 'play unlocks after the flip-back');
+  assert.deepEqual(explorer.playProgress.memory.open, [], 'the save after flip-back stores no open cards');
+});
+
+test('resuming Memory Match with one card up restores it with no flip-back timer', () => {
+  var gState = null; // eslint-disable-line no-unused-vars
+  var deck = ['🐸', '🦦', '🍓', '⭐', '🚀', '🦋', '🐸', '🦦', '🍓', '⭐', '🚀', '🦋'];
+  var explorer = { // eslint-disable-line no-unused-vars
+    id: 'e1', name: 'Jiyuna', stars: 49, playBest: {}, playDoneDay: {}, playFresh: {},
+    playProgress: { memory: { matched: [], moves: 0, won: false, seed: 777, deck: deck.slice(), open: [3], elapsed: 12 } },
+  };
+  var DB = { explorers: [explorer], activeId: 'e1' }; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers.find(function (e) { return e.id === DB.activeId; }) || null; } // eslint-disable-line no-unused-vars
+  var GAMES = [{ id: 'memory', name: 'Memory Match', rounds: 6 }]; // eslint-disable-line no-unused-vars
+  function todayKey() { return '2026-11-07'; } // eslint-disable-line no-unused-vars
+  function save() {} // eslint-disable-line no-unused-vars
+  function go() {} // eslint-disable-line no-unused-vars
+  function shuffle(a) { return a.slice(); } // eslint-disable-line no-unused-vars
+  var timers = [];
+  function setTimeout(fn) { timers.push(fn); return timers.length; } // eslint-disable-line no-unused-vars
+  const startGame = eval('(' + fnText('function startGame(id){') + ')');
+  startGame('memory');
+  assert.deepEqual(gState.open, [3], 'the single flipped card comes back face-up');
+  assert.equal(gState.lock, false, 'play is not locked with one card up');
+  assert.equal(timers.length, 0, 'no flip-back timer with only one card up');
+});

@@ -59,6 +59,31 @@ test('startGame starts a 1s tick and clears any previous game timer', function (
   assert.ok(body.includes('clearInterval(gameTimer)'), 'startGame must clear a previous gameTimer first');
 });
 
+test('every pill on the Play route is dark-on-white (the header and leaderboard pills too)', function () {
+  const m = html.match(/\.app\.route-play \.chip\{([^}]*)\}/);
+  assert.ok(m, '.app.route-play .chip rule not found');
+  const rule = m[1];
+  const fg = (rule.match(/color:\s*(#[0-9a-f]{3,6})/i) || [])[1];
+  const bg = (rule.match(/background:\s*(#[0-9a-f]{3,6})/i) || [])[1];
+  assert.ok(fg && bg, 'route-play chip rule needs an explicit text colour and background');
+  const ratio = contrast(fg, bg);
+  assert.ok(ratio >= 4.5, 'route-play chip contrast ' + ratio.toFixed(2) + ':1 is below WCAG AA 4.5:1 (' + fg + ' on ' + bg + ')');
+  // The pale pills the live check flagged are plain .chip spans, so
+  // this one rule covers them all — parking Level/Moves/stars,
+  // crossword Round/stars, the generic Round pill, and the arcade
+  // leaderboard best-time pill.
+  assert.ok(html.includes('<span class="chip">Level '), 'parking header still uses plain .chip (covered by the route rule)');
+  assert.ok(html.includes('<span class="chip">Round '), 'crossword/generic header still uses plain .chip (covered by the route rule)');
+});
+
+test('sidebar critter card uses full ink, not the muted soft ink', function () {
+  const start = html.indexOf('Critter stage');
+  assert.ok(start >= 0, 'critter card markup not found');
+  const line = html.slice(html.lastIndexOf('\n', start) + 1, html.indexOf('\n', start));
+  assert.ok(!line.includes('color:var(--ink-soft)'), 'critter card must not use the pale --ink-soft text');
+  assert.ok(line.includes('color:var(--ink)'), 'critter card text must use full --ink');
+});
+
 test('tickGameTime writes the elapsed time and self-clears when the chip is gone', function () {
   const fmtBody = fnBody('function fmtPlaySecs(');
   const tickBody = fnBody('function tickGameTime(){');
