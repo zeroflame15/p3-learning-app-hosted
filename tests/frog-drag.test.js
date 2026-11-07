@@ -68,6 +68,7 @@ class FakeElement {
     if (i >= 0) list.splice(i, 1);
   }
   fire(type, ev) { for (const fn of (this._listeners[type] || []).slice()) fn(ev || {}); }
+  querySelector() { return null; } // the wander tick looks for .frog-bob; none in the fake pond
   getBoundingClientRect() { return this._rect || { left: 0, top: 0, width: 0, height: 0 }; }
   setPointerCapture() { /* the old drag code called this; the fix must not need it */ }
 }
@@ -75,6 +76,7 @@ class FakeElement {
 const POND_RECT = { left: 100, top: 100, width: 800, height: 400 };
 
 function makeTab() {
+  const timers = []; // captured wander-timer callbacks, latest first use
   const docListeners = {};
   const elements = {};
   const document = {
@@ -113,7 +115,7 @@ function makeTab() {
     __swapWrap: null, // set below, once the vm context exists
     setTimeout: () => 0, // never fires: no timer leaks, bubble stays up for the assert
     clearTimeout: () => {},
-    setInterval: () => 0,
+    setInterval: (fn) => { timers.push(fn); return timers.length; },
     clearInterval: () => {},
     ex: null, save: () => {}, toast: () => {},
     sndPop: () => {}, sndCorrect: () => {}, sndFanfare: () => {},
@@ -150,6 +152,7 @@ function makeTab() {
     pond: () => elements.pond,
     frogPos: () => ({ x: vm.runInContext('frogPos.x', ctx), y: vm.runInContext('frogPos.y', ctx) }),
     dragging: () => vm.runInContext('frogDragging', ctx),
+    timer: () => timers[timers.length - 1],
   };
 }
 
@@ -212,4 +215,32 @@ test('the drag does not depend on pointer capture, and the transition is off whi
   const handler = bind.slice(bind.indexOf('frogDragHandler=function(ev){'), bind.indexOf("document.addEventListener('pointermove',frogDragHandler)"));
   assert.ok(handler.includes("document.getElementById('pond')"), 'the move handler re-fetches the live pond on every move');
   assert.ok(handler.includes("placeFrog()"), 'the move handler visibly moves the frog');
+});
+
+// Hover pause (seen live 2026-11-07): two frogspawn drags in a row
+// left the egg cluster in the centre. The drag code is
+// stage-agnostic — same wrap, same handlers for every stage — so
+// there is no stage-specific defect to revert. The failure is the
+// wander race: the frog glides to a new spot every 3.8s, and a press
+// aimed at the smallest stage (frogspawn, 150px) can land on empty
+// pond after it glides away. Hovering now pauses the wander, so the
+// frog is where the child aimed when they press, and the wrap has a
+// 16px invisible grab halo.
+test('hovering the frog pauses the wander so an aimed press lands on it', () => {
+  const tab = makeTab();
+  tab.bind();
+  const before = tab.frogPos();
+  tab.wrap().fire('pointerenter', {});
+  assert.equal(tab.run('frogHover'), true, 'hovering sets the pause flag');
+  tab.timer()();
+  assert.deepEqual(tab.frogPos(), before, 'the frog holds still while hovered');
+  tab.wrap().fire('pointerleave', {});
+  assert.equal(tab.run('frogHover'), false, 'leaving clears the pause flag');
+  tab.timer()();
+  assert.notDeepEqual(tab.frogPos(), before, 'wandering resumes once the pointer leaves');
+});
+
+test('the frog wrap has an enlarged invisible grab zone', () => {
+  assert.ok(html.includes('.frog-wrap::before'), 'grab-zone rule exists');
+  assert.ok(html.includes('inset:-16px'), 'the grab zone extends 16px past the frog');
 });
