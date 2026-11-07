@@ -3066,6 +3066,27 @@ function xwCheckWord(wi, letters, filled){
   if(txt.length<XWORDS[wi].w.length)return 'incomplete';
   return txt===XWORDS[wi].w?'ok':'wrong';
 }
+function xwApplyTyped(wi, raw, letters, filled){
+  /* raw: the letters typed into the box, in order. Walk the word:
+     a locked cell's letter is already given, so if the next typed
+     character matches it, it is the child re-typing the given
+     letter — drop it. The rest fill the unlocked cells in order.
+     Returns how many unlocked cells are now filled. (Seen live
+     2026-11-07: a child types the whole word, e.g. TIP when T is
+     already given; stuffing that T into the first blank made the
+     check fail.) */
+  var cells=xwWordCells(wi), j=0, typed=0;
+  cells.forEach(function(c){
+    if(xwCellLocked(c.x,c.y,filled)){ if(j<raw.length&&raw[j]===c.ch)j++; return; }
+    if(j<raw.length){ letters[c.x+','+c.y]=raw[j]; j++; typed++; }
+    else delete letters[c.x+','+c.y];
+  });
+  return typed;
+}
+function xwPattern(wi, letters, filled){
+  /* The word as the child sees it: given letters shown, blanks as _. */
+  return xwWordCells(wi).map(function(c){ return xwCellLocked(c.x,c.y,filled)?c.ch:(letters[c.x+','+c.y]||'_'); }).join(' ');
+}
 function xwNextUnsolved(from, filled){
   for(var n=1;n<=XWORDS.length;n++){ var wi=(from+n)%XWORDS.length; if(!filled[wi])return wi; } return -1;
 }
@@ -3313,12 +3334,15 @@ function gameHTML(){
     var typedNow=unlocked.map(function(c){ return gState.letters[c.x+','+c.y]||''; }).join('');
     var selDone=gState.filled[gState.sel];
     var full=typedNow.length>=unlocked.length;
+    var pattern=xwPattern(gState.sel,gState.letters,gState.filled);
     return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Tap a square, type the word with your keyboard!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🧩 Crossword Quest</span><span class="chip">Words '+gState.idx+' of '+gState.rounds+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<div class="xwgrid">'+grid+'</div>'
      +'<p class="muted" style="font-weight:700;margin:6px 0 0">👆 Tap a square to pick its word — tap the same square again to switch between Across and Down. The hint lights up too!</p>'
      +'<div class="xwclues">'+clues+'</div>'
-     +'<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><input class="field" id="xwInput" maxlength="'+unlocked.length+'" value="'+esc(typedNow)+'" placeholder="'+(selDone?'Solved! ✔ Pick another word':'Type the word…')+'" '+(selDone?'disabled':'')+' autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1;min-width:140px;text-transform:uppercase;font-weight:900;letter-spacing:2px"><button class="btn" id="xwCheck" '+(full&&!selDone?'':'disabled')+'>Check ✓</button></div>'
+     +'<p class="small" style="font-weight:900;margin:12px 0 0;letter-spacing:5px;font-size:1.15rem">'+pattern+'</p>'
+     +'<p class="small muted" style="font-weight:700;margin:2px 0 0">The green letters are already given — type the whole word, or just the missing letters.</p>'
+     +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><input class="field" id="xwInput" maxlength="'+XWORDS[gState.sel].w.length+'" value="'+esc(typedNow)+'" placeholder="'+(selDone?'Solved! ✔ Pick another word':'Type the word…')+'" '+(selDone?'disabled':'')+' autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false" style="flex:1;min-width:140px;text-transform:uppercase;font-weight:900;letter-spacing:2px"><button class="btn" id="xwCheck" '+(full&&!selDone?'':'disabled')+'>Check ✓</button></div>'
      +'<p class="small muted" style="font-weight:700;margin:8px 0 0">Type with your keyboard — green means it fits! ✔ A correct word turns green and its hint greys out.</p>'
      +'<button class="btn ghost" id="gBack" style="margin-top:8px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
@@ -3403,12 +3427,12 @@ function bindGame(){
     }
     function syncFromInput(){
       if(!input)return;
-      var cells=xwUnlockedCells(gState.sel,gState.filled);
-      var val=input.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,cells.length);
-      if(input.value!==val)input.value=val;
-      cells.forEach(function(c,i){ if(i<val.length)gState.letters[c.x+','+c.y]=val[i]; else delete gState.letters[c.x+','+c.y]; });
+      var raw=input.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,XWORDS[gState.sel].w.length);
+      if(input.value!==raw)input.value=raw;
+      var typed=xwApplyTyped(gState.sel,raw,gState.letters,gState.filled);
       paintCells();
-      if(val.length>=cells.length&&cells.length>0){
+      var unlocked=xwUnlockedCells(gState.sel,gState.filled);
+      if(typed>=unlocked.length&&unlocked.length>0){
         /* Full word: check it after a beat, so the last letter is
            seen before the green/red flash. */
         if(xwCheckTimer)clearTimeout(xwCheckTimer);
