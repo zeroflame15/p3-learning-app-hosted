@@ -84,15 +84,27 @@ test('spelling card keeps the Back to Learn button during the self-test', () => 
 });
 
 test('spelling Back button leaves the test and returns to Learn (top of page)', () => {
-  const bindLearn = grab('bindLearn');
-  const at = bindLearn.indexOf("getElementById('hclBack')");
-  assert.ok(at >= 0, 'bindLearn wires hclBack');
-  const handler = bindLearn.slice(at);
+  const bindSpelling = grab('bindSpelling');
+  const at = bindSpelling.indexOf("getElementById('hclBack')");
+  assert.ok(at >= 0, 'bindSpelling wires hclBack');
+  const handler = bindSpelling.slice(at);
   assert.ok(handler.includes('hclTest=null'), 'leaving the card ends the self-test, so Learn shows the topic list');
   assert.ok(handler.includes("go('learn')"), 'button goes to the Learn page');
   // go() itself scrolls to the top on every route change.
   const goFn = grab('go');
   assert.ok(goFn.includes('window.scrollTo(0,0)'), 'go() scrolls to the top');
+});
+
+test('Learn shows a spelling entry card; the routine is its own sub-view', () => {
+  const learn = grab('learnHTML');
+  assert.ok(learn.includes('hclEntryHTML'), 'Learn renders the spelling entry card');
+  assert.ok(!learn.includes('hclCardHTML'), 'Learn no longer embeds the routine card');
+  const spell = grab('spellingHTML');
+  assert.ok(spell.includes('hclCardHTML'), 'the spelling sub-view renders the routine card');
+  assert.ok(clientSrc.includes("else if(route==='spelling')"), 'render routes to the spelling sub-view');
+  const bindLearn = grab('bindLearn');
+  assert.ok(bindLearn.indexOf("getElementById('hclBack')") < 0, 'bindLearn no longer wires the routine back button');
+  assert.ok(bindLearn.indexOf("getElementById('hclOpen')") >= 0, 'bindLearn wires the entry card button');
 });
 
 test('every in-progress game screen has a save-and-back button', () => {
@@ -149,15 +161,18 @@ test('Number Pop renders its options as balloons falling from the top', () => {
   assert.ok(html.includes('🎈'), 'each balloon shows the 🎈 emoji');
   for (let i = 0; i < 4; i++) {
     assert.ok(html.includes('data-gopt="' + i + '"'), 'balloon ' + i + ' keeps the data-gopt tap wiring');
-    assert.ok(html.includes('--d:' + (i * 0.12) + 's'), 'balloon ' + i + ' is staggered');
+    assert.ok(html.includes('--d:-' + (i * 1.25) + 's'), 'balloon ' + i + ' is staggered with a negative delay, so it starts mid-fall');
     assert.ok(html.includes('<span class="b-num">' + q.o[i] + '</span>'),
       'balloon ' + i + ' holds option ' + q.o[i]);
   }
   assert.ok(!html.includes('class="optbtn'), 'Number Pop no longer uses plain option buttons');
-  // The fall + bob animation exists and was added after the Play CSS anchor.
+  // The fall loops continuously from the top (not a one-off entrance
+  // that leaves the balloons sitting in a static row), and was added
+  // after the Play CSS anchor.
   assert.ok(clientSrc.includes('@keyframes balloonFall'), 'balloonFall keyframes exist');
-  assert.ok(clientSrc.includes('balloonBob'), 'balloonBob keyframes exist');
-  assert.ok(clientSrc.indexOf('.balloonrow') > clientSrc.indexOf('.memcard.matched{'),
+  assert.ok(clientSrc.includes('balloonFall 5s linear infinite'), 'the fall loops continuously');
+  assert.ok(clientSrc.includes('translateY(210px)'), 'the fall ends below the row — the balloons really fall through');
+  assert.ok(clientSrc.includes('.balloonrow') && clientSrc.indexOf('.balloonrow') > clientSrc.indexOf('.memcard.matched{'),
     'balloon CSS is appended after the .memcard.matched rule');
 });
 
