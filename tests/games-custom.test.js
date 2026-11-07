@@ -78,34 +78,34 @@ test('crossword grid: every crossing letter matches, and the grid is exactly as 
   assert.deepEqual(nums, [1, 1, 2, 3, 4, 5], 'clue numbers follow reading order');
 });
 
-test('each crossword round is deterministic and its marked answer is the true word', { skip: !HAS_XW }, () => {
-  const genRound = eval(stubTopics + helpers
-    + '\nvar XWORDS=' + JSON.stringify(XWORDS) + ';\n'
-    + grab('genRound') + '\n;genRound');
-  for (const seed of [0, 7, 12345]) {
-    for (let idx = 0; idx < 6; idx++) {
-      const first = genRound('crossword', idx, seed);
-      const second = genRound('crossword', idx, seed);
-      assert.deepEqual(second.o, first.o, 'seed ' + seed + ' round ' + idx + ': options must not move on re-render');
-      assert.equal(second.a, first.a, 'seed ' + seed + ' round ' + idx + ': correct-answer index must not move');
-      assert.equal(first.o[first.a], XWORDS[idx].w, 'round ' + idx + ': the marked option is the true word ' + XWORDS[idx].w);
-      assert.equal(first.o.length, 4, 'round ' + idx + ': four word options');
-      assert.equal(new Set(first.o).size, 4, 'round ' + idx + ': options are all different words');
-      assert.ok(first.q.includes(XWORDS[idx].clue), 'round ' + idx + ': question shows the clue');
-      assert.ok(first.q.includes(XWORDS[idx].dir), 'round ' + idx + ': question shows the direction');
-    }
-  }
+test('genRound has no crossword branch any more — the grid is typed, not multiple-choice', { skip: !HAS_XW }, () => {
+  const genSrc = grab('genRound');
+  assert.ok(genSrc.indexOf("gameId==='crossword'") < 0, 'no crossword round in genRound');
+  assert.ok(genSrc.indexOf('xwd|') < 0 && genSrc.indexOf('xwo|') < 0, 'no crossword option shuffling left');
 });
 
-test('crossword branches exist in the page (grid, filled words, back button)', { skip: !HAS_XW }, () => {
+test('crossword branches exist in the page (grid, typing input, clue list, toggle)', { skip: !HAS_XW }, () => {
   const game = html.slice(html.indexOf('function gameHTML(){'), html.indexOf('function bindGame(){'));
   assert.ok(game.includes("if(gState.id==='crossword')"), 'gameHTML has a crossword branch');
   assert.ok(game.includes('class="xwgrid"') || game.includes("'xwgrid'") || game.includes('xwgrid'), 'crossword branch renders the grid');
-  assert.ok(game.includes('pX&&pX.filled&&pX.idx===gState.idx'), 'filled words restore from saved progress on resume');
+  assert.ok(game.includes('id="xwInput"'), 'a keyboard input for typing the word');
+  assert.ok(game.includes('id="xwCheck"'), 'a Check button for the typed word');
+  assert.ok(game.includes('class="xwclues"'), 'the hint list (clues only — no answer options)');
+  assert.ok(game.includes('data-clue'), 'each clue selects its word');
+  assert.ok(game.indexOf('data-gopt') < 0, 'no multiple-choice options in the crossword branch');
   assert.ok(game.includes('id="gBack"'), 'crossword branch has its own back button');
   const bind = html.slice(html.indexOf('function bindGame(){'), html.indexOf('function saveGameProgress(){'));
   assert.ok(bind.includes("if(gState.id==='crossword')"), 'bindGame has a crossword branch');
-  assert.ok(bind.includes('gState.filled[gState.idx]=true'), 'a correct answer fills the word in the grid');
+  assert.ok(bind.includes('xwSelectCell'), 'tapping a square selects its word (same square again toggles)');
+  assert.ok(bind.includes('checkWord'), 'typing is checked as a whole word');
+  assert.ok(bind.includes('gState.wrong'), 'a wrong word flashes red');
+  const start = html.slice(html.indexOf('function startGame(id){'), html.indexOf('function gameOptsHTML'));
+  assert.ok(start.includes("else if(id==='crossword')"), 'startGame restores the crossword grid state');
+  assert.ok(start.includes('letters'), 'typed letters restore on resume');
+  const save = html.slice(html.indexOf('function saveGameProgress(){'), html.indexOf('/* ============================================================ ASK PIP'));
+  assert.ok(save.includes('letters:Object.assign({},gState.letters||{})'), 'typed letters are saved with the game');
+  const merge = html.slice(html.indexOf('function mergeExplorer'), html.indexOf('function mergeFamilyDB'));
+  assert.ok(merge.includes('letters:'), 'the sync merge carries typed letters');
 });
 
 /* ---------------- Exit Parking ---------------- */
@@ -186,6 +186,8 @@ function harness() {
     + 'function shuffle(a){ return a.slice(); }\n'
     + 'function toast(){}\n';
   const src = prelude + helpers + '\n'
+    + 'var XWORDS=' + JSON.stringify(XWORDS) + ';\n'
+    + grab('xwNextUnsolved') + '\n'
     + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon'].map((n) => grab(n)).join('\n') + '\n'
     + grab('playElapsedSecs') + '\n'
     + grab('startGame') + '\n' + grab('saveGameProgress', 'save(); }') + '\n'
@@ -230,28 +232,35 @@ test('parking replay after completion starts fresh at level 1', { skip: !HAS_PAR
   assert.deepEqual(st.cars, PARKLEVELS[0].cars, 'replay uses the level 1 layout');
 });
 
-test('crossword filled words save with progress and resume at the same round', { skip: !HAS_XW }, () => {
+test('crossword solved words and typed letters save with progress and resume', { skip: !HAS_XW }, () => {
   const fns = harness();
   fns.startGame('crossword');
   let st = fns.getState();
-  assert.equal(st.idx, 0, 'fresh game starts at round 1');
-  assert.equal(st.rounds, 6, 'six rounds');
-  // Simulate two correct answers, then save mid-game.
-  st.idx = 2; st.score = 2;
+  assert.equal(st.idx, 0, 'fresh game: 0 words solved');
+  assert.equal(st.rounds, 6, 'six words in the grid');
+  assert.deepEqual(st.filled, [false, false, false, false, false, false], 'nothing solved yet');
+  assert.deepEqual(st.letters, {}, 'no typed letters yet');
+  assert.equal(st.sel, 0, 'first unsolved word selected (CAT)');
+  // Solve CAT and CAR, type one letter of TIP, then save mid-game.
   st.filled = [true, true, false, false, false, false];
+  st.idx = 2; st.score = 2;
+  st.letters = { '2,1': 'I' };
   fns.saveGameProgress();
   const saved = JSON.parse(JSON.stringify(fns.getDB().explorers[0].playProgress.crossword));
-  assert.equal(saved.idx, 2, 'saved round is 3');
+  assert.equal(saved.idx, 2, 'two words solved');
   assert.equal(saved.score, 2, 'saved score is 2');
-  assert.deepEqual(saved.filled, [true, true, false, false, false, false], 'filled words are saved');
-  // Leave and come back: same round and score.
+  assert.deepEqual(saved.filled, [true, true, false, false, false, false], 'solved words are saved');
+  assert.deepEqual(saved.letters, { '2,1': 'I' }, 'typed letters are saved');
+  // Leave and come back: same words solved, same letters, next word selected.
   fns.setState(null);
   fns.startGame('crossword');
   st = fns.getState();
-  assert.equal(st.idx, 2, 'resumed at the same round');
+  assert.equal(st.idx, 2, 'resumed with 2 words solved');
   assert.equal(st.score, 2, 'resumed with the same score');
+  assert.deepEqual(st.filled, [true, true, false, false, false, false], 'solved words are restored');
+  assert.deepEqual(st.letters, { '2,1': 'I' }, 'typed letters are restored');
+  assert.equal(st.sel, 2, 'the next unsolved word (TIP) is selected on resume');
 });
-
 test('the explorer merge keeps parking cars and crossword filled words', { skip: !HAS_PARK || !HAS_XW }, () => {
   const line = html.split('\n').find((l) => l.includes('Object.keys(b.playProgress'));
   assert.ok(line, 'the playProgress merge line exists');
