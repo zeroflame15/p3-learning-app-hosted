@@ -72,18 +72,18 @@ test('pausePlayTimer banks the window and freezes the clock; resumePlayTimer res
   } finally { Date.now = realNow; }
 });
 
-test('bindGame pauses on every answer tap and resumes on Next (both question games)', () => {
+test('bindGame pauses on every answer tap and resumes on Next (question games only)', () => {
   const bindSrc = fnText('function bindGame(){');
   const pauses = (bindSrc.match(/pausePlayTimer\(\); saveGameProgress\(\); render\(\);/g) || []).length;
-  assert.equal(pauses, 2, 'answer handlers pause before saving (generic + crossword), got ' + pauses);
+  assert.equal(pauses, 1, 'one answer handler pauses before saving (generic only — crossword types continuously now), got ' + pauses);
   const resumes = (bindSrc.match(/if\(gState\.idx<gState\.rounds\)resumePlayTimer\(\);/g) || []).length;
-  assert.equal(resumes, 2, 'Next handlers resume when another round follows (generic + crossword), got ' + resumes);
-  // Memory and Parking are continuous play: no pause anywhere in
-  // their handlers, and the timer chip keeps ticking through them.
+  assert.equal(resumes, 1, 'one Next handler resumes when another round follows (generic only), got ' + resumes);
+  // Memory, Parking and Crossword are continuous play: no pause
+  // anywhere in their handlers, and the timer chip keeps ticking.
   const pauseCalls = (bindSrc.match(/pausePlayTimer\(\)/g) || []).length;
-  assert.equal(pauseCalls, 2, 'exactly two pause sites (generic + crossword answers), got ' + pauseCalls);
+  assert.equal(pauseCalls, 1, 'exactly one pause site (generic answers), got ' + pauseCalls);
   const resumeCalls = (bindSrc.match(/resumePlayTimer\(\)/g) || []).length;
-  assert.equal(resumeCalls, 2, 'exactly two resume sites (generic + crossword Next), got ' + resumeCalls);
+  assert.equal(resumeCalls, 1, 'exactly one resume site (generic Next), got ' + resumeCalls);
   const saveSrc = fnBody('function saveGameProgress(){');
   assert.ok(saveSrc.indexOf('var elapsed=playElapsedSecs();') >= 0, 'saved elapsed is the answer-only time');
 });
