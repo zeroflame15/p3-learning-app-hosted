@@ -82,6 +82,25 @@ test('sidebar critter card uses full ink, not the muted soft ink', function () {
   const line = html.slice(html.lastIndexOf('\n', start) + 1, html.indexOf('\n', start));
   assert.ok(!line.includes('color:var(--ink-soft)'), 'critter card must not use the pale --ink-soft text');
   assert.ok(line.includes('color:var(--ink)'), 'critter card text must use full --ink');
+  // The critter name line had NO colour at all, so it inherited the
+  // sidebar's cream text — pale cream on the white card. It needs
+  // the explicit ink too.
+  assert.ok(line.includes("margin-top:2px;color:var(--ink)"), 'critter name line must set an explicit ink colour');
+});
+
+test('feedback banners use dark ink on their pale backgrounds', function () {
+  const greenSoft = (html.match(/--green-soft:\s*(#[0-9a-f]{3,6})/i) || [])[1];
+  const coralSoft = (html.match(/--coral-soft:\s*(#[0-9a-f]{3,6})/i) || [])[1];
+  assert.ok(greenSoft && coralSoft, 'soft background variables must exist');
+  [['ok', greenSoft], ['no', coralSoft]].forEach(function (pair) {
+    const kind = pair[0], bg = pair[1];
+    const m = html.match(new RegExp('\\.feedback\\.' + kind + '\\{([^}]*)\\}'));
+    assert.ok(m, '.feedback.' + kind + ' rule not found');
+    const fg = (m[1].match(/color:\s*(#[0-9a-f]{3,6})/i) || [])[1];
+    assert.ok(fg, '.feedback.' + kind + ' needs an explicit dark text colour (it inherits cream on the Play route)');
+    const ratio = contrast(fg, bg);
+    assert.ok(ratio >= 4.5, '.feedback.' + kind + ' contrast ' + ratio.toFixed(2) + ':1 is below WCAG AA 4.5:1 (' + fg + ' on ' + bg + ')');
+  });
 });
 
 test('tickGameTime writes the elapsed time and self-clears when the chip is gone', function () {

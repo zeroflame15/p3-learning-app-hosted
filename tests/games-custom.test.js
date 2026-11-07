@@ -256,6 +256,7 @@ test('the explorer merge keeps parking cars and crossword filled words', { skip:
   assert.ok(line, 'the playProgress merge line exists');
   assert.ok(line.includes('cars:'), 'merge keeps cars (otherwise save() would wipe mid-level lots)');
   assert.ok(line.includes('filled:'), 'merge keeps filled (otherwise save() would wipe the crossword grid)');
+  assert.ok(line.includes('open:'), 'merge keeps open (otherwise save() would wipe face-up Memory cards at quit time)');
 });
 
 test('both games render their own back button and styles', { skip: !HAS_XW || !HAS_PARK }, () => {
