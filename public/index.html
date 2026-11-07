@@ -255,7 +255,8 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .parklot{position:relative;max-width:340px;margin:14px auto;aspect-ratio:1}
 .parkcell{position:absolute;border:2px dashed var(--line);border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
 .parkcell.exit{border-style:solid;border-color:var(--amber);background:#fff7e0}
-.parkcar{position:absolute;border-radius:12px;border:2.5px solid var(--line);font-size:1.7rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:left .28s ease,top .28s ease;padding:0}
+.parkcar{position:absolute;border-radius:12px;border:2.5px solid var(--line);font-size:1.7rem;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:left .28s ease,top .28s ease;padding:0;touch-action:none;user-select:none;-webkit-user-select:none}
+.parkcar.parkdrag{transition:none}
 .parkcar.red{background:#ffe1e1;border-color:#d33}
 .parkshake{animation:parkshake .3s ease}
 @keyframes parkshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
@@ -2165,7 +2166,7 @@ function mergeExplorer(a,b){
   Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
-  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,open:((y.elapsed||0)>=(x.elapsed||0)?(y.open||[]):(x.open||[])),cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),v:x.v||y.v,filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),gridId:((x.idx||0)>(y.idx||0)?(x.gridId!=null?x.gridId:y.gridId):(y.gridId!=null?y.gridId:x.gridId)),letters:((x.elapsed||0)>=(y.elapsed||0)?mergeLetters(x.letters,y.letters):mergeLetters(y.letters,x.letters)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked))),built:((x.idx||0)>(y.idx||0)?(x.built||y.built):(y.built||x.built)),locked:((x.idx||0)>(y.idx||0)?(x.locked||y.locked):(y.locked||x.locked)),punct:((x.idx||0)>(y.idx||0)?(x.punct||y.punct):(y.punct||x.punct)),done:((x.idx||0)>(y.idx||0)?x.done:((y.idx||0)>(x.idx||0)?y.done:(x.done||y.done))),sent:((x.idx||0)>(y.idx||0)?(x.sent||y.sent):(y.sent||x.sent))}); });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,open:((y.elapsed||0)>=(x.elapsed||0)?(y.open||[]):(x.open||[])),cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),v:x.v||y.v,starTotal:Math.max(x.starTotal||0,y.starTotal||0),starDay:((x.starDay||'')>=(y.starDay||'')?x.starDay:y.starDay),starBanked:((x.starDay||'')>(y.starDay||'')?(x.starBanked||0):((y.starDay||'')>(x.starDay||'')?(y.starBanked||0):Math.max(x.starBanked||0,y.starBanked||0))),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),gridId:((x.idx||0)>(y.idx||0)?(x.gridId!=null?x.gridId:y.gridId):(y.gridId!=null?y.gridId:x.gridId)),letters:((x.elapsed||0)>=(y.elapsed||0)?mergeLetters(x.letters,y.letters):mergeLetters(y.letters,x.letters)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked))),built:((x.idx||0)>(y.idx||0)?(x.built||y.built):(y.built||x.built)),locked:((x.idx||0)>(y.idx||0)?(x.locked||y.locked):(y.locked||x.locked)),punct:((x.idx||0)>(y.idx||0)?(x.punct||y.punct):(y.punct||x.punct)),done:((x.idx||0)>(y.idx||0)?x.done:((y.idx||0)>(x.idx||0)?y.done:(x.done||y.done))),sent:((x.idx||0)>(y.idx||0)?(x.sent||y.sent):(y.sent||x.sent))}); });
   e.playProgress=play;
   /* Fastest game times: keep the smaller secs per game (best ever). The
      day tag follows the winning side, so the board shows when the best
@@ -3419,7 +3420,7 @@ function liveGenRecompute(stem, answer){
      at $6, pay with $50", 24 = 4 x 6 is computable yet wrong). */
   var EPS=0.011, fullMask=(1<<nums.length)-1, cands=[], OPS=['+','-','*','/'], i,j,k,a,b,v1,v2,w1,v3;
   function push(v, used){ if(v!=null&&isFinite(v))cands.push({v:v, used:used}); }
-  for(i=0;i<nums.length;i++)for(j=i+1;j<nums.length;j++)for(a=0;a<4;a++)push(liveGenApply(nums[i],OPS[a],nums[j]), (1<<i)|(1<<j));
+  for(i=0;i<nums.length;i++)for(j=i+1;j<nums.length;j++){ for(a=0;a<4;a++)push(liveGenApply(nums[i],OPS[a],nums[j]), (1<<i)|(1<<j)); /* Order matters for - and /: "a watermelon costs $7, pay with $10" is 10-7, but the stem lists 7 first — try the reverse too (found live 2026-11-08). + and * commute. */ push(liveGenApply(nums[j],'-',nums[i]), (1<<i)|(1<<j)); push(liveGenApply(nums[j],'/',nums[i]), (1<<i)|(1<<j)); }
   for(i=0;i<nums.length;i++)for(j=i+1;j<nums.length;j++)for(k=j+1;k<nums.length;k++){
     var used=(1<<i)|(1<<j)|(1<<k);
     for(a=0;a<4;a++){
@@ -3535,6 +3536,121 @@ function liveGenExperimentHTML(sel){
    +'<p style="font-weight:700;margin:6px 0">'+line+'</p>'
    +'<p class="small muted" style="font-weight:700">Counts are from this device only (the live set is cached on the device, not synced). Full comparison: EXPERIMENT-REPORT.md in the project.</p></div>';
 }
+/* ---------- Server-bank pilot — one topic only (math-ntuc) ----------
+   The year's questions live in Supabase (sb_questions); the app only
+   pulls one day's set at a time, so the app stays lean. Design, on
+   purpose (mirrors the live-gen experiment):
+   - The set is cached in localStorage (per explorer + topic), NOT in
+     the explorer record: no new persisted field, so mergeExplorer can
+     never drop it and no sync change is needed. A second device pulls
+     its own set for the day. An unfinished quest resumes from the
+     cache whatever the day; a fresh quest reuses today's cached set.
+   - The server is authoritative for WHICH questions (due first, then
+     fresh, mastered never served). The client only checks the SHAPE
+     of a cached set (5 questions, each with an id, 4 options, a valid
+     answer index) — it does NOT re-run the live-gen validator, because
+     bank questions legitimately include estimation/multiples items
+     that the recompute validator rejects.
+   - ANY failure, timeout or missing set falls back SILENTLY to the
+     bank — the child never sees an error.
+   - On quest finish the answers are reported fire-and-forget
+     (POST /api/report-answers): correct -> mastered, wrong -> due.
+     A failed report never blocks the child; the set is simply served
+     again another day. Question state lives server-side only.
+   - Precedence on math-ntuc: server-bank set first, live-gen set
+     second, bank third. The quest chip shows which one is playing:
+     "📚 Pip's shelf" for a server set, "✨ Fresh from Pip" for live. */
+var SB_TOPIC='math-ntuc';
+var SB_COUNT=5;
+var sbFetchState={status:'idle', reason:null};
+var sbFetchPromise=null;
+function sbCacheKey(eid){ return 'jyn-servbank-v1:'+eid+':'+SB_TOPIC; }
+function loadSbCache(eid, topicId){ if(topicId!==SB_TOPIC)return null; var rec=liveGenLSGet(sbCacheKey(eid)); if(!rec||!Array.isArray(rec.questions)||rec.questions.length!==SB_COUNT)return null; return rec; }
+function sbShapeOk(questions){
+  if(!Array.isArray(questions)||questions.length!==SB_COUNT)return false;
+  return questions.every(function(q){
+    return q&&typeof q==='object'&&typeof q.id==='string'&&q.id.length>0
+      &&typeof q.q==='string'&&q.q.trim().length>=12
+      &&Array.isArray(q.o)&&q.o.length===4
+      &&typeof q.a==='number'&&q.a>=0&&q.a<=3&&Math.floor(q.a)===q.a
+      &&typeof q.c==='string';
+  });
+}
+function saveSbCache(eid, topicId, day, questions){
+  if(topicId!==SB_TOPIC)return null;
+  /* Shuffle the options once, deterministically for this explorer +
+     topic + day — same as the live-gen cache. The server id rides
+     along: it is what the report call sends back. */
+  var seed=hashStr(eid+'|'+topicId+'|'+day);
+  var shuffled=questions.map(function(q, qi){
+    var order=seededShuffle(q.o.map(function(_,i){ return i; }), seed+qi*7919);
+    return {id:q.id, q:q.q, o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:q.c, j:q.j||''};
+  });
+  var rec={topicId:topicId, day:day, questions:shuffled, savedAt:Date.now()};
+  liveGenLSSet(sbCacheKey(eid), rec);
+  return rec;
+}
+function sbPick(cached, today){
+  if(!cached||!sbShapeOk(cached.questions))return {source:'bank', reason:'no-server-set'};
+  if(cached.day===today)return {source:'server', questions:cached.questions};
+  return {source:'bank', reason:'stale-day'};
+}
+function sbPickResume(cached){
+  if(!cached||!sbShapeOk(cached.questions))return {source:'bank', reason:'no-server-set'};
+  return {source:'server', questions:cached.questions};
+}
+function sbUsable(eid, topicId, level, today, allowStale){
+  var cached=loadSbCache(eid, topicId);
+  var pick=allowStale?sbPickResume(cached):sbPick(cached, today);
+  return pick;
+}
+function reportServerBankAnswers(topicId, list, wrongIdx){
+  /* Fire-and-forget: the quest is already finished; a failed report
+     must never bother the child. The server marks correct answers
+     mastered and wrong ones due; if this call never lands, the set
+     is simply served again another day — safe by design. */
+  try{
+    var e=ex(); if(!e||topicId!==SB_TOPIC)return;
+    var results=(list||[]).map(function(q, i){
+      return {questionId:q.id, correct:(wrongIdx||[]).indexOf(i)<0};
+    }).filter(function(r){ return typeof r.questionId==='string'&&r.questionId.length>0; });
+    if(!results.length)return;
+    fetch('/api/report-answers',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:(typeof syncKey==='function'?syncKey():null)||'', explorerId:e.id, topicId:topicId, results:results})}).catch(function(){});
+  }catch(err){}
+}
+function fetchServerBankQuestions(topicId, level){
+  if(topicId!==SB_TOPIC)return null;
+  if(sbFetchState.status==='pending')return sbFetchPromise;
+  var e=ex(); if(!e)return null;
+  var day=todayKey();
+  var cached=loadSbCache(e.id, topicId);
+  if(cached&&cached.day===day&&sbShapeOk(cached.questions))return cached.questions;
+  sbFetchState={status:'pending', reason:null};
+  function hardTimeout(ms){ return new Promise(function(res){ setTimeout(function(){ res(null); }, ms); }); }
+  sbFetchPromise=(function(){
+    var ctrl=null, timer=null;
+    try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(err){} },20000); }catch(err){ ctrl=null; }
+    var work=(async function(){
+      try{
+        var opts={method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:(typeof syncKey==='function'?syncKey():null)||'', explorerId:e.id, topicId:topicId, level:level, count:SB_COUNT, day:day})};
+        if(ctrl)opts.signal=ctrl.signal;
+        var r=await fetch('/api/daily-set', opts);
+        if(!r.ok){ sbFetchState={status:'failed', reason:'daily-set-failed'}; return null; }
+        var j=await r.json();
+        if(!j||j.source!=='server'||!Array.isArray(j.questions)||!sbShapeOk(j.questions))return null;
+        var rec=saveSbCache(e.id, topicId, day, j.questions);
+        sbFetchState={status:'ok', reason:null};
+        return rec?rec.questions:null;
+      }catch(err){ return null; }
+      finally{ if(timer)clearTimeout(timer); }
+    })();
+    return Promise.race([work, hardTimeout(25000)]).then(function(out){
+      if(!out&&sbFetchState.status==='pending')sbFetchState={status:'failed', reason:'timeout-or-fetch-failed'};
+      return out;
+    });
+  })();
+  return sbFetchPromise;
+}
 var cur=null, warm=null, quizTimer=null;
 /* Quest timing (requested 2026-11-07): the same answer-only clock
    as the Play Arcade — it counts only the time a question is on
@@ -3585,7 +3701,7 @@ function startQuestFlow(topicId){
      one is discarded and the quest starts again from Question 1. */
   if(p&&!p.fresh&&e.completedDay&&e.completedDay[topicId]){ delete e.progress[topicId]; save(); p=null; }
   if(p){ cur=loadProgress(topicId); go('quiz'); }
-  else { var tt=topicById(topicId); warm={topicId:topicId, order:dailyWarmIndices(tt, todayKey(), e.id, levelNum(e)), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; if(topicId===LIVE_GEN_TOPIC)fetchLiveGenQuestions(topicId, levelNum(e)); go('warmup'); }
+  else { var tt=topicById(topicId); warm={topicId:topicId, order:dailyWarmIndices(tt, todayKey(), e.id, levelNum(e)), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; if(topicId===LIVE_GEN_TOPIC){ fetchServerBankQuestions(topicId, levelNum(e)); fetchLiveGenQuestions(topicId, levelNum(e)); } go('warmup'); }
 }
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
 function loadProgress(topicId){
@@ -3599,7 +3715,11 @@ function loadProgress(topicId){
      live set it started with, from the on-device cache. No cache
      (other device, cleared data) degrades to the bank pool it already
      saved — never an error. */
-  if(topicId===LIVE_GEN_TOPIC){ var use=liveGenUsable(ex().id, topicId, levelNum(ex()), todayKey(), true); if(use.source==='live'){ lc.liveGen=use.questions; lc.liveGenSource='live'; } }
+  if(topicId===LIVE_GEN_TOPIC){
+    var sbUse=sbUsable(ex().id, topicId, levelNum(ex()), todayKey(), true);
+    if(sbUse.source==='server'){ lc.liveGen=sbUse.questions; lc.liveGenSource='server'; }
+    else { var use=liveGenUsable(ex().id, topicId, levelNum(ex()), todayKey(), true); if(use.source==='live'){ lc.liveGen=use.questions; lc.liveGenSource='live'; } }
+  }
   return lc;
 }
 function persistProgress(){
@@ -3647,9 +3767,13 @@ function beginQuest(topicId){
      usually landed; a skipped warm-up may still be loading. */
   var liveGen=null, liveGenSource='bank';
   if(topicId===LIVE_GEN_TOPIC){
-    var use=liveGenUsable(e.id, topicId, levelNum(e), todayKey(), false);
-    if(use.source==='live'){ liveGen=use.questions; liveGenSource='live'; }
-    else recordLiveGenStat('fallback', null, liveGenFetchState.status==='pending'?'still-loading':(liveGenFetchState.reason||use.reason));
+    var sbUse=sbUsable(e.id, topicId, levelNum(e), todayKey(), false);
+    if(sbUse.source==='server'){ liveGen=sbUse.questions; liveGenSource='server'; }
+    else {
+      var use=liveGenUsable(e.id, topicId, levelNum(e), todayKey(), false);
+      if(use.source==='live'){ liveGen=use.questions; liveGenSource='live'; }
+      else recordLiveGenStat('fallback', null, liveGenFetchState.status==='pending'?'still-loading':(liveGenFetchState.reason||use.reason));
+    }
   }
   cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now(), liveGen:liveGen, liveGenSource:liveGenSource};
   persistProgress(); go('quiz');
@@ -3709,7 +3833,7 @@ function quizHTML(){
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
-   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+(cur.liveGenSource==='live'?'<span class="chip">✨ Fresh from Pip</span>':'')+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+(cur.liveGenSource==='live'?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q)+'</h3>'+listenBtn
    +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
@@ -3810,6 +3934,10 @@ function finishRound(t){
     if(_isFlag&&(!_br.at||(_br.dismissedAt&&_br.dismissedAt>=_br.at))){ _br.at=new Date().toISOString(); _br.flagScore=cur.score; _br.dismissedAt=null; }
     if(!_isFlag&&_br.at&&cur.score>=3){ _br.clearedAt=new Date().toISOString(); }
     if(e.stuck&&e.stuck.indexOf(cur.topicId)>=0&&cur.score>=3){ e.stuck=e.stuck.filter(function(x){ return x!==cur.topicId; }); }
+    /* Server-bank pilot: report the answers fire-and-forget, so the
+       server can mark correct ones mastered and wrong ones due. A
+       failed report never blocks the child. */
+    if(cur.liveGenSource==='server')reportServerBankAnswers(cur.topicId, questListFor(t,cur,levelNum(e)), cur.wrong);
     save(); sndFanfare(); confettiStars();
   } else if(cur.phase==='boost'){
     /* Boost drill finished: stars once per topic per day (a replay
@@ -3958,7 +4086,7 @@ var GAMES=[
  {id:'race',img:'icons/game-race.webp',e:'🏁',name:'Maths Race',blurb:'Quick-fire sums against the clock!',rounds:6},
  {id:'sentence',img:'icons/game-sentence.webp',e:'📝',name:'Sentence Builder',blurb:'Put the words in the right order.',rounds:6},
  {id:'crossword',img:'icons/game-crossword.webp',e:'🧩',name:'Crossword Quest',blurb:'Solve the clues and fill the grid!',rounds:6},
- {id:'parking',img:'icons/game-parking.webp',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:12}];
+ {id:'parking',img:'icons/game-parking.webp',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:18}];
 var gState=null, gameTimer=null, xwCheckTimer=null;
 /* Fastest-time helpers for the Play Arcade. Best times are
    best-ever (kept across days), stored per explorer as
@@ -4786,14 +4914,21 @@ function genRound(gameId, idx, seed, tier){
      the right/wrong highlight landed on the wrong one. */
   return optsShuffled({q:(a+' × '+b+' = ?'), o:[String(ans)].concat(ds.map(String)), a:0, c:'', j:''}, hashStr('numo|'+seed+'|'+idx));
 }
-/* Exit Parking (4 levels, 4x4 lot). Red car starts (0,2) horizontal,
-   len 2; exit is the right-edge cell (3,2); win when red.x===2.
-   Verified solutions (tap a car to slide it one cell; tap the end
-   you want it to move towards):
+/* Exit Parking (18 levels in 4 packs: 4x4, 5x5, 6x6, 6x6 Hard).
+   Red car starts (0,exit.y) horizontal, len 2; win when red reaches
+   the right edge of its exit row. A "move" is ONE drag: one car
+   sliding any number of cells in one direction costs 1 (a tap moves
+   one cell). Pars for levels 1-12 are the original cell-step pars,
+   kept byte-identical; pars for levels 13-18 are BFS minimal slide
+   counts + 1, so 3 stars allows exactly one wasted slide.
+   Verified one-cell solutions for the first pack (tap the end you
+   want the car to move towards):
    L1: blue up, red right, red right.
    L2: yellow up, green up, green up, red right, red right.
    L3: A left, B up, C up, C up, red right, red right.
-   L4: A left, B up, B up, C up, red right, red right. */
+   L4: A left, B up, B up, C up, red right, red right.
+   Levels 13-18: BFS-verified slide solutions live in
+   tests/parking-swipe.test.js (SLIDE_MIN_13_18 + replay). */
 var PARKLEVELS=[
  {w:4,h:4,exit:{x:3,y:2},par:3,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚙',o:'v',x:2,y:1,len:2,bg:'#8ecae6'}]},
  {w:4,h:4,exit:{x:3,y:2},par:5,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'y1',e:'🚕',o:'v',x:2,y:1,len:2,bg:'#ffd166'},{id:'g1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#90be6d'}]},
@@ -4806,7 +4941,13 @@ var PARKLEVELS=[
  {w:6,h:6,exit:{x:5,y:2},par:6,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚙',o:'v',x:2,y:1,len:2,bg:'#8ecae6'},{id:'c1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#90be6d'},{id:'d1',e:'🚌',o:'h',x:0,y:0,len:2,bg:'#f3722c'},{id:'e1',e:'🚕',o:'v',x:4,y:0,len:2,bg:'#ffd166'},{id:'f1',e:'🚙',o:'h',x:0,y:5,len:2,bg:'#577590'}]},
  {w:6,h:6,exit:{x:5,y:2},par:9,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚌',o:'v',x:2,y:0,len:3,bg:'#f3722c'},{id:'c1',e:'🚐',o:'v',x:4,y:1,len:2,bg:'#90be6d'},{id:'d1',e:'🚕',o:'h',x:0,y:0,len:2,bg:'#ffd166'},{id:'e1',e:'🚙',o:'v',x:5,y:3,len:2,bg:'#8ecae6'},{id:'f1',e:'🚌',o:'h',x:1,y:3,len:2,bg:'#f8961e'},{id:'g1',e:'🚕',o:'h',x:3,y:5,len:2,bg:'#f9c74f'}]},
  {w:6,h:6,exit:{x:5,y:3},par:8,cars:[{id:'red',e:'🚗',o:'h',x:0,y:3,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚙',o:'v',x:2,y:2,len:2,bg:'#8ecae6'},{id:'c1',e:'🚐',o:'v',x:3,y:3,len:2,bg:'#90be6d'},{id:'d1',e:'🚌',o:'v',x:4,y:2,len:2,bg:'#f3722c'},{id:'e1',e:'🚕',o:'h',x:0,y:0,len:2,bg:'#ffd166'},{id:'f1',e:'🚙',o:'h',x:3,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:5,y:1,len:2,bg:'#43aa8b'},{id:'h1',e:'🚌',o:'h',x:4,y:5,len:2,bg:'#f8961e'},{id:'k1',e:'🚕',o:'h',x:2,y:5,len:2,bg:'#f9c74f'}]},
- {w:6,h:6,exit:{x:5,y:3},par:9,cars:[{id:'red',e:'🚗',o:'h',x:0,y:3,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚙',o:'v',x:2,y:3,len:2,bg:'#8ecae6'},{id:'c1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#90be6d'},{id:'d1',e:'🚌',o:'v',x:4,y:3,len:2,bg:'#f3722c'},{id:'e1',e:'🚕',o:'h',x:0,y:0,len:3,bg:'#ffd166'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'h',x:1,y:5,len:2,bg:'#43aa8b'},{id:'h1',e:'🚌',o:'v',x:0,y:1,len:2,bg:'#f8961e'},{id:'i1',e:'🚕',o:'h',x:4,y:5,len:2,bg:'#f9c74f'}]}
+ {w:6,h:6,exit:{x:5,y:3},par:9,cars:[{id:'red',e:'🚗',o:'h',x:0,y:3,len:2,bg:'#ff6b6b'},{id:'b1',e:'🚙',o:'v',x:2,y:3,len:2,bg:'#8ecae6'},{id:'c1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#90be6d'},{id:'d1',e:'🚌',o:'v',x:4,y:3,len:2,bg:'#f3722c'},{id:'e1',e:'🚕',o:'h',x:0,y:0,len:3,bg:'#ffd166'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'h',x:1,y:5,len:2,bg:'#43aa8b'},{id:'h1',e:'🚌',o:'v',x:0,y:1,len:2,bg:'#f8961e'},{id:'i1',e:'🚕',o:'h',x:4,y:5,len:2,bg:'#f9c74f'}]},
+ {w:6,h:6,exit:{x:5,y:3},par:10,cars:[{id:'red',e:'🚗',o:'h',x:0,y:3,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚙',o:'v',x:2,y:2,len:2,bg:'#8ecae6'},{id:'b1',e:'🚕',o:'v',x:3,y:3,len:2,bg:'#ffd166'},{id:'c1',e:'🚌',o:'v',x:4,y:1,len:3,bg:'#f3722c'},{id:'d1',e:'🚐',o:'h',x:2,y:0,len:2,bg:'#90be6d'},{id:'e1',e:'🚕',o:'h',x:4,y:0,len:2,bg:'#f9c74f'},{id:'f1',e:'🚙',o:'v',x:0,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:1,y:0,len:2,bg:'#43aa8b'},{id:'h1',e:'🚌',o:'h',x:3,y:5,len:3,bg:'#f8961e'},{id:'i1',e:'🚕',o:'h',x:4,y:4,len:2,bg:'#ffd166'},{id:'j1',e:'🚙',o:'h',x:1,y:4,len:2,bg:'#8ecae6'},{id:'k1',e:'🚐',o:'v',x:5,y:2,len:2,bg:'#90be6d'}]},
+ {w:6,h:6,exit:{x:5,y:2},par:11,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚕',o:'v',x:2,y:1,len:2,bg:'#ffd166'},{id:'b1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#43aa8b'},{id:'c1',e:'🚌',o:'v',x:4,y:2,len:3,bg:'#f3722c'},{id:'d1',e:'🚕',o:'h',x:1,y:0,len:2,bg:'#f9c74f'},{id:'e1',e:'🚙',o:'h',x:3,y:5,len:2,bg:'#8ecae6'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:0,y:4,len:2,bg:'#90be6d'},{id:'h1',e:'🚕',o:'h',x:1,y:3,len:2,bg:'#ffd166'},{id:'i1',e:'🚙',o:'h',x:2,y:4,len:2,bg:'#8ecae6'},{id:'j1',e:'🚐',o:'v',x:5,y:2,len:2,bg:'#43aa8b'},{id:'k1',e:'🚕',o:'h',x:1,y:5,len:2,bg:'#f9c74f'},{id:'l1',e:'🚙',o:'v',x:0,y:0,len:2,bg:'#8ecae6'}]},
+ {w:6,h:6,exit:{x:5,y:2},par:14,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚕',o:'v',x:2,y:2,len:2,bg:'#ffd166'},{id:'b1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#43aa8b'},{id:'c1',e:'🚌',o:'v',x:4,y:2,len:3,bg:'#f3722c'},{id:'d1',e:'🚕',o:'h',x:2,y:0,len:3,bg:'#f9c74f'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:0,y:3,len:3,bg:'#90be6d'},{id:'h1',e:'🚕',o:'h',x:0,y:1,len:2,bg:'#ffd166'},{id:'i1',e:'🚙',o:'h',x:2,y:4,len:2,bg:'#8ecae6'},{id:'j1',e:'🚐',o:'v',x:5,y:2,len:2,bg:'#43aa8b'},{id:'k1',e:'🚕',o:'h',x:1,y:5,len:2,bg:'#f9c74f'},{id:'l1',e:'🚙',o:'h',x:2,y:1,len:2,bg:'#8ecae6'}]},
+ {w:6,h:6,exit:{x:5,y:2},par:15,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚕',o:'v',x:2,y:1,len:2,bg:'#ffd166'},{id:'b1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#43aa8b'},{id:'c1',e:'🚌',o:'v',x:4,y:1,len:3,bg:'#f3722c'},{id:'d1',e:'🚕',o:'h',x:3,y:0,len:2,bg:'#f9c74f'},{id:'e1',e:'🚙',o:'h',x:1,y:0,len:2,bg:'#8ecae6'},{id:'f1',e:'🚙',o:'v',x:5,y:2,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:0,y:4,len:2,bg:'#90be6d'},{id:'h1',e:'🚕',o:'h',x:1,y:5,len:2,bg:'#ffd166'},{id:'i1',e:'🚙',o:'h',x:2,y:4,len:2,bg:'#8ecae6'},{id:'k1',e:'🚕',o:'h',x:0,y:3,len:2,bg:'#f9c74f'},{id:'l1',e:'🚙',o:'h',x:4,y:5,len:2,bg:'#8ecae6'},{id:'m1',e:'🚙',o:'h',x:4,y:4,len:2,bg:'#8ecae6'}]},
+ {w:6,h:6,exit:{x:5,y:2},par:17,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚕',o:'v',x:2,y:2,len:2,bg:'#ffd166'},{id:'b1',e:'🚐',o:'v',x:3,y:1,len:2,bg:'#43aa8b'},{id:'c1',e:'🚌',o:'v',x:4,y:2,len:3,bg:'#f3722c'},{id:'d1',e:'🚕',o:'h',x:2,y:0,len:3,bg:'#f9c74f'},{id:'e1',e:'🚙',o:'h',x:1,y:1,len:2,bg:'#8ecae6'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:0,y:4,len:2,bg:'#90be6d'},{id:'h1',e:'🚕',o:'h',x:0,y:3,len:2,bg:'#ffd166'},{id:'i1',e:'🚙',o:'h',x:2,y:4,len:2,bg:'#8ecae6'},{id:'j1',e:'🚐',o:'v',x:5,y:4,len:2,bg:'#43aa8b'},{id:'k1',e:'🚕',o:'h',x:1,y:5,len:2,bg:'#f9c74f'},{id:'l1',e:'🚙',o:'h',x:3,y:5,len:2,bg:'#8ecae6'}]},
+ {w:6,h:6,exit:{x:5,y:2},par:18,cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2,bg:'#ff6b6b'},{id:'a1',e:'🚕',o:'v',x:2,y:2,len:2,bg:'#ffd166'},{id:'b1',e:'🚐',o:'v',x:3,y:2,len:2,bg:'#43aa8b'},{id:'c1',e:'🚌',o:'v',x:4,y:2,len:3,bg:'#f3722c'},{id:'d1',e:'🚕',o:'h',x:2,y:0,len:3,bg:'#f9c74f'},{id:'e1',e:'🚙',o:'h',x:3,y:5,len:2,bg:'#8ecae6'},{id:'f1',e:'🚙',o:'v',x:5,y:0,len:2,bg:'#577590'},{id:'g1',e:'🚐',o:'v',x:0,y:3,len:3,bg:'#90be6d'},{id:'h1',e:'🚕',o:'h',x:0,y:1,len:2,bg:'#ffd166'},{id:'i1',e:'🚙',o:'h',x:2,y:4,len:2,bg:'#8ecae6'},{id:'j1',e:'🚐',o:'v',x:5,y:2,len:2,bg:'#43aa8b'},{id:'k1',e:'🚕',o:'h',x:1,y:5,len:2,bg:'#f9c74f'},{id:'l1',e:'🚙',o:'h',x:2,y:1,len:2,bg:'#8ecae6'}]}
 ];
 var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};
 function parkCarCells(c){
@@ -4858,6 +4999,43 @@ function parkWon(cars, lv){
   return !!r&&r.x===(lv?lv.w:PARKW)-r.len&&r.y===(lv?lv.exit.y:PARKEXIT.y);
 }
 function parkLevelStars(moves, par){ return moves<=par?3:(moves<=par+2?2:1); }
+function parkPackName(idx){ return idx<4?'Pack 1 (4×4)':(idx<8?'Pack 2 (5×5)':(idx<12?'Pack 3 (6×6)':'Pack 4 (6×6) Hard')); }
+/* Free run of a car along its axis, in cells: how far it can slide
+   back (left/up) and forward (right/down) before a wall or a car. */
+function parkDragRange(cars, id, lv){
+  var c=null; cars.forEach(function(x){ if(x.id===id)c=x; });
+  if(!c)return {back:0, fwd:0};
+  var occ=parkOccupied(cars, id);
+  var PW=lv?lv.w:PARKW, PH=lv?lv.h:PARKH;
+  var back=0, fwd=0;
+  if(c.o==='h'){
+    for(var x=c.x-1;x>=0&&!occ[x+','+c.y];x--)back++;
+    for(var x2=c.x+c.len;x2<PW&&!occ[x2+','+c.y];x2++)fwd++;
+  } else {
+    for(var y=c.y-1;y>=0&&!occ[c.x+','+y];y--)back++;
+    for(var y2=c.y+c.len;y2<PH&&!occ[c.x+','+y2];y2++)fwd++;
+  }
+  return {back:back, fwd:fwd};
+}
+/* Slide a car n cells in one direction (one drag). Null when any
+   step is illegal; otherwise a new cars array, colours included. */
+function parkSlide(cars, id, dir, n, lv){
+  if(!n||n<1)return null;
+  var cur=cars;
+  for(var i=0;i<n;i++){ cur=parkMove(cur, id, dir, lv); if(!cur)return null; }
+  return cur;
+}
+/* Exit Parking stars bank ONCE per level per day. Levels are won in
+   order, so one counter (starBanked = levels banked today) is
+   enough; a new day resets it. Same rule as lib/rules.js
+   parkStarsToBank — if the rule changes, change both. Returns the
+   stars to bank now plus the updated counter and day. */
+function parkStarsToBank(idx, moves, par, starDay, starBanked, today){
+  var stars=parkLevelStars(moves, par);
+  var banked=(starDay===today)?(starBanked||0):0;
+  if(idx<banked)return {bank:0, starBanked:banked, starDay:today};
+  return {bank:stars, starBanked:idx+1, starDay:today};
+}
 function startGame(id){
   var e=ex(); if(!e.playFresh)e.playFresh={};
   if(!canPlay(e)){ toast('Play is done for today — come back tomorrow!'); return; }
@@ -4880,7 +5058,7 @@ function startGame(id){
      board the child left — the level is never recomputed on
      resume. No new persisted field: pairs = deck.length/2. */
   if(id==='memory'){ var MEMDECKS=[['🐸','🦦','🍓','⭐','🚀','🦋','🐢','🦁'],['🍎','🍌','🍇','🍓','🥝','🍊','🍉','🍍'],['🐟','🐙','🦀','🐢','🐬','🦈','🐳','🦭'],['🚀','⭐','🌙','🪐','☀️','🌟','🛸','👽']]; var memPairs=[4,6,8][(((seed||0)%3)+3)%3]; var memTheme=MEMDECKS[Math.floor((seed||0)/3)%4]; var memCards=[]; memTheme.slice(0,memPairs).forEach(function(em){ memCards.push(em,em); }); gState={id:id, deck:shuffle(memCards), open:(p&&p.open?p.open.slice():[]), matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
-  else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; var useSaved=p&&!doneP&&p.cars&&(p.idx<4||p.v===2); gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, cars:(useSaved?p.cars:PARKLEVELS[lv].cars).map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; }
+  else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; var useSaved=p&&!doneP&&p.cars&&(p.idx<4||p.v===2); gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, starTotal:(!p||doneP)?0:(p.starTotal||0), starBanked:(!p?0:(p.starBanked||0)), starDay:(!p?null:(p.starDay||null)), cars:(useSaved?p.cars:PARKLEVELS[lv].cars).map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; }
   else if(id==='crossword'){
     /* Six themed grids rotate by day — the whole family gets the
        same grid each day. A resume keeps its saved grid (filled
@@ -5040,7 +5218,7 @@ function gameHTML(){
      +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards to flip them. Find all '+(gState.deck.length/2)+' pairs! Your progress is saved if you leave.</p><p style="font-weight:800;margin:6px 0 0">Pairs found: '+(gState.matched.length/2)+' of '+(gState.deck.length/2)+'</p><div class="progressbar"><div style="width:'+Math.round(gState.matched.length/gState.deck.length*100)+'%"></div></div><div class="memgrid" style="margin-top:10px">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'"><span class="meminner"><span class="memface memfront">❓</span><span class="memface memback">'+c+'</span></span></button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
   }
   if(gState.idx>=gState.rounds){
-    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(100,e.glow)+'</div><div class="trophy">🏆</div><h2>'+g.name+' complete!</h2><div class="starsRow">'+[1,2,3,4,5,6].map(function(i){return i<=gState.score?'⭐':'☆';}).join('')+'</div><p style="font-weight:900">Score: '+gState.score+' / '+gState.rounds+' — you earned ⭐ '+gState.score+' stars!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
+    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(100,e.glow)+'</div><div class="trophy">🏆</div><h2>'+g.name+' complete!</h2><div class="starsRow">'+[1,2,3,4,5,6].map(function(i){return i<=gState.score?'⭐':'☆';}).join('')+'</div><p style="font-weight:900">Score: '+gState.score+' / '+gState.rounds+' — you earned ⭐ '+(gState.id==='parking'?(gState.starTotal||0):gState.score)+' stars!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
   }
   if(gState.id==='crossword'){
     /* Whole-grid typing: the grid shows only solved words and the
@@ -5081,7 +5259,7 @@ function gameHTML(){
   if(gState.id==='parking'){
     var lv=PARKLEVELS[gState.idx]||PARKLEVELS[0];
     var PW=lv.w, PH=lv.h, ex2=lv.exit||PARKEXIT;
-    var pack=PW===4?'Pack 1 (4×4)':(PW===5?'Pack 2 (5×5)':'Pack 3 (6×6)');
+    var pack=parkPackName(gState.idx);
     var cellW=100/PW, cellH=100/PH;
     var cells='';
     for(var py=0;py<PH;py++){ for(var px=0;px<PW;px++){ var isExit=(px===ex2.x&&py===ex2.y); cells+='<div class="parkcell'+(isExit?' exit':'')+'" style="left:'+(px*cellW)+'%;top:'+(py*cellH)+'%;width:'+cellW+'%;height:'+cellH+'%">'+(isExit?'🏁':'')+'</div>'; } }
@@ -5090,10 +5268,10 @@ function gameHTML(){
       return '<button class="parkcar'+(c.id==='red'?' red':'')+'" data-car="'+c.id+'" style="left:'+(c.x*cellW)+'%;top:'+(c.y*cellH)+'%;width:'+w+'%;height:'+h+'%;background:'+(c.bg||'#fff')+'">'+c.e+'</button>';
     }).join('');
     var overlay='';
-    if(gState.levelWon){ var lw=gState.levelWon; overlay='<div class="card" style="text-align:center;margin-top:12px"><div class="trophy">🚗</div><h3 style="margin:4px 0">Level '+lw.level+' complete!</h3><p style="font-weight:900">'+('⭐'.repeat(lw.stars))+' '+lw.stars+' star'+(lw.stars===1?'':'s')+' — '+lw.moves+' moves (par '+lw.par+')</p>'+(lw.level>=gState.rounds?'<p style="font-weight:800">You freed every car! 🏆</p>':'<p style="font-weight:800">On to level '+(lw.level+1)+'!</p>')+'<button class="btn" id="gParkNext">'+(lw.level>=gState.rounds?'See results 🏁':'Next level ▶')+'</button></div>'; }
+    if(gState.levelWon){ var lw=gState.levelWon; overlay='<div class="card" style="text-align:center;margin-top:12px"><div class="trophy">🚗</div><h3 style="margin:4px 0">Level '+lw.level+' complete!</h3><p style="font-weight:900">'+('⭐'.repeat(lw.stars))+' '+lw.stars+' star'+(lw.stars===1?'':'s')+' — '+lw.moves+' moves (par '+lw.par+')</p>'+(lw.banked===0?'<p style="font-weight:800">Already counted today — no extra ⭐ this time. Come back tomorrow for more!</p>':'')+(lw.level>=gState.rounds?'<p style="font-weight:800">You freed every car! 🏆</p>':'<p style="font-weight:800">On to level '+(lw.level+1)+'!</p>')+'<button class="btn" id="gParkNext">'+(lw.level>=gState.rounds?'See results 🏁':'Next level ▶')+'</button></div>'; }
     return '<div class="flowhero">'+ic(g.img,g.e,'heroart')+'<div><b style="font-family:\'Fredoka\'">Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
-     +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+' · '+pack+'</span><span class="chip">Par '+lv.par+'</span><span class="chip" id="parkMoves">Moves: '+gState.moves+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
-     +'<p class="muted" style="font-weight:700">Tap a car to slide it one cell — tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
+     +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+' · '+pack+'</span><span class="chip">Par '+lv.par+'</span><span class="chip" id="parkMoves">Moves: '+gState.moves+'</span><span class="chip">⭐ '+(gState.starTotal||0)+' stars</span></div>'
+     +'<p class="muted" style="font-weight:700">Drag a car to slide it — or tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
      +'<div class="parklot">'+cells+lot+'</div>'
      +'<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn ghost" id="parkUndo">↩ Undo</button><button class="btn ghost" id="parkReset">↺ Reset level</button></div>'
      +overlay
@@ -5166,6 +5344,9 @@ function bindGame(){
     var lv=PARKLEVELS[gState.idx]||PARKLEVELS[0];
     /* A resumed lot that is already won (quit on the overlay edge
        case) advances at once instead of leaving a stuck board. */
+    /* Already-won lot: advance only. The level's stars were banked
+       when it was won, so this branch must never call earnStars —
+       banking again here would pay the same level twice. */
     if(parkWon(gState.cars, lv)){
       gState.score++; gState.idx++;
       if(gState.idx<gState.rounds){ gState.cars=PARKLEVELS[gState.idx].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; }); }
@@ -5173,21 +5354,19 @@ function bindGame(){
     }
     if(!gState.parkHist)gState.parkHist=[];
     if(!gState.parkWinToken)gState.parkWinToken=0;
-    document.querySelectorAll('[data-car]').forEach(function(b){ b.onclick=function(ev){
-      if(gState.parkBusy)return;
-      var id=b.getAttribute('data-car');
-      var car=null; gState.cars.forEach(function(c){ if(c.id===id)car=c; }); if(!car)return;
-      /* Direction from WHERE on the car the child tapped (left/right
-         half, top/bottom half) — never from data-cx/data-cy, which
-         go stale the moment a car slides without a re-render. */
-      var r=b.getBoundingClientRect();
-      var dir;
-      if(car.o==='h'){ dir=((ev.clientX-r.left)/r.width>0.5)?'r':'l'; }
-      else { dir=((ev.clientY-r.top)/r.height>0.5)?'d':'u'; }
-      var moved=parkMove(gState.cars, id, dir, lv);
-      /* No opposite-direction fallback any more: a blocked move is
-         a thunk + a shake, and the child picks another car. */
-      if(!moved){ sndThunk(); b.classList.add('parkshake'); setTimeout(function(){ b.classList.remove('parkshake'); },320); return; }
+    /* One shared commit for taps and drags. A drag of several cells
+       is still ONE move (moves++ once) — that is what par is
+       measured in. The car's element slides (CSS transition); there
+       is no full re-render on a move. On a win, the level's stars
+       bank HERE, on a fresh explorer (see the bindGame note above),
+       through the once-per-level-per-day gate in parkStarsToBank —
+       never at the end of the game. */
+    function commitParkMove(b, id, dir, steps){
+      if(gState.parkBusy)return false;
+      var moved=(steps===1)?parkMove(gState.cars, id, dir, lv):parkSlide(gState.cars, id, dir, steps, lv);
+      /* No opposite-direction fallback: a blocked move is a thunk +
+         a shake, and the child picks another car. */
+      if(!moved){ sndThunk(); b.classList.add('parkshake'); setTimeout(function(){ b.classList.remove('parkshake'); },320); return false; }
       gState.parkHist.push(JSON.parse(JSON.stringify(gState.cars))); if(gState.parkHist.length>50)gState.parkHist.shift();
       gState.cars=moved; gState.moves++; sndSlide(); saveGameProgress();
       /* Slide, don't teleport: move just this car's element (the
@@ -5200,10 +5379,15 @@ function bindGame(){
         gState.parkBusy=true;
         var stars=parkLevelStars(gState.moves, lv.par);
         var wonMoves=gState.moves;
-        gState.score++; var wonLevel=gState.idx+1; gState.idx++;
+        var wonLevel=gState.idx+1;
+        var tb=parkStarsToBank(gState.idx, gState.moves, lv.par, gState.starDay, gState.starBanked, todayKey());
+        gState.starBanked=tb.starBanked; gState.starDay=tb.starDay;
+        if(tb.bank>0){ var live=ex(); earnStars(live, tb.bank); }
+        gState.starTotal=(gState.starTotal||0)+tb.bank;
+        gState.score++; gState.idx++;
         if(gState.idx<gState.rounds){ gState.cars=PARKLEVELS[gState.idx].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; }); }
         gState.moves=0; gState.parkHist=[];
-        gState.levelWon={level:wonLevel, stars:stars, moves:wonMoves, par:lv.par};
+        gState.levelWon={level:wonLevel, stars:stars, moves:wonMoves, par:lv.par, banked:tb.bank};
         saveGameProgress();
         /* Let the slide into the exit be seen before the overlay
            (and the next level) render. The token guards against a
@@ -5212,11 +5396,85 @@ function bindGame(){
         setTimeout(function(){
           if(!gState||gState.id!=='parking'||gState.parkWinToken!==tok)return;
           gState.parkBusy=false;
-          if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,'parking'); earnStars(live,Math.min(gState.score,gState.rounds)); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+          if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,'parking'); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
           render();
         },380);
       }
-    }; });
+      return true;
+    }
+    var suppressParkClick=0;
+    /* Drag / swipe: press and pull a car along its track. The car
+       follows the pointer (no re-render mid-drag — the parkdrag
+       class drops the slide transition while dragging); on release
+       it snaps to the furthest free cell in the drag direction. A
+       press without a drag is a tap, handled by the click below.
+       The move/end handlers are DOCUMENT-level (like the frog
+       drag): releasing outside the car still ends the drag. No
+       pointer capture is used anywhere — the frog rule forbids
+       pointer capture is used anywhere — the frog rule forbids
+       it page-wide, since capture does not survive a re-render. */
+    var drag=null;
+    var parkDragMove=function(ev){
+      if(!drag||gState.parkBusy)return;
+      var range=parkDragRange(gState.cars, drag.id, lv);
+      var cellPx=drag.car.o==='h'?(drag.lotW/lv.w):(drag.lotH/lv.h);
+      var raw=drag.car.o==='h'?((ev.clientX-drag.x0)/cellPx):((ev.clientY-drag.y0)/cellPx);
+      var cl=Math.max(-range.back, Math.min(range.fwd, raw));
+      drag.cells=cl;
+      var cw=100/lv.w, ch=100/lv.h;
+      drag.el.classList.add('parkdrag');
+      if(drag.car.o==='h')drag.el.style.left=((drag.car.x+cl)*cw)+'%';
+      else drag.el.style.top=((drag.car.y+cl)*ch)+'%';
+      if(Math.abs(cl)>=0.3)ev.preventDefault();
+    };
+    var parkDragEnd=function(ev, cancelled){
+      if(!drag)return;
+      var d0=drag; drag=null;
+      document.removeEventListener('pointermove', parkDragMove);
+      document.removeEventListener('pointerup', parkDragUp);
+      document.removeEventListener('pointercancel', parkDragCancel);
+      d0.el.classList.remove('parkdrag');
+      var steps=Math.round(Math.abs(d0.cells));
+      if(cancelled||steps<1){
+        var cw2=100/lv.w, ch2=100/lv.h;
+        if(d0.car.o==='h')d0.el.style.left=(d0.car.x*cw2)+'%'; else d0.el.style.top=(d0.car.y*ch2)+'%';
+        return;
+      }
+      var dir=d0.car.o==='h'?(d0.cells>0?'r':'l'):(d0.cells>0?'d':'u');
+      suppressParkClick=Date.now();
+      commitParkMove(d0.el, d0.id, dir, steps);
+    };
+    var parkDragUp=function(ev){ parkDragEnd(ev, false); };
+    var parkDragCancel=function(ev){ parkDragEnd(ev, true); };
+    document.querySelectorAll('[data-car]').forEach(function(b){
+      b.onclick=function(ev){
+        if(gState.parkBusy)return;
+        if(Date.now()-suppressParkClick<600)return; /* a drag just ended — its pointerup already moved the car */
+        var id=b.getAttribute('data-car');
+        var car=null; gState.cars.forEach(function(c){ if(c.id===id)car=c; }); if(!car)return;
+        /* Direction from WHERE on the car the child tapped (left/right
+           half, top/bottom half) — never from data-cx/data-cy, which
+           go stale the moment a car slides without a re-render. */
+        var r=b.getBoundingClientRect();
+        var dir;
+        if(car.o==='h'){ dir=((ev.clientX-r.left)/r.width>0.5)?'r':'l'; }
+        else { dir=((ev.clientY-r.top)/r.height>0.5)?'d':'u'; }
+        commitParkMove(b, id, dir, 1);
+      };
+      b.addEventListener('pointerdown', function(ev){
+        if(gState.parkBusy)return;
+        if(drag)return; /* a drag is already in progress */
+        var id=b.getAttribute('data-car');
+        var car=null; gState.cars.forEach(function(c){ if(c.id===id)car=c; }); if(!car)return;
+        var lot=b.closest('.parklot'); if(!lot)return;
+        var lr=lot.getBoundingClientRect();
+        drag={id:id, car:car, el:b, x0:ev.clientX, y0:ev.clientY, lotW:lr.width, lotH:lr.height, cells:0};
+        document.addEventListener('pointermove', parkDragMove);
+        document.addEventListener('pointerup', parkDragUp);
+        document.addEventListener('pointercancel', parkDragCancel);
+        suppressParkClick=0;
+      });
+    });
     var un=document.getElementById('parkUndo'); if(un)un.onclick=function(){
       if(gState.parkBusy)return;
       var prev=gState.parkHist.pop(); if(!prev)return;
@@ -5542,7 +5800,7 @@ function bindGame(){
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=playElapsedSecs(); if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, v:2, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, gridId:gState.gridId, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false], letters:Object.assign({},gState.letters||{})}; else if(gState.id==='sentence')e.playProgress.sentence={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, built:(gState.built||[]).slice(), locked:(gState.locked||[]).slice(), punct:gState.punct||null, done:!!gState.done, answered:!!gState.done, sent:gState.sent||''}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
+function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=playElapsedSecs(); if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, v:2, starTotal:gState.starTotal||0, starBanked:gState.starBanked||0, starDay:gState.starDay||null, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, gridId:gState.gridId, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false], letters:Object.assign({},gState.letters||{})}; else if(gState.id==='sentence')e.playProgress.sentence={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, built:(gState.built||[]).slice(), locked:(gState.locked||[]).slice(), punct:gState.punct||null, done:!!gState.done, answered:!!gState.done, sent:gState.sent||''}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
   var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
