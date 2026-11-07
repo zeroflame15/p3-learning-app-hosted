@@ -71,3 +71,50 @@ test('merge keeps the other side’s face-up cards when it played longer', funct
   const merged = mergeExplorer(server, local);
   assert.deepEqual(merged.playProgress.memory.open, [2, 7], 'the side with the larger elapsed time wins');
 });
+
+test('merge keeps a freshly picked weekly theme (later timestamp wins)', function () {
+  const server = explorer({ theme: 'Frog Pond', themeAt: '2026-11-07T08:00:00.000Z' });
+  const local = explorer({ theme: 'Starry Night', themeAt: '2026-11-07T18:00:00.000Z' });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.theme, 'Starry Night', 'the newer theme pick survives the merge instead of reverting to the server copy');
+  assert.equal(merged.themeAt, '2026-11-07T18:00:00.000Z', 'the newer theme timestamp is kept');
+  const merged2 = mergeExplorer(local, server);
+  assert.equal(merged2.theme, 'Starry Night', 'the newer pick wins whichever side it arrives on');
+});
+
+test('merge keeps the server theme when neither side has a theme timestamp', function () {
+  const server = explorer({ theme: 'Frog Pond', themeAt: null });
+  const local = explorer({ theme: 'Starry Night', themeAt: null });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.theme, 'Frog Pond', 'legacy explorers without a timestamp keep the server copy');
+});
+
+test('new explorers start with a null theme timestamp and the theme tap stamps it', function () {
+  assert.ok(html.includes("theme:'Frog Pond', themeAt:null"), 'explorer factory must start themeAt at null');
+  const start = html.indexOf('[data-theme]');
+  assert.ok(start >= 0, 'theme chip handler not found');
+  const handler = html.slice(start, html.indexOf('});', start));
+  assert.ok(handler.includes('e.themeAt=new Date().toISOString()'), 'tapping a theme chip must stamp themeAt so the merge can tell it is the newer pick');
+});
+
+test('merge keeps a freshly reset picture code (later timestamp wins)', function () {
+  const server = explorer({ code: ['🦊', '🐢', '🦉'], codeAt: '2026-11-07T08:00:00.000Z' });
+  const local = explorer({ code: ['🦋', '🍓', '🚀'], codeAt: '2026-11-07T18:00:00.000Z' });
+  const merged = mergeExplorer(server, local);
+  assert.deepEqual(merged.code, ['🦋', '🍓', '🚀'], 'the newer reset code survives the merge instead of reverting to the old code');
+  assert.equal(merged.codeAt, '2026-11-07T18:00:00.000Z', 'the newer code timestamp is kept');
+  const merged2 = mergeExplorer(local, server);
+  assert.deepEqual(merged2.code, ['🦋', '🍓', '🚀'], 'the newer reset wins whichever side it arrives on');
+});
+
+test('merge keeps the server picture code when neither side has a code timestamp', function () {
+  const server = explorer({ code: ['🦊', '🐢', '🦉'], codeAt: null });
+  const local = explorer({ code: ['🦋', '🍓', '🚀'], codeAt: null });
+  const merged = mergeExplorer(server, local);
+  assert.deepEqual(merged.code, ['🦊', '🐢', '🦉'], 'legacy explorers without a timestamp keep the server copy');
+});
+
+test('new explorers start with a null code timestamp and the reset stamps it', function () {
+  assert.ok(html.includes('code:code, codeAt:null'), 'explorer factory must start codeAt at null');
+  assert.ok(html.includes('target.codeAt=new Date().toISOString()'), 'resetting a picture code must stamp codeAt so the merge can tell it is the newer code');
+});
