@@ -96,6 +96,14 @@ test('live-gen: recompute covers two-step money, change, and two-product problem
   assert.deepEqual(liveGen.validateLiveGenQuestion(twoStep, [], []), []);
   const twoProduct = { q: 'Ben buys 4 notebooks at $6 each and 2 pens at $3 each. How much does he spend in all?', o: ['$28', '$30', '$32', '$26'], a: 1, c: '4 x $6 = $24 and 2 x $3 = $6, then $24 + $6 = $30.' };
   assert.deepEqual(liveGen.validateLiveGenQuestion(twoProduct, [], []), []);
+  // Reverse order: the paid amount comes second in the stem, so the
+  // answer needs 10-7, not 7-10. Found live 2026-11-08: a valid
+  // watermelon change question was rejected as not recomputing
+  // because the pair loop only tried numbers in stem order.
+  const change2 = { q: 'A watermelon costs $7. You pay with $10. Your change is…', o: ['$2', '$3', '$4', '$17'], a: 1, c: '$10 − $7 = $3.' };
+  assert.deepEqual(liveGen.validateLiveGenQuestion(change2, [], []), []);
+  const share = { q: '2 friends share $10 equally. How much does each friend get?', o: ['$2', '$5', '$8', '$20'], a: 1, c: '$10 ÷ 2 = $5.' };
+  assert.deepEqual(liveGen.validateLiveGenQuestion(share, [], []), []);
   // The intermediate step as the answer: 24 IS computable from the
   // stem (4 x 6) but ignores the $50, so it must fail distinctly.
   const intermediate = { ...twoStep, a: 0 };

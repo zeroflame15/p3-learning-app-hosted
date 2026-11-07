@@ -271,8 +271,8 @@ test('completion screens show the new-fastest badge, recorded on both paths', ()
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'sentence');") >= 0, 'sentence completion records the best on the live explorer');
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'scramble');") >= 0, 'scramble completion records the best on the live explorer (its own Next binding, not the generic one)');
   assert.ok(bindSrc.indexOf('earnStars(live,') >= 0, 'stars are awarded to the live explorer, not a stale copy');
-  assert.equal((bindSrc.match(/earnStars\(live,Math\.min\(gState\.score,gState\.rounds\)\)/g) || []).length, 5,
-    'round-game awards are capped at the round count (generic, crossword, parking, sentence, scramble), so a 6-round game can never pay 7 stars');
+  assert.equal((bindSrc.match(/earnStars\(live,Math\.min\(gState\.score,gState\.rounds\)\)/g) || []).length, 4,
+    'round-game awards are capped at the round count (generic, crossword, sentence, scramble — parking now banks per level), so a 6-round game can never pay 7 stars');
 });
 
 test('every inline script block in the page still parses', () => {

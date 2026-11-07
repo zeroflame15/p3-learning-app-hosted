@@ -139,6 +139,9 @@ test('live-gen client: recompute rejects a wrong answer and accepts change probl
   assert.equal(c.liveGenRecompute('Mei buys 4 notebooks at $6 each and pays with $50. How much change does she get?', 24).reason, 'answer-ignores-numbers', '24 is the first step only — it ignores the $50');
   assert.equal(c.liveGenRecompute('Mei buys 4 notebooks at $6 each and pays with $50. How much change does she get?', 30).reason, 'answer-does-not-recompute');
   assert.equal(c.liveGenRecompute('Estimate: 48 × 5 is closest to…', 250).reason, 'non-computable-type');
+  // Reverse order: 10-7, not 7-10 (watermelon change, found live 2026-11-08).
+  assert.deepEqual(c.liveGenRecompute('A watermelon costs $7. You pay with $10. Your change is…', 3), { ok: true, value: 3 });
+  assert.deepEqual(c.liveGenRecompute('2 friends share $10 equally. How much does each friend get?', 5), { ok: true, value: 5 });
 });
 
 test('live-gen client: cache — same day reuses, new day refuses, resume keeps any day', () => {

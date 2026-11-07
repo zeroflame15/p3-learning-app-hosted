@@ -122,3 +122,15 @@ test('resume: a saved quest keeps its exact set (rule, not prose)', () => {
   assert.deepEqual(started, [0, 1, 2, 3, 4]);
   assert.ok(R.dailyFreshIndices('math-frac', '2026-11-06', 15).length === 5);
 });
+
+test('parking stars: level rating and once-per-level-per-day banking', () => {
+  assert.equal(R.parkLevelStars(3, 3), 3);
+  assert.equal(R.parkLevelStars(5, 3), 2);
+  assert.equal(R.parkLevelStars(6, 3), 1);
+  assert.deepEqual(R.parkStarsToBank(0, 2, 3, null, 0, '2026-11-08'), { bank: 3, starBanked: 1, starDay: '2026-11-08' });
+  assert.deepEqual(R.parkStarsToBank(0, 2, 3, '2026-11-08', 1, '2026-11-08'), { bank: 0, starBanked: 1, starDay: '2026-11-08' });
+  assert.deepEqual(R.parkStarsToBank(1, 5, 5, '2026-11-08', 1, '2026-11-08'), { bank: 3, starBanked: 2, starDay: '2026-11-08' });
+  assert.deepEqual(R.parkStarsToBank(0, 2, 3, '2026-11-08', 18, '2026-11-09'), { bank: 3, starBanked: 1, starDay: '2026-11-09' });
+  assert.deepEqual(R.parkStarsToBank(5, 8, 6, null, 0, '2026-11-08'), { bank: 2, starBanked: 6, starDay: '2026-11-08' });
+  assert.deepEqual(R.parkStarsToBank(5, 9, 6, null, 0, '2026-11-08'), { bank: 1, starBanked: 6, starDay: '2026-11-08' });
+});

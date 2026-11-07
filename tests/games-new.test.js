@@ -49,7 +49,7 @@ const NEW_GAMES = {
   race: { e: '🏁', name: 'Maths Race', blurb: 'Quick-fire sums against the clock!', rounds: 6 },
   sentence: { e: '📝', name: 'Sentence Builder', blurb: 'Put the words in the right order.', rounds: 6 },
   crossword: { e: '🧩', name: 'Crossword Quest', blurb: 'Solve the clues and fill the grid!', rounds: 6 },
-  parking: { e: '🚗', name: 'Exit Parking', blurb: 'Slide the cars and free the red car!', rounds: 12 },
+  parking: { e: '🚗', name: 'Exit Parking', blurb: 'Slide the cars and free the red car!', rounds: 18 },
 };
 
 test('GAMES has 9 entries: the 4 originals plus scramble, race, sentence, crossword, parking', () => {

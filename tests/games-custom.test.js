@@ -113,8 +113,8 @@ test('crossword branches exist in the page (grid, typing input, clue list, toggl
 
 const PARK_PRELUDE = 'var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};\n';
 const parkFns = HAS_PARK
-  ? eval(PARK_PRELUDE + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon', 'parkLevelStars'].map((n) => grab(n)).join('\n')
-    + '\n;({parkCarCells:parkCarCells,parkOccupied:parkOccupied,parkCanMove:parkCanMove,parkMove:parkMove,parkWon:parkWon,parkLevelStars:parkLevelStars})')
+  ? eval(PARK_PRELUDE + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon', 'parkLevelStars', 'parkSlide'].map((n) => grab(n)).join('\n')
+    + '\n;({parkCarCells:parkCarCells,parkOccupied:parkOccupied,parkCanMove:parkCanMove,parkMove:parkMove,parkWon:parkWon,parkLevelStars:parkLevelStars,parkSlide:parkSlide})')
   : null;
 
 // BFS-minimal solutions: [carId, direction] per step. The length of
@@ -133,18 +133,24 @@ const SOLUTIONS = [
   [['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['c1', 'u'], ['red', 'r'], ['d1', 'u'], ['red', 'r'], ['red', 'r']],
   [['b1', 'u'], ['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['red', 'r'], ['d1', 'u'], ['d1', 'u'], ['red', 'r'], ['red', 'r']],
 ];
-const PARS = [3, 5, 6, 6, 5, 6, 6, 7, 6, 9, 8, 9];
-const DIMS = [[4, 4], [4, 4], [4, 4], [4, 4], [5, 5], [5, 5], [5, 5], [5, 5], [6, 6], [6, 6], [6, 6], [6, 6]];
-const EXITS = [[3, 2], [3, 2], [3, 2], [3, 2], [4, 2], [4, 2], [4, 2], [4, 2], [5, 2], [5, 2], [5, 3], [5, 3]];
+const PARS = [3, 5, 6, 6, 5, 6, 6, 7, 6, 9, 8, 9, 10, 11, 14, 15, 17, 18];
+const DIMS = [[4, 4], [4, 4], [4, 4], [4, 4], [5, 5], [5, 5], [5, 5], [5, 5], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6], [6, 6]];
+const EXITS = [[3, 2], [3, 2], [3, 2], [3, 2], [4, 2], [4, 2], [4, 2], [4, 2], [5, 2], [5, 2], [5, 3], [5, 3], [5, 3], [5, 2], [5, 2], [5, 2], [5, 2], [5, 2]];
+// BFS-minimal slide solutions for levels 13-18: [carId, direction, cells] per drag.
+const SLIDE_SOLUTIONS = [[['a1','u',1],['b1','u',2],['f1','d',1],['g1','d',1],['d1','l',2],['e1','l',2],['c1','u',1],['k1','u',1],['red','r',4]],[['d1','r',2],['a1','u',1],['g1','u',1],['i1','l',1],['b1','d',1],['j1','d',1],['k1','l',1],['e1','l',1],['c1','d',1],['red','r',4]],[['c1','d',1],['i1','l',1],['b1','d',1],['j1','d',1],['f1','d',1],['d1','r',1],['l1','r',1],['a1','u',2],['red','r',3],['a1','d',1],['d1','l',1],['f1','u',1],['red','r',1]],[['d1','r',1],['b1','u',2],['e1','l',1],['a1','u',1],['red','r',1],['k1','r',1],['g1','u',2],['h1','l',1],['i1','l',2],['l1','l',2],['m1','l',2],['c1','d',2],['f1','d',1],['red','r',3]],[['e1','l',1],['f1','d',1],['d1','r',1],['a1','u',2],['h1','r',1],['g1','u',1],['i1','l',1],['b1','d',2],['k1','l',1],['l1','l',1],['c1','d',1],['red','r',3],['a1','d',1],['d1','l',1],['f1','u',1],['red','r',1]],[['i1','l',1],['b1','d',1],['j1','d',1],['f1','d',1],['d1','r',1],['l1','r',1],['a1','u',2],['red','r',1],['g1','u',1],['k1','l',1],['e1','l',1],['c1','d',1],['red','r',2],['a1','d',1],['d1','l',1],['f1','u',1],['red','r',1]]];
 
 test('each parking level starts legal and is solvable by its verified move sequence', { skip: !HAS_PARK }, () => {
-  assert.equal(PARKLEVELS.length, 12, 'twelve levels, one per round');
+  assert.equal(PARKLEVELS.length, 18, 'eighteen levels, one per round');
   assert.ok(html.includes('var PARKW=4, PARKH=4'), 'the 4x4 globals stay for the old 1-arg calls');
   PARKLEVELS.forEach((lv, li) => {
     assert.deepEqual([lv.w, lv.h], DIMS[li], 'level ' + (li + 1) + ' is ' + DIMS[li][0] + 'x' + DIMS[li][1]);
     assert.deepEqual([lv.exit.x, lv.exit.y], EXITS[li], 'level ' + (li + 1) + ' exit is ' + EXITS[li]);
     assert.equal(lv.par, PARS[li], 'level ' + (li + 1) + ' par is ' + PARS[li]);
-    assert.equal(SOLUTIONS[li].length, lv.par, 'level ' + (li + 1) + ': the verified solution is exactly par long');
+    if (li < 12) {
+      assert.equal(SOLUTIONS[li].length, lv.par, 'level ' + (li + 1) + ': the verified solution is exactly par long');
+    } else {
+      assert.equal(SLIDE_SOLUTIONS[li - 12].length, lv.par - 1, 'level ' + (li + 1) + ': the verified slide solution is exactly par-1 long (par is minimal slides + 1)');
+    }
     let cars = lv.cars.map((c) => ({ id: c.id, e: c.e, o: c.o, x: c.x, y: c.y, len: c.len, bg: c.bg }));
     // No two cars overlap, every car is inside the lot, red starts at the exit row.
     const seen = {};
@@ -161,11 +167,12 @@ test('each parking level starts legal and is solvable by its verified move seque
     assert.deepEqual([red.o, red.x, red.y, red.len], ['h', 0, lv.exit.y, 2], 'level ' + (li + 1) + ': red car starts at (0,' + lv.exit.y + '), horizontal, len 2');
     assert.ok(!parkFns.parkWon(cars, lv), 'level ' + (li + 1) + ': not already won at the start');
     // Simulate the verified solution, one legal slide at a time.
-    SOLUTIONS[li].forEach((step) => {
-      const id = step[0], dir = step[1];
-      assert.ok(parkFns.parkCanMove(cars, id, dir, lv), 'level ' + (li + 1) + ': ' + id + ' can slide ' + dir);
-      cars = parkFns.parkMove(cars, id, dir, lv);
-      assert.ok(cars, 'level ' + (li + 1) + ': ' + id + ' ' + dir + ' produces a new layout');
+    // Levels 13-18 use slide steps [id, dir, cells]; one drag is one move.
+    const steps = li < 12 ? SOLUTIONS[li].map((s) => [s[0], s[1], 1]) : SLIDE_SOLUTIONS[li - 12];
+    steps.forEach((step) => {
+      const id = step[0], dir = step[1], n = step[2];
+      cars = parkFns.parkSlide(cars, id, dir, n, lv);
+      assert.ok(cars, 'level ' + (li + 1) + ': ' + id + ' ' + dir + ' x' + n + ' produces a new layout');
     });
     assert.ok(parkFns.parkWon(cars, lv), 'level ' + (li + 1) + ': red car reaches the exit after the solution');
     // Star rating: par is 3 stars, par+2 is 2, anything more is 1.
@@ -206,7 +213,7 @@ function harness() {
     + "{id:'memory',e:'🃏',name:'Memory Match',rounds:0},"
     + "{id:'sort',e:'🧺',name:'Speed Sort',rounds:6},"
     + "{id:'crossword',e:'🧩',name:'Crossword Quest',rounds:6},"
-    + "{id:'parking',e:'🚗',name:'Exit Parking',rounds:12}];\n"
+    + "{id:'parking',e:'🚗',name:'Exit Parking',rounds:18}];\n"
     + 'var PARKLEVELS=' + JSON.stringify(PARKLEVELS) + ';\n'
     + 'var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};\n'
     + 'var gState=null;\n'
@@ -235,7 +242,7 @@ test('parking progress saves mid-level car positions and restores them on resume
   fns.startGame('parking');
   let st = fns.getState();
   assert.equal(st.idx, 0, 'fresh game starts at level 1');
-  assert.equal(st.rounds, 12, 'twelve levels');
+  assert.equal(st.rounds, 18, 'eighteen levels');
   // Slide blue up, drive red right once, then save mid-level.
   st.cars = fns.parkMove(st.cars, 'b1', 'u');
   st.cars = fns.parkMove(st.cars, 'red', 'r');
@@ -243,7 +250,7 @@ test('parking progress saves mid-level car positions and restores them on resume
   fns.saveGameProgress();
   const saved = JSON.parse(JSON.stringify(fns.getDB().explorers[0].playProgress.parking));
   assert.equal(saved.idx, 0, 'saved level is 1');
-  assert.equal(saved.v, 2, 'the save carries the v:2 marker for the 12-level game');
+  assert.equal(saved.v, 2, 'the save carries the v:2 marker for the 18-level game');
   assert.deepEqual(saved.cars, st.cars, 'saved car positions match the live lot');
   // Leave and come back: positions must restore, not reset to level 1 fresh.
   fns.setState(null);
@@ -259,7 +266,7 @@ test('parking progress saves mid-level car positions and restores them on resume
 
 test('parking replay after completion starts fresh at level 1', { skip: !HAS_PARK }, () => {
   const fns = harness();
-  fns.getDB().explorers[0].playProgress.parking = { idx: 12, score: 12, seed: 1, v: 2, cars: PARKLEVELS[11].cars };
+  fns.getDB().explorers[0].playProgress.parking = { idx: 18, score: 18, seed: 1, v: 2, cars: PARKLEVELS[17].cars };
   fns.startGame('parking');
   const st = fns.getState();
   assert.equal(st.idx, 0, 'completed game replays from level 1');
@@ -322,6 +329,9 @@ test('the explorer merge keeps parking cars and crossword filled words', { skip:
   assert.ok(line.includes('built:'), 'merge keeps the sentence build (otherwise save() would wipe a half-built sentence)');
   assert.ok(line.includes('sent:'), 'merge keeps the sentence key (otherwise a build could restore onto the wrong sentence)');
   assert.ok(line.includes('v:'), 'merge keeps the parking version marker');
+  assert.ok(line.includes('starTotal:'), 'merge keeps the banked star total');
+  assert.ok(line.includes('starBanked:'), 'merge keeps the banked-level count');
+  assert.ok(line.includes('starDay:'), 'merge keeps the banking day');
 });
 
 test('both games render their own back button and styles', { skip: !HAS_XW || !HAS_PARK }, () => {

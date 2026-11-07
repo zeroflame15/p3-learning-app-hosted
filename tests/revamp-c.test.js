@@ -16,7 +16,7 @@ const html = fs.readFileSync(pagePath, 'utf8');
 
 const HAS_XWGRIDS = html.includes('var XWGRIDS=');
 const HAS_SENT = html.includes('var SENTENCES=');
-const HAS_PARK12 = html.includes('var PARKLEVELS=') && html.includes('rounds:12');
+const HAS_PARK = html.includes('var PARKLEVELS=');
 
 function grab(name, endMarker) {
   const start = html.indexOf('function ' + name);
@@ -186,7 +186,7 @@ test('crossword: startGame swaps in the day grid and keeps gridId', { skip: !HAS
 
 /* ---------------- Exit Parking ---------------- */
 
-test('parking: no opposite-direction fallback, blocked moves thunk + shake', { skip: !HAS_PARK12 }, () => {
+test('parking: no opposite-direction fallback, blocked moves thunk + shake', { skip: !HAS_PARK }, () => {
   const bind = bindGameSrc();
   const park = bind.slice(bind.indexOf("if(gState.id==='parking')"), bind.indexOf("if(gState.id==='memory')"));
   assert.ok(park.indexOf('var opp=') < 0, 'the opposite-direction fallback is gone');
@@ -197,7 +197,7 @@ test('parking: no opposite-direction fallback, blocked moves thunk + shake', { s
   assert.ok(park.indexOf("getAttribute('data-cy')") < 0, 'no stale data-cy direction read');
 });
 
-test('parking: cars slide (no full re-render on a move), undo/reset, level overlay', { skip: !HAS_PARK12 }, () => {
+test('parking: cars slide (no full re-render on a move), undo/reset, level overlay', { skip: !HAS_PARK }, () => {
   const game = gameHTMLSrc();
   const park = game.slice(game.indexOf("if(gState.id==='parking')"), game.indexOf("if(gState.id==='sentence')"));
   assert.ok(park.includes('parkUndo'), 'an Undo button renders');
@@ -205,7 +205,7 @@ test('parking: cars slide (no full re-render on a move), undo/reset, level overl
   assert.ok(park.includes('gParkNext'), 'the level overlay has a Next button');
   assert.ok(park.includes('parkMoves'), 'a moves chip renders');
   assert.ok(park.includes('Par '), 'a par chip renders');
-  assert.ok(park.includes('Pack '), 'a pack label renders');
+  assert.ok(park.includes('parkPackName'), 'a pack label renders (via the helper, so Pack 4 is not confused with Pack 3)');
   assert.ok(park.includes('style="left:'), 'cars are absolutely positioned with left/top');
   assert.ok(park.indexOf('data-cx') < 0, 'no data-cx/data-cy in the lot');
   const bind = bindGameSrc();
@@ -223,7 +223,7 @@ test('parking: cars slide (no full re-render on a move), undo/reset, level overl
   assert.ok(css.includes('@keyframes parkshake'), 'the shake keyframes exist');
 });
 
-test('parking: sounds exist and respect mute through slide()', { skip: !HAS_PARK12 }, () => {
+test('parking: sounds exist and respect mute through slide()', { skip: !HAS_PARK }, () => {
   assert.ok(html.includes('function sndThunk(){'), 'sndThunk exists');
   assert.ok(html.includes('function sndSlide(){'), 'sndSlide exists');
   assert.ok(html.includes('slide(160,70'), 'the thunk is a low slide');
