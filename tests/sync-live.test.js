@@ -155,3 +155,25 @@ test('postToServer checks the response: a non-OK answer is retried (bounded) and
   assert.ok(b.includes('if(postRetryCount<2){ postRetryCount++; syncToServer(); }'), 'a non-OK answer must queue a bounded retry, not an endless loop');
   assert.ok(!b.includes('}).catch(function(){}); }catch(e){}'), 'the old silent fire-and-forget must be gone');
 });
+
+test('save() merges the stored copy before writing, so a stale tab cannot wipe a new explorer', () => {
+  const b = bodyOf('save', 'function save(){');
+  assert.ok(b.includes('mergeStoredIntoDB()'), 'save must merge the stored copy first');
+  assert.ok(b.indexOf('mergeStoredIntoDB()') < b.indexOf('saveLocal()'), 'the merge must happen before the local write');
+  const m = bodyOf('mergeStoredIntoDB', 'function mergeStoredIntoDB(){');
+  assert.ok(m.includes('localStorage.getItem(LSKEY)'), 'the merge reads what is already stored');
+  assert.ok(m.includes('mergeExplorer('), 'shared explorers are union-merged, not overwritten');
+  assert.ok(m.includes('DB.explorers.push(JSON.parse(JSON.stringify(se)))'), 'stored-only explorers are added');
+  assert.ok(!m.includes('parentPin'), 'the stored merge must not touch the parent PIN (the server merge is the authority for that)');
+  assert.ok(!m.includes('dailyLimit'), 'the stored merge must not touch the daily limit either');
+});
+
+test('a storage event merges the other tab explorers into this tab', () => {
+  const i = html.indexOf("window.addEventListener('storage'");
+  assert.ok(i >= 0, 'a storage listener must exist');
+  const snippet = html.slice(i, html.indexOf('});', i) + 3);
+  assert.ok(snippet.includes('ev.key!==LSKEY'), 'the listener only reacts to this app storage key');
+  assert.ok(snippet.includes('mergeStoredIntoDB()'), 'the listener merges the other tab explorers in');
+  assert.ok(snippet.includes('saveLocal()'), 'the listener saves the merged copy');
+  assert.ok(snippet.includes('safeToRender()'), 'the listener re-renders only when safe');
+});
