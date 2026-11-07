@@ -42,10 +42,10 @@ function esc(s) {
 }
 
 const TOPICS9 = [
-  { id: 'eng-story', icon: '📖', name: 'Story Words' },
-  { id: 'math-mrt', icon: '🔢', name: 'MRT Numbers' },
-  { id: 'sci-frog', icon: '🔬', name: 'Frog Life' },
-  { id: 'chi-listen', icon: '🀄', name: 'Listen Up' },
+  { id: 'eng-story', sub: 'eng', icon: '📖', name: 'Story Words' },
+  { id: 'math-mrt', sub: 'math', icon: '🔢', name: 'MRT Numbers' },
+  { id: 'sci-frog', sub: 'sci', icon: '🔬', name: 'Frog Life' },
+  { id: 'chi-listen', sub: 'chi', icon: '🀄', name: 'Listen Up' },
 ];
 
 test('learnElapsedSecs / pause / resume mirror the Play answer-only clock', () => {
@@ -216,4 +216,26 @@ test('tickQuizTime writes the answer-only time and self-clears when the chip is 
   document = { getElementById: function () { return null; } };
   tickQuizTime();
   assert.deepEqual(cleared, [9], 'timer clears itself once the chip disappears');
+});
+
+test('each quest is its own mini-card with a subject-coloured header band', () => {
+  var DB = { // eslint-disable-line no-unused-vars
+    explorers: [
+      { id: 'e1', name: 'Jiyuna', face: '🦦', stars: 40, friends: [], deletedFriends: [], friendCode: 'ABC2DE',
+        learnBest: { 'eng-story': { secs: 65, day: '2026-11-07' }, 'math-mrt': { secs: 30, day: '2026-11-07' } } },
+    ],
+    activeId: 'e1',
+  };
+  var TOPICS = TOPICS9; // eslint-disable-line no-unused-vars
+  var friendsCache = []; // eslint-disable-line no-unused-vars
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
+  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
+  const learnBoardHTML = eval('(' + fnText('function learnBoardHTML(){') + ')');
+  const out = learnBoardHTML();
+  assert.equal((out.match(/class="lbcard"/g) || []).length, 2, 'one mini-card per timed quest (Story Words, MRT Numbers)');
+  assert.ok(out.includes('<h4 class="lbhead-eng">📖 Story Words</h4>'), 'English quests get the green header band');
+  assert.ok(out.includes('<h4 class="lbhead-math">🔢 MRT Numbers</h4>'), 'Maths quests get the pink header band');
+  assert.ok(out.indexOf('⭐') < 0, 'no star counts on quest board rows either');
 });
