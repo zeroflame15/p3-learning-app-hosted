@@ -205,13 +205,32 @@ test('timer wiring: startGame stamps startedAt, in-game flowhero has theme class
   }
 });
 
+test('Memory Match, Crossword and Exit Parking show the timer chip during play', () => {
+  const gameSrc = fnText('function gameHTML(){');
+  /* The generic hero has the chip; Memory Match and Exit Parking
+     had none (time only on completion) and Crossword had none
+     either. All four in-game heroes now carry the same chip. */
+  const chips = (gameSrc.match(/margin-left:auto;flex:0 0 auto">⏱ '\+\(gState\.startedAt\?fmtPlaySecs/g) || []).length;
+  assert.equal(chips, 4, 'timer chip in all four in-game heroes (generic, memory, crossword, parking), got ' + chips);
+});
+
 test('completion screens show the new-fastest badge, recorded on both paths', () => {
   const gameSrc = fnText('function gameHTML(){');
   const badge = (gameSrc.match(/🏅 New fastest time!/g) || []).length;
   assert.equal(badge, 2, 'badge on both completion screens (generic + memory), got ' + badge);
   const bindSrc = fnText('function bindGame(){');
-  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(e,gState.id);") >= 0, 'generic completion records the best');
-  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(e,'memory');") >= 0, 'memory win records the best');
+  /* Completions resolve the explorer FRESH at the award moment:
+     a captured bindGame explorer is detached by the 30s auto-pull
+     merge, so best times (and Exit Parking stars) written through
+     it were lost live — 8 of 9 best times never reached the cards. */
+  assert.ok(bindSrc.indexOf('recordPlayBest(e,') < 0, 'no completion records through a captured explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,gState.id);") >= 0, 'generic completion records the best on the live explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'memory');") >= 0, 'memory win records the best on the live explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'parking');") >= 0, 'parking completion records the best on the live explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'crossword');") >= 0, 'crossword completion records the best on the live explorer');
+  assert.ok(bindSrc.indexOf('live.stars+=') >= 0, 'stars are awarded to the live explorer, not a stale copy');
+  assert.equal((bindSrc.match(/live\.stars\+=Math\.min\(gState\.score,gState\.rounds\)/g) || []).length, 3,
+    'round-game awards are capped at the round count (generic, crossword, parking), so a 6-round game can never pay 7 stars');
 });
 
 test('every inline script block in the page still parses', () => {
