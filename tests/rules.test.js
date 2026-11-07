@@ -44,22 +44,55 @@ test('treasure unlock: only if stars >= cost, deducts exactly cost', () => {
   assert.equal(R.starsAfterUnlock(10, 15), 10); // cannot unlock: unchanged
 });
 
-test('daily fresh sets: 5 unique, stable same day, different next day', () => {
+test('daily fresh sets: 5 unique, stable same day, disjoint from yesterday (rotation)', () => {
   for (const topic of ['eng-tense', 'math-frac', 'sci-frog', 'chi-school']) {
+    let prevSet = null;
     for (let d = 1; d <= 21; d++) {
       const date = '2026-11-' + String(d).padStart(2, '0');
       const set = R.dailyFreshIndices(topic, date, 15);
       assert.equal(set.length, 5);
       assert.equal(new Set(set).size, 5, topic + ' ' + date);
       assert.deepEqual(set, R.dailyFreshIndices(topic, date, 15), 'same day must be stable');
-      if (d > 1) {
-        const prev = R.dailyFreshIndices(topic, '2026-11-' + String(d - 1).padStart(2, '0'), 15);
-        assert.notDeepEqual(set, prev, topic + ' ' + date + ' must differ from yesterday');
+      if (prevSet) {
+        assert.ok(set.every((v) => !prevSet.includes(v)), topic + ' ' + date + ' shares nothing with yesterday');
       }
+      prevSet = set;
     }
+    // With 15 in the pool the same group returns only after 3 days.
+    const d1 = R.dailyFreshIndices(topic, '2026-11-07', 15);
+    const d4 = R.dailyFreshIndices(topic, '2026-11-10', 15);
+    assert.deepEqual([...d1].sort(), [...d4].sort(), topic + ': the group returns after 3 days');
+  }
+  // A 10-question pool alternates between two groups of 5.
+  for (let d = 1; d <= 6; d++) {
+    const date = '2026-11-' + String(d).padStart(2, '0');
+    const set = R.dailyFreshIndices('math-frac', date, 10);
+    const next = R.dailyFreshIndices('math-frac', '2026-11-' + String(d + 1).padStart(2, '0'), 10);
+    assert.ok(set.every((v) => !next.includes(v)), 'pool-10 day ' + d + ' shares nothing with the next day');
   }
   assert.deepEqual(R.dailyFreshIndices('x', '2026-11-05', 3), [0, 1, 2].sort(() => 0) .length ? R.dailyFreshIndices('x', '2026-11-05', 3) : []);
   assert.equal(R.dailyFreshIndices('x', '2026-11-05', 0).length, 0);
+});
+
+test('daily warm sets rotate too, and retry draws change every time', () => {
+  for (let d = 1; d <= 7; d++) {
+    const date = '2026-11-' + String(d).padStart(2, '0');
+    const set = R.dailyWarmIndices('eng-story', date, 8);
+    assert.equal(set.length, 4, 'warm-up shows 4');
+    assert.equal(new Set(set).size, 4, 'warm-up picks 4 distinct questions');
+    assert.deepEqual(set, R.dailyWarmIndices('eng-story', date, 8), 'same day must be stable');
+    if (d > 1) {
+      const prev = R.dailyWarmIndices('eng-story', '2026-11-' + String(d - 1).padStart(2, '0'), 8);
+      assert.ok(set.every((v) => !prev.includes(v)), 'warm-up shares nothing with yesterday');
+    }
+  }
+  // Retry: a fresh draw from the bank every time.
+  const draws = new Set();
+  for (let s = 1; s <= 20; s++) draws.add(R.retryIndices(6, s).join(','));
+  assert.ok(draws.size >= 15, 'retry draws vary: ' + draws.size + ' distinct sets in 20 draws');
+  assert.deepEqual(R.retryIndices(6, 42), R.retryIndices(6, 42), 'same seed, same draw');
+  assert.equal(R.retryIndices(6, 7).length, 3, 'retry draws 3');
+  assert.equal(R.retryIndices(0, 1).length, 0);
 });
 
 test('warm-up banks never repeat quest wording (real content)', () => {
@@ -73,7 +106,7 @@ test('warm-up banks never repeat quest wording (real content)', () => {
     const qs = [...m[2].matchAll(/Q\('([^']+)/g)].map((x) => ({ q: x[1] }));
     const ws = [...m[3].matchAll(/Q\('([^']+)/g)].map((x) => ({ q: x[1] }));
     assert.ok(qs.length >= 5, m[1] + ' quest bank');
-    assert.ok(ws.length >= 4, m[1] + ' warm bank');
+    assert.ok(ws.length >= 8, m[1] + ' warm bank (8, so the warm-up rotates without repeating yesterday)');
     const overlaps = R.warmupOverlapsQuest(ws, qs);
     assert.deepEqual(overlaps, [], m[1] + ' warm-up must not repeat quest wording: ' + JSON.stringify(overlaps));
     checked++;
