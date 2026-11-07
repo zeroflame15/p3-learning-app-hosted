@@ -77,6 +77,7 @@ test('fmtPlaySecs formats minutes and seconds', () => {
 test('recordPlayBest keeps the fastest time (best-ever, across days)', () => {
   var gState = { startedAt: Date.now() - 65000 };
   var todayKey = function () { return TODAY; }; // eslint-disable-line no-unused-vars
+  const playElapsedSecs = eval('(' + fnText('function playElapsedSecs(){') + ')'); // eslint-disable-line no-unused-vars
   const recordPlayBest = eval('(' + fnText('function recordPlayBest(e, gameId){') + ')');
   const e = {};
   assert.equal(recordPlayBest(e, 'word'), true, 'first run sets a best');
@@ -92,12 +93,16 @@ test('recordPlayBest keeps the fastest time (best-ever, across days)', () => {
   assert.ok(e.playBest.word.secs >= 18 && e.playBest.word.secs <= 22, 'faster run ~20s, got ' + e.playBest.word.secs);
   assert.equal(recordPlayBest(e, 'number'), true, 'a different game gets its own best');
   assert.ok(e.playBest.number.secs >= 18 && e.playBest.number.secs <= 22);
+  // A paused run (answered, clock frozen, seconds banked) still counts.
+  gState = { answerSecs: 12, startedAt: null };
+  assert.equal(recordPlayBest(e, 'race'), true, 'a paused run records its banked seconds');
+  assert.ok(e.playBest.race.secs >= 11 && e.playBest.race.secs <= 13, 'paused run ~12s, got ' + e.playBest.race.secs);
   gState = {};
   assert.equal(recordPlayBest(e, 'sort'), false, 'no start time, no best recorded');
   assert.equal(e.playBest.sort, undefined);
 });
 
-test('leaderboard ranks explorers by stars desc, with games today and best time', () => {
+test('leaderboard has one board per game, ranked by fastest time', () => {
   var todayKey = function () { return TODAY; }; // eslint-disable-line no-unused-vars
   var GAMES = GAMES9; // eslint-disable-line no-unused-vars
   var DB = { // eslint-disable-line no-unused-vars
@@ -106,25 +111,37 @@ test('leaderboard ranks explorers by stars desc, with games today and best time'
         playBest: { word: { secs: 65, day: TODAY }, number: { secs: 30, day: TODAY } } },
       { name: 'Sibling', face: '🐸', stars: 55, playDoneDay: {},
         playBest: { memory: { secs: 120, day: TODAY } } },
-      { name: 'Cousin', face: '🦁', stars: 10, playDoneDay: { sort: TODAY }, playBest: {} },
+      { name: 'Cousin', face: '🦁', stars: 10, playDoneDay: { sort: TODAY },
+        playBest: { sort: { secs: 45, day: TODAY }, word: { secs: 50, day: TODAY } } },
     ],
   };
   const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
   const familyBoardHTML = eval('(' + fnText('function familyBoardHTML(){') + ')');
   const out = familyBoardHTML();
   assert.ok(out.indexOf('Family leaderboard') >= 0, 'leaderboard heading present');
-  const iSib = out.indexOf('Sibling'), iJiy = out.indexOf('Jiyuna'), iCou = out.indexOf('Cousin');
-  assert.ok(iSib >= 0 && iJiy >= 0 && iCou >= 0, 'all three explorers listed');
-  assert.ok(iSib < iJiy && iJiy < iCou, 'ranked by stars desc: Sibling (55), Jiyuna (40), Cousin (10)');
-  assert.ok(out.indexOf('🥇') >= 0 && out.indexOf('🥈') >= 0 && out.indexOf('🥉') >= 0, 'medals for the top three');
-  assert.ok(out.indexOf('⭐ 55 stars') >= 0, 'stars shown');
-  assert.ok(out.indexOf('2 games today') >= 0, 'Jiyuna finished 2 games today');
-  assert.ok(out.indexOf('0 games today') >= 0, 'Sibling finished 0 games today');
-  assert.ok(out.indexOf('⏱ 30s (Number Pop)') >= 0, 'fastest time across games, with the game name');
-  assert.ok(out.indexOf('⏱ 2m 00s (Memory Match)') >= 0, 'Sibling best time shown');
-  assert.ok(out.indexOf('⏱ No time yet') >= 0, 'explorer with no best time yet');
+  assert.ok(out.indexOf('Fastest time wins') >= 0, 'ranked by time, not stars');
+  assert.ok(out.indexOf('Most stars wins') < 0, 'old stars ranking is gone');
+  for (const name of ['Word Garden', 'Number Pop', 'Memory Match', 'Speed Sort']) {
+    assert.ok(out.indexOf(name) >= 0, 'a board for ' + name);
+  }
+  assert.ok(out.indexOf('Scramble') < 0, 'no board for a game nobody has timed');
+  // Word Garden: Cousin (50s) beats Jiyuna (65s) despite fewer stars.
+  const iWord = out.indexOf('Word Garden'), iNum = out.indexOf('Number Pop');
+  const wordBoard = out.slice(iWord, iNum);
+  assert.ok(wordBoard.indexOf('Cousin') >= 0 && wordBoard.indexOf('Jiyuna') >= 0, 'both word players listed');
+  assert.ok(wordBoard.indexOf('Cousin') < wordBoard.indexOf('Jiyuna'), 'Word Garden ranked fastest first: Cousin 50s, Jiyuna 65s');
+  assert.ok(wordBoard.indexOf('Sibling') < 0, 'Sibling has no Word Garden time, so not on that board');
+  assert.ok(wordBoard.indexOf('⏱ 50s') >= 0, 'fastest word time shown');
+  assert.ok(wordBoard.indexOf('🥇') >= 0, 'medal for the fastest');
+  // Sibling's 55 stars do not put him first anywhere — time does.
+  const iMem = out.indexOf('Memory Match');
+  assert.ok(out.slice(iMem).indexOf('Sibling') >= 0, 'Sibling tops the Memory board on time (2m 00s)');
+  assert.ok(out.indexOf('⏱ 2m 00s') >= 0, 'Sibling memory time shown');
+  assert.ok(out.indexOf('⭐ 55 stars') >= 0, 'stars still shown as a small extra');
   DB = { explorers: [] };
   assert.equal(familyBoardHTML(), '', 'no explorers, no leaderboard section');
+  DB = { explorers: [{ name: 'Nobody', face: '🦦', stars: 0, playBest: {} }] };
+  assert.equal(familyBoardHTML(), '', 'explorers with no timed games, no leaderboard section');
 });
 
 test('playHTML renders arcade cards with theme line, gradient band, best time and leaderboard', () => {
@@ -135,7 +152,7 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
       { name: 'Jiyuna', face: '🦦', stars: 12,
         playProgress: { word: { idx: 6, score: 5 } }, playDoneDay: { word: TODAY },
         playBest: { word: { secs: 65, day: TODAY } } },
-      { name: 'Sibling', face: '🐸', stars: 30, playProgress: {}, playDoneDay: {}, playBest: {} },
+      { name: 'Sibling', face: '🐸', stars: 30, playProgress: {}, playDoneDay: {}, playBest: { memory: { secs: 90, day: TODAY } } },
     ],
   };
   var pageHero = function () { return '<div class="hero">HERO</div>'; }; // eslint-disable-line no-unused-vars
@@ -155,6 +172,7 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   assert.ok(out.indexOf('⏱ No time yet — be the first!') >= 0, 'empty best time invites the first run');
   assert.ok(out.indexOf('✔ Completed — replay any time!') >= 0, 'completed-today state still renders');
   assert.ok(out.indexOf('Family leaderboard') >= 0, 'leaderboard section at the bottom');
+  assert.ok(out.indexOf('Memory Match') >= 0, 'a board for the game Sibling timed');
   assert.ok(out.indexOf('Sibling') >= 0, 'leaderboard lists the other explorer');
 });
 
@@ -196,8 +214,8 @@ test('timer wiring: startGame stamps startedAt, in-game flowhero has theme class
   assert.ok(seedAt >= 0 && stampAt > seedAt, 'startedAt recorded right after the seed line');
   const gameSrc = fnText('function gameHTML(){');
   assert.ok(gameSrc.indexOf("gametheme-'+g.id") >= 0, 'in-game flowhero carries the per-game theme class');
-  assert.ok(gameSrc.indexOf("fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000)))") >= 0,
-    'timer chip shows elapsed mm:ss from startedAt, render-driven, no interval');
+  assert.ok(gameSrc.indexOf('fmtPlaySecs(playElapsedSecs())') >= 0,
+    'timer chip shows the answer-only elapsed time, render-driven, no interval');
   assert.ok(gameSrc.indexOf('setInterval') < 0, 'no setInterval added by the timer');
   const css = html.slice(0, html.indexOf('</style>'));
   for (const id of GAME_IDS) {
@@ -210,7 +228,7 @@ test('Memory Match, Crossword and Exit Parking show the timer chip during play',
   /* The generic hero has the chip; Memory Match and Exit Parking
      had none (time only on completion) and Crossword had none
      either. All four in-game heroes now carry the same chip. */
-  const chips = (gameSrc.match(/margin-left:auto;flex:0 0 auto">⏱ '\+\(gState\.startedAt\?fmtPlaySecs/g) || []).length;
+  const chips = (gameSrc.match(/margin-left:auto;flex:0 0 auto">⏱ '\+\(fmtPlaySecs\(playElapsedSecs\(\)\)\)/g) || []).length;
   assert.equal(chips, 4, 'timer chip in all four in-game heroes (generic, memory, crossword, parking), got ' + chips);
 });
 
