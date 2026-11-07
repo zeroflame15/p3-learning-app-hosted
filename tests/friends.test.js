@@ -374,6 +374,7 @@ function clientPrelude() {
     + 'function esc(s){ return String(s==null?\'\':s).replace(/[&<>"\']/g,function(c){return{\'&\':\'&amp;\',\'<\':\'&lt;\',\'>\':\'&gt;\',\'"\':\'&quot;\' ,"\'":\'&#39;\' }[c];}); }\n'
     + 'var GAMES=[{id:\'word\',name:\'Word Garden\'},{id:\'number\',name:\'Number Pop\'},{id:\'memory\',name:\'Memory Match\'},{id:\'sort\',name:\'Speed Sort\'}];\n'
     + 'var friendsCache=null; var friendsUnconfigured=false;\n'
+    + 'var frErrMsg=\'\';\n'
     + 'var toastCalls=[]; function toast(m){ toastCalls.push(m); }\n';
 }
 
@@ -442,14 +443,55 @@ test('client: board shows only parent-approved friends, with stars and fastest t
   assert.ok(html.includes('Kai'), 'approved friend shown');
   assert.ok(html.includes('⭐ 30'), 'stars shown');
   assert.ok(html.includes('Number Pop 25s'), 'fastest time across games shown');
-  assert.ok(!html.includes('Mei'), 'server-accepted but not parent-approved friend is hidden');
+  /* The server only returns ACCEPTED friendships, so a friend in
+     friendsCache is parent-approved even when this device's local
+     list has not recorded them yet (the requester's side, whose
+     parent never accepted — the OTHER parent did). They show.
+     Only a removed friend stays hidden. */
+  assert.ok(html.includes('Mei'), 'server-accepted friend shows even without a local list entry');
   assert.ok(html.includes('Friends see only your stars and fastest times'), 'privacy note present');
+  const removed = eval(clientPrelude()
+    + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{}}];\n'
+    + 'DB.explorers[0].deletedFriends=[\'XYZ789\'];\n'
+    + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  assert.ok(!removed.includes('Kai'), 'a removed friend is hidden');
+  const localOnly = eval(clientPrelude()
+    + 'friendsCache=[];\n'
+    + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  assert.ok(localOnly.includes('Friend XYZ789'), 'a locally approved friend shows even before their snapshot arrives');
   // A name with markup is escaped, never injected.
   const evil = eval(clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'<script>alert(1)</script>\',stars:1,bestTimes:{}}];\n'
     + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(!evil.includes('<script>alert'), 'friend name is escaped');
   assert.ok(evil.includes('&lt;script&gt;'), 'escaped form shown');
+});
+
+/* --- Accept/display fix (seen live 2026-11-07) ----------------------
+   A accepted B's request (toast ok), but after a reload BOTH arcades
+   and the Grown-ups list still said "No friends yet" — even though
+   the server had recorded the friendship ("already friends" on
+   re-send). Two defects: the boards gated on the local friends list
+   (the requester's side never gets an entry), and the accept pushed
+   to the captured sel, which the 30s auto-pull merge had detached.
+   The boards now union the local list with the server's accepted
+   list (the server only ever returns accepted friendships), the
+   accept/remove resolve the live explorer, and an unknown code
+   leaves a persistent error on the page, not just a 2.6s toast. */
+test('client: accept resolves the live explorer; boards show server-accepted friends; unknown code errors persist', skipIfNotIntegrated, () => {
+  const bindSrc = grab('bindFriendPanelButtons');
+  assert.ok(bindSrc.includes('DB.explorers.find(function(x){return x.id===sel.id;})'), 'accept/remove resolve the live explorer, not the captured sel');
+  assert.ok(bindSrc.includes('live.friends'), 'accept writes to the live explorer');
+  const boardSrc = grab('friendsBoardHTML');
+  assert.ok(boardSrc.includes('friendsCache'), 'arcade board reads the server list, not just the local list');
+  assert.ok(boardSrc.indexOf('deletedFriends') >= 0, 'arcade board hides removed friends');
+  const parentSrc = grab('renderParentFriends');
+  assert.ok(parentSrc.indexOf('deletedFriends') >= 0, 'parent Friends list hides removed friends');
+  assert.ok(parentSrc.indexOf('mine.indexOf(f.code)>=0') < 0, 'parent list no longer gates on the local friends list');
+  const sendSrc = grab('sendFriendRequest');
+  assert.ok(sendSrc.includes("getElementById('frErr')"), 'unknown-code error is written to a persistent page element');
+  assert.ok(sendSrc.includes('No explorer has that code'), 'unknown-code message is clear');
+  assert.ok(clientSrc.includes('id="frErr"'), 'the error element exists on the friends board');
 });
 
 test('client: loadFriends caches snapshots and flags an unreachable server', skipIfNotIntegrated, async () => {
