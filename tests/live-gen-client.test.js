@@ -229,12 +229,24 @@ test('live-gen client: fetch failure and timeout fall back to null (bank)', asyn
   } finally { global.fetch = origFetch; global.setTimeout = origSetTimeout; }
 });
 
+test('live-gen client: a 502 validation rejection records an honest reason, not a timeout', async () => {
+  const c = clientEngine();
+  const origFetch = global.fetch;
+  global.fetch = async () => ({ ok: false, status: 502, json: async () => ({ error: 'generated_set_invalid', reasons: ['q4:answer-ignores-numbers'] }) });
+  try {
+    assert.equal(await c.fetchLiveGenQuestions('math-ntuc', 3), null);
+    assert.equal(c.fetchState.status, 'failed');
+    assert.equal(c.fetchState.reason, 'validation-failed');
+  } finally { global.fetch = origFetch; }
+});
+
 test('live-gen client: page wiring — tag, experiment topic, parent card', () => {
   assert.ok(html.includes("LIVE_GEN_TOPIC='math-ntuc'"), 'experiment topic constant in page');
   assert.ok(html.includes('✨ Fresh from Pip'), 'live tag shown on the experiment quest');
   assert.ok(html.includes('liveGenExperimentHTML(sel)'), 'parent page shows the experiment card');
   assert.ok(html.includes("t.id===LIVE_GEN_TOPIC?'"), 'Learn card carries the experiment note for the topic only');
   assert.ok(html.includes('/api/generate-questions'), 'client calls the new endpoint');
+  assert.ok(html.includes('validation-failed'), 'client names a validation failure honestly, not as a timeout');
   assert.ok(!html.includes('MODEL_API_KEY'), 'no model key anywhere in client code');
   const c = clientEngine();
   const card = c.liveGenExperimentHTML({ name: 'Test' });

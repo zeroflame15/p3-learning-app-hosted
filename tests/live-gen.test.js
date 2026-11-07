@@ -249,3 +249,47 @@ test('live-gen api: the prompt sent to the model names the topic and level', asy
     assert.equal(sent.model, process.env.MODEL_ID || 'muse-spark-1.3');
   } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
 });
+
+test('live-gen api: a validation failure retries with the reasons fed back, then succeeds', async () => {
+  process.env.MODEL_API_KEY = 'test-key';
+  const handler = loadHandler();
+  const origFetch = global.fetch;
+  let calls = 0;
+  const prompts = [];
+  global.fetch = async (_url, init) => {
+    calls++;
+    prompts.push(JSON.parse(init.body).messages[0].content);
+    const set = calls === 1 ? FLAWED : GOOD;
+    return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ questions: set }) } }] }) };
+  };
+  try {
+    const res = mockRes();
+    await handler(mockReq('POST', { topicId: 'math-ntuc', level: 3, day: '2026-11-07', bankStems: BANK_STEMS }), res);
+    assert.equal(calls, 2, 'one retry after the rejected set');
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.live, true);
+    assert.equal(res.body.attempts, 2);
+    assert.match(prompts[1], /rejected for:/, 'second prompt carries the rejection reasons');
+    assert.match(prompts[1], /answer-does-not-recompute/, 'the actual reason is named');
+  } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
+});
+
+test('live-gen api: three rejected sets -> 502 with the last reasons and attempts: 3', async () => {
+  process.env.MODEL_API_KEY = 'test-key';
+  const handler = loadHandler();
+  const origFetch = global.fetch;
+  let calls = 0;
+  global.fetch = async () => {
+    calls++;
+    return { ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ questions: FLAWED }) } }] }) };
+  };
+  try {
+    const res = mockRes();
+    await handler(mockReq('POST', { topicId: 'math-ntuc', level: 3, day: '2026-11-07', bankStems: BANK_STEMS }), res);
+    assert.equal(calls, 3, 'max three generation attempts');
+    assert.equal(res.statusCode, 502);
+    assert.equal(res.body.error, 'generated_set_invalid');
+    assert.equal(res.body.attempts, 3);
+    assert.ok(res.body.reasons.includes('q1:answer-does-not-recompute'));
+  } finally { global.fetch = origFetch; delete process.env.MODEL_API_KEY; }
+});
