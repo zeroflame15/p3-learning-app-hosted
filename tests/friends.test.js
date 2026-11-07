@@ -483,12 +483,12 @@ test('client: board renders gracefully when the server is unconfigured', skipIfN
   assert.ok(html.includes('id="frCode"') && html.includes('id="frSend"'), 'add-a-friend row still offered');
 });
 
-test('client: board shows only parent-approved friends, with stars and per-game fastest times', skipIfNotIntegrated, () => {
+test('client: board shows only parent-approved friends, with per-game fastest times', skipIfNotIntegrated, () => {
   const prelude = clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{word:{secs:50},number:{secs:25}}},{code:\'MNP456\',name:\'Mei\',stars:5,bestTimes:{sort:{secs:44}}}];\n';
   const html = eval(prelude + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(html.includes('Kai'), 'approved friend shown');
-  assert.ok(html.includes('⭐ 30'), 'stars shown');
+  assert.ok(!html.includes('⭐ 30'), 'no star counts on board rows — the board ranks by time');
   assert.ok(html.includes('Fastest time wins'), 'ranked by time, one board per game');
   // Kai's times land on their own game boards, fastest first.
   assert.ok(html.includes('Number Pop'), 'a board for Number Pop');
