@@ -177,6 +177,26 @@ test('friends: publish upserts the snapshot and sanitises it', async () => {
   } finally { global.fetch = origFetch; }
 });
 
+test('friends: publish keeps all 9 game times plus all 14 Learn quest times', async () => {
+  const mock = makeSupabaseMock();
+  const handler = loadHandler();
+  const origFetch = global.fetch;
+  global.fetch = mock.fetchMock;
+  try {
+    // A child who has timed every game and every quest publishes 23
+    // keys — the old 20-key cap silently dropped the last three.
+    const bestTimes = {};
+    for (const g of ['word', 'number', 'memory', 'sort', 'scramble', 'race', 'sentence', 'crossword', 'parking']) bestTimes[g] = { secs: 40 };
+    for (const t of ['eng-story', 'eng-tense', 'eng-story2', 'eng-punct', 'math-mrt', 'math-hawker', 'math-ntuc', 'math-frac', 'sci-frog', 'sci-magnet', 'sci-plants', 'chi-listen', 'chi-family', 'chi-school']) bestTimes['learn-' + t] = { secs: 60 };
+    const res = mockRes();
+    await handler(mockReq('POST', { code: 'ABC2DE', name: 'Jiyuna', stars: 10, bestTimes }, { action: 'publish' }), res);
+    assert.equal(res.statusCode, 200);
+    const snap = mock.db.friend_snapshots.get('ABC2DE');
+    assert.equal(Object.keys(snap.best_times).length, 23, 'all 23 best times stored, got ' + Object.keys(snap.best_times).length);
+    assert.equal(snap.best_times['learn-chi-school'].secs, 60, 'the last Learn quest time survives');
+  } finally { global.fetch = origFetch; }
+});
+
 test('friends: self-request rejected, unknown code rejected, duplicate pending rejected', async () => {
   const mock = makeSupabaseMock();
   const handler = loadHandler();
@@ -424,6 +444,31 @@ test('client: friendBestTimes reads playBest defensively', skipIfNotIntegrated, 
     { word: { secs: 42 } },
     'only sane positive seconds survive',
   );
+  // Learn quest times travel as learn-<topicId> keys in the same map.
+  assert.deepEqual(
+    fn({ playBest: { word: { secs: 42 } }, learnBest: { 'eng-story': { secs: 65 }, 'math-mrt': { secs: 0 }, bad: {} } }),
+    { word: { secs: 42 }, 'learn-eng-story': { secs: 65 } },
+    'quest times publish under learn- keys, junk dropped',
+  );
+});
+
+test('client: friends list page shows every friend, my code and the add row', skipIfNotIntegrated, () => {
+  const prelude = clientPrelude()
+    + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{word:{secs:50},number:{secs:25}}},{code:\'MNP456\',name:\'Mei\',stars:5,bestTimes:{sort:{secs:44}}}];\n'
+    + 'function pageHero(icon, title, blurb, stat){ return title + " " + (stat || ""); }\n';
+  const html = eval(prelude + grab('friendFastest') + '\n' + grab('friendsListHTML') + '\n;friendsListHTML()');
+  assert.ok(html.includes('My Friends'), 'friends list heading');
+  assert.ok(html.includes('Your friend code: ABC2DE'), 'my own code shown so I can share it');
+  assert.ok(html.includes('Kai'), 'approved friend shown');
+  assert.ok(html.includes('Mei'), 'server-accepted friend shown');
+  assert.ok(html.includes('⭐ 30'), 'stars shown');
+  assert.ok(html.includes('Fastest: Number Pop 25s'), 'fastest Play time shown per friend');
+  assert.ok(html.includes('id="frCode"') && html.includes('id="frSend"'), 'add-a-friend row on the list page');
+  assert.ok(html.includes('id="frErr"'), 'persistent error element on the list page');
+  const empty = eval(clientPrelude() + 'friendsCache=[];\n' + 'DB.explorers[0].friends=[];\n' + 'function pageHero(icon, title, blurb, stat){ return title + " " + (stat || ""); }\n'
+    + grab('friendFastest') + '\n' + grab('friendsListHTML') + '\n;friendsListHTML()');
+  assert.ok(empty.includes('0 friends'), 'empty list says 0 friends');
+  assert.ok(empty.includes('No friends yet'), 'empty list invites the first request');
 });
 
 test('client: board renders gracefully when the server is unconfigured', skipIfNotIntegrated, () => {
