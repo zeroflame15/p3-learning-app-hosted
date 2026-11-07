@@ -290,6 +290,12 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .app.route-play .card{background:#232154;border-color:#3a3677;color:#f5f1e6}
 .app.route-play .flowhero{background:#232154;border-color:#3a3677;color:#f5f1e6}
 .app.route-play .muted{color:#b9b4d9}
+/* Every pill on the Play route gets the same dark-on-white treatment
+   as the timer chip: the plain .chip inherits the route's cream text
+   on its pale-mint pill, which is nearly invisible (seen live
+   2026-11-07 on the parking/crossword header pills and the
+   leaderboard best-time pill). */
+.app.route-play .chip{background:#fff;color:#1e3a24;border-color:#1e3a24}
 .app.route-treasure .main{background:linear-gradient(180deg,#2a1b4d,#1b1030);color:#f5f1e6}
 .app.route-treasure .topbar{background:#2a1b4d;border-bottom-color:#6b4fa1}
 .app.route-treasure .card{background:#3a2a63;border-color:#6b4fa1;color:#f5f1e6}
@@ -1607,7 +1613,7 @@ function render(){
   root.innerHTML='<div class="app route-'+routeCls+'">'
    +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
-   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
+   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<span class="chip">⭐ '+ex().stars+'</span>'
    +'<button class="iconbtn '+(vibeId?'on':'')+'" id="tbMusic" title="Background music" aria-label="Toggle background music">🎵</button>'
@@ -2539,7 +2545,7 @@ function startGame(id){
   var seed;
   if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ }
   else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
-  if(id==='memory'){ gState={id:id, deck:shuffle(['🐸','🐸','🦦','🦦','🍓','🍓','⭐','⭐','🚀','🚀','🦋','🦋']), open:[], matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
+  if(id==='memory'){ gState={id:id, deck:shuffle(['🐸','🐸','🦦','🦦','🍓','🍓','⭐','⭐','🚀','🚀','🦋','🦋']), open:(p&&p.open?p.open.slice():[]), matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
   else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, cars:(!p||doneP||!p.cars)?PARKLEVELS[lv].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }):p.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; }
   else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } else if(p){ gState.answered=!!p.answered; gState.picked=(p.picked!=null?p.picked:null); } }
   gState.seed=seed;
@@ -2558,6 +2564,15 @@ function startGame(id){
   if(typeof gameTimer!=='undefined'&&typeof tickGameTime==='function'){
     if(gameTimer){clearInterval(gameTimer);gameTimer=null;}
     gameTimer=setInterval(tickGameTime,1000);
+  }
+  /* A resumed Memory Match keeps its face-up cards: if two are up
+     and they do not match, re-arm the 750ms flip-back (seen live
+     2026-11-07 — resumed cards came back face-down instead). A
+     matching pair cannot survive a save (it is collected at once),
+     but collect it here too rather than leaving the board stuck. */
+  if(id==='memory'&&gState.open.length===2){
+    if(gState.deck[gState.open[0]]===gState.deck[gState.open[1]]){ gState.matched=gState.matched.concat(gState.open); gState.open=[]; saveGameProgress(); }
+    else { gState.lock=true; setTimeout(function(){ gState.open=[]; gState.lock=false; saveGameProgress(); render(); },750); }
   }
 }
 /* The answer buttons for one round. Number Pop renders its options
@@ -2704,7 +2719,7 @@ function bindGame(){
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=gState.startedAt?Math.max(0,Math.round((Date.now()-gState.startedAt)/1000)):0; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
+function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=gState.startedAt?Math.max(0,Math.round((Date.now()-gState.startedAt)/1000)):0; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
   var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
