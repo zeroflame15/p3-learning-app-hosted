@@ -128,6 +128,7 @@ const mergeExplorer = eval(
   fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
   fnText('function pickCritterName(a,b){') + '\n' +
   fnText('function mergeCare(a,b){') + '\n' +
+  fnText('function mergeLetters(a,b){') + '\n' +
   '(' + fnText('function mergeExplorer(a,b){') + ')'
 );
 
@@ -190,7 +191,7 @@ test('startQuestFlow discards stale original-run progress for a completed-today 
 test('finishRound awards stars only on the first completion of the day', () => {
   const finish = fnBody('function finishRound(t){');
   assert.ok(finish.includes('var firstToday=e.completedDay[cur.topicId]!==todayKey();'), 'first-today is computed before stamping');
-  assert.ok(finish.includes('if(firstToday)e.stars+=cur.score;'), 'stars are gated on first completion today');
+  assert.ok(finish.includes('if(firstToday)earnStars(e,cur.score);'), 'stars are gated on first completion today');
 });
 
 test('replay results say honestly that no extra stars were earned', () => {
