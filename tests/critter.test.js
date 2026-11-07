@@ -123,7 +123,7 @@ test('care UI: three buttons, 1 star each, growth once a day on all three', () =
   assert.ok(page.includes('each care earns ⭐ 1 star'), 'the star reward is shown');
   assert.ok(page.includes('again in'), 'cooldown countdown is shown');
   const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 3000);
-  assert.ok(bind.includes('eNow.stars+=1'), 'each care earns exactly 1 star');
+  assert.ok(bind.includes('earnStars(eNow,1)'), 'each care earns exactly 1 star');
   assert.ok(bind.includes("careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3"), 'all three today grows the frog one stage, once a day, never past Adult');
   assert.ok(bind.includes('eNow.critterStage++'), 'growth advances the stage');
   assert.ok(html.includes('care:{}, careGrewDay:null'), 'new explorers start with empty care');
