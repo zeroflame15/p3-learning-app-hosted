@@ -106,6 +106,7 @@ test('feedback banners use dark ink on their pale backgrounds', function () {
 test('tickGameTime writes the elapsed time and self-clears when the chip is gone', function () {
   const fmtBody = fnBody('function fmtPlaySecs(');
   const tickBody = fnBody('function tickGameTime(){');
+  const elapsedBody = fnBody('function playElapsedSecs(){');
   var el = { textContent: '' };
   var document = { getElementById: function () { return el; } };
   var gState = { startedAt: Date.now() - 65000 };
@@ -115,10 +116,20 @@ test('tickGameTime writes the elapsed time and self-clears when the chip is gone
   // Strict-mode eval keeps declarations in its own scope, so capture
   // the functions from the eval's return value instead.
   var fmtPlaySecs = eval(fmtBody + '; fmtPlaySecs;');
+  var playElapsedSecs = eval(elapsedBody + '; playElapsedSecs;'); // eslint-disable-line no-unused-vars
   var tickGameTime = eval(tickBody + '; tickGameTime;');
   tickGameTime();
   assert.equal(el.textContent, '⏱ 1m 05s');
   assert.equal(cleared.length, 0, 'timer must keep running while the chip is on screen');
+  // Answered: the clock is paused (startedAt null, seconds banked) —
+  // the chip shows the frozen total and the interval must NOT clear,
+  // so Next can resume it.
+  gState = { answerSecs: 65, startedAt: null };
+  el = { textContent: '' };
+  document = { getElementById: function () { return el; } };
+  tickGameTime();
+  assert.equal(el.textContent, '⏱ 1m 05s');
+  assert.equal(cleared.length, 0, 'timer must not clear while paused — the chip is still on screen');
   // Chip gone (game finished / Back pressed): the interval clears itself.
   el = null;
   document = { getElementById: function () { return null; } };
