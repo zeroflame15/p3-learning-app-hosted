@@ -56,12 +56,14 @@ function cleanStars(v) {
   return Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-// Best times are { gameId: { secs } } only — fastest times, nothing
-// else. Keys are short game ids; values keep the seconds only.
+// Best times are { gameId: { secs } } for Play games, plus
+// { learn-<topicId>: { secs } } for Learn quests — fastest times,
+// nothing else. Keys are short ids; values keep the seconds only.
+// The cap is 40 keys: 9 games + 14 quests, with headroom.
 function cleanBestTimes(v) {
   const out = {};
   if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
-  for (const k of Object.keys(v).slice(0, 20)) {
+  for (const k of Object.keys(v).slice(0, 40)) {
     if (!/^[a-z0-9_-]{1,20}$/.test(k)) continue;
     const b = v[k];
     const secs = b && Number.isFinite(Number(b.secs)) ? Math.round(Number(b.secs)) : NaN;
