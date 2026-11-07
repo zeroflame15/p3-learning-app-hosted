@@ -60,7 +60,7 @@ const SYNC_FNS = [
   'function mergeFamilyDB(local, server){', 'function syncFromServer(opts){',
   'function mergeStoredIntoDB(){', 'function save(){', 'function load(){',
   'function migrateStages(){', 'function isModalOpen(){', 'function safeToRender(){',
-  'function newExplorer(name, code){',
+  'function newExplorer(name, code){', 'function genFriendCode(){',
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
