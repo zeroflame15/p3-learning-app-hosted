@@ -22,6 +22,9 @@
     },
     "api/flag.js": {
       "maxDuration": 10
+    },
+    "api/friends.js": {
+      "maxDuration": 10
     }
   }
 }
