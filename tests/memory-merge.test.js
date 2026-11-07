@@ -31,7 +31,7 @@ function grabFn(name) {
 
 const mergeExplorer = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeExplorer',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer',
 ].map(grabFn).join('\n') + '\n; mergeExplorer;');
 
 function explorer(overrides) {
@@ -117,4 +117,73 @@ test('merge keeps the server picture code when neither side has a code timestamp
 test('new explorers start with a null code timestamp and the reset stamps it', function () {
   assert.ok(html.includes('code:code, codeAt:null'), 'explorer factory must start codeAt at null');
   assert.ok(html.includes('target.codeAt=new Date().toISOString()'), 'resetting a picture code must stamp codeAt so the merge can tell it is the newer code');
+});
+
+test('merge keeps crossword typed letters from both sides, later time wins a conflict', function () {
+  const server = explorer({ playProgress: { crossword: { idx: 1, score: 1, seed: 1, filled: [true, false, false, false, false, false], letters: { '0,1': 'A', '2,1': 'I' }, elapsed: 40 } } });
+  const local = explorer({ playProgress: { crossword: { idx: 1, score: 1, seed: 1, filled: [true, false, false, false, false, false], letters: { '0,1': 'A', '0,2': 'R' }, elapsed: 30 } } });
+  const merged = mergeExplorer(server, local);
+  assert.deepEqual(merged.playProgress.crossword.letters, { '0,1': 'A', '2,1': 'I', '0,2': 'R' }, 'letters typed on either device survive — the merge unions them');
+  // Same cell, different letter: the side that played longer wins.
+  const s2 = explorer({ playProgress: { crossword: { idx: 0, score: 0, seed: 1, filled: [false, false, false, false, false, false], letters: { '1,0': 'A' }, elapsed: 50 } } });
+  const l2 = explorer({ playProgress: { crossword: { idx: 0, score: 0, seed: 1, filled: [false, false, false, false, false, false], letters: { '1,0': 'X' }, elapsed: 20 } } });
+  assert.equal(mergeExplorer(s2, l2).playProgress.crossword.letters['1,0'], 'A', 'the later (longer-played) letter wins a conflict');
+  assert.equal(mergeExplorer(l2, s2).playProgress.crossword.letters['1,0'], 'A', 'the later letter wins whichever side it arrives on');
+});
+
+test('merge keeps a treasure spend — stars do not resurrect (reported 2026-11-07)', function () {
+  // The old merge kept Math.max(balance), so a spend (34 -> 19) was
+  // undone by the next sync: the server still held 34. The ledger
+  // (earned minus spent) must survive the merge instead.
+  const server = explorer({ stars: 34 });
+  const local = explorer({ stars: 19, starsEarned: 34, starsSpent: 15 });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.stars, 19, 'the spent balance survives the merge');
+  assert.equal(merged.starsEarned, 34, 'lifetime earned survives');
+  assert.equal(merged.starsSpent, 15, 'lifetime spent survives');
+  const merged2 = mergeExplorer(local, server);
+  assert.equal(merged2.stars, 19, 'the spend survives whichever side it arrives on');
+});
+
+test('merge keeps an earn on one side and a spend on the other', function () {
+  const server = explorer({ stars: 39, starsEarned: 39, starsSpent: 0 });
+  const local = explorer({ stars: 19, starsEarned: 34, starsSpent: 15 });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.starsEarned, 39, 'the higher earned total wins');
+  assert.equal(merged.starsSpent, 15, 'the higher spent total wins');
+  assert.equal(merged.stars, 24, 'balance is earned minus spent (39 - 15)');
+});
+
+test('legacy explorers migrate: their balance becomes the earned total', function () {
+  const server = explorer({ stars: 34 });
+  const local = explorer({ stars: 34 });
+  const merged = mergeExplorer(server, local);
+  assert.equal(merged.stars, 34, 'balance unchanged by the migration');
+  assert.equal(merged.starsEarned, 34, 'balance becomes the earned total');
+  assert.equal(merged.starsSpent, 0, 'nothing spent yet');
+});
+
+test('earnStars and spendStars keep the ledger and the balance in step', function () {
+  function fnBody(marker) {
+    const start = html.indexOf(marker);
+    assert.ok(start >= 0, marker + ' found');
+    const next = html.indexOf('\nfunction ', start + marker.length);
+    return next >= 0 ? html.slice(start, next) : html.slice(start);
+  }
+  const fns = eval(fnBody('function ensureStarsLedger(e){') + '\n' + fnBody('function earnStars(e,n){') + '\n' + fnBody('function spendStars(e,n){') + '\n;({ensureStarsLedger:ensureStarsLedger,earnStars:earnStars,spendStars:spendStars});');
+  const e = { stars: 34 };
+  fns.earnStars(e, 5);
+  assert.deepEqual([e.stars, e.starsEarned, e.starsSpent], [39, 39, 0], 'earning 5 migrates the legacy balance first, then adds');
+  fns.spendStars(e, 15);
+  assert.deepEqual([e.stars, e.starsEarned, e.starsSpent], [24, 39, 15], 'spending 15 deducts from the balance');
+  fns.spendStars(e, 100);
+  assert.equal(e.stars, 0, 'the balance never goes below zero');
+  assert.equal(e.starsSpent, 115, 'the spent counter still records the whole spend');
+});
+
+test('stars only ever change through the ledger (no direct += / -= left)', function () {
+  assert.ok(!/\.stars\+=/.test(html), 'no direct stars+= in the page');
+  assert.ok(!/\.stars-=/.test(html), 'no direct stars-= in the page');
+  assert.ok(html.includes("spendStars(e,t.cost)"), 'unlocking a treasure spends through the ledger');
+  assert.ok(html.includes('starsEarned:0, starsSpent:0'), 'new explorers start with an empty ledger');
 });
