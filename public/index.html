@@ -3502,7 +3502,12 @@ function fetchLiveGenQuestions(topicId, level){
         var opts={method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({topicId:topicId, level:level, count:LIVE_GEN_COUNT, day:day, bankStems:liveGenBankStems(t, level), examples:examples})};
         if(ctrl)opts.signal=ctrl.signal;
         var r=await fetch('/api/generate-questions', opts);
-        if(!r.ok)return null;
+        if(!r.ok){
+          // Name the failure honestly: a 502 validation rejection is
+          // not a timeout, and the parent-page card shows this reason.
+          try{ var ej=await r.json(); if(ej&&ej.error==='generated_set_invalid')liveGenFetchState={status:'failed', reason:'validation-failed'}; }catch(err){}
+          return null;
+        }
         var j=await r.json();
         if(!j||!j.live||!Array.isArray(j.questions))return null;
         if(!validateLiveGenClient(j.questions, liveGenBankStems(t, level)).ok){ liveGenFetchState={status:'failed', reason:'client-validation-failed'}; return null; }
