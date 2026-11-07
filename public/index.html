@@ -2172,46 +2172,75 @@ var gState=null, gameTimer=null;
    best-ever (kept across days), stored per explorer as
    e.playBest[gameId] = {secs, day}. */
 function fmtPlaySecs(s){ s=Math.max(0,Math.round(s||0)); var m=Math.floor(s/60), r=s%60; return m>0?(m+'m '+String(r).padStart(2,'0')+'s'):(s+'s'); }
-/* The game timer chip ticks every second from the moment a game
-   starts — it used to sit at 0s until the first tap, because the
-   chip only re-rendered on an interaction (seen live 2026-11-07).
-   The interval clears itself the moment the chip is gone (game
-   finished, Back pressed, or route changed). */
+/* Answer-only timing (requested 2026-11-07): the clock counts only
+   the time a question is on screen waiting for an answer.
+   gState.answerSecs banks the seconds already spent answering;
+   gState.startedAt is the moment the current question appeared
+   (null while the answer is showing and the clock is paused).
+   Memory Match and Exit Parking are continuous play, so they
+   never pause — startedAt stays set for the whole run. */
+function playElapsedSecs(){
+  if(!gState)return 0;
+  var base=gState.answerSecs||0;
+  if(gState.startedAt)base+=Math.max(0,(Date.now()-gState.startedAt)/1000);
+  return Math.round(base);
+}
+function pausePlayTimer(){
+  if(!gState||!gState.startedAt)return;
+  gState.answerSecs=playElapsedSecs();
+  gState.startedAt=null;
+}
+function resumePlayTimer(){
+  if(!gState||gState.startedAt)return;
+  gState.startedAt=Date.now();
+}
+/* The game timer chip ticks every second while a game is open —
+   it used to sit at 0s until the first tap, because the chip only
+   re-rendered on an interaction (seen live 2026-11-07). While the
+   clock is paused the chip keeps showing the frozen total (the
+   interval must NOT clear — Next resumes it). The interval clears
+   itself the moment the chip is gone (game finished, Back pressed,
+   or route changed). */
 function tickGameTime(){
   var el=document.getElementById('gameTime');
-  if(!el||!gState||!gState.startedAt){ if(gameTimer){clearInterval(gameTimer);gameTimer=null;} return; }
-  el.textContent='⏱ '+fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000)));
+  if(!el||!gState){ if(gameTimer){clearInterval(gameTimer);gameTimer=null;} return; }
+  el.textContent='⏱ '+fmtPlaySecs(playElapsedSecs());
 }
-/* Stops the timer started by startGame (gState.startedAt) and keeps
-   the run only if it beats the stored best. Also stashes the run's
-   time on gState.lastSecs for the completion screen. Returns true
-   when the run just set a new fastest time. */
+/* Stops the answer-only timer (playElapsedSecs) and keeps the run
+   only if it beats the stored best. Also stashes the run's time on
+   gState.lastSecs for the completion screen. Returns true when the
+   run just set a new fastest time. */
 function recordPlayBest(e, gameId){
-  if(!gState||!gState.startedAt)return false;
-  var secs=Math.max(1,Math.round((Date.now()-gState.startedAt)/1000));
+  /* No timing at all (never started, or a blank state) records
+     nothing — a paused run still counts, because its seconds are
+     banked in answerSecs. */
+  if(!gState||(!gState.startedAt&&!(gState.answerSecs>0)))return false;
+  var secs=Math.max(1,playElapsedSecs());
   gState.lastSecs=secs;
   if(!e.playBest)e.playBest={};
   var cur=e.playBest[gameId];
   if(!cur||secs<cur.secs){ e.playBest[gameId]={secs:secs, day:todayKey()}; return true; }
   return false;
 }
-/* Same-family leaderboard: every explorer in DB.explorers, ranked by
-   total stars (desc), with games finished today and each explorer's
-   single fastest game time. */
+/* Same-family leaderboard: one board PER GAME, ranked by fastest
+   time (answer-only time — see playElapsedSecs). Only games where
+   at least one explorer has a best time get a section; an explorer
+   with no time for a game simply does not appear on that game's
+   board. */
 function familyBoardHTML(){
-  var list=(DB.explorers||[]).slice().sort(function(a,b){ return (b.stars||0)-(a.stars||0); });
+  var list=(DB.explorers||[]);
   if(!list.length)return '';
-  var tk=todayKey();
-  var rows=list.map(function(x,i){
-    var doneToday=Object.keys(x.playDoneDay||{}).filter(function(k){ return x.playDoneDay[k]===tk; }).length;
-    var best=null, bestGame=null;
-    Object.keys(x.playBest||{}).forEach(function(gid){ var b=x.playBest[gid]; if(b&&(!best||b.secs<best.secs)){ best=b; bestGame=gid; } });
-    var gName=bestGame?((GAMES.find(function(g){ return g.id===bestGame; })||{}).name||bestGame):'';
-    var bestTxt=best?('⏱ '+fmtPlaySecs(best.secs)+' ('+esc(gName)+')'):('⏱ No time yet');
-    var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
-    return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+(x.stars||0)+' stars · '+doneToday+' game'+(doneToday===1?'':'s')+' today</span><span style="flex:1"></span><span class="chip">'+bestTxt+'</span></div>';
+  var sections=GAMES.map(function(g){
+    var rows=list.map(function(x){ var b=(x.playBest||{})[g.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{x:x,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    if(!rows.length)return '';
+    var body=rows.map(function(r,i){
+      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+r.x.face+'</span><b>'+esc(r.x.name)+'</b><span class="small muted">⭐ '+(r.x.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+    }).join('');
+    return '<h4 style="margin:14px 0 4px">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body;
   }).join('');
-  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Family leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Most stars wins — every explorer in the family, ranked!</p>'+rows+'</div>';
+  if(!sections)return '';
+  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Family leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per game!</p>'+sections+'</div>';
 }
 function playHTML(){
   var e=ex();
@@ -2285,20 +2314,13 @@ function loadFriends(){
     return friendsCache;
   });
 }
-function friendBestLine(bestTimes){
-  var best=null, bestGame=null;
-  Object.keys(bestTimes||{}).forEach(function(g){ var b=bestTimes[g]; if(b&&isFinite(+b.secs)&&(best===null||+b.secs<best)){ best=+b.secs; bestGame=g; } });
-  if(best===null)return 'no timed games yet';
-  var g=(typeof GAMES!=='undefined'?GAMES:[]).find(function(x){ return x.id===bestGame; });
-  return 'fastest: '+(g?g.name:bestGame)+' '+best+'s';
-}
 function friendsBoardHTML(){
   /* Plugged into playHTML() by the other agent's hook:
      +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')
      Shows ONLY accepted friends the parent approved (e.friends),
      with their stars and fastest time — never chats or progress. */
   var e=ex();
-  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends leaderboard</h3>';
+  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends leaderboard</h3><p class="small muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per game!</p>';
   var note='<p class="small muted" style="font-weight:700">Friends see only your stars and fastest times — never your chats or full progress.</p>';
   var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
   if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p>'+note+'</div>';
@@ -2311,7 +2333,21 @@ function friendsBoardHTML(){
   var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
   var gone=e.deletedFriends||[];
   var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
-  var rows=list.length?list.map(function(f){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+' · '+esc(friendBestLine(f.bestTimes||{}))+'</span></div>'; }).join(''):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  /* One board per game, ranked by fastest time — the same shape as
+     the family board. A friend with no timed game yet is listed
+     under the boards, so they still show up. */
+  var sections=GAMES.map(function(g){
+    var rows=list.map(function(f){ var b=(f.bestTimes||{})[g.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{f:f,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    if(!rows.length)return '';
+    var body=rows.map(function(r,i){
+      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><b>'+esc(r.f.name||'Explorer')+'</b><span class="small muted">⭐ '+(r.f.stars||0)+'</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+    }).join('');
+    return '<h4 style="margin:14px 0 4px">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body;
+  }).join('');
+  var waiting=list.filter(function(f){ return !Object.keys(f.bestTimes||{}).some(function(k){ var b=f.bestTimes[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
+  var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(f){ return esc(f.name||'Explorer'); }).join(', ')+' — no timed games yet.</p>':'';
+  var rows=list.length?(sections+waitHtml):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
   return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
 }
 function sendFriendRequest(){
@@ -2564,10 +2600,14 @@ function startGame(id){
   else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, cars:(!p||doneP||!p.cars)?PARKLEVELS[lv].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }):p.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; }
   else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } else if(p){ gState.answered=!!p.answered; gState.picked=(p.picked!=null?p.picked:null); } }
   gState.seed=seed;
+  /* Answer-only timing: the banked seconds resume with the run,
+     and the current question's window starts now — unless the run
+     resumes on an already-answered round, where the clock stays
+     paused until Next shows the next question. Memory and Parking
+     never pause, so their window always starts now. */
+  gState.answerSecs=(p&&!doneP&&p.elapsed)?p.elapsed:0;
   gState.startedAt=Date.now();
-  /* Resume keeps the clock: a resumed round must not restart the
-     timer, and a resumed best time must count the whole game. */
-  if(p&&!doneP&&p.elapsed)gState.startedAt=Date.now()-p.elapsed*1000;
+  if(p&&!doneP&&gState.answered)gState.startedAt=null;
   if(id==='memory'){
     if(doneP){ gState.matched=[]; gState.moves=0; }
     else if(p&&p.deck&&p.deck.length===12)gState.deck=p.deck.slice();
@@ -2619,7 +2659,7 @@ function gameHTML(){
   var e=ex(); var g=GAMES.find(function(x){return x.id===gState.id;});
   if(gState.id==='memory'){
     if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
      +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
   }
   if(gState.idx>=gState.rounds){
@@ -2632,7 +2672,7 @@ function gameHTML(){
     XWORDS.forEach(function(wd,wi){ for(var k=0;k<wd.w.length;k++){ var key=(wd.x+wd.dx*k)+','+(wd.y+wd.dy*k); (cellWord[key]=cellWord[key]||[]).push(wi); } if(!cellNum[wd.x+','+wd.y])cellNum[wd.x+','+wd.y]=wd.num; });
     var grid='';
     for(var gy=0;gy<5;gy++){ for(var gx=0;gx<5;gx++){ var key2=gx+','+gy, ws=cellWord[key2]; if(!ws){ grid+='<div class="xwcell blank"></div>'; continue; } var shown=''; for(var wi2=0;wi2<ws.length;wi2++){ if(gState.filled[ws[wi2]]){ var wd2=XWORDS[ws[wi2]]; shown=wd2.w[(gx-wd2.x)*wd2.dx+(gy-wd2.y)*wd2.dy]; break; } } grid+='<div class="xwcell'+(shown?' lit':'')+'">'+(cellNum[key2]?'<span class="xwnum">'+cellNum[key2]+'</span>':'')+shown+'</div>'; } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🧩 Crossword Quest</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<div class="xwgrid">'+grid+'</div>'
      +'<div class="bigq">'+esc(qx.q)+'</div>'
@@ -2645,14 +2685,14 @@ function gameHTML(){
     gState.cars.forEach(function(c){ parkCarCells(c).forEach(function(p){ occ[p[0]+','+p[1]]=c; }); });
     var lot='';
     for(var py=0;py<PARKH;py++){ for(var px=0;px<PARKW;px++){ var cc=occ[px+','+py]; if(cc){ lot+='<button class="parkcar'+(cc.id==='red'?' red':'')+'" data-car="'+cc.id+'" data-cx="'+px+'" data-cy="'+py+'">'+cc.e+'</button>'; } else if(px===PARKEXIT.x&&py===PARKEXIT.y){ lot+='<div class="parkcell exit">🏁</div>'; } else { lot+='<div class="parkcell"></div>'; } } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Moves: '+gState.moves+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<p class="muted" style="font-weight:700">Tap a car to slide it one cell — tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
      +'<div class="parklot">'+lot+'</div>'
      +'<button class="btn ghost" id="gBack" style="margin-top:14px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   var q=genRound(gState.id, gState.idx, gState.seed);
-  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
    +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
    +'<div class="bigq">'+esc(q.q)+'</div>'
    + gameOptsHTML(q)
@@ -2712,10 +2752,12 @@ function bindGame(){
     document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
       var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
       if(i===qx.a){ gState.score++; gState.filled[gState.idx]=true; sndCorrect(); } else sndWrong();
-      saveGameProgress(); render();
+      pausePlayTimer(); saveGameProgress(); render();
     }; });
     var nx2=document.getElementById('gNext'); if(nx2)nx2.onclick=function(){
-      gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
+      gState.idx++; gState.picked=null; gState.answered=false;
+      if(gState.idx<gState.rounds)resumePlayTimer();
+      saveGameProgress();
       if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,'crossword'); live.stars+=Math.min(gState.score,gState.rounds); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
       render();
     };
@@ -2726,15 +2768,17 @@ function bindGame(){
   document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
     if(i===q.a){ gState.score++; sndCorrect(); } else sndWrong();
-    saveGameProgress(); render();
+    pausePlayTimer(); saveGameProgress(); render();
   }; });
   var nx=document.getElementById('gNext'); if(nx)nx.onclick=function(){
-    gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
+    gState.idx++; gState.picked=null; gState.answered=false;
+    if(gState.idx<gState.rounds)resumePlayTimer();
+    saveGameProgress();
     if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,gState.id); live.stars+=Math.min(gState.score,gState.rounds); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=gState.startedAt?Math.max(0,Math.round((Date.now()-gState.startedAt)/1000)):0; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
+function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=playElapsedSecs(); if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
   var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
