@@ -137,6 +137,11 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .pond-lily{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8ed9a0,#3d9e57 70%);opacity:.92;z-index:1}
 .pond-bubble{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);z-index:1}
 .frog-wrap{position:absolute;transform:translate(-50%,-50%);transition:left 1.3s ease-in-out,top 1.3s ease-in-out;cursor:grab;touch-action:none;z-index:3}
+/* A bigger invisible grab zone: the frogspawn cluster is the
+   smallest stage (150px), so the wrap gets a 16px halo that still
+   catches a press — and the frog holds still on hover (bindCritter)
+   so an aimed press lands on it instead of empty pond. */
+.frog-wrap::before{content:'';position:absolute;inset:-16px}
 /* During Play the frog must track the pointer, not drift — the
    1.3s wander transition is far too slow for a chase. */
 .pond.playing .frog-wrap{transition:left .3s ease-out,top .3s ease-out}
@@ -166,8 +171,8 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .memcard.matched{background:var(--green-soft);border-color:var(--green)}
 
 /* ---------- Number Pop balloons + Speed Sort big tiles ---------- */
-.balloonrow{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:18px 4px 6px;min-height:150px}
-.balloon{position:relative;background:none;border:0;cursor:pointer;padding:0;width:104px;height:128px;animation:balloonFall .6s cubic-bezier(.2,.7,.3,1.2) var(--d,0s) both,balloonBob 2.4s ease-in-out calc(var(--d,0s) + .65s) infinite}
+.balloonrow{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:18px 4px 6px;height:200px;overflow:hidden}
+.balloon{position:relative;background:none;border:0;cursor:pointer;padding:0;width:104px;height:128px;animation:balloonFall 5s linear infinite;animation-delay:var(--d,0s)}
 .balloon .b-emoji{font-size:4.4rem;line-height:1;display:block;filter:drop-shadow(0 6px 6px rgba(10,40,30,.25))}
 .balloon .b-num{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:1.15rem;font-weight:900;color:#3a2b00;font-family:'Fredoka'}
 .balloon:disabled{cursor:default}
@@ -175,8 +180,7 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .balloon.wrong{opacity:.55}
 .balloon.wrong .b-num{color:var(--coral)}
 .balloon.popped{animation:balloonPop .45s ease-out both}
-@keyframes balloonFall{from{transform:translateY(-140px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes balloonBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes balloonFall{from{transform:translateY(-170px)}to{transform:translateY(210px)}}
 @keyframes balloonPop{0%{transform:scale(1)}40%{transform:scale(1.28) rotate(-7deg)}100%{transform:scale(1)}}
 .sortgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:10px 0 4px}
 .sorttile{min-height:118px;border-radius:18px;border:3px solid var(--line);background:var(--panel);font-size:3rem;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -1019,6 +1023,17 @@ function hclCardHTML(e){
    +(step.test?'<div style="margin-top:12px"><button class="btn" id="hclStart">▶ Start the self-test</button></div>':'<p class="small muted" style="font-weight:700;margin:10px 0 0">Routine: <b style="color:var(--ink)">Tue</b> learn · <b style="color:var(--ink)">Wed</b> quick test before HCL · <b style="color:var(--ink)">Fri</b> redo missed · <b style="color:var(--ink)">Sun</b> recap.</p>')
    +'</div>';
 }
+/* Spelling entry card on the Learn page: the routine itself lives
+   on its own sub-view (route 'spelling'), so its Back button has a
+   real page to return to. */
+function hclEntryHTML(e){
+  if(!e.hclMissed)e.hclMissed=[];
+  var step=hclStepFor(new Date().getDay(), e);
+  return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>'
+   +(e.hclMissed.length?'<p class="small" style="font-weight:800;margin:10px 0 0">📌 Missed words saved for Friday & Sunday: '+esc(e.hclMissed.join('、'))+'</p>':'')
+   +'<div style="margin-top:12px"><button class="btn" id="hclOpen">Open spelling routine →</button></div></div>';
+}
+function spellingHTML(){ var e=ex(); return hclCardHTML(e); }
 var JOKES=['Why did the frog sit on the MRT? It wanted to go ribbit-ing fast!','What do otters use to e-mail? Their otter-space!','Why was the maths book sad? Too many problems!','What room has no doors? A mushroom!','Why did the student eat her homework? The teacher said it was a piece of cake!','What do you call a sleeping bull? A bull-dozer!'];
 var PIC_CHOICES=['🦊','🐢','🦉','🐠','🦋','🐞','🍓','⭐','🌙','🚀','🎈','🍕'];
 var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15','#c084fc','#f97316','#84cc16','#38bdf8','#f472b6','#a3e635'];
@@ -1289,7 +1304,7 @@ function mergeExplorer(a,b){
   Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
-  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled))}); });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked)))}); });
   e.playProgress=play;
   /* Fastest game times: keep the smaller secs per game (best ever). The
      day tag follows the winning side, so the board shows when the best
@@ -1554,7 +1569,7 @@ function confettiStars(){
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
 var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
-var PAGE_TITLES={home:'My Terrarium',learn:'Learn',ask:'Ask Pip',play:'Play Arcade',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
+var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
 function go(r){ route=r; window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
@@ -1601,6 +1616,7 @@ function render(){
   var c=document.getElementById('content');
   if(route==='home')c.innerHTML=homeHTML(),bindHome();
   else if(route==='learn')c.innerHTML=learnHTML(),bindLearn();
+  else if(route==='spelling')c.innerHTML=spellingHTML(),bindSpelling();
   else if(route==='play')c.innerHTML=playHTML(),bindPlay();
   else if(route==='ask')c.innerHTML=askHTML(),bindAsk();
   else if(route==='critter')c.innerHTML=critterHTML(),bindCritter();
@@ -1885,7 +1901,7 @@ function learnHTML(){
   var SUBHEAD={eng:['📖','English','Story words, tenses & punctuation','#1e3a5f'],math:['🔢','Maths','MRT numbers, hawker change & fractions','#4a3a10'],sci:['🔬','Science','Frogs, magnets & garden plants','#1e4034'],chi:['🀄','Chinese','Listening, family & school words','#4c2a33']};
   return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars)
    + learnPlanBannerHTML(e)
-   + hclCardHTML(e)
+   + hclEntryHTML(e)
    + subs.map(function(s){
     var list=TOPICS.filter(function(t){return t.sub===s;});
     var sh=SUBHEAD[s];
@@ -1908,6 +1924,12 @@ function learnHTML(){
 }
 function bindLearn(){
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
+  /* The spelling routine is its own sub-view now (route 'spelling'):
+     Learn shows an entry card, and the Back button inside the
+     routine has a real page to return from. */
+  var ho=document.getElementById('hclOpen'); if(ho)ho.onclick=function(){ go('spelling'); };
+}
+function bindSpelling(){
   var e=ex(); if(!e.hclMissed)e.hclMissed=[];
   document.querySelectorAll('[data-hcllisten]').forEach(function(b){ b.onclick=function(){ speakPip(b.getAttribute('data-hcllisten')); toast('Listen… now say it out loud like Pip!'); }; });
   var hs=document.getElementById('hclStart'); if(hs)hs.onclick=function(){ var step=hclStepFor(new Date().getDay(), e); hclTest={words:step.words, idx:0}; sndPop(); render(); };
@@ -2193,6 +2215,7 @@ function bindPlay(){
 
 /* ============================================================ FRIENDS (leaderboard-only) */
 var friendsCache=null;      /* accepted friends' snapshots from /api/friends, or null when not loaded */
+var frErrMsg='';            /* last friend-code error, kept on the page (not just a toast) */
 var friendsUnconfigured=false; /* true when the server has no Supabase setup or the call failed */
 function friendsApi(action, body){
   /* One fetch wrapper for every friends call. Never rejects and
@@ -2241,11 +2264,17 @@ function friendsBoardHTML(){
   var e=ex();
   var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends leaderboard</h3>';
   var note='<p class="small muted" style="font-weight:700">Friends see only your stars and fastest times — never your chats or full progress.</p>';
-  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
+  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
   if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p>'+note+'</div>';
   if(friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'+addRow+note+'</div>';
-  var mine=e.friends||[];
-  var list=(friendsCache||[]).filter(function(f){ return mine.indexOf(f.code)>=0; });
+  /* Friends come from BOTH sides: the local list (parent-approved
+     here) and the server's accepted list (a friend accepted on the
+     OTHER family's parent page still shows here — the server is the
+     source of truth for accepted friendships; the local list alone
+     hid the requester's friend). Removed friends stay hidden. */
+  var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
+  var gone=e.deletedFriends||[];
+  var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
   var rows=list.length?list.map(function(f){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+' · '+esc(friendBestLine(f.bestTimes||{}))+'</span></div>'; }).join(''):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
   return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
 }
@@ -2253,14 +2282,19 @@ function sendFriendRequest(){
   var e=ex(); if(!e)return;
   var inp=document.getElementById('frCode');
   var to=inp?String(inp.value||'').toUpperCase().replace(/[\s-]/g,''):'';
-  if(!friendCodeValid(to)){ toast('That code does not look right — it should be 6 letters, like ABC2DE.'); return; }
+  /* The error stays on the page (not just a 2.6s toast) so an
+     unknown code is unmissable — seen live 2026-11-07, ZZZZZZ
+     showed no visible error at all. */
+  function showErr(msg){ frErrMsg=msg||''; var er=document.getElementById('frErr'); if(er)er.textContent=frErrMsg; }
+  if(!friendCodeValid(to)){ showErr('That code does not look right — it should be 6 letters, like ABC2DE.'); toast('That code does not look right — it should be 6 letters, like ABC2DE.'); return; }
   var own=ensureFriendCode(e);
-  if(to===own){ toast('That is your own friend code — ask your friend for theirs!'); return; }
+  if(to===own){ showErr('That is your own friend code — ask your friend for theirs!'); toast('That is your own friend code — ask your friend for theirs!'); return; }
   friendsApi('request',{fromCode:own,fromName:e.name||'Explorer',toCode:to}).then(function(j){
-    if(j&&j.ok){ toast('Friend request sent — their grown-up needs to accept it first.'); if(inp)inp.value=''; return; }
-    if(j&&j.error==='unknown_friend_code'){ toast('No explorer has that code — check it and try again.'); return; }
-    if(j&&j.error==='request_already_pending'){ toast('Request already sent — waiting for their grown-up.'); return; }
-    if(j&&j.error==='already_friends'){ toast('You are already friends!'); return; }
+    if(j&&j.ok){ showErr(''); toast('Friend request sent — their grown-up needs to accept it first.'); if(inp)inp.value=''; return; }
+    if(j&&j.error==='unknown_friend_code'){ showErr('No explorer has that code — check it and try again.'); toast('No explorer has that code — check it and try again.'); return; }
+    if(j&&j.error==='request_already_pending'){ showErr(''); toast('Request already sent — waiting for their grown-up.'); return; }
+    if(j&&j.error==='already_friends'){ showErr(''); toast('You are already friends!'); return; }
+    showErr('Could not send the request — check the connection and try again.');
     toast('Could not send the request — check the connection and try again.');
   });
 }
@@ -2293,8 +2327,10 @@ function renderParentFriends(sel){
   friendsApi('friends',{code:code}).then(function(j){
     if(!document.getElementById('frFriends'))return;
     if(!j||j.configured===false){ document.getElementById('frFriends').innerHTML=''; return; }
-    var mine=sel.friends||[];
-    var list=(j.friends||[]).filter(function(f){ return mine.indexOf(f.code)>=0; });
+    var gone=sel.deletedFriends||[];
+    var list=(j.friends||[]).filter(function(f){ return gone.indexOf(f.code)<0; });
+    var seen={}; list.forEach(function(f){ seen[f.code]=1; });
+    (sel.friends||[]).forEach(function(code){ if(!seen[code]&&gone.indexOf(code)<0)list.push({code:code,name:'Friend '+code,stars:0,bestTimes:{}}); });
     document.getElementById('frFriends').innerHTML=list.length?list.map(function(f){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+'</span><span style="flex:1"></span><button class="btn ghost" data-frrem="'+esc(f.code)+'">Remove</button></div>'; }).join(''):'<p style="font-weight:700">No friends yet.</p>';
     bindFriendPanelButtons(sel);
   });
@@ -2304,7 +2340,13 @@ function bindFriendPanelButtons(sel){
     var id=b.getAttribute('data-fracc'), from=b.getAttribute('data-frfrom');
     friendsApi('respond',{id:id,code:ensureFriendCode(sel),accept:true}).then(function(j){
       if(j&&j.ok){
-        if(from&&friendCodeValid(from)){ if(!sel.friends)sel.friends=[]; if(sel.friends.indexOf(from)<0)sel.friends.push(from); if(sel.deletedFriends)sel.deletedFriends=sel.deletedFriends.filter(function(c){ return c!==from; }); }
+        /* Resolve the explorer fresh: the server round-trip gives
+           the 30s auto-pull time to merge the DB and replace the
+           explorer object, so a push through the captured sel
+           would be lost (same detached-explorer bug as the game
+           completions). */
+        var live=DB.explorers.find(function(x){return x.id===sel.id;})||sel;
+        if(from&&friendCodeValid(from)){ if(!live.friends)live.friends=[]; if(live.friends.indexOf(from)<0)live.friends.push(from); if(live.deletedFriends)live.deletedFriends=live.deletedFriends.filter(function(c){ return c!==from; }); }
         save(); toast('Friend request accepted — they’ll show up in Play Arcade.');
         render();
       } else toast('Could not accept that request — try again.');
@@ -2319,10 +2361,11 @@ function bindFriendPanelButtons(sel){
   }; });
   document.querySelectorAll('[data-frrem]').forEach(function(b){ b.onclick=function(){
     var code=b.getAttribute('data-frrem');
-    sel.friends=(sel.friends||[]).filter(function(c){ return c!==code; });
-    if(!sel.deletedFriends)sel.deletedFriends=[]; if(sel.deletedFriends.indexOf(code)<0)sel.deletedFriends.push(code);
+    var live=DB.explorers.find(function(x){return x.id===sel.id;})||sel;
+    live.friends=(live.friends||[]).filter(function(c){ return c!==code; });
+    if(!live.deletedFriends)live.deletedFriends=[]; if(live.deletedFriends.indexOf(code)<0)live.deletedFriends.push(code);
     save(); toast('Friend removed from the leaderboard.');
-    renderParentFriends(sel);
+    renderParentFriends(live);
   }; });
 }
 /* Rounds are generated from a seed. A game still in progress keeps
@@ -2483,9 +2526,12 @@ function startGame(id){
   else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
   if(id==='memory'){ gState={id:id, deck:shuffle(['🐸','🐸','🦦','🦦','🍓','🍓','⭐','⭐','🚀','🚀','🦋','🦋']), open:[], matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
   else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, cars:(!p||doneP||!p.cars)?PARKLEVELS[lv].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }):p.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; }
-  else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } }
+  else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } else if(p){ gState.answered=!!p.answered; gState.picked=(p.picked!=null?p.picked:null); } }
   gState.seed=seed;
   gState.startedAt=Date.now();
+  /* Resume keeps the clock: a resumed round must not restart the
+     timer, and a resumed best time must count the whole game. */
+  if(p&&!doneP&&p.elapsed)gState.startedAt=Date.now()-p.elapsed*1000;
   if(id==='memory'){
     if(doneP){ gState.matched=[]; gState.moves=0; }
     else if(p&&p.deck&&p.deck.length===12)gState.deck=p.deck.slice();
@@ -2505,7 +2551,7 @@ function gameOptsHTML(q){
       var cls='balloon';
       if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; if(i===gState.picked&&i===q.a)cls+=' popped'; }
       var face=(gState.answered&&i===gState.picked&&i===q.a)?'💥':'🎈';
-      return '<button class="'+cls+'" style="--d:'+(i*0.12)+'s" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'><span class="b-emoji">'+face+'</span><span class="b-num">'+esc(o)+'</span></button>';
+      return '<button class="'+cls+'" style="--d:-'+(i*1.25)+'s" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'><span class="b-emoji">'+face+'</span><span class="b-num">'+esc(o)+'</span></button>';
     }).join('')+'</div>';
   }
   if(gState.id==='sort'){
@@ -2521,7 +2567,7 @@ function gameHTML(){
   var e=ex(); var g=GAMES.find(function(x){return x.id===gState.id;});
   if(gState.id==='memory'){
     if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
   }
   if(gState.idx>=gState.rounds){
@@ -2534,7 +2580,7 @@ function gameHTML(){
     XWORDS.forEach(function(wd,wi){ for(var k=0;k<wd.w.length;k++){ var key=(wd.x+wd.dx*k)+','+(wd.y+wd.dy*k); (cellWord[key]=cellWord[key]||[]).push(wi); } if(!cellNum[wd.x+','+wd.y])cellNum[wd.x+','+wd.y]=wd.num; });
     var grid='';
     for(var gy=0;gy<5;gy++){ for(var gx=0;gx<5;gx++){ var key2=gx+','+gy, ws=cellWord[key2]; if(!ws){ grid+='<div class="xwcell blank"></div>'; continue; } var shown=''; for(var wi2=0;wi2<ws.length;wi2++){ if(gState.filled[ws[wi2]]){ var wd2=XWORDS[ws[wi2]]; shown=wd2.w[(gx-wd2.x)*wd2.dx+(gy-wd2.y)*wd2.dy]; break; } } grid+='<div class="xwcell'+(shown?' lit':'')+'">'+(cellNum[key2]?'<span class="xwnum">'+cellNum[key2]+'</span>':'')+shown+'</div>'; } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🧩 Crossword Quest</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<div class="xwgrid">'+grid+'</div>'
      +'<div class="bigq">'+esc(qx.q)+'</div>'
@@ -2547,7 +2593,7 @@ function gameHTML(){
     gState.cars.forEach(function(c){ parkCarCells(c).forEach(function(p){ occ[p[0]+','+p[1]]=c; }); });
     var lot='';
     for(var py=0;py<PARKH;py++){ for(var px=0;px<PARKW;px++){ var cc=occ[px+','+py]; if(cc){ lot+='<button class="parkcar'+(cc.id==='red'?' red':'')+'" data-car="'+cc.id+'" data-cx="'+px+'" data-cy="'+py+'">'+cc.e+'</button>'; } else if(px===PARKEXIT.x&&py===PARKEXIT.y){ lot+='<div class="parkcell exit">🏁</div>'; } else { lot+='<div class="parkcell"></div>'; } } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Moves: '+gState.moves+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<p class="muted" style="font-weight:700">Tap a car to slide it one cell — tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
      +'<div class="parklot">'+lot+'</div>'
@@ -2562,7 +2608,14 @@ function gameHTML(){
    +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
 }
 function bindGame(){
-  var e=ex();
+  /* Completion awards resolve the explorer FRESH (ex()) at the
+     moment of the award — never through a variable captured when
+     bindGame ran. A 30s auto-pull merges the DB and replaces every
+     explorer object, so a captured explorer is detached: stars and
+     best times written through it are lost on the next save (seen
+     live 2026-11-07: Exit Parking stars never counted, and 8 of 9
+     best times never reached the arcade cards). The award and the
+     save below are synchronous, so no merge can slip between them. */
   var back=document.getElementById('gBack'); if(back)back.onclick=function(){ gState=null; go('play'); };
   var quit=document.getElementById('gQuit'); if(quit)quit.onclick=function(){ saveGameProgress(); toast('Saved! Tap the game anytime to resume.'); gState=null; go('play'); };
   if(gState.id==='parking'){
@@ -2579,7 +2632,7 @@ function bindGame(){
         gState.score++; gState.idx++; gState.moves=0;
         if(gState.idx<gState.rounds){ gState.cars=PARKLEVELS[gState.idx].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }); }
         saveGameProgress();
-        if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,'parking'); e.stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+        if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,'parking'); live.stars+=Math.min(gState.score,gState.rounds); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
       }
       render();
     }; });
@@ -2597,7 +2650,7 @@ function bindGame(){
       }
       saveGameProgress(); render();
     }; });
-    if(gState.matched.length>=12&&!gState.won){ gState.won=true; e.stars+=6; awardBadge('player','🎮 Arcade Star'); gState.newBest=recordPlayBest(e,'memory'); saveGameProgress(); sndFanfare(); confettiStars(); render(); }
+    if(gState.matched.length>=12&&!gState.won){ gState.won=true; var live=ex(); live.stars+=6; awardBadge('player','🎮 Arcade Star'); gState.newBest=recordPlayBest(live,'memory'); saveGameProgress(); sndFanfare(); confettiStars(); render(); }
     return;
   }
   if(gState.id==='crossword'){
@@ -2611,7 +2664,7 @@ function bindGame(){
     }; });
     var nx2=document.getElementById('gNext'); if(nx2)nx2.onclick=function(){
       gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
-      if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,'crossword'); ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+      if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,'crossword'); live.stars+=Math.min(gState.score,gState.rounds); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
       render();
     };
     return;
@@ -2625,11 +2678,11 @@ function bindGame(){
   }; });
   var nx=document.getElementById('gNext'); if(nx)nx.onclick=function(){
     gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
-    if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,gState.id); ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+    if(gState.idx>=gState.rounds){ var live=ex(); gState.newBest=recordPlayBest(live,gState.id); live.stars+=Math.min(gState.score,gState.rounds); awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed};
+function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=gState.startedAt?Math.max(0,Math.round((Date.now()-gState.startedAt)/1000)):0; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
   var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
@@ -2820,7 +2873,7 @@ var FOODS=[{e:'🪰',name:'fly'},{e:'🦟',name:'mozzie'},{e:'🐛',name:'wriggl
 /* Pond UI state only — never saved, never synced. frogPos is where
    the frog sits in the pond (percent); pondMode is the care activity
    in progress ('feed' | 'clean' | 'play' | null). */
-var frogPos={x:50,y:56}, pondMode=null, dirtLeft=null, playTimer=null, playPointerHandler=null, frogTimer=null, frogBubbleTimer=null, frogDragging=false, frogDragMoved=false, frogDownX=0, frogDownY=0, frogPausedUntil=0, frogDragHandler=null, frogDragUpHandler=null;
+var frogPos={x:50,y:56}, pondMode=null, dirtLeft=null, playTimer=null, playPointerHandler=null, frogTimer=null, frogBubbleTimer=null, frogDragging=false, frogDragMoved=false, frogDownX=0, frogDownY=0, frogPausedUntil=0, frogDragHandler=null, frogDragUpHandler=null, frogHover=false;
 /* The play chase listener (see startPlayMode) is attached to the
    document so it survives re-renders; it must be removed when play
    ends, or it would keep moving a toy that is no longer there. */
@@ -3082,6 +3135,14 @@ function bindCritter(){
   var wrap=document.getElementById('frogWrap');
   if(wrap){
     wrap.addEventListener('pointerdown',function(ev){ frogDragging=true; frogDragMoved=false; frogDownX=ev.clientX; frogDownY=ev.clientY; frogPausedUntil=Date.now()+3000; var p0=document.getElementById('pond'); if(p0)p0.classList.add('dragging'); });
+    /* Hold still while aimed at: the frog wanders to a new spot
+       every 3.8s, and a press aimed at the smallest stage
+       (frogspawn, 150px) can land on empty pond after it glides
+       away — seen live 2026-11-07, two frogspawn drags in a row.
+       Hovering pauses the wander, so the frog is where the child
+       aimed when they press. */
+    wrap.addEventListener('pointerenter',function(){ frogHover=true; });
+    wrap.addEventListener('pointerleave',function(){ frogHover=false; });
   }
   if(frogDragHandler){ document.removeEventListener('pointermove',frogDragHandler); frogDragHandler=null; }
   frogDragHandler=function(ev){
@@ -3106,7 +3167,7 @@ function bindCritter(){
   document.addEventListener('pointercancel',frogDragUpHandler);
   if(frogTimer)clearInterval(frogTimer);
   frogTimer=setInterval(function(){
-    if(route!=='critter'||pondMode==='play'||frogDragging||Date.now()<frogPausedUntil)return;
+    if(route!=='critter'||pondMode==='play'||frogDragging||frogHover||Date.now()<frogPausedUntil)return;
     var w2=document.getElementById('frogWrap'); if(!w2)return;
     frogPos={x:8+Math.random()*76, y:14+Math.random()*62};
     placeFrog();
