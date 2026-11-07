@@ -371,15 +371,28 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .gameband span{font-size:4.2rem;line-height:1}
 .lbrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line);font-weight:800}
 .lbrow:last-child{border-bottom:0}
-.flowhero.gametheme-word{background:linear-gradient(135deg,#e6f4ea,#fff)}
-.flowhero.gametheme-number{background:linear-gradient(135deg,#fbe9ec,#fff)}
-.flowhero.gametheme-memory{background:linear-gradient(135deg,#e6eefb,#fff)}
-.flowhero.gametheme-sort{background:linear-gradient(135deg,#faf3dc,#fff)}
-.flowhero.gametheme-scramble{background:linear-gradient(135deg,#efe8f8,#fff)}
-.flowhero.gametheme-race{background:linear-gradient(135deg,#fbe7e7,#fff)}
-.flowhero.gametheme-sentence{background:linear-gradient(135deg,#e2f2f5,#fff)}
-.flowhero.gametheme-crossword{background:linear-gradient(135deg,#f5efe0,#fff)}
-.flowhero.gametheme-parking{background:linear-gradient(135deg,#e8edf2,#fff)}
+/* Leaderboard mini-cards (requested 2026-11-07 — the combined board
+   lumped every game into one card, so a time alone said nothing
+   about which game it belonged to): one card per game/quest, with
+   its own coloured header band. The card sets its own dark ink so
+   it reads on the dark Play card as well as the white Learn card.
+   Rows carry no star count — the board ranks by time, not stars. */
+.lbcard{border:2px solid var(--line);border-radius:14px;margin-top:12px;overflow:hidden;background:#fff;color:#1e3a24}
+.lbcard>h4{margin:0;padding:10px 12px;font-size:1rem;color:#1e3a24}
+.lbcard .lbrow{padding:10px 12px}
+.lbhead-eng{background:linear-gradient(135deg,#e6f4ea,#fff)}
+.lbhead-math{background:linear-gradient(135deg,#fbe9ec,#fff)}
+.lbhead-sci{background:linear-gradient(135deg,#e6eefb,#fff)}
+.lbhead-chi{background:linear-gradient(135deg,#efe8f8,#fff)}
+.flowhero.gametheme-word,.lbhead-word{background:linear-gradient(135deg,#e6f4ea,#fff)}
+.flowhero.gametheme-number,.lbhead-number{background:linear-gradient(135deg,#fbe9ec,#fff)}
+.flowhero.gametheme-memory,.lbhead-memory{background:linear-gradient(135deg,#e6eefb,#fff)}
+.flowhero.gametheme-sort,.lbhead-sort{background:linear-gradient(135deg,#faf3dc,#fff)}
+.flowhero.gametheme-scramble,.lbhead-scramble{background:linear-gradient(135deg,#efe8f8,#fff)}
+.flowhero.gametheme-race,.lbhead-race{background:linear-gradient(135deg,#fbe7e7,#fff)}
+.flowhero.gametheme-sentence,.lbhead-sentence{background:linear-gradient(135deg,#e2f2f5,#fff)}
+.flowhero.gametheme-crossword,.lbhead-crossword{background:linear-gradient(135deg,#f5efe0,#fff)}
+.flowhero.gametheme-parking,.lbhead-parking{background:linear-gradient(135deg,#e8edf2,#fff)}
 .tdisc{width:62px;height:62px;border-radius:50%;background:var(--panel2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex:0 0 auto}
 .tdisc.owned{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,201,77,.28)}
 .flashcard{display:block;width:100%;background:var(--card);color:var(--card-text);border:0;border-radius:14px;padding:16px;font-weight:900;font-size:1.05rem;min-height:76px;box-shadow:var(--shadow);text-align:center}
@@ -2248,7 +2261,11 @@ function learnBoardHTML(){
   var fam=(DB.explorers||[]).map(function(x){ var best={}; Object.keys(x.learnBest||{}).forEach(function(t){ best['learn-'+t]=x.learnBest[t]; }); return {face:x.face, name:x.name, stars:x.stars||0, best:best, friend:false}; });
   var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
   var gone=e.deletedFriends||[];
-  var frs=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
+  /* Same dedupe as the Play board: a family explorer who is also
+     added as a friend appears once, as family. */
+  var famCodes={}; (DB.explorers||[]).forEach(function(x){ if(x.friendCode)famCodes[x.friendCode]=1; });
+  var hasFriends=codes.some(function(code){ return gone.indexOf(code)<0; });
+  var frs=codes.filter(function(code){ return gone.indexOf(code)<0 && !famCodes[code]; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
     .map(function(f){ return {face:null, name:f.name||'Explorer', stars:f.stars||0, best:f.bestTimes||{}, friend:true}; });
   var all=fam.concat(frs);
   var sections=TOPICS.map(function(t){
@@ -2257,14 +2274,14 @@ function learnBoardHTML(){
     var body=rows.map(function(row,i){
       var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
       var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span class="small muted">⭐ '+(row.r.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
-    return '<h4 style="margin:14px 0 4px">'+t.icon+' '+esc(t.name)+'</h4>'+body;
+    return '<div class="lbcard"><h4 class="lbhead-'+t.sub+'">'+t.icon+' '+esc(t.name)+'</h4>'+body+'</div>';
   }).join('');
   var waiting=frs.filter(function(r){ return !Object.keys(r.best||{}).some(function(k){ if(k.indexOf('learn-')!==0)return false; var b=r.best[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
   var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed quests yet.</p>':'';
   var rows=sections?sections+waitHtml:'<p style="font-weight:700">No timed quests yet — be the first to finish one!</p>';
-  if(!frs.length)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  if(!hasFriends)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
   return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+'</div>';
 }
 function bindLearn(){
@@ -2736,7 +2753,12 @@ function playBoardHTML(){
   var fam=(DB.explorers||[]).map(function(x){ return {face:x.face, name:x.name, stars:x.stars||0, best:x.playBest||{}, friend:false}; });
   var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
   var gone=e.deletedFriends||[];
-  var frs=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
+  /* A family explorer who is also added as a friend appears once,
+     as family — otherwise the same person takes two rows on one
+     board (seen live 2026-11-07: VerifyB07 twice on Speed Sort). */
+  var famCodes={}; (DB.explorers||[]).forEach(function(x){ if(x.friendCode)famCodes[x.friendCode]=1; });
+  var hasFriends=codes.some(function(code){ return gone.indexOf(code)<0; });
+  var frs=codes.filter(function(code){ return gone.indexOf(code)<0 && !famCodes[code]; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
     .map(function(f){ return {face:null, name:f.name||'Explorer', stars:f.stars||0, best:f.bestTimes||{}, friend:true}; });
   var all=fam.concat(frs);
   var sections=GAMES.map(function(g){
@@ -2745,14 +2767,14 @@ function playBoardHTML(){
     var body=rows.map(function(row,i){
       var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
       var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span class="small muted">⭐ '+(row.r.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
-    return '<h4 style="margin:14px 0 4px">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body;
+    return '<div class="lbcard"><h4 class="lbhead-'+g.id+'">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body+'</div>';
   }).join('');
   var waiting=frs.filter(function(r){ return !GAMES.some(function(g){ var b=(r.best||{})[g.id]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
   var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed games yet.</p>':'';
   var rows=sections?sections+waitHtml:'<p style="font-weight:700">No timed games yet — be the first to play!</p>';
-  if(!frs.length)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  if(!hasFriends)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
   return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
 }
 function playHTML(){
