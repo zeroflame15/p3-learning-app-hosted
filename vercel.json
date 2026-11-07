@@ -28,6 +28,12 @@
     },
     "api/generate-questions.js": {
       "maxDuration": 30
+    },
+    "api/daily-set.js": {
+      "maxDuration": 10
+    },
+    "api/report-answers.js": {
+      "maxDuration": 10
     }
   }
 }

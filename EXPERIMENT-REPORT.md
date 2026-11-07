@@ -208,3 +208,34 @@ roughly 1-in-2 or better per quest. Tests 460/460 green, including
 two new retry tests (bad set then good set serves live on attempt 2;
 three bad sets still fall back cleanly) and one new client test for
 the honest reason.
+
+## 9. Update 2026-11-08 — server-bank pilot, parking rework, validator fix
+
+Three changes, one deploy (Bryan approved "deploy it all now"):
+
+**Server-bank pilot (one topic: math-ntuc).** The year's questions
+move to the server: `sb_questions` (44 real bank questions seeded)
+and `sb_explorer_questions` (per-explorer mastery) in Supabase,
+served by two new endpoints — `POST /api/daily-set` (due-first,
+then day-seeded fresh; mastered excluded) and
+`POST /api/report-answers` (correct → mastered, wrong → due).
+The app shows server sets with a "📚 Pip's shelf" chip; precedence
+on math-ntuc is server set → live-gen set → bank, and a server set
+is never counted as a live-gen fallback. Warm-up stays bank; the
+other 13 topics are untouched. Live-gen's role shifts to FILLING
+the bank in bulk (generate → validate → keep the good ones).
+
+**Parking rework.** Bryan: "the parking doesn't really swipe and
+too easy." Cars now follow the pointer and snap to the furthest
+free cell (one drag = one move; tap keeps the one-cell behaviour;
+blocked drag shakes and snaps back). Six harder levels, 13–18
+(6×6, solutions of 9–17 slides where the old ones were 2–4).
+Level stars now bank immediately on the win, once per level per
+day — the old end-of-game award never reached the balance.
+
+**Validator fix.** The live-gen recompute checker only tried number
+pairs in stem order, so a valid change question ("watermelon $7,
+pay with $10", answer $3 = 10−7) was rejected. It now tries the
+reverse for `-` and `/` too. Seed pin updated: 33 of 44 bank stems
+recompute, 11 known failures (7 word-numbers, 5 estimation /
+multiples / factors by design). Tests 490/490 green.
