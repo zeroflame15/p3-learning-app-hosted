@@ -296,6 +296,17 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
    2026-11-07 on the parking/crossword header pills and the
    leaderboard best-time pill). */
 .app.route-play .chip{background:#fff;color:#1e3a24;border-color:#1e3a24}
+/* Play Arcade layout: the game cards take the left, the leaderboards
+   sit in a right-hand column (requested 2026-11-07). On narrow
+   screens the boards stack underneath the games. */
+.playwrap{display:flex;gap:16px;align-items:flex-start}
+.playwrap .playmain{flex:1;min-width:0}
+.playwrap .playside{flex:0 0 340px;max-width:340px;min-width:0}
+.playwrap .playside>.card:first-child{margin-top:0!important}
+@media (max-width:900px){
+  .playwrap{flex-direction:column}
+  .playwrap .playside{flex:1 1 auto;max-width:none;width:100%}
+}
 .app.route-treasure .main{background:linear-gradient(180deg,#2a1b4d,#1b1030);color:#f5f1e6}
 .app.route-treasure .topbar{background:#2a1b4d;border-bottom-color:#6b4fa1}
 .app.route-treasure .card{background:#3a2a63;border-color:#6b4fa1;color:#f5f1e6}
@@ -1306,7 +1317,7 @@ function mergeExplorer(a,b){
   e.hclMissed=unionArr(a.hclMissed,b.hclMissed);
   e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
   var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
-  Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh}); });
+  Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh,elapsed:Math.max(x.elapsed||0,y.elapsed||0)}); });
   /* A finished run's progress must not come back from the server:
      a delete does not sync, so the server's copy would resurrect
      a finished quest at its last question. Drop any ORIGINAL-run
@@ -1323,6 +1334,11 @@ function mergeExplorer(a,b){
   var pb={}; Object.keys(a.playBest||{}).forEach(function(k){ pb[k]={secs:a.playBest[k].secs, day:a.playBest[k].day}; });
   Object.keys(b.playBest||{}).forEach(function(k){ var x=pb[k], y=b.playBest[k]; if(!x) pb[k]={secs:y.secs, day:y.day}; else if((y.secs||1e9)<(x.secs||1e9)) pb[k]={secs:y.secs, day:y.day}; });
   e.playBest=pb;
+  /* Fastest quest times: same rule as game times — smaller secs
+     wins, and the day tag follows the winning side. */
+  var lb={}; Object.keys(a.learnBest||{}).forEach(function(k){ lb[k]={secs:a.learnBest[k].secs, day:a.learnBest[k].day}; });
+  Object.keys(b.learnBest||{}).forEach(function(k){ var x=lb[k], y=b.learnBest[k]; if(!x) lb[k]={secs:y.secs, day:y.day}; else if((y.secs||1e9)<(x.secs||1e9)) lb[k]={secs:y.secs, day:y.day}; });
+  e.learnBest=lb;
   var daily={}; Object.keys(a.daily||{}).forEach(function(k){ daily[k]=a.daily[k]; });
   Object.keys(b.daily||{}).forEach(function(k){ daily[k]=Math.max(daily[k]||0,b.daily[k]); });
   e.daily=daily; e.totalMinutes=Math.max(a.totalMinutes||0,b.totalMinutes||0);
@@ -1591,8 +1607,8 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
-var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
+var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['trivia','🎲','Trivia'],['friends','👥','Friends'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
+var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
 function go(r){ route=r; window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
@@ -1641,6 +1657,8 @@ function render(){
   else if(route==='learn')c.innerHTML=learnHTML(),bindLearn();
   else if(route==='spelling')c.innerHTML=spellingHTML(),bindSpelling();
   else if(route==='play')c.innerHTML=playHTML(),bindPlay();
+  else if(route==='trivia')c.innerHTML=triviaHTML(),bindTrivia();
+  else if(route==='friends')c.innerHTML=friendsListHTML(),bindFriends();
   else if(route==='ask')c.innerHTML=askHTML(),bindAsk();
   else if(route==='critter')c.innerHTML=critterHTML(),bindCritter();
   else if(route==='treasure')c.innerHTML=treasureHTML(),bindTreasure();
@@ -1933,11 +1951,14 @@ function learnHTML(){
     var sh=SUBHEAD[s];
     return '<div class="subjecthead"><span class="sdisc" style="background:'+sh[3]+'">'+sh[0]+'</span><div><h3>'+sh[1]+'</h3><div class="small muted">'+sh[2]+'</div></div></div><div class="grid c2">'
      + list.map(function(t){ var st=questState(e,t.id,todayKey()); var done=e.completed[t.id]; var prog=e.progress[t.id];
+       var lb=(e.learnBest||{})[t.id];
+       var bestLine=lb?('⏱ Best: '+fmtPlaySecs(lb.secs)):('⏱ No time yet — be the first!');
        var pct=st==='completed-today'?100:(done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0));
        var count=st==='completed-today'?'5 / 5':(done?done+' / 5':(prog?prog.idx+' / 5':'0 / 5'));
        var label=st==='completed-today'?'✔ Completed':(st==='in-progress'?'Quest progress':(st==='fresh-today'?'Best score':'Not started'));
        return '<div class="questcard learncard'+(st==='completed-today'?' done':'')+'"><div class="iconrow"><span class="qicon">'+t.icon+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
        +'<p class="muted" style="font-weight:700;margin:10px 0 0">'+esc(t.blurb)+'</p>'
+       +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
        +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+label+'</span><span>'+count+'</span></div>'
        +'<div class="progressbar" style="margin-top:5px"><div style="width:'+pct+'%"></div></div></div>'
        +(studyPlanFor(new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
@@ -1946,7 +1967,47 @@ function learnHTML(){
        +(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')
        +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
        +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button></div>'; }).join('')+'</div>';
+  }).join('')
+   +(typeof learnBoardHTML==='function'?learnBoardHTML():'')
+   +(typeof learnFriendsBoardHTML==='function'?learnFriendsBoardHTML():'');
+}
+/* Learn leaderboards (requested 2026-11-07): one board PER QUEST,
+   ranked by fastest time — the same shape as the Play boards.
+   The family board reads e.learnBest; the friends board reads the
+   friends' snapshots, where quest times travel as bestTimes keys
+   'learn-<topicId>'. */
+function learnBoardHTML(){
+  var list=(DB.explorers||[]);
+  if(!list.length)return '';
+  var sections=TOPICS.map(function(t){
+    var rows=list.map(function(x){ var b=(x.learnBest||{})[t.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{x:x,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    if(!rows.length)return '';
+    var body=rows.map(function(r,i){
+      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+r.x.face+'</span><b>'+esc(r.x.name)+'</b><span class="small muted">⭐ '+(r.x.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+    }).join('');
+    return '<h4 style="margin:14px 0 4px">'+t.icon+' '+esc(t.name)+'</h4>'+body;
   }).join('');
+  if(!sections)return '';
+  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Quest leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per quest!</p>'+sections+'</div>';
+}
+function learnFriendsBoardHTML(){
+  var e=ex(); if(!e)return '';
+  var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
+  var gone=e.deletedFriends||[];
+  var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
+  if(!list.length)return '';
+  var sections=TOPICS.map(function(t){
+    var rows=list.map(function(f){ var b=(f.bestTimes||{})['learn-'+t.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{f:f,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    if(!rows.length)return '';
+    var body=rows.map(function(r,i){
+      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><b>'+esc(r.f.name||'Explorer')+'</b><span class="small muted">⭐ '+(r.f.stars||0)+'</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+    }).join('');
+    return '<h4 style="margin:14px 0 4px">'+t.icon+' '+esc(t.name)+'</h4>'+body;
+  }).join('');
+  if(!sections)return '';
+  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends quest board</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per quest!</p>'+sections+'</div>';
 }
 function bindLearn(){
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
@@ -1954,6 +2015,10 @@ function bindLearn(){
      Learn shows an entry card, and the Back button inside the
      routine has a real page to return from. */
   var ho=document.getElementById('hclOpen'); if(ho)ho.onclick=function(){ go('spelling'); };
+  /* Friends quest times refresh like the arcade boards do. */
+  publishFriendSnapshot();
+  var before=JSON.stringify(friendsCache);
+  loadFriends().then(function(){ if(route==='learn'&&JSON.stringify(friendsCache)!==before)render(); });
 }
 function bindSpelling(){
   var e=ex(); if(!e.hclMissed)e.hclMissed=[];
@@ -1999,7 +2064,45 @@ function questListFor(t, c){
   var pool=poolQuestions(t);
   return c.pool.map(function(pi){ var q=pool[pi]; if(!q)return null; return c.fresh?optsShuffled(q, hashStr(t.id+'#'+pi)):q; }).filter(Boolean);
 }
-var cur=null, warm=null;
+var cur=null, warm=null, quizTimer=null;
+/* Quest timing (requested 2026-11-07): the same answer-only clock
+   as the Play Arcade — it counts only the time a question is on
+   screen waiting for an answer. cur.answerSecs banks the seconds
+   already spent answering; cur.startedAt is the moment the current
+   question appeared (null while the answer is showing and the clock
+   is paused). The best time per quest is stored as
+   e.learnBest[topicId] = {secs, day}. */
+function learnElapsedSecs(){
+  if(!cur)return 0;
+  var base=cur.answerSecs||0;
+  if(cur.startedAt)base+=Math.max(0,(Date.now()-cur.startedAt)/1000);
+  return Math.round(base);
+}
+function pauseLearnTimer(){
+  if(!cur||!cur.startedAt)return;
+  cur.answerSecs=learnElapsedSecs();
+  cur.startedAt=null;
+}
+function resumeLearnTimer(){
+  if(!cur||cur.startedAt)return;
+  cur.startedAt=Date.now();
+}
+function tickQuizTime(){
+  var el=document.getElementById('quizTime');
+  if(!el||!cur){ if(quizTimer){clearInterval(quizTimer);quizTimer=null;} return; }
+  el.textContent='⏱ '+fmtPlaySecs(learnElapsedSecs());
+}
+function recordLearnBest(e, topicId){
+  /* No timing at all records nothing — a paused run still counts,
+     because its seconds are banked in answerSecs. */
+  if(!cur||(!cur.startedAt&&!(cur.answerSecs>0)))return false;
+  var secs=Math.max(1,learnElapsedSecs());
+  cur.lastSecs=secs;
+  if(!e.learnBest)e.learnBest={};
+  var b=e.learnBest[topicId];
+  if(!b||secs<b.secs){ e.learnBest[topicId]={secs:secs, day:todayKey()}; return true; }
+  return false;
+}
 function startQuestFlow(topicId){
   var e=ex();
   var p=e.progress[topicId];
@@ -2020,11 +2123,11 @@ function loadProgress(topicId){
      with (p.pool), whatever the date is now — it is never re-pulled.
      Progress saved by older builds has no pool: it means the
      original quest set, in order. */
-  return {topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh};
+  return {topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh, answerSecs:(p.elapsed||0), startedAt:(p.answered?null:Date.now())};
 }
 function persistProgress(){
   var e=ex(); if(!cur||cur.phase!=='quest')return;
-  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh}; save();
+  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs()}; save();
 }
 function warmupHTML(){
   var t=topicById(warm.topicId);
@@ -2060,7 +2163,7 @@ function beginQuest(topicId){
      so pausing mid-quest never changes the questions. */
   var isDone=!!e.completed[topicId];
   var pool=isDone?dailyPoolIndices(t, todayKey(), e.id):[0,1,2,3,4];
-  cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone};
+  cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now()};
   persistProgress(); go('quiz');
 }
 function quizHTML(){
@@ -2078,7 +2181,7 @@ function quizHTML(){
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
   return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+t.icon+' '+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!'))+'</div></div></div>'
-   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+t.icon+' '+esc(t.name)+(cur.phase==='retry'?' · Second Chance':'')+'</span><span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+t.icon+' '+esc(t.name)+(cur.phase==='retry'?' · Second Chance':'')+'</span><span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q)+'</h3>'+listenBtn
    +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
@@ -2096,7 +2199,7 @@ function quizDoneHTML(t){
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
   var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
   var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' and earned ⭐ '+earned+' stars!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:t.quest.length)+' — a replay, so no extra stars this time. You already earned them today!';
-  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
 }
 function bindQuiz(){
   var e=ex(), t=topicById(cur.topicId);
@@ -2104,19 +2207,27 @@ function bindQuiz(){
   var done=cur.idx>=list.length;
   if(done){
     var dh=document.getElementById('doneHome'); if(dh)dh.onclick=function(){ cur=null; go('learn'); };
-    var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
+    var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong, answerSecs:0, startedAt:Date.now()}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
     return;
+  }
+  /* The quest clock ticks live while a question is open — the
+     interval clears itself the moment the chip is gone. */
+  if(typeof quizTimer!=='undefined'&&typeof tickQuizTime==='function'){
+    if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
+    quizTimer=setInterval(tickQuizTime,1000);
   }
   var q=list[cur.idx];
   var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); speakPip(m?m[0]:q.q); toast('Listen… now say it out loud like Pip!'); };
   document.querySelectorAll('[data-qopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-qopt'),10); cur.picked=i; cur.answered=true;
     if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest')cur.wrong.push(cur.idx); }
+    pauseLearnTimer();
     if(cur.phase==='quest')persistProgress(); else save();
     render();
   }; });
   var nx=document.getElementById('qNext'); if(nx)nx.onclick=function(){
     cur.idx++; cur.picked=null; cur.answered=false;
+    if(cur.idx<list.length)resumeLearnTimer();
     if(cur.idx>=list.length){ finishRound(t); }
     if(cur.phase==='quest'&&cur.idx<list.length)persistProgress();
     render();
@@ -2139,6 +2250,7 @@ function finishRound(t){
        extra stars, and "earned ⭐ 5 stars!" on a replay is a lie. */
     cur.starsEarned=firstToday?cur.score:0;
     e.lastTopic=cur.topicId;
+    cur.newBest=recordLearnBest(e, cur.topicId);
     delete e.progress[cur.topicId];
     if(!e.badges.length)awardBadge('first','🌟 First Quest');
     if(cur.score===(cur.pool?cur.pool.length:t.quest.length))awardBadge('perfect','💯 Perfect Quest');
@@ -2154,6 +2266,100 @@ function finishRound(t){
     if(e.stuck)e.stuck=e.stuck.filter(function(x){return x!==cur.topicId;});
     save(); sndFanfare(); confettiStars();
   }
+}
+
+/* ============================================================ TRIVIA TIME */
+var TRIVIA_CATS={all:['🎲','All topics'],eng:['📖','English'],math:['🔢','Maths'],sci:['🔬','Science'],chi:['🀄','Chinese']};
+/* Trivia bank (requested 2026-11-07): Primary 3 level, matched to
+   what the child learns — English, Maths, Science and Chinese.
+   Each item shows a question, a hint, then the answer on tap.
+   The deck reshuffles when it runs out, so trivia never ends. */
+var TRIVIA=[
+ {cat:'eng',q:'Which word means the opposite of "brave"?',hint:'Think of someone who is scared of everything.',a:'Cowardly — or just "afraid"!'},
+ {cat:'eng',q:'Which word is a verb: "happy", "run" or "blue"?',hint:'A verb is a doing word.',a:'"Run" — it is something you do!'},
+ {cat:'eng',q:'What is the past tense of "eat"?',hint:'Yesterday, I ___ my lunch.',a:'Ate'},
+ {cat:'eng',q:'Which sentence is correct: "She go to school" or "She goes to school"?',hint:'She is one person, so the verb needs an -s.',a:'"She goes to school"'},
+ {cat:'eng',q:'What do we call the person who writes a book?',hint:'It starts with "au".',a:'An author'},
+ {cat:'eng',q:'Which word is a noun: "quickly", "garden" or "jump"?',hint:'A noun is a person, place or thing.',a:'"Garden" — it is a place!'},
+ {cat:'eng',q:'What is the plural of "child"?',hint:'It is not "childs"!',a:'Children'},
+ {cat:'eng',q:'Which word means almost the same as "huge"?',hint:'It is also a word for very, very big.',a:'Enormous — or giant, or massive!'},
+ {cat:'eng',q:'What punctuation goes at the end of "What a beautiful day"?',hint:'It shows excitement!',a:'An exclamation mark (!)'},
+ {cat:'eng',q:'Which word is the odd one out: apple, banana, carrot, grape?',hint:'Three are fruits. One grows underground.',a:'Carrot — it is a vegetable!'},
+ {cat:'eng',q:'What is the past tense of "go"?',hint:'Yesterday, we ___ to the park.',a:'Went'},
+ {cat:'eng',q:'Which is correct: "Their going home" or "They\'re going home"?',hint:'"They\'re" is short for "they are".',a:'"They\'re going home"'},
+ {cat:'math',q:'What is 7 × 8?',hint:'7 groups of 8.',a:'56'},
+ {cat:'math',q:'What is 96 ÷ 8?',hint:'Think: 8 times what is 96?',a:'12'},
+ {cat:'math',q:'A pencil costs 60 cents. How much do 5 pencils cost?',hint:'60 × 5.',a:'$3.00'},
+ {cat:'math',q:'What is half of 84?',hint:'84 ÷ 2.',a:'42'},
+ {cat:'math',q:'Which fraction is bigger: 1/2 or 1/4?',hint:'Draw a pizza cut into 2 pieces, and one cut into 4.',a:'1/2 — a half is bigger than a quarter!'},
+ {cat:'math',q:'What is 345 + 278?',hint:'300 + 200 = 500, then the rest.',a:'623'},
+ {cat:'math',q:'A rectangle is 9 cm long and 4 cm wide. What is its area?',hint:'Area = length × width.',a:'36 cm²'},
+ {cat:'math',q:'What time is 2 hours after 10:45?',hint:'Count forward: 11:45, then…',a:'12:45'},
+ {cat:'math',q:'What is 1000 − 456?',hint:'1000 − 400 = 600.',a:'544'},
+ {cat:'math',q:'How many sides does a hexagon have?',hint:'"Hexa" means six.',a:'6 sides'},
+ {cat:'math',q:'What is 6 × 7?',hint:'6 groups of 7.',a:'42'},
+ {cat:'math',q:'Mei has $10. She buys a $3.50 drink. How much change does she get?',hint:'$10.00 − $3.50.',a:'$6.50'},
+ {cat:'sci',q:'Which animal is a mammal: frog, snake or whale?',hint:'Mammals feed their babies milk.',a:'Whale'},
+ {cat:'sci',q:'What do plants need to make their own food?',hint:'Sunlight, water and air.',a:'Sunlight, water and carbon dioxide'},
+ {cat:'sci',q:'Which material is attracted to a magnet: wood, iron or plastic?',hint:'It is a metal.',a:'Iron'},
+ {cat:'sci',q:'What is the first stage of a frog\'s life cycle?',hint:'It looks like jelly with black dots.',a:'Eggs — frogspawn!'},
+ {cat:'sci',q:'Which part of the plant takes in water from the soil?',hint:'It grows underground.',a:'The roots'},
+ {cat:'sci',q:'What force pulls things down to the ground?',hint:'It is why dropped things fall.',a:'Gravity'},
+ {cat:'sci',q:'Which of these is a living thing: rock, mushroom or chair?',hint:'It grows and needs food.',a:'Mushroom — a fungus is alive!'},
+ {cat:'sci',q:'How many legs does a spider have?',hint:'More than an insect\'s six.',a:'8 legs'},
+ {cat:'sci',q:'What gas do we breathe in to stay alive?',hint:'Plants make it.',a:'Oxygen'},
+ {cat:'sci',q:'Which sense do we use to taste food?',hint:'It is on your tongue.',a:'The sense of taste'},
+ {cat:'sci',q:'What happens to water when it is heated to 100°C?',hint:'It turns into steam.',a:'It boils — it turns into water vapour!'},
+ {cat:'sci',q:'Which animal lays eggs and can fly: bat, penguin or sparrow?',hint:'It has feathers.',a:'Sparrow'},
+ {cat:'chi',q:'What does 猫 (māo) mean?',hint:'It says "meow".',a:'Cat 🐱'},
+ {cat:'chi',q:'How do you say "I love you" in Chinese?',hint:'Wǒ ài nǐ.',a:'我爱你 (wǒ ài nǐ)'},
+ {cat:'chi',q:'What does 水 (shuǐ) mean?',hint:'You drink it every day.',a:'Water 💧'},
+ {cat:'chi',q:'Which word means "school": 学校 (xué xiào) or 医院 (yī yuàn)?',hint:'医院 is where sick people go.',a:'学校 (xué xiào)'},
+ {cat:'chi',q:'What does 大 (dà) mean?',hint:'It is the opposite of 小 (xiǎo).',a:'Big'},
+ {cat:'chi',q:'How do you write the number 3 in Chinese?',hint:'It has three lines.',a:'三 (sān)'},
+ {cat:'chi',q:'What does 太阳 (tài yáng) mean?',hint:'It shines in the daytime sky.',a:'The sun ☀️'},
+ {cat:'chi',q:'What does 书 (shū) mean?',hint:'You read it.',a:'Book 📖'},
+ {cat:'chi',q:'Which word means "friend": 朋友 (péng you) or 敌人 (dí rén)?',hint:'敌人 means enemy.',a:'朋友 (péng you)'},
+ {cat:'chi',q:'What does 红 (hóng) mean?',hint:'It is the colour of an apple.',a:'Red'},
+ {cat:'chi',q:'How do you say "thank you" in Chinese?',hint:'Xiè xie.',a:'谢谢 (xiè xie)'},
+ {cat:'chi',q:'What does 月亮 (yuè liang) mean?',hint:'It shines at night.',a:'The moon 🌙'}
+];
+var triviaState=null;
+function triviaOrder(cat){
+  var idx=[];
+  TRIVIA.forEach(function(t,i){ if(cat==='all'||t.cat===cat)idx.push(i); });
+  return shuffle(idx);
+}
+function triviaHTML(){
+  if(!triviaState)triviaState={cat:'all', order:triviaOrder('all'), idx:0, revealed:false, seen:0};
+  var t=TRIVIA[triviaState.order[triviaState.idx]];
+  var cats=Object.keys(TRIVIA_CATS).map(function(c){
+    var cc=TRIVIA_CATS[c];
+    return '<button class="btn'+(triviaState.cat===c?'':' ghost')+'" data-tcat="'+c+'" style="padding:8px 14px">'+cc[0]+' '+cc[1]+'</button>';
+  }).join('');
+  var pill='<span class="pill '+t.cat+'">'+TRIVIA_CATS[t.cat][0]+' '+TRIVIA_CATS[t.cat][1]+'</span>';
+  return pageHero('🎲','Trivia Time','A quick brain snack — read the question, think, peek at the hint, then tap to see the answer. New ones keep coming, forever!','🎲 Endless questions')
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+cats+'</div>'
+   +'<div class="card" style="text-align:center;max-width:640px;margin:0 auto"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:center">'+pill+'<span class="chip">Trivia #'+(triviaState.seen+1)+'</span></div>'
+   +'<h2 style="margin:18px 0 6px;font-size:1.4rem">'+esc(t.q)+'</h2>'
+   +'<p style="font-weight:700;color:var(--ink-soft)">💡 Hint: '+esc(t.hint)+'</p>'
+   +(triviaState.revealed
+     ?'<div class="feedback ok" style="font-size:1.15rem">🎉 '+esc(t.a)+'</div><button class="btn" id="tvNext" style="margin-top:14px">Next trivia 🎲</button>'
+     :'<button class="btn" id="tvShow" style="margin-top:14px">Show the answer 👀</button>')
+   +'<p class="small muted" style="font-weight:700;margin-top:14px">Questions match Primary 3 learning — English, Maths, Science and Chinese. There is always another one!</p></div>';
+}
+function bindTrivia(){
+  document.querySelectorAll('[data-tcat]').forEach(function(b){ b.onclick=function(){
+    var c=b.getAttribute('data-tcat');
+    triviaState={cat:c, order:triviaOrder(c), idx:0, revealed:false, seen:0};
+    sndPop(); render();
+  }; });
+  var sh=document.getElementById('tvShow'); if(sh)sh.onclick=function(){ triviaState.revealed=true; sndCorrect(); render(); };
+  var nx=document.getElementById('tvNext'); if(nx)nx.onclick=function(){
+    triviaState.idx++; triviaState.seen++; triviaState.revealed=false;
+    if(triviaState.idx>=triviaState.order.length){ triviaState.order=triviaOrder(triviaState.cat); triviaState.idx=0; }
+    sndPop(); render();
+  };
 }
 
 /* ============================================================ PLAY ARCADE */
@@ -2254,16 +2460,16 @@ function playHTML(){
   var BAND2={word:'#2e6b45',number:'#7a3b47',memory:'#2f5b8f',sort:'#7a6420',scramble:'#5b4280',race:'#8a2f2f',sentence:'#1f5f70',crossword:'#6b5a2e',parking:'#43536a'};
   var THEME={word:'🌸 Grow a garden of words',number:'🎈 Pop the right balloon!',memory:'🧠 Find every matching pair',sort:'⚡ Spot the odd one out — fast!',scramble:'🔤 Unscramble the jumbled letters',race:'🏁 Race the clock to the finish',sentence:'✏️ Build the sentence in order',crossword:'🧩 Fill the grid, one clue at a time',parking:'🚗 Slide the cars out of the jam'};
   return pageHero('✨','Play Arcade','Quick games that secretly train your brain — words, numbers, memory and speedy spotting. Started games resume right where you stopped. ✅ A game you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for fresh rounds. Unfinished games keep the exact rounds they started with.','⭐ '+e.stars+' stars')
-   +'<div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds; var st=gameState(e,g.id,todayKey(),!!doneG);
+   +'<div class="playwrap"><div class="playmain"><div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds; var st=gameState(e,g.id,todayKey(),!!doneG);
     var best=(e.playBest||{})[g.id];
     var bestLine=best?('⏱ Best: '+fmtPlaySecs(best.secs)):('⏱ No time yet — be the first!');
     return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:linear-gradient(135deg,'+(BAND[g.id]||'#1e4034')+','+(BAND2[g.id]||'#2e6b45')+')"><span>'+g.e+'</span></div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
     +'<p style="font-weight:800;margin:8px 0 0">'+esc(THEME[g.id]||'')+'</p>'
     +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
     +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')+(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh rounds for today!</span></p>':'')
-    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div>'
-   +familyBoardHTML()
-   +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'');
+    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div></div>'
+   +'<aside class="playside">'+familyBoardHTML()
+   +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')+'</aside></div>';
 }
 function bindPlay(){
   document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; });
@@ -2291,11 +2497,14 @@ function friendsApi(action, body){
   }catch(e){ return Promise.resolve(null); }
 }
 function friendBestTimes(e){
-  /* The snapshot carries fastest times only: {gameId:{secs}}.
+  /* The snapshot carries fastest times only: {gameId:{secs}} for
+     Play games, plus {learn-<topicId>:{secs}} for Learn quests.
      playBest holds {secs, day} per game (recordPlayBest); read it
      defensively anyway — an explorer without it simply publishes {}. */
   var out={}, pb=(e&&(e.playBest||{}))||{};
   Object.keys(pb).forEach(function(g){ var b=pb[g]; if(b&&isFinite(+b.secs)&&+b.secs>0)out[g]={secs:Math.round(+b.secs)}; });
+  var lb=(e&&(e.learnBest||{}))||{};
+  Object.keys(lb).forEach(function(t){ var b=lb[t]; if(b&&isFinite(+b.secs)&&+b.secs>0)out['learn-'+t]={secs:Math.round(+b.secs)}; });
   return out;
 }
 function publishFriendSnapshot(){
@@ -2349,6 +2558,39 @@ function friendsBoardHTML(){
   var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(f){ return esc(f.name||'Explorer'); }).join(', ')+' — no timed games yet.</p>':'';
   var rows=list.length?(sections+waitHtml):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
   return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
+}
+function friendFastest(bestTimes){
+  /* Fastest Play time across games, with the game name — for the
+     Friends list. Learn-quest times (learn-* keys) are not Play
+     games, so they are skipped here. */
+  var best=null, bestGame=null;
+  GAMES.forEach(function(g){ var b=(bestTimes||{})[g.id]; if(b&&isFinite(+b.secs)&&+b.secs>0&&(best===null||+b.secs<best)){ best=+b.secs; bestGame=g.name; } });
+  return best===null?null:{secs:best, game:bestGame};
+}
+function friendsListHTML(){
+  /* The whole friend list in one place (requested 2026-11-07):
+     every accepted friend, from both sides — the local list
+     (parent-approved here) and the server's accepted list. */
+  var e=ex();
+  var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
+  var gone=e.deletedFriends||[];
+  var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
+  var rows=list.length?list.map(function(f){
+    var fast=friendFastest(f.bestTimes||{});
+    var fastTxt=fast?('⏱ Fastest: '+esc(fast.game)+' '+fmtPlaySecs(fast.secs)):('⏱ No timed games yet');
+    return '<div class="lbrow"><span style="font-size:1.5rem">👤</span><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">'+fastTxt+'</span></div>';
+  }).join(''):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  return pageHero('👥','My Friends','Everyone you play and learn with — your whole friend list in one place.','👥 '+list.length+' friend'+(list.length===1?'':'s'))
+   +'<div class="card"><h3 style="margin-top:0">🔑 Your friend code: '+esc(e.friendCode||'—')+'</h3><p class="muted" style="font-weight:700">Share it with a friend so they can add you — their grown-up has to accept first.</p></div>'
+   +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">All my friends</h3>'+rows+'</div>'
+   +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">Add a friend</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p></div>';
+}
+function bindFriends(){
+  publishFriendSnapshot();
+  var before=JSON.stringify(friendsCache);
+  loadFriends().then(function(){ if(route==='friends'&&JSON.stringify(friendsCache)!==before)render(); });
+  var frSend=document.getElementById('frSend');
+  if(frSend)frSend.onclick=function(){ sendFriendRequest(); };
 }
 function sendFriendRequest(){
   var e=ex(); if(!e)return;
