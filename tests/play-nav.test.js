@@ -43,6 +43,8 @@ function makeGame() {
   return eval(stubTopics + helpers + '\n'
     + gamesSrc + '\n'
     + grabLine('esc') + '\n'
+    + grabLine('fmtPlaySecs') + '\n'
+    + grab('playElapsedSecs') + '\n'
     + 'var PRAISE=["Great!"]; var ENCOURAGE=["Try again!"];\n'
     + 'function pipSVG(){ return ""; }\n'
     + 'function ex(){ return {glow:"#ffb020", stars:0, playProgress:{}}; }\n'
