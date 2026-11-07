@@ -372,6 +372,7 @@ function clientPrelude() {
     + 'function syncCodeValid(v){ return /^[A-Z2-9]{6}$/.test(String(v||\'\')) && String(v).split(\'\').every(function(ch){ return SYNC_ALPHABET.indexOf(ch)>=0; }); }\n'
     + 'function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }\n'
     + 'function esc(s){ return String(s==null?\'\':s).replace(/[&<>"\']/g,function(c){return{\'&\':\'&amp;\',\'<\':\'&lt;\',\'>\':\'&gt;\',\'"\':\'&quot;\' ,"\'":\'&#39;\' }[c];}); }\n'
+    + 'function fmtPlaySecs(s){ s=Math.max(0,Math.round(s||0)); return s<60?s+\'s\':Math.floor(s/60)+\'m \'+String(s%60).padStart(2,\'0\')+\'s\'; }\n'
     + 'var GAMES=[{id:\'word\',name:\'Word Garden\'},{id:\'number\',name:\'Number Pop\'},{id:\'memory\',name:\'Memory Match\'},{id:\'sort\',name:\'Speed Sort\'}];\n'
     + 'var friendsCache=null; var friendsUnconfigured=false;\n'
     + 'var frErrMsg=\'\';\n'
@@ -426,7 +427,7 @@ test('client: friendBestTimes reads playBest defensively', skipIfNotIntegrated, 
 });
 
 test('client: board renders gracefully when the server is unconfigured', skipIfNotIntegrated, () => {
-  const html = eval(clientPrelude() + 'friendsUnconfigured=true;\n' + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  const html = eval(clientPrelude() + 'friendsUnconfigured=true;\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(html.includes('Friends need a quick grown-up setup'), 'setup line, not a crash or raw error');
   assert.ok(html.includes('never your chats or full progress'), 'privacy note still shown');
   // The explorer's own code appears nowhere except the static
@@ -436,13 +437,22 @@ test('client: board renders gracefully when the server is unconfigured', skipIfN
   assert.ok(html.includes('id="frCode"') && html.includes('id="frSend"'), 'add-a-friend row still offered');
 });
 
-test('client: board shows only parent-approved friends, with stars and fastest time', skipIfNotIntegrated, () => {
+test('client: board shows only parent-approved friends, with stars and per-game fastest times', skipIfNotIntegrated, () => {
   const prelude = clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{word:{secs:50},number:{secs:25}}},{code:\'MNP456\',name:\'Mei\',stars:5,bestTimes:{sort:{secs:44}}}];\n';
-  const html = eval(prelude + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  const html = eval(prelude + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(html.includes('Kai'), 'approved friend shown');
   assert.ok(html.includes('⭐ 30'), 'stars shown');
-  assert.ok(html.includes('Number Pop 25s'), 'fastest time across games shown');
+  assert.ok(html.includes('Fastest time wins'), 'ranked by time, one board per game');
+  // Kai's times land on their own game boards, fastest first.
+  assert.ok(html.includes('Number Pop'), 'a board for Number Pop');
+  const iNum = html.indexOf('Number Pop');
+  const iSort = html.indexOf('Speed Sort');
+  const numBoard = iSort >= 0 ? html.slice(iNum, iSort) : html.slice(iNum);
+  assert.ok(numBoard.indexOf('Kai') >= 0, 'Kai appears on the Number Pop board');
+  assert.ok(numBoard.indexOf('⏱ 25s') >= 0, 'Kai fastest Number Pop time shown');
+  assert.ok(html.includes('Speed Sort'), 'a board for Speed Sort');
+  assert.ok(html.includes('⏱ 44s'), 'Mei fastest Speed Sort time shown');
   /* The server only returns ACCEPTED friendships, so a friend in
      friendsCache is parent-approved even when this device's local
      list has not recorded them yet (the requester's side, whose
@@ -453,16 +463,16 @@ test('client: board shows only parent-approved friends, with stars and fastest t
   const removed = eval(clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{}}];\n'
     + 'DB.explorers[0].deletedFriends=[\'XYZ789\'];\n'
-    + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(!removed.includes('Kai'), 'a removed friend is hidden');
   const localOnly = eval(clientPrelude()
     + 'friendsCache=[];\n'
-    + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(localOnly.includes('Friend XYZ789'), 'a locally approved friend shows even before their snapshot arrives');
   // A name with markup is escaped, never injected.
   const evil = eval(clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'<script>alert(1)</script>\',stars:1,bestTimes:{}}];\n'
-    + grab('friendBestLine') + '\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
   assert.ok(!evil.includes('<script>alert'), 'friend name is escaped');
   assert.ok(evil.includes('&lt;script&gt;'), 'escaped form shown');
 });
