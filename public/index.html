@@ -1968,54 +1968,40 @@ function learnHTML(){
        +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
        +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button></div>'; }).join('')+'</div>';
   }).join('')
-   +(typeof learnBoardHTML==='function'?learnBoardHTML():'')
-   +(typeof learnFriendsBoardHTML==='function'?learnFriendsBoardHTML():'');
+   +(typeof learnBoardHTML==='function'?learnBoardHTML():'');
 }
-/* Learn leaderboards (requested 2026-11-07): one board PER QUEST,
-   ranked by fastest time — the same shape as the Play boards.
-   The family board reads e.learnBest; the friends board reads the
-   friends' snapshots, where quest times travel as bestTimes keys
-   'learn-<topicId>'. */
+/* Learn leaderboard (requested 2026-11-07): one board PER QUEST,
+   family AND friends together — the same shape as the Play board.
+   Family quest times live in e.learnBest[topicId]; friends' quest
+   times travel as bestTimes keys 'learn-<topicId>', so the family
+   rows are normalised into that shape first. */
 function learnBoardHTML(){
-  var list=(DB.explorers||[]);
-  if(!list.length)return '';
-  var sections=TOPICS.map(function(t){
-    var rows=list.map(function(x){ var b=(x.learnBest||{})[t.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{x:x,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
-    if(!rows.length)return '';
-    var body=rows.map(function(r,i){
-      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+r.x.face+'</span><b>'+esc(r.x.name)+'</b><span class="small muted">⭐ '+(r.x.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
-    }).join('');
-    return '<h4 style="margin:14px 0 4px">'+t.icon+' '+esc(t.name)+'</h4>'+body;
-  }).join('');
-  if(!sections)return '';
-  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Quest leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per quest!</p>'+sections+'</div>';
-}
-function learnFriendsBoardHTML(){
-  /* Same shape as the Play friends board: the card always shows
-     when there is an explorer (even with no timed quest yet — the
-     friends just sit on a waiting line), so the section is never
-     mysteriously absent from the Learn page. */
   var e=ex();
-  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends quest board</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per quest!</p>';
+  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Quest leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per quest, family and friends together!</p>';
+  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
   if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p></div>';
-  if(typeof friendsUnconfigured!=='undefined'&&friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p></div>';
+  if(typeof friendsUnconfigured!=='undefined'&&friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'+addRow+'</div>';
+  var fam=(DB.explorers||[]).map(function(x){ var best={}; Object.keys(x.learnBest||{}).forEach(function(t){ best['learn-'+t]=x.learnBest[t]; }); return {face:x.face, name:x.name, stars:x.stars||0, best:best, friend:false}; });
   var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
   var gone=e.deletedFriends||[];
-  var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
+  var frs=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
+    .map(function(f){ return {face:null, name:f.name||'Explorer', stars:f.stars||0, best:f.bestTimes||{}, friend:true}; });
+  var all=fam.concat(frs);
   var sections=TOPICS.map(function(t){
-    var rows=list.map(function(f){ var b=(f.bestTimes||{})['learn-'+t.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{f:f,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    var rows=all.map(function(r){ var b=(r.best||{})['learn-'+t.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{r:r,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
     if(!rows.length)return '';
-    var body=rows.map(function(r,i){
+    var body=rows.map(function(row,i){
       var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><b>'+esc(r.f.name||'Explorer')+'</b><span class="small muted">⭐ '+(r.f.stars||0)+'</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+      var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span class="small muted">⭐ '+(row.r.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
     return '<h4 style="margin:14px 0 4px">'+t.icon+' '+esc(t.name)+'</h4>'+body;
   }).join('');
-  var waiting=list.filter(function(f){ return !Object.keys(f.bestTimes||{}).some(function(k){ if(k.indexOf('learn-')!==0)return false; var b=f.bestTimes[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
-  var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(f){ return esc(f.name||'Explorer'); }).join(', ')+' — no timed quests yet.</p>':'';
-  var rows=list.length?(sections+waitHtml):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
-  return head+'<div>'+rows+'</div></div>';
+  var waiting=frs.filter(function(r){ return !Object.keys(r.best||{}).some(function(k){ if(k.indexOf('learn-')!==0)return false; var b=r.best[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
+  var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed quests yet.</p>':'';
+  var rows=sections?sections+waitHtml:'<p style="font-weight:700">No timed quests yet — be the first to finish one!</p>';
+  if(!frs.length)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+'</div>';
 }
 function bindLearn(){
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
@@ -2023,10 +2009,13 @@ function bindLearn(){
      Learn shows an entry card, and the Back button inside the
      routine has a real page to return from. */
   var ho=document.getElementById('hclOpen'); if(ho)ho.onclick=function(){ go('spelling'); };
-  /* Friends quest times refresh like the arcade boards do. */
+  /* Friends quest times refresh like the arcade boards do, and the
+     board's own "Add a friend" row is wired here. */
   publishFriendSnapshot();
   var before=JSON.stringify(friendsCache);
   loadFriends().then(function(){ if(route==='learn'&&JSON.stringify(friendsCache)!==before)render(); });
+  var frSend=document.getElementById('frSend');
+  if(frSend)frSend.onclick=function(){ sendFriendRequest(); };
 }
 function bindSpelling(){
   var e=ex(); if(!e.hclMissed)e.hclMissed=[];
@@ -2286,7 +2275,7 @@ var TRIVIA=[
  {cat:'eng',q:'Which word means the opposite of "brave"?',hint:'Think of someone who is scared of everything.',a:'Cowardly — or just "afraid"!'},
  {cat:'eng',q:'Which word is a verb: "happy", "run" or "blue"?',hint:'A verb is a doing word.',a:'"Run" — it is something you do!'},
  {cat:'eng',q:'What is the past tense of "eat"?',hint:'Yesterday, I ___ my lunch.',a:'Ate'},
- {cat:'eng',q:'Which sentence is correct: "She go to school" or "She goes to school"?',hint:'She is one person, so the verb needs an -s.',a:'"She goes to school"'},
+ {cat:'eng',q:'Which sentence is correct: "She go to school" or "She goes to school"?',hint:'She is one person, so the verb needs an -s.',a:'The second one — she goes to school (one person needs the -s verb).'},
  {cat:'eng',q:'What do we call the person who writes a book?',hint:'It starts with "au".',a:'An author'},
  {cat:'eng',q:'Which word is a noun: "quickly", "garden" or "jump"?',hint:'A noun is a person, place or thing.',a:'"Garden" — it is a place!'},
  {cat:'eng',q:'What is the plural of "child"?',hint:'It is not "childs"!',a:'Children'},
@@ -2294,7 +2283,7 @@ var TRIVIA=[
  {cat:'eng',q:'What punctuation goes at the end of "What a beautiful day"?',hint:'It shows excitement!',a:'An exclamation mark (!)'},
  {cat:'eng',q:'Which word is the odd one out: apple, banana, carrot, grape?',hint:'Three are fruits. One grows underground.',a:'Carrot — it is a vegetable!'},
  {cat:'eng',q:'What is the past tense of "go"?',hint:'Yesterday, we ___ to the park.',a:'Went'},
- {cat:'eng',q:'Which is correct: "Their going home" or "They\'re going home"?',hint:'"They\'re" is short for "they are".',a:'"They\'re going home"'},
+ {cat:'eng',q:'Which is correct: "Their going home" or "They\'re going home"?',hint:'"They\'re" is short for "they are".',a:'The second one — they\'re going home, because they are going home.'},
  {cat:'math',q:'What is 7 × 8?',hint:'7 groups of 8.',a:'56'},
  {cat:'math',q:'What is 96 ÷ 8?',hint:'Think: 8 times what is 96?',a:'12'},
  {cat:'math',q:'A pencil costs 60 cents. How much do 5 pencils cost?',hint:'60 × 5.',a:'$3.00'},
@@ -2322,12 +2311,12 @@ var TRIVIA=[
  {cat:'chi',q:'What does 猫 (māo) mean?',hint:'It says "meow".',a:'Cat 🐱'},
  {cat:'chi',q:'How do you say "I love you" in Chinese?',hint:'Wǒ ài nǐ.',a:'我爱你 (wǒ ài nǐ)'},
  {cat:'chi',q:'What does 水 (shuǐ) mean?',hint:'You drink it every day.',a:'Water 💧'},
- {cat:'chi',q:'Which word means "school": 学校 (xué xiào) or 医院 (yī yuàn)?',hint:'医院 is where sick people go.',a:'学校 (xué xiào)'},
+ {cat:'chi',q:'Which word means "school": 学校 (xué xiào) or 医院 (yī yuàn)?',hint:'医院 is where sick people go.',a:'The first one — 学校 (xué xiào).'},
  {cat:'chi',q:'What does 大 (dà) mean?',hint:'It is the opposite of 小 (xiǎo).',a:'Big'},
  {cat:'chi',q:'How do you write the number 3 in Chinese?',hint:'It has three lines.',a:'三 (sān)'},
  {cat:'chi',q:'What does 太阳 (tài yáng) mean?',hint:'It shines in the daytime sky.',a:'The sun ☀️'},
  {cat:'chi',q:'What does 书 (shū) mean?',hint:'You read it.',a:'Book 📖'},
- {cat:'chi',q:'Which word means "friend": 朋友 (péng you) or 敌人 (dí rén)?',hint:'敌人 means enemy.',a:'朋友 (péng you)'},
+ {cat:'chi',q:'Which word means "friend": 朋友 (péng you) or 敌人 (dí rén)?',hint:'敌人 means enemy.',a:'The first one — 朋友 (péng you).'},
  {cat:'chi',q:'What does 红 (hóng) mean?',hint:'It is the colour of an apple.',a:'Red'},
  {cat:'chi',q:'How do you say "thank you" in Chinese?',hint:'Xiè xie.',a:'谢谢 (xiè xie)'},
  {cat:'chi',q:'What does 月亮 (yuè liang) mean?',hint:'It shines at night.',a:'The moon 🌙'}
@@ -2441,20 +2430,38 @@ function recordPlayBest(e, gameId){
    at least one explorer has a best time get a section; an explorer
    with no time for a game simply does not appear on that game's
    board. */
-function familyBoardHTML(){
-  var list=(DB.explorers||[]);
-  if(!list.length)return '';
+function playBoardHTML(){
+  /* One board per game, family AND friends together (requested
+     2026-11-07): every explorer in the family and every accepted
+     friend, ranked together by fastest time. Friend rows carry a
+     👥 Friend tag; family rows show the explorer's face. */
+  var e=ex();
+  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per game, family and friends together!</p>';
+  var note='<p class="small muted" style="font-weight:700">Friends see only your stars and fastest times — never your chats or full progress.</p>';
+  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
+  if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p>'+note+'</div>';
+  if(friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'+addRow+note+'</div>';
+  var fam=(DB.explorers||[]).map(function(x){ return {face:x.face, name:x.name, stars:x.stars||0, best:x.playBest||{}, friend:false}; });
+  var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
+  var gone=e.deletedFriends||[];
+  var frs=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; })
+    .map(function(f){ return {face:null, name:f.name||'Explorer', stars:f.stars||0, best:f.bestTimes||{}, friend:true}; });
+  var all=fam.concat(frs);
   var sections=GAMES.map(function(g){
-    var rows=list.map(function(x){ var b=(x.playBest||{})[g.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{x:x,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
+    var rows=all.map(function(r){ var b=(r.best||{})[g.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{r:r,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
     if(!rows.length)return '';
-    var body=rows.map(function(r,i){
+    var body=rows.map(function(row,i){
       var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+r.x.face+'</span><b>'+esc(r.x.name)+'</b><span class="small muted">⭐ '+(r.x.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
+      var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
+      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span class="small muted">⭐ '+(row.r.stars||0)+' stars</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
     return '<h4 style="margin:14px 0 4px">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body;
   }).join('');
-  if(!sections)return '';
-  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Family leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per game!</p>'+sections+'</div>';
+  var waiting=frs.filter(function(r){ return !GAMES.some(function(g){ var b=(r.best||{})[g.id]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
+  var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed games yet.</p>':'';
+  var rows=sections?sections+waitHtml:'<p style="font-weight:700">No timed games yet — be the first to play!</p>';
+  if(!frs.length)rows+='<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
 }
 function playHTML(){
   var e=ex();
@@ -2476,15 +2483,14 @@ function playHTML(){
     +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
     +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')+(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh rounds for today!</span></p>':'')
     +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div></div>'
-   +'<aside class="playside">'+familyBoardHTML()
-   +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')+'</aside></div>';
+   +'<aside class="playside">'+playBoardHTML()+'</aside></div>';
 }
 function bindPlay(){
   document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; });
   /* Friends: publish our own leaderboard snapshot whenever the
      arcade is opened (fire-and-forget — a failed publish never
      blocks play), refresh the accepted-friends list, and wire the
-     "Add a friend" row rendered by friendsBoardHTML(). */
+     "Add a friend" row rendered by playBoardHTML(). */
   publishFriendSnapshot();
   var before=JSON.stringify(friendsCache);
   loadFriends().then(function(){ if(route==='play'&&JSON.stringify(friendsCache)!==before)render(); });
@@ -2531,42 +2537,6 @@ function loadFriends(){
     return friendsCache;
   });
 }
-function friendsBoardHTML(){
-  /* Plugged into playHTML() by the other agent's hook:
-     +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')
-     Shows ONLY accepted friends the parent approved (e.friends),
-     with their stars and fastest time — never chats or progress. */
-  var e=ex();
-  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends leaderboard</h3><p class="small muted" style="font-weight:700;margin:0 0 6px">Fastest time wins — one board per game!</p>';
-  var note='<p class="small muted" style="font-weight:700">Friends see only your stars and fastest times — never your chats or full progress.</p>';
-  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
-  if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p>'+note+'</div>';
-  if(friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'+addRow+note+'</div>';
-  /* Friends come from BOTH sides: the local list (parent-approved
-     here) and the server's accepted list (a friend accepted on the
-     OTHER family's parent page still shows here — the server is the
-     source of truth for accepted friendships; the local list alone
-     hid the requester's friend). Removed friends stay hidden. */
-  var codes=[]; (e.friends||[]).forEach(function(c){ if(codes.indexOf(c)<0)codes.push(c); }); (friendsCache||[]).forEach(function(f){ if(f&&codes.indexOf(f.code)<0)codes.push(f.code); });
-  var gone=e.deletedFriends||[];
-  var list=codes.filter(function(code){ return gone.indexOf(code)<0; }).map(function(code){ var f=(friendsCache||[]).find(function(x){ return x.code===code; }); return f||{code:code,name:'Friend '+code,stars:0,bestTimes:{}}; });
-  /* One board per game, ranked by fastest time — the same shape as
-     the family board. A friend with no timed game yet is listed
-     under the boards, so they still show up. */
-  var sections=GAMES.map(function(g){
-    var rows=list.map(function(f){ var b=(f.bestTimes||{})[g.id]; return (b&&isFinite(+b.secs)&&+b.secs>0)?{f:f,secs:+b.secs}:null; }).filter(Boolean).sort(function(a,b){ return a.secs-b.secs; });
-    if(!rows.length)return '';
-    var body=rows.map(function(r,i){
-      var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
-      return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><b>'+esc(r.f.name||'Explorer')+'</b><span class="small muted">⭐ '+(r.f.stars||0)+'</span><span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(r.secs)+'</span></div>';
-    }).join('');
-    return '<h4 style="margin:14px 0 4px">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body;
-  }).join('');
-  var waiting=list.filter(function(f){ return !Object.keys(f.bestTimes||{}).some(function(k){ var b=f.bestTimes[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
-  var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(f){ return esc(f.name||'Explorer'); }).join(', ')+' — no timed games yet.</p>':'';
-  var rows=list.length?(sections+waitHtml):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
-  return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
-}
 function friendFastest(bestTimes){
   /* Fastest Play time across games, with the game name — for the
      Friends list. Learn-quest times (learn-* keys) are not Play
@@ -2591,6 +2561,7 @@ function friendsListHTML(){
   return pageHero('👥','My Friends','Everyone you play and learn with — your whole friend list in one place.','👥 '+list.length+' friend'+(list.length===1?'':'s'))
    +'<div class="card"><h3 style="margin-top:0">🔑 Your friend code: '+esc(e.friendCode||'—')+'</h3><p class="muted" style="font-weight:700">Share it with a friend so they can add you — their grown-up has to accept first.</p></div>'
    +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">All my friends</h3>'+rows+'</div>'
+   +'<p class="small muted" style="font-weight:700;margin-top:12px">Friends see only your stars and fastest times — never your chats or full progress.</p>'
    +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">Add a friend</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><div id="frErr" class="small" style="color:#c2410c;font-weight:800;margin-top:6px">'+esc(frErrMsg)+'</div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p></div>';
 }
 function bindFriends(){
