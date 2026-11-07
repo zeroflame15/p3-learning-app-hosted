@@ -174,6 +174,14 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   assert.ok(out.indexOf('Family leaderboard') >= 0, 'leaderboard section at the bottom');
   assert.ok(out.indexOf('Memory Match') >= 0, 'a board for the game Sibling timed');
   assert.ok(out.indexOf('Sibling') >= 0, 'leaderboard lists the other explorer');
+  // The leaderboards sit in a right-hand column, after the games.
+  assert.ok(out.indexOf('class="playwrap"') >= 0, 'games and boards share a two-column wrap');
+  assert.ok(out.indexOf('class="playside"') >= 0, 'the boards live in the right-hand column');
+  assert.ok(out.indexOf('class="playside"') > out.indexOf('data-game="parking"'), 'the side column comes after the game cards');
+  const css = html.slice(0, html.indexOf('</style>'));
+  assert.ok(css.indexOf('.playwrap{display:flex') >= 0, 'playwrap is a flex row');
+  assert.ok(css.indexOf('.playwrap .playside{flex:0 0 340px') >= 0, 'the side column is a fixed 340px');
+  assert.ok(css.indexOf('@media (max-width:900px)') >= 0 && css.indexOf('.playwrap{flex-direction:column}') >= 0, 'boards stack under the games on narrow screens');
 });
 
 test('friends hook is present verbatim and safe when friendsBoardHTML is undefined', () => {
