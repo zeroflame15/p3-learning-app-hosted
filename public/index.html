@@ -1384,6 +1384,18 @@ function mergeExplorer(a,b){
   if(_nAtB>_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; } else if(_nAtA>_nAtB){ if(a.name!=null)e.name=a.name; e.nameAt=a.nameAt; } else if(_nAtA&&_nAtB&&_nAtB===_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; }
   var _lAtA=Date.parse((a&&a.lookAt)||'')||0, _lAtB=Date.parse((b&&b.lookAt)||'')||0;
   if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; if(a.face!=null)e.face=a.face; e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; }
+  /* Weekly theme: same later-timestamp-wins rule as name/look. The
+     merge used to rebuild the explorer from the server copy and
+     never took the local theme, so tapping a theme chip changed
+     nothing — save() reverted it on the spot (seen live 2026-11-07). */
+  var _tAtA=Date.parse((a&&a.themeAt)||'')||0, _tAtB=Date.parse((b&&b.themeAt)||'')||0;
+  if(_tAtB>_tAtA){ if(b.theme!=null)e.theme=b.theme; e.themeAt=b.themeAt; } else if(_tAtA>_tAtB){ if(a.theme!=null)e.theme=a.theme; e.themeAt=a.themeAt; } else if(_tAtA&&_tAtB&&_tAtB===_tAtA){ if(b.theme!=null)e.theme=b.theme; e.themeAt=b.themeAt; }
+  /* Picture code: same later-timestamp-wins rule. The merge used to
+     rebuild the explorer from the server copy and never took the
+     local code, so a reset in the parent page was reverted by the
+     very save that stored it (seen live 2026-11-07). */
+  var _cAtA=Date.parse((a&&a.codeAt)||'')||0, _cAtB=Date.parse((b&&b.codeAt)||'')||0;
+  if(_cAtB>_cAtA){ if(b.code!=null)e.code=b.code; e.codeAt=b.codeAt; } else if(_cAtA>_cAtB){ if(a.code!=null)e.code=a.code; e.codeAt=a.codeAt; } else if(_cAtA&&_cAtB&&_cAtB===_cAtA){ if(b.code!=null)e.code=b.code; e.codeAt=b.codeAt; }
   var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
   e.care=mergeCare(a.care,b.care);
   e.careGrewDay=((a.careGrewDay||'')>(b.careGrewDay||''))?a.careGrewDay:b.careGrewDay;
@@ -1531,9 +1543,9 @@ function ensureFriendCode(e){
   return e.friendCode;
 }
 function newExplorer(name, code){
-  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
+  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
@@ -1644,8 +1656,9 @@ function toggleMenu(){
   var h=document.getElementById('menuHolder'); if(!h)return;
   if(h.innerHTML){ h.innerHTML=''; return; }
   var e=ex();
+  if(e&&!e.friendCode){ e.friendCode=genFriendCode(); save(); }
   h.innerHTML='<div class="menu"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+pipSVG(52,e.glow)
-   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+' '+(e.badge||'⭐')+'</div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
+   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+' '+(e.badge||'⭐')+'</div><div class="small" style="font-weight:800;margin-top:2px">🔑 Friend code: <span id="mFriendCode" style="cursor:pointer;text-decoration:underline">'+esc(e.friendCode||'—')+'</span> <span class="muted" style="font-weight:600">· tap code to copy</span></div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
    +'<button class="mitem" id="mLook">🎨 Change my name &amp; look</button>'
    +'<button class="mitem" id="mSwitch">🔀 Switch explorer</button>'
    +'<button class="mitem" id="mAdd">➕ Add another explorer</button>'
@@ -1656,6 +1669,7 @@ function toggleMenu(){
   document.getElementById('mAdd').onclick=function(){ DB.activeId=null; save(); doorMode='create'; go('door'); };
   document.getElementById('mParent').onclick=function(){ h.innerHTML=''; go('parent'); };
   document.getElementById('mLook').onclick=function(){ h.innerHTML=''; openLookModal(); };
+  var fc=document.getElementById('mFriendCode'); if(fc)fc.onclick=function(){ var live=ex(); var code=live&&live.friendCode?live.friendCode:''; if(!code)return; function done(){ toast('Friend code copied — share it so a friend can add '+live.name+'!'); } if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done,function(){ toast('Friend code: '+code); }); } else { var ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(err){ toast('Friend code: '+code); } document.body.removeChild(ta); } };
 }
 function openLookModal(){
   var e=ex();
@@ -1895,7 +1909,8 @@ function homeHTML(){
 }
 function bindHome(){
   document.querySelectorAll('[data-theme]').forEach(function(b){ b.onclick=function(){
-    var name=b.getAttribute('data-theme'); var e=ex(); e.theme=name; save(); applyTheme(); sndCorrect();
+    var name=b.getAttribute('data-theme'); var e=ex(); if(e.theme!==name){ e.theme=name; e.themeAt=new Date().toISOString(); }
+    save(); applyTheme(); sndCorrect();
     toast('Theme changed to '+name+'!'); render();
   }; });
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
@@ -3416,7 +3431,7 @@ function bindParent(){
     var area=document.getElementById('resetArea');
     area.innerHTML='<div class="card" style="margin-top:12px"><h4>New picture code for '+esc(target.name)+'</h4><p class="small muted" style="font-weight:700">Tap 3 pictures in order — this becomes the new code.</p><div class="codebubbles" id="rsBubbles"></div><div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-rpic="'+p+'">'+p+'</button>'; }).join('')+'</div></div>';
     renderBubbles(document.getElementById('rsBubbles'), picks);
-    document.querySelectorAll('[data-rpic]').forEach(function(pb){ pb.onclick=function(){ if(picks.length<3)picks.push(pb.getAttribute('data-rpic')); renderBubbles(document.getElementById('rsBubbles'), picks); if(picks.length===3){ target.code=picks.slice(); save(); toast('Picture code reset for '+target.name+'.'); area.innerHTML=''; } }; });
+    document.querySelectorAll('[data-rpic]').forEach(function(pb){ pb.onclick=function(){ if(picks.length<3)picks.push(pb.getAttribute('data-rpic')); renderBubbles(document.getElementById('rsBubbles'), picks); if(picks.length===3){ target.code=picks.slice(); target.codeAt=new Date().toISOString(); save(); toast('Picture code reset for '+target.name+'.'); area.innerHTML=''; } }; });
   }; });
   document.querySelectorAll('[data-remove]').forEach(function(b){ b.onclick=function(){
     var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-remove');});
