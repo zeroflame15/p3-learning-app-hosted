@@ -39,7 +39,7 @@ a{color:var(--sky)}
 .brand .bname{font-family:"Fredoka";font-weight:800;font-size:1.15rem;line-height:1.1}
 .brand .bsub{font-size:.72rem;opacity:.75;font-weight:700}
 .navbtn{display:flex;align-items:center;gap:11px;width:100%;background:transparent;border:0;color:var(--nav-ink);padding:11px 12px;border-radius:12px;font-size:.98rem;font-weight:800;text-align:left;margin-bottom:4px}
-.navbtn .nic{font-size:1.15rem;width:24px;text-align:center}
+.navbtn .nic{font-size:1.15rem;width:28px;text-align:center}
 .navbtn:hover{background:rgba(255,255,255,.08)}
 .navbtn.active{background:var(--amber);color:#231a02}
 .sidebar .spacer{flex:1}
@@ -292,19 +292,16 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .themechip.sel{background:var(--gold);color:#2a2753;transform:scale(1.05);box-shadow:0 0 0 2px rgba(255,255,255,.8)}
 .themedots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
 .themedots i{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.18)}
-/* Departures from the mint world (myKx review): the Play Arcade stays
-   dark navy/neon and the Treasure Realm stays a purple crystal cave. */
-.app.route-play .main{background:#0e1230;color:#f5f1e6}
-.app.route-play .topbar{background:#0e1230;border-bottom-color:#2a2f5e}
-.app.route-play .card{background:#232154;border-color:#3a3677;color:#f5f1e6}
-.app.route-play .flowhero{background:#232154;border-color:#3a3677;color:#f5f1e6}
-.app.route-play .muted{color:#b9b4d9}
-/* Every pill on the Play route gets the same dark-on-white treatment
-   as the timer chip: the plain .chip inherits the route's cream text
-   on its pale-mint pill, which is nearly invisible (seen live
-   2026-11-07 on the parking/crossword header pills and the
-   leaderboard best-time pill). */
-.app.route-play .chip{background:#fff;color:#1e3a24;border-color:#1e3a24}
+/* Play and Treasure keep their own colours, but in the same light
+   pastel family as the mint world (requested 2026-11-07 — the dark
+   navy arcade and deep purple cave felt like different apps, and
+   every dark route kept breaking text contrast). Play is a soft
+   aqua, Treasure a soft lavender; cards stay white and text stays
+   dark on both, so the plain .chip reads fine with no override. */
+.app.route-play .main{background:#d8f1ea}
+.app.route-play .topbar{background:#d8f1ea;border-bottom-color:#b5e3d5}
+.app.route-treasure .main{background:#ece7f7}
+.app.route-treasure .topbar{background:#ece7f7;border-bottom-color:#d8cdef}
 /* Play Arcade layout: the game cards take the left, the leaderboards
    sit in a right-hand column (requested 2026-11-07). On narrow
    screens the boards stack underneath the games. */
@@ -316,15 +313,8 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
   .playwrap{flex-direction:column}
   .playwrap .playside{flex:1 1 auto;max-width:none;width:100%}
 }
-.app.route-treasure .main{background:linear-gradient(180deg,#2a1b4d,#1b1030);color:#f5f1e6}
-.app.route-treasure .topbar{background:#2a1b4d;border-bottom-color:#6b4fa1}
-.app.route-treasure .card{background:#3a2a63;border-color:#6b4fa1;color:#f5f1e6}
-.app.route-treasure .muted{color:#cfc4f2}
-/* Same invisible-chip trap as Play (seen live 2026-11-07): the
-   top-bar star count is a plain .chip, and on this route it inherits
-   the route's cream text on its pale-mint pill — the stars balance
-   is unreadable. Dark text on white, like the Play fix. */
-.app.route-treasure .chip{background:#fff;color:#1e3a24;border-color:#1e3a24}
+.app.route-treasure .main{background:#ece7f7}
+.app.route-treasure .topbar{background:#ece7f7;border-bottom-color:#d8cdef}
 /* Friend-request badge (requested 2026-11-07): a red count bubble
    on the Friends nav item, only while requests wait for a grown-up.
    In the sidebar it sits at the right end; in the bottom nav it
@@ -371,12 +361,16 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .gameband span{font-size:4.2rem;line-height:1}
 .lbrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line);font-weight:800}
 .lbrow:last-child{border-bottom:0}
-/* Leaderboard mini-cards (requested 2026-11-07 — the combined board
-   lumped every game into one card, so a time alone said nothing
-   about which game it belonged to): one card per game/quest, with
-   its own coloured header band. The card sets its own dark ink so
-   it reads on the dark Play card as well as the white Learn card.
-   Rows carry no star count — the board ranks by time, not stars. */
+/* Custom icon art sizes (2026-11-07): glossy 3D tiles in
+   public/icons/. .navic is the sidebar/bottom-nav tile, .gicon the
+   big game-card band icon, .qicon img fills the quest-card tile,
+   .ic-sm is the inline size for heroes, pills and leaderboard
+   headers. */
+.navic{width:28px;height:28px;border-radius:8px;object-fit:cover;display:block}
+.bottomnav .navic{width:24px;height:24px}
+.gicon{width:72px;height:72px;border-radius:18px;object-fit:cover}
+.qicon img{width:46px;height:46px;border-radius:14px;object-fit:cover;display:block}
+.ic-sm{width:1.35em;height:1.35em;border-radius:6px;object-fit:cover;vertical-align:-0.28em}
 .lbcard{border:2px solid var(--line);border-radius:14px;margin-top:12px;overflow:hidden;background:#fff;color:#1e3a24}
 .lbcard>h4{margin:0;padding:10px 12px;font-size:1rem;color:#1e3a24}
 .lbcard .lbrow{padding:10px 12px}
@@ -567,7 +561,7 @@ if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.on
    ============================================================ */
 function Q(q,o,a,c,j){return{q:q,o:o,a:a,c:c,j:j};}
 var TOPICS=[
-{id:'eng-story',sub:'eng',subName:'English',icon:'📖',name:'Story Words',blurb:'Pick the best word to finish each mini story.',
+{id:'eng-story',img:'icons/topic-eng-story.webp',sub:'eng',subName:'English',icon:'📖',name:'Story Words',blurb:'Pick the best word to finish each mini story.',
  quest:[Q('Mina was so hungry she ate her noodles in two minutes. She was really ___.',['starving','sleepy','gentle','proud'],0,'Think: super, super hungry!','Why did the noodle blush? It saw the salad dressing! 🍜'),
  Q('The tortoise moved very slowly, but it never stopped. It was ___.',['lazy','steady','rude','shiny'],1,'It kept going and going, like a good MRT train.','Slow and steady — just like me chasing a fish!'),
  Q('“Please lower your voice,” whispered Miss Tan. “We are in the ___.”',['library','market','playground','beach'],0,'Shhh… where must we be extra quiet?','Libraries are my favourite quiet ponds!'),
@@ -587,7 +581,7 @@ var TOPICS=[
  Q('After the long hike, Sara’s feet felt sore and ___.',['tired','sleepy','thirsty','proud'],0,'A long hike makes feet…',''),
  Q('The baby laughed and clapped her hands. She was very ___.',['sad','happy','angry','sleepy'],1,'Laughing and clapping means…',''),
  Q('The old bridge creaked in the wind. It looked very ___.',['new','shaky','bright','clean'],1,'A creaky bridge feels…','')]},
-{id:'eng-tense',sub:'eng',subName:'English',icon:'⏰',name:'Tenses Trek',blurb:'Yesterday, today or tomorrow? Pick the right verb.',
+{id:'eng-tense',img:'icons/topic-eng-tense.webp',sub:'eng',subName:'English',icon:'⏰',name:'Tenses Trek',blurb:'Yesterday, today or tomorrow? Pick the right verb.',
  quest:[Q('Yesterday, we ___ to the zoo by bus.',['go','goes','went','going'],2,'Yesterday = past tense. Go becomes…?','Past tense is like yesterday’s snacks — already eaten!'),
  Q('She ___ her teeth every morning.',['brush','brushes','brushed','brushing'],1,'Every morning = habit. She needs an -es!','Even otters brush… okay, we mostly splash.'),
  Q('Tomorrow, they ___ a kite at Marina Barrage.',['fly','flew','will fly','flies'],2,'Tomorrow = future. We add “will”.','Future kites! I call that tomorrow-wind!'),
@@ -607,7 +601,7 @@ var TOPICS=[
  Q('Last week, we ___ to the museum by train.',['go','goes','went','going'],2,'Last week = past. Go becomes…?',''),
  Q('She ___ her shoes every night.',['clean','cleans','cleaned','cleaning'],1,'Every night = always. She…',''),
  Q('Look! The cat ___ up the tree right now.',['climb','climbs','is climbing','climbed'],2,'Right now = happening now!','')]},
-{id:'eng-story2',sub:'eng',subName:'English',icon:'✏️',name:'Finish the Story',blurb:'You are the author! Choose the best next sentence.',
+{id:'eng-story2',img:'icons/topic-eng-story2.webp',sub:'eng',subName:'English',icon:'✏️',name:'Finish the Story',blurb:'You are the author! Choose the best next sentence.',
  quest:[Q('Kai found a tiny door behind the library shelf. He pushed it open and…',['…the door was closed.','…saw a garden where books grew on trees!','…ate a sandwich.','…it was bedtime.'],1,'A magical story needs a magical surprise!','Books on trees? Leaf me alone, that’s amazing! 🌳'),
  Q('It started to rain heavily. Mei quickly…',['…took off her shoes to swim.','…opened her umbrella and ran to the void deck.','…watered the plants.','…wore her sunglasses.'],1,'Rain + smart move = stay dry!','Void deck to the rescue — Singapore style!'),
  Q('The little robot beeped sadly. Its battery was flat. So Zara…',['…plugged it in and waited kindly.','…threw it away at once.','…shouted at it.','…gave it a bath.'],0,'Kind Zara helps, not throws!','Be kind to robots. They remember. Beep.'),
@@ -627,7 +621,7 @@ var TOPICS=[
  Q('Mei found a shiny key under the mat. She…',['…tried it in the old chest.','…ate the key.','…threw it in the sea.','…went to sleep at once.'],0,'A key opens something — what would you try?',''),
  Q('The kite got stuck in a tall tree. Tom…',['…asked his dad to help get it down.','…climbed the tree at once.','…bought a new tree.','…shouted at the kite.'],0,'Stuck kite? Ask a grown-up first!',''),
  Q('A plant in the classroom was very dry. The children…',['…watered it and put it in the sun.','…painted it blue.','…put it in the fridge.','…hid it under the bed.'],0,'Dry plants need…?','')]},
-{id:'eng-punct',sub:'eng',subName:'English',icon:'❗',name:'Punctuation Pond',blurb:'Full stops, question marks and capital letters.',
+{id:'eng-punct',img:'icons/topic-eng-punct.webp',sub:'eng',subName:'English',icon:'❗',name:'Punctuation Pond',blurb:'Full stops, question marks and capital letters.',
  quest:[Q('Which sentence is correct?',['where is my pencil','Where is my pencil?','where is my pencil?','Where is my pencil'],1,'Questions start big and end with…?','Question marks are like hooks for answers!'),
  Q('Pick the missing mark: “Wow ___ That was an amazing goal!”',['.','?','!',','],2,'“Wow!” shows strong feeling!','WOW! See? Excitement needs the tall mark!'),
  Q('Which name needs a capital letter?',['singapore','table','apple','happy'],0,'Special names of places start BIG.','Singapore deserves a capital S!'),
@@ -647,7 +641,7 @@ var TOPICS=[
  Q('Which sentence is written correctly?',['the dog is barking loudly.','The dog is barking loudly.','The dog is barking loudly?','the Dog is Barking loudly.'],1,'Starts big, ends with a full stop!',''),
  Q('Missing mark: “Help ___ I cannot open the door!”',['.','!','?',','],1,'Someone is shouting for help!',''),
  Q('Which sentence uses a question mark correctly?',['Are you coming with us?','Are you coming with us.','are you coming with us?','Are, you coming with us?'],0,'A question starts big and ends with ?','')]},
-{id:'math-mrt',sub:'math',subName:'Maths',icon:'🚇',name:'MRT Numbers',blurb:'Count stations, add and subtract along the line.',
+{id:'math-mrt',img:'icons/topic-math-mrt.webp',sub:'math',subName:'Maths',icon:'🚇',name:'MRT Numbers',blurb:'Count stations, add and subtract along the line.',
  quest:[Q('The train travels 14 stations, then 9 more. How many stations in all?',['21','23','25','19'],1,'14 + 9. Count on: 14, 15… or make 20 first!','All aboard the number train! Choo choo!'),
  Q('There were 46 passengers. 18 got off at Orchard. How many are left?',['26','28','32','24'],1,'46 − 18. Take away 10, then 8.','28 passengers still riding!'),
  Q('A ride costs $1.30. You pay with $2. Your change is…',['$0.60','$0.70','$0.80','$1.70'],1,'$2.00 − $1.30 = ?','Change jingles like tiny bells!'),
@@ -667,7 +661,7 @@ var TOPICS=[
  Q('The train travels 12 stations, then 8 more. How many stations in all?',['18','19','20','22'],2,'12 + 8. Make 20 first!',''),
  Q('There were 35 passengers. 12 got off at City Hall. How many are left?',['21','22','23','24'],2,'35 − 12. Count back!',''),
  Q('A ride costs $1.50. You pay with $2. Your change is…',['$0.40','$0.50','$0.60','$1.50'],1,'$2.00 − $1.50.','')]},
-{id:'math-hawker',sub:'math',subName:'Maths',icon:'🍜',name:'Hawker Change',blurb:'Chicken rice, roti prata and making change.',
+{id:'math-hawker',img:'icons/topic-math-hawker.webp',sub:'math',subName:'Maths',icon:'🍜',name:'Hawker Change',blurb:'Chicken rice, roti prata and making change.',
  quest:[Q('Chicken rice costs $3.50 and a drink $1.50. Total?',['$4.50','$5.00','$5.50','$4.00'],1,'50 cents + 50 cents = $1!','$3 + $1 + $1 = $5. Yummy maths!'),
  Q('You pay $10 for a $6.80 meal. Your change is…',['$3.20','$4.20','$3.80','$2.20'],0,'$10 − $6.80. Start from $6.80 up to $10.','Count up: 6.80 → 7.00 → 10.00!'),
  Q('One roti prata costs $1.20. Three cost…',['$2.40','$3.20','$3.60','$4.20'],2,'$1.20 × 3. 12 × 3 = 36!','Three pratas! Flip flip flip!'),
@@ -687,7 +681,7 @@ var TOPICS=[
  Q('Laksa costs $4.00 and a drink $1.00. Total?',['$4.50','$5.00','$5.50','$4.00'],1,'Add the dollars: $4 + $1!',''),
  Q('You pay $10 for a $7.50 meal. Your change is…',['$2.00','$2.50','$3.00','$3.50'],1,'$10.00 − $7.50.',''),
  Q('One curry puff costs $1.50. Two cost…',['$2.50','$3.00','$3.50','$2.00'],1,'$1.50 + $1.50 = $3.00!','')]},
-{id:'math-ntuc',sub:'math',subName:'Maths',icon:'🛒',name:'NTUC Totals',blurb:'Shopping basket multiplication and totals.',
+{id:'math-ntuc',img:'icons/topic-math-ntuc.webp',sub:'math',subName:'Maths',icon:'🛒',name:'NTUC Totals',blurb:'Shopping basket multiplication and totals.',
  quest:[Q('Apples come in bags of 6. You buy 4 bags. How many apples?',['18','20','24','30'],2,'6 × 4 = ? Count in sixes!','24 crunchy apples!'),
  Q('One carton of milk is $2. Three cartons cost…',['$5','$6','$7','$23'],1,'2 × 3. Easy-peasy!','Milk maths, mooo-velous!'),
  Q('A basket has 36 eggs shared equally into 4 trays. Each tray has…',['8 eggs','9 eggs','10 eggs','12 eggs'],1,'36 ÷ 4 = ? 4 × 9 = 36!','Nine per tray — no cracks!'),
@@ -707,7 +701,7 @@ var TOPICS=[
  Q('Pears come in bags of 4. You buy 5 bags. How many pears?',['16','18','20','24'],2,'4 × 5 — count in fours!',''),
  Q('One bottle of juice is $3. Two bottles cost…',['$5','$6','$7','$9'],1,'$3 + $3!',''),
  Q('A box has 24 biscuits shared equally into 3 plates. Each plate has…',['6','7','8','9'],2,'24 ÷ 3.','')]},
-{id:'math-frac',sub:'math',subName:'Maths',icon:'🍕',name:'Fractions Feast',blurb:'Halves, quarters and sharing fairly.',
+{id:'math-frac',img:'icons/topic-math-frac.webp',sub:'math',subName:'Maths',icon:'🍕',name:'Fractions Feast',blurb:'Halves, quarters and sharing fairly.',
  quest:[Q('A pizza is cut into 8 equal slices. You eat 2. What fraction did you eat?',['2/8','8/2','2/6','1/2'],0,'Eaten slices on top, total slices below!','2 out of 8 — still 6 left for me, right?'),
  Q('Which is bigger: 1/2 or 1/4 of the same cake?',['1/4','1/2','They are equal','Cannot tell'],1,'Fewer pieces = bigger pieces!','Half a cake beats a quarter — trust an otter!'),
  Q('3/4 of a ribbon is used. What fraction is left?',['1/4','2/4','3/4','4/4'],0,'4/4 − 3/4 = ?','One quarter left — a tiny tail of ribbon!'),
@@ -727,7 +721,7 @@ var TOPICS=[
  Q('A chocolate bar is cut into 10 equal squares. You eat 3. What fraction did you eat?',['3/10','10/3','3/7','1/3'],0,'Eaten squares on top, total below!',''),
  Q('Which is bigger: 1/3 or 1/4 of the same cake?',['1/4','1/3','They are equal','Cannot tell'],1,'Fewer pieces = bigger pieces!',''),
  Q('2/5 of a rope is used. What fraction is left?',['1/5','3/5','2/5','5/5'],1,'5/5 − 2/5.','')]},
-{id:'sci-frog',sub:'sci',subName:'Science',icon:'🐸',name:'Frog Life Cycle',blurb:'From egg to frog — how living things grow.',
+{id:'sci-frog',img:'icons/topic-sci-frog.webp',sub:'sci',subName:'Science',icon:'🐸',name:'Frog Life Cycle',blurb:'From egg to frog — how living things grow.',
  quest:[Q('What is the correct order of a frog’s life cycle?',['Frog → egg → tadpole','Egg → tadpole → froglet → frog','Tadpole → egg → frog','Egg → frog → tadpole'],1,'It starts as a tiny egg in water!','Ribbit! I cheer for every tadpole!'),
  Q('A tadpole breathes using its…',['lungs','gills','nose','skin only'],1,'Tadpoles live in water like fish!','Gills are underwater breathing gear!'),
  Q('What does a young tadpole mostly eat?',['Insects','Plants and algae','Other frogs','Sand'],1,'Tiny tadpoles munch green plant bits.','Salad days for baby tadpoles!'),
@@ -747,7 +741,7 @@ var TOPICS=[
  Q('What comes right after a tadpole?',['Egg','Froglet','Tadpole','Fish'],1,'Legs grow, tail shrinks!',''),
  Q('A tadpole uses its tail to ___.',['fly','swim','jump','dig'],1,'It wiggles to move in water!',''),
  Q('Which is the correct order?',['Tadpole → froglet → frog → egg','Egg → tadpole → froglet → frog','Frog → froglet → tadpole → egg','Egg → frog → tadpole → froglet'],1,'It starts as a tiny egg in water!','')]},
-{id:'sci-magnet',sub:'sci',subName:'Science',icon:'🧲',name:'Magnet Lab',blurb:'What sticks, what doesn’t, and pushing poles.',
+{id:'sci-magnet',img:'icons/topic-sci-magnet.webp',sub:'sci',subName:'Science',icon:'🧲',name:'Magnet Lab',blurb:'What sticks, what doesn’t, and pushing poles.',
  quest:[Q('Which of these will a magnet attract?',['Plastic ruler','Iron nail','Wooden block','Rubber eraser'],1,'Magnets love iron and steel!','Nails stick, rubbers don’t — magnet rules!'),
  Q('Two north poles of magnets pushed together will…',['stick tightly','push away (repel)','melt','disappear'],1,'Same poles push away!','Like two otters wanting the same fish — push!'),
  Q('A paperclip is made of steel. A magnet will…',['repel it','attract it','make it float forever','turn it blue'],1,'Steel is magnetic!','Click! Paperclip captured!'),
@@ -767,7 +761,7 @@ var TOPICS=[
  Q('A magnet will attract a ___.',['plastic spoon','wooden ruler','iron key','rubber duck'],2,'Magnets love iron and steel!',''),
  Q('A north pole and a south pole pushed together will…',['push away','pull together (attract)','melt','break'],1,'Opposites pull together!',''),
  Q('What is the best way to find out if a coin is magnetic?',['Taste it','Hold a magnet near it','Drop it in water','Shake it'],1,'Bring a magnet close and watch!','')]},
-{id:'sci-plants',sub:'sci',subName:'Science',icon:'🌱',name:'Garden & Plants',blurb:'Void-deck gardens, roots, leaves and sunlight.',
+{id:'sci-plants',img:'icons/topic-sci-plants.webp',sub:'sci',subName:'Science',icon:'🌱',name:'Garden & Plants',blurb:'Void-deck gardens, roots, leaves and sunlight.',
  quest:[Q('Plants make their own food using…',['moonlight only','sunlight, water and air','soil as food','insects only'],1,'Photosynthesis needs sun + water + air.','Plants are tiny chefs cooking with sunlight!'),
  Q('The part of the plant that drinks water from the soil is the…',['flower','leaf','root','fruit'],2,'Underground drinker!','Roots are the plant’s straws!'),
  Q('A plant kept in a dark cupboard will most likely…',['grow faster','turn yellow and weak','make more flowers','grow bigger leaves'],1,'No sunlight = no food-making!','Plants need their sunny breakfast!'),
@@ -787,7 +781,7 @@ var TOPICS=[
  Q('Plants make food using sunlight, water and ___.',['soil','air','sand','milk'],1,'The air gives a gas called carbon dioxide!',''),
  Q('The part that holds the plant up and carries water is the ___.',['root','stem','leaf','petal'],1,'It stands tall like a straw!',''),
  Q('A seed kept in a cold, dry box will most likely…',['sprout quickly','stay asleep (not germinate)','grow flowers at once','turn into a tree'],1,'Seeds need water and warmth to wake up!','')]},
-{id:'chi-listen',sub:'chi',subName:'Chinese',icon:'👂',name:'听一听 Listening',blurb:'Tap Listen, hear the word, pick the right picture word.',
+{id:'chi-listen',img:'icons/topic-chi-listen.webp',sub:'chi',subName:'Chinese',icon:'👂',name:'听一听 Listening',blurb:'Tap Listen, hear the word, pick the right picture word.',
  quest:[Q('Listen: mā ma（妈妈）means…',['father','mother','teacher','friend'],1,'“Mā ma” — the first word many babies say!','妈妈 is the warmest word!'),
  Q('Listen: píng guǒ（苹果）is a…',['banana 香蕉','apple 苹果','orange 橙子','grape 葡萄'],1,'Red, round and crunchy!','An apple a day keeps Pip playful!'),
  Q('Listen: xiè xie（谢谢）means…',['hello','goodbye','thank you','sorry'],2,'We say it when someone helps us!','Say 谢谢 with a big smile!'),
@@ -807,7 +801,7 @@ var TOPICS=[
  Q('Listen: gǒu（狗）is a…',['cat','dog','bird','fish'],1,'汪汪 (wāng wāng) says the dog!',''),
  Q('Listen: hóng（红）means…',['blue','green','red','yellow'],2,'红 is the colour of a red apple!',''),
  Q('Listen: shū（书）is a…',['pen','book','bag','cup'],1,'书 — open it and read!','')]},
-{id:'chi-family',sub:'chi',subName:'Chinese',icon:'🏠',name:'家庭 Family Words',blurb:'Words for the people at home.',
+{id:'chi-family',img:'icons/topic-chi-family.webp',sub:'chi',subName:'Chinese',icon:'🏠',name:'家庭 Family Words',blurb:'Words for the people at home.',
  quest:[Q('哥哥 (gē ge) is your…',['younger sister','elder brother','father','uncle'],1,'哥 is for the big brother!','Elder brother = 哥哥!'),
  Q('妹妹 (mèi mei) is your…',['elder sister','mother','younger sister','aunt'],2,'妹 is the little sister.','妹妹 loves story time!'),
  Q('奶奶 (nǎi nai) is your…',['grandmother (father’s side)','teacher','cousin','neighbour'],0,'Nǎi nai makes the best soup!','Grandma’s soup wins every time!'),
@@ -827,7 +821,7 @@ var TOPICS=[
  Q('外公 (wài gōng) is your…',['grandfather (mother’s side)','uncle','father','teacher'],0,'外公 tells great stories too!',''),
  Q('表姐 (biǎo jiě) is your…',['elder cousin sister','younger brother','aunt','mother'],0,'表 means cousin!',''),
  Q('我的家有爸爸、妈妈和我。“家” means…',['a home','a school','a shop','a park'],0,'家 is where your family lives!','')]},
-{id:'chi-school',sub:'chi',subName:'Chinese',icon:'🎒',name:'学校 School Day',blurb:'Classroom words and weekly spelling practice.',
+{id:'chi-school',img:'icons/topic-chi-school.webp',sub:'chi',subName:'Chinese',icon:'🎒',name:'学校 School Day',blurb:'Classroom words and weekly spelling practice.',
  quest:[Q('老师 (lǎo shī) means…',['student','teacher','principal','librarian'],1,'We greet 老师 every morning!','老师好! Say it brightly!'),
  Q('书包 (shū bāo) is your…',['pencil','school bag','textbook','water bottle'],1,'书 (book) + 包 (bag)!','Pack your 书包 tonight!'),
  Q('读书 (dú shū) means…',['to write','to read','to draw','to sing'],1,'书 is book — so 读书 is…?','Reading = 读书!'),
@@ -1881,7 +1875,12 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home'],['learn','📚','Learn'],['ask','💬','Ask Pip'],['play','✨','Play'],['trivia','🎲','Trivia'],['friends','👥','Friends'],['create','🎨','Create'],['critter','🐸','Critter Lab'],['treasure','💎','Treasure'],['vibe','🎵','Vibe']];
+var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
+/* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
+   replacing the flat emoji in the nav, game cards and quest cards.
+   ic() renders the image, and falls back to the emoji if the file
+   ever fails to load, so a missing file never leaves a blank hole. */
+function ic(src,emo,cls){ return src?'<img class="'+(cls||'ic-sm')+'" src="'+src+'" alt="" onerror="this.outerHTML=\''+emo+'\'">':emo; }
 var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
 function go(r){ route=r; window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
@@ -1906,8 +1905,8 @@ function render(){
      parent without one gets a minimal shell instead. */
   if(route==='door'||(!ex()&&route!=='parent')){ root.innerHTML=doorHTML(); bindDoor(); return; }
   if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); return; }
-  var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
-  var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
+  var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
+  var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
   /* Route class on the shell: the mint world has two departures (myKx
      review) — the Play Arcade stays dark navy/neon and the Treasure
      Realm stays a purple crystal cave. The 'game' route is arcade. */
@@ -2169,7 +2168,7 @@ function homeHTML(){
    +'</div><div class="themeline">'+t.line+'</div></div>'
    +'</div></section>';
   var questCard='<section class="questcard'+(qdone?' done':'')+'"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
-   +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+quest.icon+' '+esc(quest.name)+'</h2>'
+   +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+ic(quest.img,quest.icon,'ic-sm')+' '+esc(quest.name)+'</h2>'
     +'<p style="font-weight:800;margin:2px 0 0;color:#2f7a3d">🐸 Frog Quest — quest '+(doneCount+1)+' of 14: we\'re saving a frog tonight, one question at a time!</p>'
     +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
     +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
@@ -2233,7 +2232,7 @@ function learnHTML(){
        var pct=st==='completed-today'?100:(done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0));
        var count=st==='completed-today'?'5 / 5':(done?done+' / 5':(prog?prog.idx+' / 5':'0 / 5'));
        var label=st==='completed-today'?'✔ Completed':(st==='in-progress'?'Quest progress':(st==='fresh-today'?'Best score':'Not started'));
-       return '<div class="questcard learncard'+(st==='completed-today'?' done':'')+'"><div class="iconrow"><span class="qicon">'+t.icon+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
+       return '<div class="questcard learncard'+(st==='completed-today'?' done':'')+'"><div class="iconrow"><span class="qicon">'+ic(t.img,t.icon,'qic')+'</span><div><span class="pill '+t.sub+'">'+t.subName+'</span><h3 style="margin:4px 0 0">'+esc(t.name)+'</h3></div></div>'
        +'<p class="muted" style="font-weight:700;margin:10px 0 0">'+esc(t.blurb)+'</p>'
        +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
        +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+label+'</span><span>'+count+'</span></div>'
@@ -2276,7 +2275,7 @@ function learnBoardHTML(){
       var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
       return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
-    return '<div class="lbcard"><h4 class="lbhead-'+t.sub+'">'+t.icon+' '+esc(t.name)+'</h4>'+body+'</div>';
+    return '<div class="lbcard"><h4 class="lbhead-'+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+'</h4>'+body+'</div>';
   }).join('');
   var waiting=frs.filter(function(r){ return !Object.keys(r.best||{}).some(function(k){ if(k.indexOf('learn-')!==0)return false; var b=r.best[k]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
   var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed quests yet.</p>':'';
@@ -2471,8 +2470,8 @@ function quizHTML(){
     else fb='<div class="feedback no">Good brave try! The right answer is “'+esc(q.o[q.a])+'”. '+(q.c?('Clue: '+esc(q.c)):'')+'</div>';
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
-  return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+t.icon+' '+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!'))+'</div></div></div>'
-   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+t.icon+' '+esc(t.name)+(cur.phase==='retry'?' · Second Chance':'')+'</span><span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
+  return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!'))+'</div></div></div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='retry'?' · Second Chance':'')+'</span><span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q)+'</h3>'+listenBtn
    +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
@@ -2670,15 +2669,15 @@ function bindTrivia(){
 
 /* ============================================================ PLAY ARCADE */
 var GAMES=[
- {id:'word',e:'🌷',name:'Word Garden',blurb:'Grow flowers by picking the right word.',rounds:6},
- {id:'number',e:'🎈',name:'Number Pop',blurb:'Pop balloons with quick mental maths.',rounds:6},
- {id:'memory',e:'🃏',name:'Memory Match',blurb:'Flip cards and find the matching pairs.',rounds:0},
- {id:'sort',e:'🧺',name:'Speed Sort',blurb:'Spot the odd one out, speedy explorer!',rounds:6},
- {id:'scramble',e:'🔀',name:'Word Scramble',blurb:'Unscramble the letters to find the word!',rounds:6},
- {id:'race',e:'🏁',name:'Maths Race',blurb:'Quick-fire sums against the clock!',rounds:6},
- {id:'sentence',e:'📝',name:'Sentence Builder',blurb:'Put the words in the right order.',rounds:6},
- {id:'crossword',e:'🧩',name:'Crossword Quest',blurb:'Solve the clues and fill the grid!',rounds:6},
- {id:'parking',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:4}];
+ {id:'word',img:'icons/game-word.webp',e:'🌷',name:'Word Garden',blurb:'Grow flowers by picking the right word.',rounds:6},
+ {id:'number',img:'icons/game-number.webp',e:'🎈',name:'Number Pop',blurb:'Pop balloons with quick mental maths.',rounds:6},
+ {id:'memory',img:'icons/game-memory.webp',e:'🃏',name:'Memory Match',blurb:'Flip cards and find the matching pairs.',rounds:0},
+ {id:'sort',img:'icons/game-sort.webp',e:'🧺',name:'Speed Sort',blurb:'Spot the odd one out, speedy explorer!',rounds:6},
+ {id:'scramble',img:'icons/game-scramble.webp',e:'🔀',name:'Word Scramble',blurb:'Unscramble the letters to find the word!',rounds:6},
+ {id:'race',img:'icons/game-race.webp',e:'🏁',name:'Maths Race',blurb:'Quick-fire sums against the clock!',rounds:6},
+ {id:'sentence',img:'icons/game-sentence.webp',e:'📝',name:'Sentence Builder',blurb:'Put the words in the right order.',rounds:6},
+ {id:'crossword',img:'icons/game-crossword.webp',e:'🧩',name:'Crossword Quest',blurb:'Solve the clues and fill the grid!',rounds:6},
+ {id:'parking',img:'icons/game-parking.webp',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:4}];
 var gState=null, gameTimer=null, xwCheckTimer=null;
 /* Fastest-time helpers for the Play Arcade. Best times are
    best-ever (kept across days), stored per explorer as
@@ -2769,7 +2768,7 @@ function playBoardHTML(){
       var who=row.r.friend?'<b>'+esc(row.r.name)+'</b><span class="pill" style="background:#efe9dc;color:#2a2753">👥 Friend</span>':'<span style="font-size:1.5rem">'+row.r.face+'</span><b>'+esc(row.r.name)+'</b>';
       return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span>'+who+'<span style="flex:1"></span><span class="chip">⏱ '+fmtPlaySecs(row.secs)+'</span></div>';
     }).join('');
-    return '<div class="lbcard"><h4 class="lbhead-'+g.id+'">'+(g.e?g.e+' ':'')+esc(g.name)+'</h4>'+body+'</div>';
+    return '<div class="lbcard"><h4 class="lbhead-'+g.id+'">'+ic(g.img,g.e,'ic-sm')+' '+esc(g.name)+'</h4>'+body+'</div>';
   }).join('');
   var waiting=frs.filter(function(r){ return !GAMES.some(function(g){ var b=(r.best||{})[g.id]; return b&&isFinite(+b.secs)&&+b.secs>0; }); });
   var waitHtml=waiting.length?'<p style="font-weight:700;margin-top:10px">'+waiting.map(function(r){ return esc(r.name); }).join(', ')+' — no timed games yet.</p>':'';
@@ -2792,7 +2791,7 @@ function playHTML(){
    +'<div class="playwrap"><div class="playmain"><div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds; var st=gameState(e,g.id,todayKey(),!!doneG);
     var best=(e.playBest||{})[g.id];
     var bestLine=best?('⏱ Best: '+fmtPlaySecs(best.secs)):('⏱ No time yet — be the first!');
-    return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:linear-gradient(135deg,'+(BAND[g.id]||'#1e4034')+','+(BAND2[g.id]||'#2e6b45')+')"><span>'+g.e+'</span></div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
+    return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:linear-gradient(135deg,'+(BAND[g.id]||'#1e4034')+','+(BAND2[g.id]||'#2e6b45')+')"><span>'+ic(g.img,g.e,'gicon')+'</span></div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
     +'<p style="font-weight:800;margin:8px 0 0">'+esc(THEME[g.id]||'')+'</p>'
     +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
     +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')+(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh rounds for today!</span></p>':'')
@@ -3335,8 +3334,8 @@ function gameHTML(){
      +'<button class="btn ghost" id="gBack" style="margin-top:14px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   var q=genRound(gState.id, gState.idx, gState.seed);
-  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
-   +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
+  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+ic(g.img,g.e,'ic-sm')+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(fmtPlaySecs(playElapsedSecs()))+'</span></div>'
+   +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+ic(g.img,g.e,'ic-sm')+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
    +'<div class="bigq">'+esc(q.q)+'</div>'
    + gameOptsHTML(q)
    +(gState.answered?'<div class="feedback '+(gState.picked===q.a?'ok':'no')+'">'+(gState.picked===q.a?PRAISE[gState.idx%PRAISE.length]:ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(q.o[q.a])+'”.')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
