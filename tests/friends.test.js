@@ -472,7 +472,7 @@ test('client: friends list page shows every friend, my code and the add row', sk
 });
 
 test('client: board renders gracefully when the server is unconfigured', skipIfNotIntegrated, () => {
-  const html = eval(clientPrelude() + 'friendsUnconfigured=true;\n' + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  const html = eval(clientPrelude() + 'friendsUnconfigured=true;\n' + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(html.includes('Friends need a quick grown-up setup'), 'setup line, not a crash or raw error');
   assert.ok(html.includes('never your chats or full progress'), 'privacy note still shown');
   // The explorer's own code appears nowhere except the static
@@ -485,7 +485,7 @@ test('client: board renders gracefully when the server is unconfigured', skipIfN
 test('client: board shows only parent-approved friends, with stars and per-game fastest times', skipIfNotIntegrated, () => {
   const prelude = clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{word:{secs:50},number:{secs:25}}},{code:\'MNP456\',name:\'Mei\',stars:5,bestTimes:{sort:{secs:44}}}];\n';
-  const html = eval(prelude + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+  const html = eval(prelude + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(html.includes('Kai'), 'approved friend shown');
   assert.ok(html.includes('⭐ 30'), 'stars shown');
   assert.ok(html.includes('Fastest time wins'), 'ranked by time, one board per game');
@@ -508,16 +508,16 @@ test('client: board shows only parent-approved friends, with stars and per-game 
   const removed = eval(clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{}}];\n'
     + 'DB.explorers[0].deletedFriends=[\'XYZ789\'];\n'
-    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(!removed.includes('Kai'), 'a removed friend is hidden');
   const localOnly = eval(clientPrelude()
     + 'friendsCache=[];\n'
-    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(localOnly.includes('Friend XYZ789'), 'a locally approved friend shows even before their snapshot arrives');
   // A name with markup is escaped, never injected.
   const evil = eval(clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'<script>alert(1)</script>\',stars:1,bestTimes:{}}];\n'
-    + grab('friendsBoardHTML') + '\n;friendsBoardHTML()');
+    + grab('playBoardHTML') + '\n;playBoardHTML()');
   assert.ok(!evil.includes('<script>alert'), 'friend name is escaped');
   assert.ok(evil.includes('&lt;script&gt;'), 'escaped form shown');
 });
@@ -537,7 +537,7 @@ test('client: accept resolves the live explorer; boards show server-accepted fri
   const bindSrc = grab('bindFriendPanelButtons');
   assert.ok(bindSrc.includes('DB.explorers.find(function(x){return x.id===sel.id;})'), 'accept/remove resolve the live explorer, not the captured sel');
   assert.ok(bindSrc.includes('live.friends'), 'accept writes to the live explorer');
-  const boardSrc = grab('friendsBoardHTML');
+  const boardSrc = grab('playBoardHTML');
   assert.ok(boardSrc.includes('friendsCache'), 'arcade board reads the server list, not just the local list');
   assert.ok(boardSrc.indexOf('deletedFriends') >= 0, 'arcade board hides removed friends');
   const parentSrc = grab('renderParentFriends');
