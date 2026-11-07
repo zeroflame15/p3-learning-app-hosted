@@ -147,11 +147,14 @@ test('leaderboard has one board per game, family and friends together, ranked by
   assert.ok(wordBoard.indexOf('🥇') >= 0, 'medal for the fastest');
   assert.ok(wordBoard.indexOf('👥 Friend') >= 0, 'friend rows carry the Friend tag');
   assert.ok(wordBoard.indexOf('🦦') >= 0, 'family rows still show the face');
-  // Sibling's 55 stars do not put him first anywhere — time does.
+  // Sibling's 55 stars do not put him first anywhere — time does,
+  // and stars are not repeated on the board rows at all: the board
+  // ranks by time, and the same number down every row was noise.
   const iMem = out.indexOf('Memory Match');
   assert.ok(out.slice(iMem).indexOf('Sibling') >= 0, 'Sibling tops the Memory board on time (2m 00s)');
   assert.ok(out.indexOf('⏱ 2m 00s') >= 0, 'Sibling memory time shown');
-  assert.ok(out.indexOf('⭐ 55 stars') >= 0, 'stars still shown as a small extra');
+  assert.ok(out.indexOf('⭐ 55 stars') < 0, 'no star counts on board rows');
+  assert.ok(out.indexOf('⭐') < 0, 'no ⭐ anywhere on the board — time is the only number that matters here');
   // Speed Sort: friend Mei (44s) beats Cousin (45s).
   const iSort = out.indexOf('Speed Sort');
   const sortBoard = out.slice(iSort);
@@ -269,4 +272,57 @@ test('every inline script block in the page still parses', () => {
     const src = b.replace(/^<script>/, '').replace(/<\/script>$/, '');
     new vm.Script(src, { filename: 'index.html inline script' });
   }
+});
+
+test('each game is its own mini-card with its own coloured header band', () => {
+  var GAMES = GAMES9; // eslint-disable-line no-unused-vars
+  var DB = { // eslint-disable-line no-unused-vars
+    explorers: [
+      { id: 'e1', name: 'Jiyuna', face: '🦦', stars: 40, friends: ['XYZ789'], deletedFriends: [], friendCode: 'ABC2DE',
+        playBest: { word: { secs: 65, day: TODAY }, number: { secs: 30, day: TODAY } } },
+    ],
+    activeId: 'e1',
+  };
+  var friendsCache = [ // eslint-disable-line no-unused-vars
+    { code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { word: { secs: 40 } } },
+  ];
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
+  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
+  const playBoardHTML = eval('(' + fnText('function playBoardHTML(){') + ')');
+  const out = playBoardHTML();
+  assert.equal((out.match(/class="lbcard"/g) || []).length, 2, 'one mini-card per timed game (Word Garden, Number Pop)');
+  assert.ok(out.includes('<h4 class="lbhead-word">🌷 Word Garden</h4>'), 'Word Garden has its own header band');
+  assert.ok(out.includes('<h4 class="lbhead-number">🎈 Number Pop</h4>'), 'Number Pop has its own header band');
+  assert.ok(out.indexOf('<h4 style="margin:14px 0 4px">') < 0, 'no more bare headings floating in one big card');
+  assert.ok(html.includes('.lbcard{'), 'the mini-card has CSS');
+  assert.ok(html.includes('.lbhead-word{'), 'each game header band has its own colour');
+});
+
+test('a family explorer who is also a friend appears once, as family', () => {
+  var GAMES = GAMES9; // eslint-disable-line no-unused-vars
+  var DB = { // eslint-disable-line no-unused-vars
+    explorers: [
+      { id: 'e1', name: 'Jiyuna', face: '🦦', stars: 40, friends: ['B07CDE'], deletedFriends: [], friendCode: 'ABC2DE',
+        playBest: { sort: { secs: 50, day: TODAY } } },
+      { id: 'e2', name: 'VerifyB07', face: '🐼', stars: 6, friends: [], deletedFriends: [], friendCode: 'B07CDE',
+        playBest: { sort: { secs: 43, day: TODAY } } },
+    ],
+    activeId: 'e1',
+  };
+  var friendsCache = [ // eslint-disable-line no-unused-vars
+    { code: 'B07CDE', name: 'VerifyB07', stars: 6, bestTimes: { sort: { secs: 43 } } },
+  ];
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
+  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
+  const playBoardHTML = eval('(' + fnText('function playBoardHTML(){') + ')');
+  const out = playBoardHTML();
+  const sortBoard = out.slice(out.indexOf('Speed Sort'));
+  assert.equal((sortBoard.match(/VerifyB07/g) || []).length, 1, 'VerifyB07 appears exactly once on the Speed Sort board');
+  assert.ok(sortBoard.indexOf('🐼') >= 0, 'the single row is the family row, with the face');
+  assert.ok(sortBoard.indexOf('👥 Friend') < 0, 'no duplicate friend row for the same person');
+  assert.ok(sortBoard.indexOf('no timed games yet') < 0, 'the family row is not also on the waiting line');
 });
