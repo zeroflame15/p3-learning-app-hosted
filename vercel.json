@@ -25,6 +25,9 @@
     },
     "api/friends.js": {
       "maxDuration": 10
+    },
+    "api/generate-questions.js": {
+      "maxDuration": 30
     }
   }
 }
