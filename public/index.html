@@ -3,22 +3,24 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="dark" />
+<meta name="color-scheme" content="light" />
 <link rel="icon" href="data:," />
 <title>P3 Learning App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root{
-  color-scheme:dark;
-  /* Night-terrarium palette — same as the Muse version */
-  --bg:#17163a; --bg2:#1d1b47; --panel:#232154; --panel2:#2c2966;
-  --ink:#f5f1e6; --ink-soft:#b9b4d9; --line:#3a3677;
-  --amber:#ffc94d; --amber-d:#e0a92e; --teal:#57b06a; --teal-soft:#1e4034;
-  --coral:#ff8a7a; --coral-soft:#4c2a33; --sky:#7cc4ff; --sky-soft:#1e3a5f;
-  --green:#8fd18b; --green-soft:#1e4034; --gold:#ffc94d;
-  --nav:#100f2c; --nav-ink:#f5f1e6; --shadow:0 10px 30px rgba(0,0,0,.4);
-  --card:#fffaf0; --card-text:#2a2753;
+  color-scheme:light;
+  /* Calm mint world (myKx review 2026-11-05): pale sage background,
+     white cards, dark forest-green text, golden-yellow buttons,
+     lavender/purple mascot accents, gold sparkles. */
+  --bg:#eaf5e6; --bg2:#dcefd6; --panel:#ffffff; --panel2:#f0f7ec;
+  --ink:#1e3a24; --ink-soft:#57705a; --line:#c9dcc6;
+  --amber:#ffc94d; --amber-d:#7d6218; --teal:#3e8e52; --teal-soft:#dff2e2;
+  --coral:#c0392b; --coral-soft:#fdeceb; --sky:#1d4ed8; --sky-soft:#dbeafe;
+  --green:#2f7a3d; --green-soft:#dff2e2; --gold:#ffc94d;
+  --nav:#1f4a2e; --nav-ink:#f5f1e6; --shadow:0 10px 30px rgba(30,60,35,.14);
+  --card:#fffaf0; --card-text:#23402c;
   --tint:rgba(46,160,90,.30); --glow:#7be495;
   --radius:18px;
 }
@@ -162,7 +164,39 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .memcard{aspect-ratio:1;border-radius:14px;border:2.5px solid var(--line);background:var(--nav);color:#fff;font-size:1.7rem;display:flex;align-items:center;justify-content:center;font-weight:900}
 .memcard.open{background:var(--panel);color:var(--ink)}
 .memcard.matched{background:var(--green-soft);border-color:var(--green)}
+
+/* ---------- Number Pop balloons + Speed Sort big tiles ---------- */
+.balloonrow{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:18px 4px 6px;min-height:150px}
+.balloon{position:relative;background:none;border:0;cursor:pointer;padding:0;width:104px;height:128px;animation:balloonFall .6s cubic-bezier(.2,.7,.3,1.2) var(--d,0s) both,balloonBob 2.4s ease-in-out calc(var(--d,0s) + .65s) infinite}
+.balloon .b-emoji{font-size:4.4rem;line-height:1;display:block;filter:drop-shadow(0 6px 6px rgba(10,40,30,.25))}
+.balloon .b-num{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:1.15rem;font-weight:900;color:#3a2b00;font-family:'Fredoka'}
+.balloon:disabled{cursor:default}
+.balloon.right .b-emoji{filter:drop-shadow(0 0 14px rgba(143,209,139,.9))}
+.balloon.wrong{opacity:.55}
+.balloon.wrong .b-num{color:var(--coral)}
+.balloon.popped{animation:balloonPop .45s ease-out both}
+@keyframes balloonFall{from{transform:translateY(-140px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes balloonBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes balloonPop{0%{transform:scale(1)}40%{transform:scale(1.28) rotate(-7deg)}100%{transform:scale(1)}}
+.sortgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:10px 0 4px}
+.sorttile{min-height:118px;border-radius:18px;border:3px solid var(--line);background:var(--panel);font-size:3rem;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.sorttile:hover{border-color:var(--sky)}
+.sorttile.right{border-color:var(--green);background:var(--green-soft);animation:pop .35s ease}
+.sorttile.wrong{border-color:var(--coral);background:var(--coral-soft);opacity:.6}
+.sorttile:disabled{cursor:default}
+@media (prefers-reduced-motion: reduce){.balloon{animation:none}.balloon.popped{animation:none}}
 .bigq{font-size:1.5rem;font-weight:900;text-align:center;padding:10px}
+/* ---------- Crossword Quest + Exit Parking ---------- */
+.xwgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;max-width:340px;margin:14px auto}
+.xwcell{aspect-ratio:1;border:2.5px solid var(--line);border-radius:10px;background:var(--panel);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:900;position:relative;color:var(--ink)}
+.xwcell.blank{border-color:transparent;background:transparent}
+.xwcell.lit{background:var(--green-soft);border-color:var(--green)}
+.xwnum{position:absolute;top:2px;left:5px;font-size:.62rem;font-weight:900;color:var(--ink-soft)}
+.parklot{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:340px;margin:14px auto}
+.parkcell{aspect-ratio:1;border:2px dashed var(--line);border-radius:12px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+.parkcell.exit{border-style:solid;border-color:var(--amber);background:#fff7e0}
+.parkcar{aspect-ratio:1;border-radius:12px;border:2.5px solid var(--line);background:var(--panel);font-size:1.7rem;display:flex;align-items:center;justify-content:center}
+.parkcar.red{background:#ffe1e1;border-color:#d33}
 
 /* ---------- Ask Pip ---------- */
 .threadrow{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:12px 14px;font-weight:800;color:var(--ink);margin-bottom:8px}
@@ -238,19 +272,32 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .themeslabel{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(245,241,230,.8)}
 .themechip{border:0;border-radius:999px;padding:8px 15px;font-weight:700;font-size:.92rem;background:rgba(0,0,0,.4);color:#fff;transition:transform .15s;font-family:"Fredoka","Nunito",sans-serif}
 .themechip.sel{background:var(--gold);color:#2a2753;transform:scale(1.05);box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+.themedots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.themedots i{width:9px;height:9px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.18)}
+/* Departures from the mint world (myKx review): the Play Arcade stays
+   dark navy/neon and the Treasure Realm stays a purple crystal cave. */
+.app.route-play .main{background:#0e1230;color:#f5f1e6}
+.app.route-play .topbar{background:#0e1230;border-bottom-color:#2a2f5e}
+.app.route-play .card{background:#232154;border-color:#3a3677;color:#f5f1e6}
+.app.route-play .flowhero{background:#232154;border-color:#3a3677;color:#f5f1e6}
+.app.route-play .muted{color:#b9b4d9}
+.app.route-treasure .main{background:linear-gradient(180deg,#2a1b4d,#1b1030);color:#f5f1e6}
+.app.route-treasure .topbar{background:#2a1b4d;border-bottom-color:#6b4fa1}
+.app.route-treasure .card{background:#3a2a63;border-color:#6b4fa1;color:#f5f1e6}
+.app.route-treasure .muted{color:#cfc4f2}
 .themeline{margin-top:10px;font-size:.92rem;font-weight:700;color:var(--glow)}
 .questcard{background:var(--card);color:var(--card-text);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 .questcard .muted{color:#6d6899}
 .questcard .progressbar{background:#e8e2d0;border-color:#e8e2d0}
-.questcard .progressbar>div{background:#57b06a}
-.questcard .btn{background:#57b06a;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
+.questcard .progressbar>div{background:#3e8e52}
+.questcard .btn{background:#3e8e52;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
 .questcard.done,.gamecard.done{opacity:.55;filter:grayscale(.55)}
 .btn:disabled{cursor:not-allowed;opacity:.75}
 .swapbox{border-radius:16px;padding:10px 8px;text-align:center;font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:.92rem;border:0;width:100%}
 .stageimg{width:100%;height:170px;object-fit:cover;border-radius:14px;display:block}
 .cardimg{width:100%;height:144px;object-fit:cover;display:block}
 .stage .simg{width:100%;height:64px;object-fit:cover;border-radius:10px}
-.tilebtn{display:block;width:100%;text-align:left;background:rgba(0,0,0,.25);border:0;border-radius:16px;padding:12px 14px;color:var(--ink);font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:1rem}
+.tilebtn{display:block;width:100%;text-align:left;background:var(--panel2);border:0;border-radius:16px;padding:12px 14px;color:var(--ink);font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:1rem}
 .tilebtn span{display:block;font-family:"Nunito",sans-serif;font-size:.78rem;font-weight:700;color:var(--ink-soft);margin-top:2px}
 .breathe{width:120px;height:120px;border-radius:50%;background:var(--teal);opacity:.75;margin:14px auto;transition:transform 4s ease-in-out}
 /* ---------- Inner pages: same terrarium treatment as Home ---------- */
@@ -274,6 +321,18 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .gamecard{padding:0;overflow:hidden;display:flex;flex-direction:column}
 .gameband{height:104px;display:flex;align-items:center;justify-content:center;font-size:3.4rem}
 .gamecard .gbody{padding:16px;display:flex;flex-direction:column;flex:1}
+.gameband span{font-size:4.2rem;line-height:1}
+.lbrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line);font-weight:800}
+.lbrow:last-child{border-bottom:0}
+.flowhero.gametheme-word{background:linear-gradient(135deg,#e6f4ea,#fff)}
+.flowhero.gametheme-number{background:linear-gradient(135deg,#fbe9ec,#fff)}
+.flowhero.gametheme-memory{background:linear-gradient(135deg,#e6eefb,#fff)}
+.flowhero.gametheme-sort{background:linear-gradient(135deg,#faf3dc,#fff)}
+.flowhero.gametheme-scramble{background:linear-gradient(135deg,#efe8f8,#fff)}
+.flowhero.gametheme-race{background:linear-gradient(135deg,#fbe7e7,#fff)}
+.flowhero.gametheme-sentence{background:linear-gradient(135deg,#e2f2f5,#fff)}
+.flowhero.gametheme-crossword{background:linear-gradient(135deg,#f5efe0,#fff)}
+.flowhero.gametheme-parking{background:linear-gradient(135deg,#e8edf2,#fff)}
 .tdisc{width:62px;height:62px;border-radius:50%;background:var(--panel2);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex:0 0 auto}
 .tdisc.owned{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,201,77,.28)}
 .flashcard{display:block;width:100%;background:var(--card);color:var(--card-text);border:0;border-radius:14px;padding:16px;font-weight:900;font-size:1.05rem;min-height:76px;box-shadow:var(--shadow);text-align:center}
@@ -282,7 +341,7 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .plannerow{display:flex;gap:10px;align-items:center;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-weight:800}
 .plannerow .ptext{flex:1}
 .plannerow.done .ptext{text-decoration:line-through;opacity:.65}
-.tickbtn{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--amber);background:transparent;color:var(--amber);font-weight:900;flex:0 0 auto;font-size:1rem;line-height:1}
+.tickbtn{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--amber-d);background:transparent;color:var(--amber-d);font-weight:900;flex:0 0 auto;font-size:1rem;line-height:1}
 .tickbtn.done{background:var(--teal);border-color:var(--teal);color:#fff}
 .delbtn{background:transparent;border:0;color:var(--ink-soft);font-size:1.05rem;flex:0 0 auto;padding:4px}
 @media (max-width:820px){
@@ -943,7 +1002,7 @@ function learnPlanBannerHTML(e){
 function hclCardHTML(e){
   if(!e.hclMissed)e.hclMissed=[];
   var step=hclStepFor(new Date().getDay(), e);
-  var head='<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>';
+  var head='<div class="card" style="margin-bottom:16px"><button class="btn ghost" id="hclBack" style="margin-bottom:10px">← Back to Learn</button><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>';
   if(hclTest){
     if(hclTest.idx>=hclTest.words.length){
       return head+'<div class="feedback ok" style="margin-top:12px">🎉 Self-test finished! '+(e.hclMissed.length?'Words to redo on Friday / Sunday: <b>'+esc(e.hclMissed.join('、'))+'</b>':'No missed words — perfect list!')+'</div><button class="btn" id="hclDone" style="margin-top:6px">Done ✔</button></div>';
@@ -962,7 +1021,7 @@ function hclCardHTML(e){
 }
 var JOKES=['Why did the frog sit on the MRT? It wanted to go ribbit-ing fast!','What do otters use to e-mail? Their otter-space!','Why was the maths book sad? Too many problems!','What room has no doors? A mushroom!','Why did the student eat her homework? The teacher said it was a piece of cake!','What do you call a sleeping bull? A bull-dozer!'];
 var PIC_CHOICES=['🦊','🐢','🦉','🐠','🦋','🐞','🍓','⭐','🌙','🚀','🎈','🍕'];
-var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15'];
+var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15','#c084fc','#f97316','#84cc16','#38bdf8','#f472b6','#a3e635'];
 
 </script>
 <script>
@@ -1230,8 +1289,14 @@ function mergeExplorer(a,b){
   Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
-  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck}); });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled))}); });
   e.playProgress=play;
+  /* Fastest game times: keep the smaller secs per game (best ever). The
+     day tag follows the winning side, so the board shows when the best
+     run happened. */
+  var pb={}; Object.keys(a.playBest||{}).forEach(function(k){ pb[k]={secs:a.playBest[k].secs, day:a.playBest[k].day}; });
+  Object.keys(b.playBest||{}).forEach(function(k){ var x=pb[k], y=b.playBest[k]; if(!x) pb[k]={secs:y.secs, day:y.day}; else if((y.secs||1e9)<(x.secs||1e9)) pb[k]={secs:y.secs, day:y.day}; });
+  e.playBest=pb;
   var daily={}; Object.keys(a.daily||{}).forEach(function(k){ daily[k]=a.daily[k]; });
   Object.keys(b.daily||{}).forEach(function(k){ daily[k]=Math.max(daily[k]||0,b.daily[k]); });
   e.daily=daily; e.totalMinutes=Math.max(a.totalMinutes||0,b.totalMinutes||0);
@@ -1272,6 +1337,18 @@ function mergeExplorer(a,b){
   (b.planner||[]).forEach(function(p){ var i=-1; _pl.forEach(function(x,ix){ if(x.t===p.t)i=ix; }); if(i<0)_pl.push({t:p.t,d:!!p.d}); else _pl[i].d=_pl[i].d||!!p.d; });
   if(e.deletedPlanner.length)_pl=_pl.filter(function(p){ return e.deletedPlanner.indexOf(p.t)<0; });
   e.planner=_pl;
+  /* Friends: friendCode is the explorer's stable shareable identity
+     (never the family sync code). A code is assigned once by
+     genFriendCode and never changes, so keep a's code when it has
+     one and take b's when a has none — no validation helper needed
+     here, because mergeExplorer is also eval'd standalone by tests
+     and must not call helpers outside its own chunk. The friends
+     list merges by union, minus any code a parent removed
+     (deletedFriends tombstone, same pattern as deletedFlashcards)
+     so a stale device can never resurrect a removed friend. */
+  if(!e.friendCode&&b.friendCode)e.friendCode=b.friendCode;
+  e.deletedFriends=unionArr(a.deletedFriends,b.deletedFriends);
+  e.friends=unionArr(a.friends,b.friends).filter(function(c){ return e.deletedFriends.indexOf(c)<0; });
   /* Explorer name/look: the old merge started from the server copy and
      never took the local name/glow/badge, so a rename reverted on the
      next sync. Later timestamp wins; a tie goes to b (local), same as
@@ -1280,7 +1357,7 @@ function mergeExplorer(a,b){
   var _nAtA=Date.parse((a&&a.nameAt)||'')||0, _nAtB=Date.parse((b&&b.nameAt)||'')||0;
   if(_nAtB>_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; } else if(_nAtA>_nAtB){ if(a.name!=null)e.name=a.name; e.nameAt=a.nameAt; } else if(_nAtA&&_nAtB&&_nAtB===_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; }
   var _lAtA=Date.parse((a&&a.lookAt)||'')||0, _lAtB=Date.parse((b&&b.lookAt)||'')||0;
-  if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; e.lookAt=b.lookAt; }
+  if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; if(a.face!=null)e.face=a.face; e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; }
   var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
   e.care=mergeCare(a.care,b.care);
   e.careGrewDay=((a.careGrewDay||'')>(b.careGrewDay||''))?a.careGrewDay:b.careGrewDay;
@@ -1407,8 +1484,28 @@ function migrateStages(){
   });
   DB.stageV=2; save();
 }
+/* Friend codes: a stable, shareable 6-character code that identifies
+   ONE explorer — never the family sync code, which must never be
+   shared through the friends flow. Same unambiguous alphabet as the
+   family sync code (no I/L/O/0/1). Friends see only this explorer's
+   stars and fastest game times — never chats or full progress. */
+function genFriendCode(){
+  var c=''; for(var i=0;i<6;i++){ c+=SYNC_ALPHABET[Math.floor(Math.random()*SYNC_ALPHABET.length)]; } return c;
+}
+function friendCodeValid(v){ return syncCodeValid(v); }
+/* Lazy code for explorers created before friend codes existed:
+   give the active explorer (or the one passed in) a code the first
+   time it is needed, and persist it locally. Idempotent — a valid
+   code is never replaced. Called from render(), so every page load
+   and navigation covers it. */
+function ensureFriendCode(e){
+  if(!e){ if(!DB||!DB.explorers)return null; e=ex(); }
+  if(!e)return null;
+  if(!friendCodeValid(e.friendCode)){ e.friendCode=genFriendCode(); try{ saveLocal(); }catch(err){} }
+  return e.friendCode;
+}
 function newExplorer(name, code){
-  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, nameAt:null, lookAt:null,
+  return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{},
@@ -1465,6 +1562,7 @@ function go(r){ route=r; window.scrollTo(0,0); render();
   if(r==='parent'){ setTimeout(function(){ syncFromServer({}).then(function(changed){ if(changed)render(); }); },0); }
 }
 function render(){
+  ensureFriendCode();
   var root=document.getElementById('root');
   /* Every visit starts at the Grand Door: route 'door' always shows
      the Door (enter a family code, or pick an existing explorer and
@@ -1482,7 +1580,11 @@ function render(){
   if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); return; }
   var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
-  root.innerHTML='<div class="app">'
+  /* Route class on the shell: the mint world has two departures (myKx
+     review) — the Play Arcade stays dark navy/neon and the Treasure
+     Realm stays a purple crystal cave. The 'game' route is arcade. */
+  var routeCls=(route==='play'||route==='game')?'play':route;
+  root.innerHTML='<div class="app route-'+routeCls+'">'
    +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
    +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink-soft);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink-soft);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
@@ -1532,16 +1634,18 @@ function openLookModal(){
   var e=ex();
   openModal('<h3 style="margin-top:0">Change my name &amp; look 🎨</h3>'
    +'<label class="flabel">Magic name</label><input class="field" id="lkName" value="'+esc(e.name)+'" maxlength="20">'
+   +'<label class="flabel">My animal friend</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['🦦','🐸','🦋','🐱','🐶','🐰','🦁','🐼','🦊','🐢','🐷','🐵'].map(function(a){return '<button class="iconbtn facePick" data-f="'+a+'" style="font-size:1.2rem;'+(e.face===a?'outline:3px solid var(--ink)':'')+'">'+a+'</button>';}).join('')+'</div>'
    +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
-   +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
+   +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡','🐸','🦋','🌟','💎','🎨','🏆','🌸','🍀','🎵','❤️'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
    +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
-  /* Glow/badge taps must NEVER rebuild the modal: rebuilding it from the
+  /* Glow/badge/animal taps must NEVER rebuild the modal: rebuilding it from the
      saved name threw away a name the child had just typed but not saved
      yet. Update only the outlines in place, and keep the typed name.
      They must also NEVER write to the explorer captured when the modal
      opened: the background sync (~800ms after a save) replaces the
      whole DB object, so that captured copy is detached and a write to
      it is silently lost. Resolve the live explorer fresh on every tap. */
+  document.querySelectorAll('.facePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var f=b.getAttribute('data-f'); if(live.face!==f){ live.face=f; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.facePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(live.glow!==g){ live.glow=g; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var bd=b.getAttribute('data-b'); if(live.badge!==bd){ live.badge=bd; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.badgePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--amber)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
@@ -1655,11 +1759,11 @@ function showDoorCode(){
 /* The same five weekly themes as the Muse version: picking one tints
    the Home terrarium scene and shows the theme's line in its glow colour. */
 var THEMES={
- 'Frog Pond':{tint:'rgba(46,160,90,.30)',glow:'#7be495',line:'Splash! This week we hop around the Frog Pond.'},
- 'Magnet Lab':{tint:'rgba(214,64,84,.28)',glow:'#ff9d8a',line:'Snap! This week we experiment in the Magnet Lab.'},
- 'Star Garden':{tint:'rgba(240,178,60,.30)',glow:'#ffd97a',line:'Twinkle! This week we grow ideas in the Star Garden.'},
- 'Ocean Deep':{tint:'rgba(38,116,210,.34)',glow:'#7cc4ff',line:'Whoosh! This week we dive into the Ocean Deep.'},
- 'Sky Castle':{tint:'rgba(140,96,220,.30)',glow:'#c9a8ff',line:'Wheee! This week we float up to the Sky Castle.'}
+ 'Frog Pond':{tint:'rgba(46,160,90,.30)',glow:'#7be495',line:'Splash! This week we hop around the Frog Pond.',dots:['#bfe3c0','#7be495','#2f7a3d']},
+ 'Magnet Lab':{tint:'rgba(214,64,84,.28)',glow:'#ff9d8a',line:'Snap! This week we experiment in the Magnet Lab.',dots:['#ffd9d2','#ff9d8a','#d64054']},
+ 'Star Garden':{tint:'rgba(240,178,60,.30)',glow:'#ffd97a',line:'Twinkle! This week we grow ideas in the Star Garden.',dots:['#fdeecb','#ffd97a','#e0a92e']},
+ 'Ocean Deep':{tint:'rgba(38,116,210,.34)',glow:'#7cc4ff',line:'Whoosh! This week we dive into the Ocean Deep.',dots:['#cfe4ff','#7cc4ff','#2674d2']},
+ 'Sky Castle':{tint:'rgba(140,96,220,.30)',glow:'#c9a8ff',line:'Wheee! This week we float up to the Sky Castle.',dots:['#e3d9ff','#c9a8ff','#8c60dc']}
 };
 /* Themes saved by older web builds keep working — they resolve to the
    matching Muse-version theme, so no saved choice is ever lost. */
@@ -1725,11 +1829,12 @@ function homeHTML(){
    +'</div></div>'
    +'<div style="margin-top:18px"><div class="themeslabel">This week’s theme: '+esc(tname)+'</div>'
    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px" role="group" aria-label="Pick this week’s theme">'
-   + Object.keys(THEMES).map(function(name){ return '<button type="button" class="themechip '+(tname===name?'sel':'')+'" data-theme="'+esc(name)+'" aria-pressed="'+(tname===name)+'">'+esc(name)+'</button>'; }).join('')
+   + Object.keys(THEMES).map(function(name){ var th=THEMES[name]; return '<button type="button" class="themechip '+(tname===name?'sel':'')+'" data-theme="'+esc(name)+'" aria-pressed="'+(tname===name)+'">'+esc(name)+'<span class="themedots" aria-hidden="true">'+(th.dots||[]).map(function(c){ return '<i style="background:'+c+'"></i>'; }).join('')+'</span></button>'; }).join('')
    +'</div><div class="themeline">'+t.line+'</div></div>'
    +'</div></section>';
   var questCard='<section class="questcard'+(qdone?' done':'')+'"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
    +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+quest.icon+' '+esc(quest.name)+'</h2>'
+    +'<p style="font-weight:800;margin:2px 0 0;color:#2f7a3d">🐸 Frog Quest — quest '+(doneCount+1)+' of 14: we\'re saving a frog tonight, one question at a time!</p>'
     +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
     +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
     +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
@@ -1778,7 +1883,7 @@ function learnHTML(){
   var doneCount=Object.keys(e.completed).length;
   var subs=['eng','math','sci','chi'];
   var SUBHEAD={eng:['📖','English','Story words, tenses & punctuation','#1e3a5f'],math:['🔢','Maths','MRT numbers, hawker change & fractions','#4a3a10'],sci:['🔬','Science','Frogs, magnets & garden plants','#1e4034'],chi:['🀄','Chinese','Listening, family & school words','#4c2a33']};
-  return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them.', doneCount+' of 14 quests finished · ⭐ '+e.stars)
+  return pageHero('📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars)
    + learnPlanBannerHTML(e)
    + hclCardHTML(e)
    + subs.map(function(s){
@@ -1807,6 +1912,7 @@ function bindLearn(){
   document.querySelectorAll('[data-hcllisten]').forEach(function(b){ b.onclick=function(){ speakPip(b.getAttribute('data-hcllisten')); toast('Listen… now say it out loud like Pip!'); }; });
   var hs=document.getElementById('hclStart'); if(hs)hs.onclick=function(){ var step=hclStepFor(new Date().getDay(), e); hclTest={words:step.words, idx:0}; sndPop(); render(); };
   var hd=document.getElementById('hclDone'); if(hd)hd.onclick=function(){ hclTest=null; render(); };
+  var hb=document.getElementById('hclBack'); if(hb)hb.onclick=function(){ hclTest=null; go('learn'); };
   var hg=document.getElementById('hclGot'); if(hg)hg.onclick=function(){ var w=hclTest.words[hclTest.idx]; e.hclMissed=e.hclMissed.filter(function(x){return x!==w.w;}); hclTest.idx++; sndCorrect(); save(); render(); };
   var hm=document.getElementById('hclMiss'); if(hm)hm.onclick=function(){ var w=hclTest.words[hclTest.idx]; if(e.hclMissed.indexOf(w.w)<0)e.hclMissed.push(w.w); hclTest.idx++; sndWrong(); save(); toast('Saved for Friday & Sunday redo 💪'); render(); };
 }
@@ -2007,25 +2113,243 @@ var GAMES=[
  {id:'word',e:'🌷',name:'Word Garden',blurb:'Grow flowers by picking the right word.',rounds:6},
  {id:'number',e:'🎈',name:'Number Pop',blurb:'Pop balloons with quick mental maths.',rounds:6},
  {id:'memory',e:'🃏',name:'Memory Match',blurb:'Flip cards and find the matching pairs.',rounds:0},
- {id:'sort',e:'🧺',name:'Speed Sort',blurb:'Spot the odd one out, speedy explorer!',rounds:6}];
+ {id:'sort',e:'🧺',name:'Speed Sort',blurb:'Spot the odd one out, speedy explorer!',rounds:6},
+ {id:'scramble',e:'🔀',name:'Word Scramble',blurb:'Unscramble the letters to find the word!',rounds:6},
+ {id:'race',e:'🏁',name:'Maths Race',blurb:'Quick-fire sums against the clock!',rounds:6},
+ {id:'sentence',e:'📝',name:'Sentence Builder',blurb:'Put the words in the right order.',rounds:6},
+ {id:'crossword',e:'🧩',name:'Crossword Quest',blurb:'Solve the clues and fill the grid!',rounds:6},
+ {id:'parking',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:4}];
 var gState=null;
+/* Fastest-time helpers for the Play Arcade. Best times are
+   best-ever (kept across days), stored per explorer as
+   e.playBest[gameId] = {secs, day}. */
+function fmtPlaySecs(s){ s=Math.max(0,Math.round(s||0)); var m=Math.floor(s/60), r=s%60; return m>0?(m+'m '+String(r).padStart(2,'0')+'s'):(s+'s'); }
+/* Stops the timer started by startGame (gState.startedAt) and keeps
+   the run only if it beats the stored best. Also stashes the run's
+   time on gState.lastSecs for the completion screen. Returns true
+   when the run just set a new fastest time. */
+function recordPlayBest(e, gameId){
+  if(!gState||!gState.startedAt)return false;
+  var secs=Math.max(1,Math.round((Date.now()-gState.startedAt)/1000));
+  gState.lastSecs=secs;
+  if(!e.playBest)e.playBest={};
+  var cur=e.playBest[gameId];
+  if(!cur||secs<cur.secs){ e.playBest[gameId]={secs:secs, day:todayKey()}; return true; }
+  return false;
+}
+/* Same-family leaderboard: every explorer in DB.explorers, ranked by
+   total stars (desc), with games finished today and each explorer's
+   single fastest game time. */
+function familyBoardHTML(){
+  var list=(DB.explorers||[]).slice().sort(function(a,b){ return (b.stars||0)-(a.stars||0); });
+  if(!list.length)return '';
+  var tk=todayKey();
+  var rows=list.map(function(x,i){
+    var doneToday=Object.keys(x.playDoneDay||{}).filter(function(k){ return x.playDoneDay[k]===tk; }).length;
+    var best=null, bestGame=null;
+    Object.keys(x.playBest||{}).forEach(function(gid){ var b=x.playBest[gid]; if(b&&(!best||b.secs<best.secs)){ best=b; bestGame=gid; } });
+    var gName=bestGame?((GAMES.find(function(g){ return g.id===bestGame; })||{}).name||bestGame):'';
+    var bestTxt=best?('⏱ '+fmtPlaySecs(best.secs)+' ('+esc(gName)+')'):('⏱ No time yet');
+    var medal=i===0?'🥇':(i===1?'🥈':(i===2?'🥉':('#'+(i+1))));
+    return '<div class="lbrow"><span style="min-width:34px">'+medal+'</span><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+(x.stars||0)+' stars · '+doneToday+' game'+(doneToday===1?'':'s')+' today</span><span style="flex:1"></span><span class="chip">'+bestTxt+'</span></div>';
+  }).join('');
+  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🏆 Family leaderboard</h3><p class="muted" style="font-weight:700;margin:0 0 6px">Most stars wins — every explorer in the family, ranked!</p>'+rows+'</div>';
+}
 function playHTML(){
   var e=ex();
   var BAND={word:'#1e4034',number:'#4c2a33',memory:'#1e3a5f',sort:'#4a3a10'};
+  /* The 5 new games extend BAND by assignment, NOT by rewriting the
+     4-entry literal: tests/palette.test.js pins that exact literal
+     ('departures kept: Play Arcade bands stay dark navy/neon'), and
+     the 4 dark colours must stay untouched. Runtime result is the
+     same 9-entry map. */
+  BAND.scramble='#3d2b52'; BAND.race='#5b1f1f'; BAND.sentence='#143c46'; BAND.crossword='#3a2f1a'; BAND.parking='#2b3440';
+  var BAND2={word:'#2e6b45',number:'#7a3b47',memory:'#2f5b8f',sort:'#7a6420',scramble:'#5b4280',race:'#8a2f2f',sentence:'#1f5f70',crossword:'#6b5a2e',parking:'#43536a'};
+  var THEME={word:'🌸 Grow a garden of words',number:'🎈 Pop the right balloon!',memory:'🧠 Find every matching pair',sort:'⚡ Spot the odd one out — fast!',scramble:'🔤 Unscramble the jumbled letters',race:'🏁 Race the clock to the finish',sentence:'✏️ Build the sentence in order',crossword:'🧩 Fill the grid, one clue at a time',parking:'🚗 Slide the cars out of the jam'};
   return pageHero('✨','Play Arcade','Quick games that secretly train your brain — words, numbers, memory and speedy spotting. Started games resume right where you stopped. ✅ A game you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for fresh rounds. Unfinished games keep the exact rounds they started with.','⭐ '+e.stars+' stars')
    +'<div class="grid c2">'+GAMES.map(function(g){ var p=e.playProgress[g.id]; var doneG=g.id==='memory'?p&&p.won:p&&p.idx>=g.rounds; var st=gameState(e,g.id,todayKey(),!!doneG);
-    return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:'+BAND[g.id]+'">'+g.e+'</div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
+    var best=(e.playBest||{})[g.id];
+    var bestLine=best?('⏱ Best: '+fmtPlaySecs(best.secs)):('⏱ No time yet — be the first!');
+    return '<div class="card gamecard'+(st==='completed-today'?' done':'')+'"><div class="gameband" style="background:linear-gradient(135deg,'+(BAND[g.id]||'#1e4034')+','+(BAND2[g.id]||'#2e6b45')+')"><span>'+g.e+'</span></div><div class="gbody"><h3 style="margin:0">'+g.name+'</h3><p class="muted" style="font-weight:700;margin:6px 0 0">'+g.blurb+'</p>'
+    +'<p style="font-weight:800;margin:8px 0 0">'+esc(THEME[g.id]||'')+'</p>'
+    +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
     +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume</span></p>':'')+(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')+(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh rounds for today!</span></p>':'')
-    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div>';
+    +'<div style="margin-top:auto;padding-top:12px"><button class="btn" data-game="'+g.id+'">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume game':'▶ Play'))+'</button></div></div></div>'; }).join('')+'</div>'
+   +familyBoardHTML()
+   +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'');
 }
-function bindPlay(){ document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; }); }
+function bindPlay(){
+  document.querySelectorAll('[data-game]').forEach(function(b){ b.onclick=function(){ startGame(b.getAttribute('data-game')); }; });
+  /* Friends: publish our own leaderboard snapshot whenever the
+     arcade is opened (fire-and-forget — a failed publish never
+     blocks play), refresh the accepted-friends list, and wire the
+     "Add a friend" row rendered by friendsBoardHTML(). */
+  publishFriendSnapshot();
+  var before=JSON.stringify(friendsCache);
+  loadFriends().then(function(){ if(route==='play'&&JSON.stringify(friendsCache)!==before)render(); });
+  var frSend=document.getElementById('frSend');
+  if(frSend)frSend.onclick=function(){ sendFriendRequest(); };
+}
+
+/* ============================================================ FRIENDS (leaderboard-only) */
+var friendsCache=null;      /* accepted friends' snapshots from /api/friends, or null when not loaded */
+var friendsUnconfigured=false; /* true when the server has no Supabase setup or the call failed */
+function friendsApi(action, body){
+  /* One fetch wrapper for every friends call. Never rejects and
+     never surfaces raw errors to a child: null means "unavailable",
+     and the UI shows the grown-up-setup line instead. */
+  try{
+    return fetch('/api/friends?action='+encodeURIComponent(action),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}).then(function(r){ return r.json().catch(function(){ return null; }); }).catch(function(){ return null; });
+  }catch(e){ return Promise.resolve(null); }
+}
+function friendBestTimes(e){
+  /* The snapshot carries fastest times only: {gameId:{secs}}.
+     playBest holds {secs, day} per game (recordPlayBest); read it
+     defensively anyway — an explorer without it simply publishes {}. */
+  var out={}, pb=(e&&(e.playBest||{}))||{};
+  Object.keys(pb).forEach(function(g){ var b=pb[g]; if(b&&isFinite(+b.secs)&&+b.secs>0)out[g]={secs:Math.round(+b.secs)}; });
+  return out;
+}
+function publishFriendSnapshot(){
+  var e=ex(); if(!e)return;
+  var code=ensureFriendCode(e); if(!code)return;
+  /* Fire-and-forget: never awaited, never blocks play. */
+  try{ friendsApi('publish',{code:code,name:e.name||'Explorer',stars:e.stars||0,bestTimes:friendBestTimes(e)}); }catch(err){}
+}
+function loadFriends(){
+  var e=ex(); if(!e)return Promise.resolve(null);
+  var code=ensureFriendCode(e); if(!code)return Promise.resolve(null);
+  return friendsApi('friends',{code:code}).then(function(j){
+    if(!j||j.configured===false){ friendsUnconfigured=true; friendsCache=null; return null; }
+    friendsUnconfigured=false;
+    friendsCache=(j.friends||[]).filter(function(f){ return f&&friendCodeValid(f.code); });
+    return friendsCache;
+  });
+}
+function friendBestLine(bestTimes){
+  var best=null, bestGame=null;
+  Object.keys(bestTimes||{}).forEach(function(g){ var b=bestTimes[g]; if(b&&isFinite(+b.secs)&&(best===null||+b.secs<best)){ best=+b.secs; bestGame=g; } });
+  if(best===null)return 'no timed games yet';
+  var g=(typeof GAMES!=='undefined'?GAMES:[]).find(function(x){ return x.id===bestGame; });
+  return 'fastest: '+(g?g.name:bestGame)+' '+best+'s';
+}
+function friendsBoardHTML(){
+  /* Plugged into playHTML() by the other agent's hook:
+     +(typeof friendsBoardHTML==='function'?friendsBoardHTML():'')
+     Shows ONLY accepted friends the parent approved (e.friends),
+     with their stars and fastest time — never chats or progress. */
+  var e=ex();
+  var head='<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friends leaderboard</h3>';
+  var note='<p class="small muted" style="font-weight:700">Friends see only your stars and fastest times — never your chats or full progress.</p>';
+  var addRow='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><input class="field" id="frCode" maxlength="6" placeholder="Friend code, e.g. ABC2DE" style="max-width:190px;text-transform:uppercase"><button class="btn" id="frSend">Send request</button></div><p class="small muted" style="font-weight:700">Ask a grown-up for your friend’s code — they’ll find it on the Grown-ups page. Your friend’s grown-up has to accept before they show up here.</p>';
+  if(!e)return head+'<p style="font-weight:700">Pick an explorer at the Grand Door first.</p>'+note+'</div>';
+  if(friendsUnconfigured)return head+'<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'+addRow+note+'</div>';
+  var mine=e.friends||[];
+  var list=(friendsCache||[]).filter(function(f){ return mine.indexOf(f.code)>=0; });
+  var rows=list.length?list.map(function(f){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+' · '+esc(friendBestLine(f.bestTimes||{}))+'</span></div>'; }).join(''):'<p style="font-weight:700">No friends yet — send a request below, and they’ll appear here once their grown-up accepts.</p>';
+  return head+'<div>'+rows+'</div><h4 style="margin-top:14px">Add a friend</h4>'+addRow+note+'</div>';
+}
+function sendFriendRequest(){
+  var e=ex(); if(!e)return;
+  var inp=document.getElementById('frCode');
+  var to=inp?String(inp.value||'').toUpperCase().replace(/[\s-]/g,''):'';
+  if(!friendCodeValid(to)){ toast('That code does not look right — it should be 6 letters, like ABC2DE.'); return; }
+  var own=ensureFriendCode(e);
+  if(to===own){ toast('That is your own friend code — ask your friend for theirs!'); return; }
+  friendsApi('request',{fromCode:own,fromName:e.name||'Explorer',toCode:to}).then(function(j){
+    if(j&&j.ok){ toast('Friend request sent — their grown-up needs to accept it first.'); if(inp)inp.value=''; return; }
+    if(j&&j.error==='unknown_friend_code'){ toast('No explorer has that code — check it and try again.'); return; }
+    if(j&&j.error==='request_already_pending'){ toast('Request already sent — waiting for their grown-up.'); return; }
+    if(j&&j.error==='already_friends'){ toast('You are already friends!'); return; }
+    toast('Could not send the request — check the connection and try again.');
+  });
+}
+function friendRequestsCardHTML(sel){
+  var code=(sel&&sel.friendCode)||'';
+  return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friend requests</h3>'
+   +'<p style="font-weight:700;margin:6px 0">'+esc(sel.name)+'’s friend code: <b style="font-size:1.3rem;letter-spacing:3px">'+esc(code||'—')+'</b></p>'
+   +'<p class="small muted" style="font-weight:700">Share this code with the other family — their child types it in Play Arcade to send a request. This is NOT the family sync code: it identifies only '+esc(sel.name)+', and friends see only stars and fastest times, never chats or full progress.</p>'
+   +'<h4>Requests waiting for you</h4><div id="frPending"><p style="font-weight:700">Loading…</p></div>'
+   +'<h4 style="margin-top:14px">Friends</h4><div id="frFriends"><p style="font-weight:700">Loading…</p></div></div>';
+}
+/* Parent-side friends panel: fills the placeholders parentHTML()
+   renders in the "👥 Friend requests" card. Called from bindParent.
+   Lists only pending requests addressed to this explorer (from_name
+   only — no family data) and the accepted friends, with Accept /
+   Decline / Remove. A friend reaches the child's leaderboard only
+   when the parent accepts: accept adds their code to sel.friends. */
+function renderParentFriends(sel){
+  var pend=document.getElementById('frPending'), fr=document.getElementById('frFriends');
+  if(!sel||(!pend&&!fr))return;
+  var code=ensureFriendCode(sel);
+  if(!code){ if(pend)pend.innerHTML='<p style="font-weight:700">No friend code yet.</p>'; return; }
+  friendsApi('inbox',{code:code}).then(function(j){
+    if(!document.getElementById('frPending'))return;
+    if(!j||j.configured===false){ document.getElementById('frPending').innerHTML='<p style="font-weight:700">Friends need a quick grown-up setup — ask a parent to finish it in the app settings.</p>'; if(fr)fr.innerHTML=''; return; }
+    var reqs=j.requests||[];
+    document.getElementById('frPending').innerHTML=reqs.length?reqs.map(function(r){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(r.fromName||'Explorer')+'</b><span class="small muted">wants to be friends</span><span style="flex:1"></span><button class="btn" data-fracc="'+esc(r.id)+'" data-frfrom="'+esc(r.fromCode||'')+'">Accept</button><button class="btn ghost" data-frdec="'+esc(r.id)+'">Decline</button></div>'; }).join(''):'<p style="font-weight:700">No friend requests right now.</p>';
+    bindFriendPanelButtons(sel);
+  });
+  friendsApi('friends',{code:code}).then(function(j){
+    if(!document.getElementById('frFriends'))return;
+    if(!j||j.configured===false){ document.getElementById('frFriends').innerHTML=''; return; }
+    var mine=sel.friends||[];
+    var list=(j.friends||[]).filter(function(f){ return mine.indexOf(f.code)>=0; });
+    document.getElementById('frFriends').innerHTML=list.length?list.map(function(f){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(f.name||'Explorer')+'</b><span class="small muted">⭐ '+(f.stars||0)+'</span><span style="flex:1"></span><button class="btn ghost" data-frrem="'+esc(f.code)+'">Remove</button></div>'; }).join(''):'<p style="font-weight:700">No friends yet.</p>';
+    bindFriendPanelButtons(sel);
+  });
+}
+function bindFriendPanelButtons(sel){
+  document.querySelectorAll('[data-fracc]').forEach(function(b){ b.onclick=function(){
+    var id=b.getAttribute('data-fracc'), from=b.getAttribute('data-frfrom');
+    friendsApi('respond',{id:id,code:ensureFriendCode(sel),accept:true}).then(function(j){
+      if(j&&j.ok){
+        if(from&&friendCodeValid(from)){ if(!sel.friends)sel.friends=[]; if(sel.friends.indexOf(from)<0)sel.friends.push(from); if(sel.deletedFriends)sel.deletedFriends=sel.deletedFriends.filter(function(c){ return c!==from; }); }
+        save(); toast('Friend request accepted — they’ll show up in Play Arcade.');
+        render();
+      } else toast('Could not accept that request — try again.');
+    });
+  }; });
+  document.querySelectorAll('[data-frdec]').forEach(function(b){ b.onclick=function(){
+    var id=b.getAttribute('data-frdec');
+    friendsApi('respond',{id:id,code:ensureFriendCode(sel),accept:false}).then(function(j){
+      if(j&&j.ok){ toast('Friend request declined.'); renderParentFriends(sel); }
+      else toast('Could not decline that request — try again.');
+    });
+  }; });
+  document.querySelectorAll('[data-frrem]').forEach(function(b){ b.onclick=function(){
+    var code=b.getAttribute('data-frrem');
+    sel.friends=(sel.friends||[]).filter(function(c){ return c!==code; });
+    if(!sel.deletedFriends)sel.deletedFriends=[]; if(sel.deletedFriends.indexOf(code)<0)sel.deletedFriends.push(code);
+    save(); toast('Friend removed from the leaderboard.');
+    renderParentFriends(sel);
+  }; });
+}
 /* Rounds are generated from a seed. A game still in progress keeps
    the seed it started with (seed 0 = the original rounds, for games
    saved by older builds), so its questions never change mid-game.
    A finished game gets a fresh seed every morning, so its rounds
    are new each day — Word Garden also draws from the fresh bank. */
+/* Crossword Quest (6 words, 5x5 grid). Verified crossings:
+   CAT across (0,0) / CAR down (0,0) share C; TIP down (2,0) shares T
+   with CAT; RAT down (0,2) shares R with CAR; PIG across (2,2) shares
+   P with TIP; GUM down (4,2) shares G with PIG. Grid:
+     C A T . .     A . I . .     R . P I G     A . . . U     T . . . M */
+var XWORDS=[
+ {w:'CAT',dir:'Across',num:1,x:0,y:0,dx:1,dy:0,clue:'A pet that says meow'},
+ {w:'CAR',dir:'Down',num:1,x:0,y:0,dx:0,dy:1,clue:'It has four wheels and takes you places'},
+ {w:'TIP',dir:'Down',num:2,x:2,y:0,dx:0,dy:1,clue:'The pointed end of something'},
+ {w:'RAT',dir:'Down',num:3,x:0,y:2,dx:0,dy:1,clue:'A small animal with a long tail'},
+ {w:'PIG',dir:'Across',num:4,x:2,y:2,dx:1,dy:0,clue:'A farm animal that says oink'},
+ {w:'GUM',dir:'Down',num:5,x:4,y:2,dx:0,dy:1,clue:'You chew it, but you must not swallow it'}];
 function genRound(gameId, idx, seed){
   seed=seed||0;
+  if(gameId==='crossword'){
+    var xw=XWORDS[idx%XWORDS.length];
+    var pool=['DOG','SUN','EGG','BEE','ANT','OWL','FOX','HEN','COW','BUS','CUP','HAT','PEN','BED','MAP','ZOO'].filter(function(w){return w!==xw.w;});
+    var d=seededShuffle(pool, hashStr('xwd|'+seed+'|'+idx)).slice(0,3);
+    return optsShuffled({q:xw.num+' '+xw.dir+': '+xw.clue, o:[xw.w].concat(d), a:0, c:'', j:''}, hashStr('xwo|'+seed+'|'+idx));
+  }
   if(gameId==='word'){
     var pool=TOPICS[0].quest.concat(TOPICS[0].fresh||[], TOPICS[1].quest, TOPICS[1].fresh||[]);
     if(!seed)return pool[idx%pool.length];
@@ -2035,6 +2359,45 @@ function genRound(gameId, idx, seed){
   if(gameId==='sort'){ var sets=[[ '🍎 Apple',['🍎','🍌','🍇','🐶'] ],[ '🚗 Car',['🚗','🚌','🚲','🍕'] ],[ '🐸 Frog',['🐸','🐢','🦁','🚀'] ],[ '📚 Book',['📚','✏️','🖍️','🍔'] ],[ '🌧 Rainy',['🌧','⛈','☔','🏖'] ],[ '🐟 Fish',['🐟','🐙','🦀','🍩'] ]];
     if(!seed){ var s0=sets[idx%sets.length]; return {q:'Which one does NOT belong?', o:s0[1], a:3, c:'', j:''}; }
     var s=sets[(idx+seed)%sets.length]; return optsShuffled({q:'Which one does NOT belong?', o:s[1], a:3, c:'', j:''}, hashStr('so|'+seed+'|'+idx)); }
+  if(gameId==='scramble'){
+    var words=['CAT','DOG','FROG','APPLE','SCHOOL','FRIEND','HAPPY','WATER','TIGER','BANANA','RAINBOW','BUTTERFLY','SUN','BIRD','FISH','TREE','BOOK','BALL','CAKE','LION'];
+    var order=seededShuffle(words.map(function(_,i){return i;}), hashStr('sc|'+seed));
+    var word=words[order[idx%order.length]];
+    /* Deterministic scramble of the word's own letters — never the
+       word itself, so the question always has something to solve. */
+    var letters=word.split('');
+    var scr=seededShuffle(letters, hashStr('scs|'+seed+'|'+idx));
+    var tries=0;
+    while(scr.join('')===word&&tries<10){ scr=seededShuffle(letters, hashStr('scs|'+seed+'|'+idx+'|'+tries)); tries++; }
+    if(scr.join('')===word)scr=letters.slice().reverse();
+    var others=seededShuffle(words.filter(function(w){return w!==word;}), hashStr('sco|'+seed+'|'+idx)).slice(0,3);
+    return optsShuffled({q:'Unscramble: '+scr.join(''), o:[word].concat(others), a:0, c:'', j:''}, hashStr('sco2|'+seed+'|'+idx));
+  }
+  if(gameId==='race'){
+    /* Quick-fire sums: add/subtract to 20, times tables 2-6. The
+       race feel (per-game timer) lives elsewhere; this round just
+       needs fast, varied sums with different numbers from Number Pop. */
+    var hs=hashStr('ra|'+seed+'|'+idx);
+    var kind=hs%3, a2, b2, ans2, qq;
+    if(kind===0){ a2=4+(hs%14); b2=2+((Math.floor(hs/14))%15); if(a2+b2>20)b2=20-a2; ans2=a2+b2; qq=a2+' + '+b2+' = ?'; }
+    else if(kind===1){ a2=6+(hs%15); b2=2+((Math.floor(hs/15))%(a2-2)); ans2=a2-b2; qq=a2+' - '+b2+' = ?'; }
+    else { a2=2+(hs%5); b2=2+((Math.floor(hs/5))%5); ans2=a2*b2; qq=a2+' × '+b2+' = ?'; }
+    return optsShuffled({q:qq, o:[String(ans2),String(ans2+1),String(ans2-1),String(ans2+2)], a:0, c:'', j:''}, hashStr('rao|'+seed+'|'+idx));
+  }
+  if(gameId==='sentence'){
+    var sents=[['The','dog','chases','the','cat'],['I','read','my','favourite','book'],['The','cat','drinks','milk'],['She','hugs','her','teddy','bear'],['We','love','our','school'],['The','bird','sings','a','song'],['He','kicked','the','ball'],['My','mum','bakes','a','cake'],['The','sun','warms','the','earth'],['The','children','love','to','play']];
+    var order=seededShuffle(sents.map(function(_,i){return i;}), hashStr('se|'+seed));
+    var words=sents[order[idx%order.length]];
+    var correct=words.join(' ');
+    /* Three wrong orderings of the same words — never the correct
+       sentence, never twice the same. Shuffles first; rotations
+       (always different from the original) as a safety net. */
+    var wrongs=[], t=0;
+    while(wrongs.length<3&&t<20){ var cand=seededShuffle(words, hashStr('sew|'+seed+'|'+idx+'|'+t)).join(' '); if(cand!==correct&&wrongs.indexOf(cand)<0)wrongs.push(cand); t++; }
+    var k=1;
+    while(wrongs.length<3&&k<words.length){ var rot=words.slice(k).concat(words.slice(0,k)).join(' '); if(rot!==correct&&wrongs.indexOf(rot)<0)wrongs.push(rot); k++; }
+    return optsShuffled({q:'Jumbled: '+words.join(' / '), o:[correct].concat(wrongs), a:0, c:'', j:''}, hashStr('seo|'+seed+'|'+idx));
+  }
   var a, b;
   if(!seed){ a=3+((idx*7)%18); b=2+((idx*5)%9); }
   else { var hs=hashStr('num|'+seed+'|'+idx); a=3+(hs%18); b=2+((Math.floor(hs/32))%9); }
@@ -2047,6 +2410,68 @@ function genRound(gameId, idx, seed){
      the right/wrong highlight landed on the wrong one. */
   return optsShuffled({q:(isMul?(a+' × '+b+' = ?'):(a+' + '+b+' = ?')), o:[String(ans),String(ans+1),String(ans-1),String(ans+2)], a:0, c:'', j:''}, hashStr('numo|'+seed+'|'+idx));
 }
+/* Exit Parking (4 levels, 4x4 lot). Red car starts (0,2) horizontal,
+   len 2; exit is the right-edge cell (3,2); win when red.x===2.
+   Verified solutions (tap a car to slide it one cell; tap the end
+   you want it to move towards):
+   L1: blue up, red right, red right.
+   L2: yellow up, green up, green up, red right, red right.
+   L3: A left, B up, C up, C up, red right, red right.
+   L4: A left, B up, B up, C up, red right, red right. */
+var PARKLEVELS=[
+ {cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2},{id:'b1',e:'🚙',o:'v',x:2,y:1,len:2}]},
+ {cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2},{id:'y1',e:'🚕',o:'v',x:2,y:1,len:2},{id:'g1',e:'🚐',o:'v',x:3,y:2,len:2}]},
+ {cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2},{id:'a1',e:'🚕',o:'h',x:1,y:0,len:2},{id:'b1',e:'🚌',o:'v',x:2,y:1,len:2},{id:'c1',e:'🚐',o:'v',x:3,y:2,len:2}]},
+ {cars:[{id:'red',e:'🚗',o:'h',x:0,y:2,len:2},{id:'a1',e:'🚕',o:'h',x:1,y:1,len:2},{id:'b1',e:'🚌',o:'v',x:2,y:2,len:2},{id:'c1',e:'🚐',o:'v',x:3,y:1,len:2}]}
+];
+var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};
+function parkCarCells(c){
+  var out=[];
+  for(var i=0;i<c.len;i++)out.push([c.o==='h'?c.x+i:c.x, c.o==='v'?c.y+i:c.y]);
+  return out;
+}
+function parkOccupied(cars, ignoreId){
+  var s={};
+  cars.forEach(function(c){
+    if(c.id===ignoreId)return;
+    parkCarCells(c).forEach(function(p){ s[p[0]+','+p[1]]=1; });
+  });
+  return s;
+}
+function parkCanMove(cars, id, dir){
+  var c=null;
+  cars.forEach(function(x){ if(x.id===id)c=x; });
+  if(!c)return false;
+  var tx, ty;
+  if(c.o==='h'){
+    if(dir==='r'){ tx=c.x+c.len; ty=c.y; }
+    else if(dir==='l'){ tx=c.x-1; ty=c.y; }
+    else return false;
+  } else {
+    if(dir==='d'){ tx=c.x; ty=c.y+c.len; }
+    else if(dir==='u'){ tx=c.x; ty=c.y-1; }
+    else return false;
+  }
+  if(tx<0||ty<0||tx>=PARKW||ty>=PARKH)return false;
+  return !parkOccupied(cars, id)[tx+','+ty];
+}
+function parkMove(cars, id, dir){
+  if(!parkCanMove(cars, id, dir))return null;
+  return cars.map(function(c){
+    if(c.id!==id)return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len};
+    var n={id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len};
+    if(dir==='l')n.x--;
+    else if(dir==='r')n.x++;
+    else if(dir==='u')n.y--;
+    else if(dir==='d')n.y++;
+    return n;
+  });
+}
+function parkWon(cars){
+  var r=null;
+  cars.forEach(function(c){ if(c.id==='red')r=c; });
+  return !!r&&r.x===PARKW-r.len;
+}
 function startGame(id){
   var e=ex(); if(!e.playFresh)e.playFresh={};
   var p=e.playProgress[id];
@@ -2057,29 +2482,82 @@ function startGame(id){
   if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ }
   else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
   if(id==='memory'){ gState={id:id, deck:shuffle(['🐸','🐸','🦦','🦦','🍓','🍓','⭐','⭐','🚀','🚀','🦋','🦋']), open:[], matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
+  else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, cars:(!p||doneP||!p.cars)?PARKLEVELS[lv].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }):p.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; }
   else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } }
   gState.seed=seed;
+  gState.startedAt=Date.now();
   if(id==='memory'){
     if(doneP){ gState.matched=[]; gState.moves=0; }
     else if(p&&p.deck&&p.deck.length===12)gState.deck=p.deck.slice();
   }
   go('game');
 }
+/* The answer buttons for one round. Number Pop renders its options
+   as 🎈 balloons falling from the top (staggered, then a gentle
+   bob); Speed Sort renders big 2×2 tiles so the emoji are easy to
+   spot. Every variant keeps data-gopt, so bindGame's tap handler —
+   score, sounds, saveGameProgress, feedback, Next — works exactly
+   the same for all three. genRound is untouched: the balloons and
+   tiles only present the round it already generated. */
+function gameOptsHTML(q){
+  if(gState.id==='number'){
+    return '<div class="balloonrow">'+q.o.map(function(o,i){
+      var cls='balloon';
+      if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; if(i===gState.picked&&i===q.a)cls+=' popped'; }
+      var face=(gState.answered&&i===gState.picked&&i===q.a)?'💥':'🎈';
+      return '<button class="'+cls+'" style="--d:'+(i*0.12)+'s" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'><span class="b-emoji">'+face+'</span><span class="b-num">'+esc(o)+'</span></button>';
+    }).join('')+'</div>';
+  }
+  if(gState.id==='sort'){
+    return '<div class="sortgrid">'+q.o.map(function(o,i){
+      var cls='sorttile';
+      if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; }
+      return '<button class="'+cls+'" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'>'+esc(o)+'</button>';
+    }).join('')+'</div>';
+  }
+  return q.o.map(function(o,i){ var cls='optbtn'; if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; } return '<button class="'+cls+'" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('');
+}
 function gameHTML(){
   var e=ex(); var g=GAMES.find(function(x){return x.id===gState.id;});
   if(gState.id==='memory'){
-    if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p><button class="btn" id="gBack">Back to Play 🎮</button></div>';
+    if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
     return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div></div>'
-     +'<div class="card"><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
+     +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
   }
   if(gState.idx>=gState.rounds){
-    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(100,e.glow)+'</div><div class="trophy">🏆</div><h2>'+g.name+' complete!</h2><div class="starsRow">'+[1,2,3,4,5,6].map(function(i){return i<=gState.score?'⭐':'☆';}).join('')+'</div><p style="font-weight:900">Score: '+gState.score+' / '+gState.rounds+' — you earned ⭐ '+gState.score+' stars!</p><button class="btn" id="gBack">Back to Play 🎮</button></div>';
+    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(100,e.glow)+'</div><div class="trophy">🏆</div><h2>'+g.name+' complete!</h2><div class="starsRow">'+[1,2,3,4,5,6].map(function(i){return i<=gState.score?'⭐':'☆';}).join('')+'</div><p style="font-weight:900">Score: '+gState.score+' / '+gState.rounds+' — you earned ⭐ '+gState.score+' stars!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
+  }
+  if(gState.id==='crossword'){
+    if(!gState.filled){ var pX=e.playProgress.crossword; gState.filled=(pX&&pX.filled&&pX.idx===gState.idx)?pX.filled.slice():[false,false,false,false,false,false]; }
+    var qx=genRound('crossword', gState.idx, gState.seed);
+    var cellWord={}, cellNum={};
+    XWORDS.forEach(function(wd,wi){ for(var k=0;k<wd.w.length;k++){ var key=(wd.x+wd.dx*k)+','+(wd.y+wd.dy*k); (cellWord[key]=cellWord[key]||[]).push(wi); } if(!cellNum[wd.x+','+wd.y])cellNum[wd.x+','+wd.y]=wd.num; });
+    var grid='';
+    for(var gy=0;gy<5;gy++){ for(var gx=0;gx<5;gx++){ var key2=gx+','+gy, ws=cellWord[key2]; if(!ws){ grid+='<div class="xwcell blank"></div>'; continue; } var shown=''; for(var wi2=0;wi2<ws.length;wi2++){ if(gState.filled[ws[wi2]]){ var wd2=XWORDS[ws[wi2]]; shown=wd2.w[(gx-wd2.x)*wd2.dx+(gy-wd2.y)*wd2.dy]; break; } } grid+='<div class="xwcell'+(shown?' lit':'')+'">'+(cellNum[key2]?'<span class="xwnum">'+cellNum[key2]+'</span>':'')+shown+'</div>'; } }
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div></div>'
+     +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🧩 Crossword Quest</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
+     +'<div class="xwgrid">'+grid+'</div>'
+     +'<div class="bigq">'+esc(qx.q)+'</div>'
+     + qx.o.map(function(o,i){ var cls='optbtn'; if(gState.answered){ if(i===qx.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; } return '<button class="'+cls+'" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')
+     +(gState.answered?'<div class="feedback '+(gState.picked===qx.a?'ok':'no')+'">'+(gState.picked===qx.a?PRAISE[gState.idx%PRAISE.length]:ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(qx.o[qx.a])+'”.')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
+     +'<button class="btn ghost" id="gBack" style="margin-top:8px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
+  }
+  if(gState.id==='parking'){
+    var occ={};
+    gState.cars.forEach(function(c){ parkCarCells(c).forEach(function(p){ occ[p[0]+','+p[1]]=c; }); });
+    var lot='';
+    for(var py=0;py<PARKH;py++){ for(var px=0;px<PARKW;px++){ var cc=occ[px+','+py]; if(cc){ lot+='<button class="parkcar'+(cc.id==='red'?' red':'')+'" data-car="'+cc.id+'" data-cx="'+px+'" data-cy="'+py+'">'+cc.e+'</button>'; } else if(px===PARKEXIT.x&&py===PARKEXIT.y){ lot+='<div class="parkcell exit">🏁</div>'; } else { lot+='<div class="parkcell"></div>'; } } }
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div></div>'
+     +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Moves: '+gState.moves+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
+     +'<p class="muted" style="font-weight:700">Tap a car to slide it one cell — tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
+     +'<div class="parklot">'+lot+'</div>'
+     +'<button class="btn ghost" id="gBack" style="margin-top:14px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   var q=genRound(gState.id, gState.idx, gState.seed);
-  return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div></div>'
-   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
+  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+   +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
    +'<div class="bigq">'+esc(q.q)+'</div>'
-   + q.o.map(function(o,i){ var cls='optbtn'; if(gState.answered){ if(i===q.a)cls+=' right'; else if(i===gState.picked)cls+=' wrong'; } return '<button class="'+cls+'" data-gopt="'+i+'" '+(gState.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')
+   + gameOptsHTML(q)
    +(gState.answered?'<div class="feedback '+(gState.picked===q.a?'ok':'no')+'">'+(gState.picked===q.a?PRAISE[gState.idx%PRAISE.length]:ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(q.o[q.a])+'”.')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
    +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
 }
@@ -2087,6 +2565,27 @@ function bindGame(){
   var e=ex();
   var back=document.getElementById('gBack'); if(back)back.onclick=function(){ gState=null; go('play'); };
   var quit=document.getElementById('gQuit'); if(quit)quit.onclick=function(){ saveGameProgress(); toast('Saved! Tap the game anytime to resume.'); gState=null; go('play'); };
+  if(gState.id==='parking'){
+    if(gState.idx>=gState.rounds)return;
+    document.querySelectorAll('[data-car]').forEach(function(b){ b.onclick=function(){
+      var id=b.getAttribute('data-car'), cx=parseInt(b.getAttribute('data-cx'),10), cy=parseInt(b.getAttribute('data-cy'),10);
+      var car=null; gState.cars.forEach(function(c){ if(c.id===id)car=c; }); if(!car)return;
+      var dir=car.o==='h'?(cx>car.x+(car.len-1)/2?'r':'l'):(cy>car.y+(car.len-1)/2?'d':'u');
+      var moved=parkMove(gState.cars, id, dir);
+      if(!moved){ var opp={l:'r',r:'l',u:'d',d:'u'}[dir]; moved=parkMove(gState.cars, id, opp); }
+      if(!moved)return;
+      gState.cars=moved; gState.moves++; sndPop(); saveGameProgress();
+      if(parkWon(gState.cars)){
+        gState.score++; gState.idx++; gState.moves=0;
+        if(gState.idx<gState.rounds){ gState.cars=PARKLEVELS[gState.idx].cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; }); }
+        saveGameProgress();
+        if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,'parking'); e.stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+      }
+      render();
+    }; });
+    return;
+  }
+  var backSave=document.getElementById('gBackSave'); if(backSave)backSave.onclick=function(){ saveGameProgress(); gState=null; go('play'); };
   if(gState.id==='memory'){
     document.querySelectorAll('[data-mem]').forEach(function(b){ b.onclick=function(){
       if(gState.lock)return; var i=parseInt(b.getAttribute('data-mem'),10);
@@ -2098,7 +2597,23 @@ function bindGame(){
       }
       saveGameProgress(); render();
     }; });
-    if(gState.matched.length>=12&&!gState.won){ gState.won=true; e.stars+=6; awardBadge('player','🎮 Arcade Star'); saveGameProgress(); sndFanfare(); confettiStars(); }
+    if(gState.matched.length>=12&&!gState.won){ gState.won=true; e.stars+=6; awardBadge('player','🎮 Arcade Star'); gState.newBest=recordPlayBest(e,'memory'); saveGameProgress(); sndFanfare(); confettiStars(); render(); }
+    return;
+  }
+  if(gState.id==='crossword'){
+    if(gState.idx>=gState.rounds)return;
+    if(!gState.filled){ var pX2=ex().playProgress.crossword; gState.filled=(pX2&&pX2.filled&&pX2.idx===gState.idx)?pX2.filled.slice():[false,false,false,false,false,false]; }
+    var qx=genRound('crossword', gState.idx, gState.seed);
+    document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
+      var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
+      if(i===qx.a){ gState.score++; gState.filled[gState.idx]=true; sndCorrect(); } else sndWrong();
+      saveGameProgress(); render();
+    }; });
+    var nx2=document.getElementById('gNext'); if(nx2)nx2.onclick=function(){
+      gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
+      if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,'crossword'); ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+      render();
+    };
     return;
   }
   if(gState.idx>=gState.rounds)return;
@@ -2110,13 +2625,13 @@ function bindGame(){
   }; });
   var nx=document.getElementById('gNext'); if(nx)nx.onclick=function(){
     gState.idx++; gState.picked=null; gState.answered=false; saveGameProgress();
-    if(gState.idx>=gState.rounds){ ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
+    if(gState.idx>=gState.rounds){ gState.newBest=recordPlayBest(e,gState.id); ex().stars+=gState.score; awardBadge('player','🎮 Arcade Star'); save(); sndFanfare(); confettiStars(); }
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed};
+function saveGameProgress(){ var e=ex(); if(!gState)return; if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false]}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
-  var doneNow=gState.id==='memory'?!!gState.won:(gState.idx>=gDef.rounds);
+  var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
   save(); }
 
@@ -2724,6 +3239,7 @@ function parentHTML(){
   var sel=DB.explorers.find(function(x){return x.id===parentSel;})||ex()||DB.explorers[0];
   if(!sel)return '<div class="card"><p style="font-weight:800">No explorers yet. Create one at the Grand Door first.</p></div>';
   parentSel=sel.id;
+  ensureFriendCode(sel);
   var tk=todayKey(); var todayMin=sel.daily[tk]||0;
   var days=[]; for(var i=6;i>=0;i--){ var d=new Date(); d.setDate(d.getDate()-i); var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); days.push({label:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()], v:sel.daily[k]||0}); }
   var maxV=Math.max(DB.dailyLimit, Math.max.apply(null,days.map(function(d){return d.v;})) ,1);
@@ -2765,7 +3281,8 @@ function parentHTML(){
    + DB.explorers.map(function(x){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+x.stars+' · '+Object.keys(x.completed).length+' quests</span><span style="flex:1"></span><button class="btn ghost" data-reset="'+x.id+'">🔑 Reset picture code</button><button class="btn coral" data-remove="'+x.id+'">Remove explorer</button></div>'; }).join('')
    +'<div id="resetArea"></div>'
    +'<h4 style="margin-top:18px">Parent PIN</h4><button class="btn ghost" id="pinChange">Change PIN</button> <span id="pinChangeArea"></span>'
-   +'<p class="small muted" style="margin-top:14px">This page shows the linked family’s progress, refreshed from the server. There is no location tracking and no camera monitoring in this app.</p></div>';
+   +'<p class="small muted" style="margin-top:14px">This page shows the linked family’s progress, refreshed from the server. There is no location tracking and no camera monitoring in this app.</p></div>'
+   +friendRequestsCardHTML(sel);
 }
 var parentSel=null;
 function bindParent(){
@@ -2812,6 +3329,10 @@ function bindParent(){
     document.getElementById('pinChangeArea').innerHTML='<span style="display:inline-flex;gap:6px;margin-left:8px"><input class="field" id="pinCh" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN" style="width:170px"><button class="btn" id="pinChSave">Save PIN</button></span>';
     document.getElementById('pinChSave').onclick=function(){ var v=document.getElementById('pinCh').value.trim(); if(!/^\d{4}$/.test(v)){ toast('PIN must be exactly 4 digits.'); return; } DB.parentPin=v; save(); toast('Parent PIN changed.'); render(); };
   };
+  /* Friends (leaderboard-only): fill the Friend requests card for
+     the selected explorer. A friend joins the child's leaderboard
+     only after the parent accepts here. */
+  (function(){ var sel=DB.explorers.find(function(x){return x.id===parentSel;})||ex(); if(sel)renderParentFriends(sel); })();
 }
 
 /* ============================================================ BOOT */
