@@ -119,3 +119,39 @@ test('a merge that replaces the DB re-renders, so no handler keeps a detached ex
   const b = bodyOf('uploadAfterPull', 'function uploadAfterPull()');
   assert.ok(b.includes('if(safeToRender())render();'), 'after a merge that changed the DB, re-render when safe');
 });
+
+/* --- Lost-upload bug (found 2026-11-07, item 6a): a save whose
+   800ms debounce fired while a pull was in flight set
+   syncUploadPending and returned — and only uploadAfterPull's own
+   done() ever drained that flag. A plain pull (syncFromServer)
+   never did, so the save was silently lost unless a later save
+   happened. That is how a brand-new explorer could never reach
+   the server. */
+test('syncFromServer drains a queued upload on both the success and the failure path', () => {
+  const b = bodyOf('syncFromServer', 'function syncFromServer(opts)');
+  // Both paths must drain: the .then after syncPulling=false, and
+  // the .catch after syncPulling=false.
+  const drains = (b.match(/drainPendingUpload\(\)/g) || []).length;
+  assert.ok(drains >= 2, 'syncFromServer must drain the pending upload on both paths (found ' + drains + ')');
+  assert.ok(b.includes('syncPulling=false; drainPendingUpload();'), 'success path must drain right after clearing syncPulling');
+  assert.ok(b.includes("catch(function(){ syncPulling=false; drainPendingUpload(); return false; })"), 'failure path must drain too');
+  // The drain must go through the helper, not a direct syncToServer
+  // call inside syncFromServer (that would re-pull from inside a pull).
+  const code = b.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.ok(!code.includes('syncToServer()'), 'syncFromServer must not call syncToServer directly');
+  // The helper itself: only when the flag is set, clear it first
+  // (so a re-entrant call cannot queue twice), then start the upload.
+  const h = bodyOf('drainPendingUpload', 'function drainPendingUpload(){');
+  assert.ok(h.includes('if(syncUploadPending)'), 'drain must only run when an upload is actually queued');
+  assert.ok(h.includes('syncUploadPending=false; syncToServer();'), 'drain must clear the flag, then start a debounced pull-then-upload');
+});
+
+test('postToServer checks the response: a non-OK answer is retried (bounded) and logged, never silently ignored', () => {
+  const b = bodyOf('postToServer', 'function postToServer(key)');
+  assert.ok(b.includes('.then(function(r){'), 'postToServer must read the response, not fire-and-forget');
+  assert.ok(b.includes('if(r.ok)'), 'postToServer must check the response status');
+  assert.ok(b.includes('postRetryCount=0'), 'a successful POST must reset the retry budget');
+  assert.ok(b.includes("console.warn('postToServer: server answered '"), 'a non-OK answer must be surfaced in diagnostics');
+  assert.ok(b.includes('if(postRetryCount<2){ postRetryCount++; syncToServer(); }'), 'a non-OK answer must queue a bounded retry, not an endless loop');
+  assert.ok(!b.includes('}).catch(function(){}); }catch(e){}'), 'the old silent fire-and-forget must be gone');
+});
