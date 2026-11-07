@@ -159,9 +159,20 @@ test('learnFriendsBoardHTML ranks friends per quest by fastest time', () => {
   assert.ok(storyBoard.indexOf('Mei') < storyBoard.indexOf('Kai'), 'Mei 44s beats Kai 50s');
   assert.ok(storyBoard.indexOf('⏱ 44s') >= 0, 'fastest friend time shown');
   assert.ok(out.indexOf('Number Pop') < 0, 'Play times never leak onto the quest board');
+  // A friend with no timed quest yet still shows up — on a waiting
+  // line, like the Play friends board — so the section is never
+  // mysteriously absent from the Learn page.
+  friendsCache = [{ code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { word: { secs: 25 } } }];
+  DB.explorers[0].friends = ['XYZ789'];
+  const waiting = learnFriendsBoardHTML();
+  assert.ok(waiting.indexOf('Friends quest board') >= 0, 'the board shows even before any friend has timed a quest');
+  assert.ok(waiting.indexOf('Kai — no timed quests yet.') >= 0, 'Kai sits on the waiting line');
+  assert.ok(waiting.indexOf('Story Words') < 0, 'no quest board until a friend actually has a time');
   friendsCache = [];
   DB.explorers[0].friends = [];
-  assert.equal(learnFriendsBoardHTML(), '', 'no friends, no friends quest board');
+  const none = learnFriendsBoardHTML();
+  assert.ok(none.indexOf('Friends quest board') >= 0, 'the board shows even with no friends at all');
+  assert.ok(none.indexOf('No friends yet') >= 0, 'and it says so plainly');
 });
 
 test('merge keeps the fastest quest time and the banked quest seconds', () => {
