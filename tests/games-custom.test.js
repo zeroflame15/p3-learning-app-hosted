@@ -187,6 +187,7 @@ function harness() {
     + 'function toast(){}\n';
   const src = prelude + helpers + '\n'
     + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon'].map((n) => grab(n)).join('\n') + '\n'
+    + grab('playElapsedSecs') + '\n'
     + grab('startGame') + '\n' + grab('saveGameProgress', 'save(); }') + '\n'
     + ';({startGame:startGame,saveGameProgress:saveGameProgress,parkMove:parkMove,parkWon:parkWon,'
     + 'getState:function(){ return gState; },setState:function(s){ gState=s; },getDB:function(){ return DB; }});';
