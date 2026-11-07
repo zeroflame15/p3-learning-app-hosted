@@ -31,7 +31,7 @@ function grabVar(name) {
 
 const XWORDS = eval(grabVar('XWORDS') + '\n;XWORDS');
 const helpers = ['xwWordsAt', 'xwCellLocked', 'xwLetterAt', 'xwWordCells',
-  'xwUnlockedCells', 'xwWordText', 'xwCheckWord', 'xwNextUnsolved', 'xwSelectCell']
+  'xwUnlockedCells', 'xwWordText', 'xwCheckWord', 'xwApplyTyped', 'xwPattern', 'xwNextUnsolved', 'xwSelectCell']
   .map((n) => fnText('function ' + n + '(')).join('\n');
 
 test('xwWordsAt finds the words covering each square', () => {
@@ -108,4 +108,54 @@ test('xwUnlockedCells counts only the cells a word still needs', () => {
   const twoSolved = [false, true, true, false, false, false];
   assert.equal(fns(0, twoSolved).length, 1, 'CAT keeps only the A once CAR and TIP are solved');
   assert.equal(fns(1, twoSolved).length, 0, 'a solved word needs no cells');
+});
+
+test('xwApplyTyped lets the child type the whole word — a re-typed given letter is dropped, not stuffed into a blank', () => {
+  const fns = eval(helpers + '\n;({xwApplyTyped, xwWordText, xwCheckWord})');
+  // Reported live 2026-11-07: with CAT solved, TIP takes 2 letters,
+  // but the child typed the whole word TIP — the old code put the T
+  // into the first blank (TTI) and the check failed.
+  const catSolved = [true, false, false, false, false, false];
+  let letters = {};
+  assert.equal(fns.xwApplyTyped(2, 'TIP', letters, catSolved), 2, 'two blanks filled');
+  assert.deepEqual(letters, { '2,1': 'I', '2,2': 'P' }, 'the re-typed T is dropped, I and P land in the blanks');
+  assert.equal(fns.xwWordText(2, letters, catSolved), 'TIP', 'the word reads TIP');
+  assert.equal(fns.xwCheckWord(2, letters, catSolved), 'ok', 'the check passes');
+  // Typing only the missing letters still works.
+  letters = {};
+  assert.equal(fns.xwApplyTyped(2, 'IP', letters, catSolved), 2, 'IP alone fills both blanks');
+  assert.equal(fns.xwCheckWord(2, letters, catSolved), 'ok', 'IP alone passes too');
+  // A given letter in the middle/end of the word: CAT with TIP solved
+  // locks the final T — typing CAT drops the T, typing CA also works.
+  const tipSolved = [false, false, true, false, false, false];
+  letters = {};
+  assert.equal(fns.xwApplyTyped(0, 'CAT', letters, tipSolved), 2, 'CAT with the T given fills C and A');
+  assert.deepEqual(letters, { '0,0': 'C', '1,0': 'A' }, 'the re-typed T is dropped');
+  assert.equal(fns.xwCheckWord(0, letters, tipSolved), 'ok', 'CAT passes');
+  letters = {};
+  assert.equal(fns.xwApplyTyped(0, 'CA', letters, tipSolved), 2, 'CA alone fills both blanks');
+  assert.equal(fns.xwCheckWord(0, letters, tipSolved), 'ok', 'CA alone passes too');
+  // Backspacing re-derives the letters: a shorter raw value clears the tail.
+  letters = { '2,1': 'I', '2,2': 'P' };
+  assert.equal(fns.xwApplyTyped(2, 'I', letters, catSolved), 1, 'back to one letter');
+  assert.deepEqual(letters, { '2,1': 'I' }, 'the P is cleared');
+  assert.equal(fns.xwCheckWord(2, letters, catSolved), 'incomplete', 'no check on a half word');
+  // A wrong guess still fails the check.
+  letters = {};
+  fns.xwApplyTyped(2, 'TAP', letters, catSolved);
+  assert.equal(fns.xwCheckWord(2, letters, catSolved), 'wrong', 'TAP is not TIP');
+});
+
+test('xwPattern shows given letters and blanks, and the input takes the whole word', () => {
+  const fns = eval(helpers + '\n;({xwPattern})');
+  const catSolved = [true, false, false, false, false, false];
+  assert.equal(fns.xwPattern(2, {}, catSolved), 'T _ _', 'TIP shows its given T');
+  assert.equal(fns.xwPattern(2, { '2,1': 'I' }, catSolved), 'T I _', 'a typed I shows in place');
+  assert.equal(fns.xwPattern(0, {}, [false, false, false, false, false, false]), '_ _ _', 'a fresh word is all blanks');
+  // The box takes the full word length, not just the missing letters.
+  const game = html.slice(html.indexOf("if(gState.id==='crossword'){"), html.indexOf("if(gState.id==='parking'){"));
+  assert.ok(game.includes("maxlength=\"'+XWORDS[gState.sel].w.length+'\""), 'maxlength is the word length');
+  assert.ok(!game.includes("maxlength=\"'+unlocked.length+'\""), 'no maxlength from the unlocked count left');
+  assert.ok(game.includes('xwPattern(gState.sel'), 'the pattern line renders above the box');
+  assert.ok(game.includes('already given'), 'the hint says the green letters are given');
 });
