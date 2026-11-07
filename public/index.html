@@ -138,6 +138,7 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 /* During Play the frog must track the pointer, not drift — the
    1.3s wander transition is far too slow for a chase. */
 .pond.playing .frog-wrap{transition:left .3s ease-out,top .3s ease-out}
+.pond.dragging .frog-wrap{transition:none}
 .pond.playing .pond-toy{transition:left .12s linear,top .12s linear}
 .frog-wrap:active{cursor:grabbing}
 .frog-bob{display:inline-block;transform-origin:50% 92%}
@@ -2304,7 +2305,7 @@ var FOODS=[{e:'🪰',name:'fly'},{e:'🦟',name:'mozzie'},{e:'🐛',name:'wriggl
 /* Pond UI state only — never saved, never synced. frogPos is where
    the frog sits in the pond (percent); pondMode is the care activity
    in progress ('feed' | 'clean' | 'play' | null). */
-var frogPos={x:50,y:56}, pondMode=null, dirtLeft=null, playTimer=null, playPointerHandler=null, frogTimer=null, frogBubbleTimer=null, frogDragging=false, frogDragMoved=false, frogDownX=0, frogDownY=0, frogPausedUntil=0;
+var frogPos={x:50,y:56}, pondMode=null, dirtLeft=null, playTimer=null, playPointerHandler=null, frogTimer=null, frogBubbleTimer=null, frogDragging=false, frogDragMoved=false, frogDownX=0, frogDownY=0, frogPausedUntil=0, frogDragHandler=null, frogDragUpHandler=null;
 /* The play chase listener (see startPlayMode) is attached to the
    document so it survives re-renders; it must be removed when play
    ends, or it would keep moving a toy that is no longer there. */
@@ -2548,22 +2549,46 @@ function bindCritter(){
   document.querySelectorAll('[data-food]').forEach(function(b){ b.onclick=function(){ var f=FOODS.find(function(x){return x.name===b.getAttribute('data-food');}); if(!f)return; recordCare('feed','Yum! '+ex().critterName+' gobbled the '+f.e+' '+f.name+'! 😋'); }; });
   var cc=document.getElementById('careCancel'); if(cc)cc.onclick=function(){ pondMode=null; dirtLeft=null; if(playTimer){ clearInterval(playTimer); playTimer=null; } stopPlayChase(); render(); };
   /* The live frog: it wanders the pond on its own, can be dragged
-     directly, and a tap (a press without dragging) says hello. */
+     directly, and a tap (a press without dragging) says hello.
+     The drag is handled at DOCUMENT level (like the play chase):
+     render() rebuilds the pond, so handlers bound to #frogWrap die
+     whenever the page re-renders mid-drag — a re-render from the
+     30s auto-pull or another tab's save releases pointer capture
+     and the frog freezes exactly where it was (seen live
+     2026-11-07: the frog stayed put through a 4.3s held drag,
+     then wandered off once the drag pause expired). The document
+     listener re-fetches the live pond on every move, so the drag
+     survives any re-render, and it needs no pointer capture at
+     all. While dragging, the pond gets a 'dragging' class that
+     turns the frog's 1.3s wander transition off — otherwise every
+     move restarts that ease-in-out transition and the frog barely
+     creeps after the pointer instead of tracking it. One listener
+     of each kind at most: re-binding removes the previous one. */
   var wrap=document.getElementById('frogWrap');
   if(wrap){
-    wrap.addEventListener('pointerdown',function(ev){ frogDragging=true; frogDragMoved=false; frogDownX=ev.clientX; frogDownY=ev.clientY; frogPausedUntil=Date.now()+3000; try{ wrap.setPointerCapture(ev.pointerId); }catch(err){} });
-    wrap.addEventListener('pointermove',function(ev){
-      if(!frogDragging)return;
-      if(Math.abs(ev.clientX-frogDownX)+Math.abs(ev.clientY-frogDownY)>8)frogDragMoved=true;
-      if(!frogDragMoved)return;
-      var pond=document.getElementById('pond'); if(!pond)return;
-      var r=pond.getBoundingClientRect();
-      frogPos={x:Math.max(4,Math.min(90,(ev.clientX-r.left)/r.width*100)), y:Math.max(10,Math.min(84,(ev.clientY-r.top)/r.height*100))};
-      placeFrog();
-    });
-    wrap.addEventListener('pointerup',function(){ if(!frogDragging)return; frogDragging=false; frogPausedUntil=Date.now()+2500; if(!frogDragMoved)frogTap(); });
-    wrap.addEventListener('pointercancel',function(){ frogDragging=false; });
+    wrap.addEventListener('pointerdown',function(ev){ frogDragging=true; frogDragMoved=false; frogDownX=ev.clientX; frogDownY=ev.clientY; frogPausedUntil=Date.now()+3000; var p0=document.getElementById('pond'); if(p0)p0.classList.add('dragging'); });
   }
+  if(frogDragHandler){ document.removeEventListener('pointermove',frogDragHandler); frogDragHandler=null; }
+  frogDragHandler=function(ev){
+    if(!frogDragging)return;
+    if(Math.abs(ev.clientX-frogDownX)+Math.abs(ev.clientY-frogDownY)>8)frogDragMoved=true;
+    if(!frogDragMoved)return;
+    var pond=document.getElementById('pond'); if(!pond)return;
+    if(!pond.classList.contains('dragging'))pond.classList.add('dragging');
+    var r=pond.getBoundingClientRect();
+    frogPos={x:Math.max(4,Math.min(90,(ev.clientX-r.left)/r.width*100)), y:Math.max(10,Math.min(84,(ev.clientY-r.top)/r.height*100))};
+    placeFrog();
+  };
+  document.addEventListener('pointermove',frogDragHandler);
+  if(frogDragUpHandler){ document.removeEventListener('pointerup',frogDragUpHandler); document.removeEventListener('pointercancel',frogDragUpHandler); frogDragUpHandler=null; }
+  frogDragUpHandler=function(){
+    if(!frogDragging)return;
+    frogDragging=false; frogPausedUntil=Date.now()+2500;
+    var p=document.getElementById('pond'); if(p)p.classList.remove('dragging');
+    if(!frogDragMoved)frogTap();
+  };
+  document.addEventListener('pointerup',frogDragUpHandler);
+  document.addEventListener('pointercancel',frogDragUpHandler);
   if(frogTimer)clearInterval(frogTimer);
   frogTimer=setInterval(function(){
     if(route!=='critter'||pondMode==='play'||frogDragging||Date.now()<frogPausedUntil)return;
