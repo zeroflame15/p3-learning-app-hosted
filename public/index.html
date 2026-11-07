@@ -121,8 +121,8 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .optbtn.wrong{border-color:var(--coral);background:var(--coral-soft)}
 @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.045)}100%{transform:scale(1)}}
 .feedback{border-radius:14px;padding:14px 16px;font-weight:800;margin:10px 0}
-.feedback.ok{background:var(--green-soft)}
-.feedback.no{background:var(--coral-soft)}
+.feedback.ok{background:var(--green-soft);color:#1e3a24}
+.feedback.no{background:var(--coral-soft);color:#1e3a24}
 .confetti{position:fixed;inset:0;pointer-events:none;z-index:90;overflow:hidden}
 .confetti span{position:absolute;top:-40px;font-size:1.5rem;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(340deg)}}
@@ -1315,7 +1315,7 @@ function mergeExplorer(a,b){
   Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
-  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked)))}); });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,open:((y.elapsed||0)>=(x.elapsed||0)?(y.open||[]):(x.open||[])),cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked)))}); });
   e.playProgress=play;
   /* Fastest game times: keep the smaller secs per game (best ever). The
      day tag follows the winning side, so the board shows when the best
@@ -1613,7 +1613,7 @@ function render(){
   root.innerHTML='<div class="app route-'+routeCls+'">'
    +'<aside class="sidebar"><div class="brand"><div class="disc" style="width:44px;height:44px;background:'+ex().glow+';font-size:1.35rem">'+ex().face+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
-   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
+   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px">'+pipSVG(34,ex().glow)+'<span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<span class="chip">⭐ '+ex().stars+'</span>'
    +'<button class="iconbtn '+(vibeId?'on':'')+'" id="tbMusic" title="Background music" aria-label="Toggle background music">🎵</button>'
