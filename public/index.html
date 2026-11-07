@@ -127,6 +127,28 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .fx-hop{animation:fxHop .95s ease}
 .fx-wiggle{animation:fxWiggle .9s ease-in-out}
 .fx-float{position:absolute;bottom:12px;animation:fxFloatUp 1.4s ease-out forwards;pointer-events:none;font-size:1.7rem;z-index:2}
+/* ---------- Live frog pond: the frog is layered SVG art that
+   lives in its pond — it wanders, blinks, breathes and can be
+   dragged. No WebGL, no raster sprite: depth comes from radial
+   gradients, shading and a soft shadow, Pip-style. */
+.pond{position:relative;height:280px;border-radius:14px;overflow:hidden;background:linear-gradient(180deg,#bfe9ff 0%,#8fd0ea 42%,#4aa88a 78%,#2f8f6d 100%);box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.pond-lily{position:absolute;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8ed9a0,#3d9e57 70%);opacity:.92;z-index:1}
+.pond-bubble{position:absolute;border-radius:50%;background:rgba(255,255,255,.4);z-index:1}
+.frog-wrap{position:absolute;transform:translate(-50%,-50%);transition:left 1.3s ease-in-out,top 1.3s ease-in-out;cursor:grab;touch-action:none;z-index:3}
+.frog-wrap:active{cursor:grabbing}
+.frog-bob{display:inline-block;transform-origin:50% 92%}
+.frog-bob svg{height:100%;width:auto;display:block;filter:drop-shadow(0 10px 10px rgba(10,40,30,.25))}
+.frog-eye{transform-box:fill-box;transform-origin:center;animation:frogBlink 4.6s infinite}
+@keyframes frogBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+.frog-body{transform-box:fill-box;transform-origin:50% 100%;animation:frogBreathe 3.2s ease-in-out infinite}
+@keyframes frogBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03,1.05)}}
+.frog-bubble{position:absolute;left:50%;top:10px;transform:translateX(-50%);max-width:88%;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:800;font-size:.92rem;z-index:6;box-shadow:var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frog-bubble:after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+.dirt-spot{position:absolute;width:36px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a9805a,#6b4a2a 70%);border:0;cursor:pointer;z-index:4;pointer-events:auto;box-shadow:inset 0 -3px 5px rgba(0,0,0,.3)}
+.dirt-spot:hover{transform:scale(1.12)}
+.pond-toy{position:absolute;font-size:2rem;z-index:4;pointer-events:none;transition:left .25s linear,top .25s linear;transform:translate(-50%,-50%)}
+#pondDirt{position:absolute;inset:0;z-index:4;pointer-events:none}
+@media (prefers-reduced-motion: reduce){.frog-eye,.frog-body,.frog-wrap{animation:none;transition:none}}
 .bouncy{animation:bounce 1s ease infinite}
 @media (prefers-reduced-motion: reduce){.trophy,.bouncy,.confetti span{animation:none}}
 
@@ -1021,13 +1043,42 @@ var syncTimer=null;
    flight, no second pull starts, and an upload requested in the
    meantime is queued once instead of starting a parallel pull. */
 var syncPulling=false, syncUploadPending=false;
+/* A save whose 800ms debounce fired while a pull was in flight was
+   queued (syncUploadPending) — but only uploadAfterPull's own done()
+   ever drained that flag, and a plain pull (syncFromServer) never
+   did, so the save was silently lost unless a later save happened.
+   That is how a brand-new explorer could never reach the server.
+   Drain the flag here, on both the success and the failure path of
+   every pull: if an upload was queued while this pull ran, start it
+   now. It goes through syncToServer (debounced pull-then-upload),
+   never a bare POST. */
+function drainPendingUpload(){
+  if(syncUploadPending){ syncUploadPending=false; syncToServer(); }
+}
+/* Bounded retries for a POST the server answers non-OK: a couple of
+   more chances, then stop — an endless retry loop on a persistent
+   server error would be worse than a lost save (the next save or
+   auto-pull retries anyway). Reset on any successful POST. */
+var postRetryCount=0;
 function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} }
 /* Direct POST of the current local DB — no GET first. Used only by
    syncFromServer() after it has already pulled and merged, so a
-   pull can never trigger another pull (no re-entrancy loop). */
+   pull can never trigger another pull (no re-entrancy loop).
+   The response is CHECKED now: a POST the server answers non-OK
+   used to vanish silently, so a brand-new explorer could sit on
+   this device forever looking synced. On a non-OK answer, log it
+   and queue a bounded retry through syncToServer; a network error
+   keeps the old fire-and-forget catch (the next save or auto-pull
+   retries). */
 function postToServer(key){
   if(!key||!DB)return;
-  try{ fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).catch(function(){}); }catch(e){}
+  try{
+    fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).then(function(r){
+      if(r.ok){ postRetryCount=0; return; }
+      if(typeof console!=='undefined'&&console.warn)console.warn('postToServer: server answered '+r.status+' — queuing a retry');
+      if(postRetryCount<2){ postRetryCount++; syncToServer(); }
+    }).catch(function(){});
+  }catch(e){}
 }
 /* Pull-then-upload: before uploading, GET the server record and
    union-merge it into the local DB (mergeFamilyDB — never
@@ -1262,7 +1313,7 @@ function syncFromServer(opts){
   if(syncPulling)return Promise.resolve(false);
   syncPulling=true;
   return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
-    syncPulling=false;
+    syncPulling=false; drainPendingUpload();
     if(!j||!j.configured||!j.data||!j.data.explorers)return false;
     var server=j.data, localEmpty=!DB.explorers||!DB.explorers.length;
     /* Upload the merged result with a direct POST (postToServer),
@@ -1278,7 +1329,7 @@ function syncFromServer(opts){
     var changed=JSON.stringify(DB)!==before;
     if(changed){ saveLocal(); postToServer(key); }
     return changed;
-  }).catch(function(){ syncPulling=false; return false; });
+  }).catch(function(){ syncPulling=false; drainPendingUpload(); return false; });
 }
 /* Live sync: pull the server record on a timer and when the tab
    becomes visible again, but re-render only when it is safe to do
@@ -1389,7 +1440,14 @@ function render(){
      explorer saved from a previous visit. Previously a saved active
      explorer fell through to the app shell with no page for 'door',
      so a fresh load showed an empty screen instead of the Door. */
-  if(route==='door'||!ex()){ root.innerHTML=doorHTML(); bindDoor(); return; }
+  /* The parent page is reachable from the Grand Door itself (the
+     'Grown-ups' button, PIN-gated), so route 'parent' must render
+     even when no explorer is active yet — otherwise the Door would
+     swallow it and a parent who forgot the picture code could never
+     reach the parent page. The shell below needs an explorer, so a
+     parent without one gets a minimal shell instead. */
+  if(route==='door'||(!ex()&&route!=='parent')){ root.innerHTML=doorHTML(); bindDoor(); return; }
+  if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); return; }
   var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+n[1]+'</span>'+n[2]+'</button>'; }).join('');
   root.innerHTML='<div class="app">'
@@ -1495,7 +1553,8 @@ function doorHTML(){
      +'<div class="picgrid">'+PIC_CHOICES.map(function(p){ return '<button class="picbtn" data-pic="'+p+'">'+p+'</button>'; }).join('')+'</div>'
      +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="createBtn">Open my door 🚪</button><button class="btn ghost" id="doorBack">Back</button></div>';
   }
-  h+='<p class="small muted" style="margin-top:16px">Grown-ups: the parent page lives inside the profile menu, protected by a PIN. Progress syncs across devices linked with your family code — or stays on this device if you never link it.</p></div></div>';
+  h+='<p class="small muted" style="margin-top:16px">Grown-ups: tap “Grown-ups” below to open the parent page with your PIN — no picture code needed. Progress syncs across devices linked with your family code — or stays on this device if you never link it.</p>'
+   +'<div style="margin-top:10px"><button class="btn ghost" id="doorGrownups">🌙 Grown-ups</button></div></div></div>';
   return h;
 }
 function renderBubbles(el, arr){
@@ -1506,6 +1565,15 @@ function bindDoor(){
   if(nb)nb.onclick=function(){ doorMode='create'; doorCode=[]; render(); };
   var lk=document.getElementById('doorLink');
   if(lk)lk.onclick=function(){ doorMode='link'; doorCode=[]; render(); };
+  /* Grown-ups entry (fix 6c): straight to the PIN screen, no picture
+     code needed — the PIN is the grown-up gate. */
+  var dg=document.getElementById('doorGrownups');
+  if(dg)dg.onclick=function(){ sndPop(); go('parent'); };
+  /* Back must work on EVERY door screen. It used to be bound after
+     the link-mode early return below, so on the link screen it had
+     no handler at all and the button did nothing (fix 6b). */
+  var back=document.getElementById('doorBack');
+  if(back)back.onclick=function(){ doorMode='pick'; doorSel=null; doorCode=[]; render(); };
   if(doorMode==='link'){
     document.getElementById('linkBtn').onclick=function(){
       var v=document.getElementById('linkCode').value;
@@ -1513,8 +1581,6 @@ function bindDoor(){
     };
     return;
   }
-  var back=document.getElementById('doorBack');
-  if(back)back.onclick=function(){ doorMode='pick'; doorSel=null; doorCode=[]; render(); };
   if(doorMode==='create'){
     renderBubbles(document.getElementById('newBubbles'), doorCode);
     document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndMystery(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
@@ -2198,6 +2264,82 @@ var careMsg=null;
    ~1.7s after the care so a later re-render never replays it. */
 var CARE_FX={feed:['🪰','💕','✨'],clean:['🫧','✨','💧'],play:['🎾','⭐','💕']};
 var careFx=null;
+/* What the frog says when tapped — a tap always replays the happy
+   reaction (hop + floating emoji + bubble), even while every care
+   is on cooldown. */
+var FROG_LINES=['Ribbit! That tickles! 🐸','I love my pond! 💧','Hop hop hooray! 🎉','You are my favourite explorer! ⭐','Ribbit ribbit! Let’s play! 🎾','I’m growing big and strong! 🌱'];
+/* Foods on the Feed menu — the child picks one, the frog gobbles it. */
+var FOODS=[{e:'🪰',name:'fly'},{e:'🦟',name:'mozzie'},{e:'🐛',name:'wriggly worm'}];
+/* Pond UI state only — never saved, never synced. frogPos is where
+   the frog sits in the pond (percent); pondMode is the care activity
+   in progress ('feed' | 'clean' | 'play' | null). */
+var frogPos={x:50,y:56}, pondMode=null, dirtLeft=null, playTimer=null, frogTimer=null, frogBubbleTimer=null, frogDragging=false, frogDragMoved=false, frogDownX=0, frogDownY=0, frogPausedUntil=0;
+/* Pip-style 3D frog art: layered inline SVG with real depth —
+   radial-gradient shading, a belly, a soft shadow, big glossy eyes
+   with highlights, blush and a smile. No WebGL, no raster sprite.
+   One drawing per life-cycle stage; the frog breathes (frog-body)
+   and blinks (frog-eye) on its own. */
+function frogSVG(stage){
+  var defs='<defs>'
+   +'<radialGradient id="fgBack" cx="38%" cy="30%" r="75%"><stop offset="0%" stop-color="#8ee06a"/><stop offset="55%" stop-color="#4caf50"/><stop offset="100%" stop-color="#2e7d32"/></radialGradient>'
+   +'<radialGradient id="fgBelly" cx="50%" cy="35%" r="70%"><stop offset="0%" stop-color="#fdf6c9"/><stop offset="100%" stop-color="#e8d98a"/></radialGradient>'
+   +'<radialGradient id="fgJelly" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#eafaf0"/><stop offset="100%" stop-color="#a8dcc0"/></radialGradient>'
+   +'<radialGradient id="fgTad" cx="40%" cy="32%" r="75%"><stop offset="0%" stop-color="#7cc46a"/><stop offset="100%" stop-color="#2f6b2f"/></radialGradient>'
+   +'</defs>';
+  if(stage===0){
+    /* Frogspawn: a jelly cluster of eggs, each with a dark embryo. */
+    var eggs=[[62,96,17],[92,82,19],[122,96,17],[78,116,16],[108,116,16],[95,100,15]];
+    return '<svg viewBox="0 0 200 170" role="img" aria-label="Frogspawn">'+defs
+     +'<ellipse cx="100" cy="150" rx="62" ry="9" fill="rgba(10,40,30,.18)"/>'
+     + eggs.map(function(e){ return '<circle cx="'+e[0]+'" cy="'+e[1]+'" r="'+e[2]+'" fill="url(#fgJelly)" stroke="#ffffff" stroke-opacity=".7" stroke-width="1.5"/><circle cx="'+e[0]+'" cy="'+e[1]+'" r="5" fill="#2f4a3a"/>'; }).join('')
+     +'<path d="M58,84 q10,-8 22,-4" stroke="#ffffff" stroke-opacity=".8" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+  }
+  if(stage===1){
+    /* Tadpole: round body, long swimming tail, one big eye. */
+    return '<svg viewBox="0 0 200 170" role="img" aria-label="Tadpole">'+defs
+     +'<ellipse cx="100" cy="148" rx="58" ry="9" fill="rgba(10,40,30,.18)"/>'
+     +'<path d="M118,96 C150,78 168,92 158,112 C150,128 128,122 114,110 Z" fill="url(#fgTad)" opacity=".92"/>'
+     +'<g class="frog-body"><ellipse cx="92" cy="98" rx="40" ry="30" fill="url(#fgTad)"/>'
+     +'<ellipse cx="92" cy="108" rx="26" ry="17" fill="url(#fgBelly)" opacity=".85"/>'
+     +'<circle cx="70" cy="88" r="3" fill="#2e7d32" opacity=".5"/></g>'
+     +'<g class="frog-eye"><circle cx="72" cy="82" r="13" fill="#ffffff"/><circle cx="72" cy="83" r="6.5" fill="#2b4a2b"/><circle cx="70" cy="80" r="2.4" fill="#ffffff"/></g>'
+     +'<path d="M62,106 q8,6 16,2" stroke="#2b4a2b" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+  }
+  var eye=function(cx){
+    return '<g class="frog-eye"><circle cx="'+cx+'" cy="56" r="17" fill="#ffffff"/><circle cx="'+cx+'" cy="57" r="9" fill="#3a7d2c"/><circle cx="'+cx+'" cy="57" r="4.5" fill="#1d2b1d"/><circle cx="'+(cx-3)+'" cy="53" r="3" fill="#ffffff"/></g>';
+  };
+  if(stage===2){
+    /* Froglet: a small frog with a tail stub left. */
+    return '<svg viewBox="0 0 200 170" role="img" aria-label="Froglet">'+defs
+     +'<ellipse cx="100" cy="152" rx="56" ry="9" fill="rgba(10,40,30,.18)"/>'
+     +'<path d="M140,108 C158,100 164,112 152,120 C142,126 132,120 132,112 Z" fill="url(#fgTad)" opacity=".9"/>'
+     +'<ellipse cx="58" cy="128" rx="20" ry="11" fill="url(#fgBack)" transform="rotate(-18 58 128)"/>'
+     +'<ellipse cx="142" cy="128" rx="20" ry="11" fill="url(#fgBack)" transform="rotate(18 142 128)"/>'
+     +'<g class="frog-body"><ellipse cx="100" cy="104" rx="50" ry="40" fill="url(#fgBack)"/>'
+     +'<ellipse cx="100" cy="118" rx="34" ry="26" fill="url(#fgBelly)"/>'
+     +'<circle cx="78" cy="86" r="4" fill="#2e7d32" opacity=".45"/><circle cx="124" cy="92" r="3" fill="#2e7d32" opacity=".45"/></g>'
+     + eye(76)+eye(124)
+     +'<ellipse cx="62" cy="98" rx="7" ry="4" fill="#ffb3a0" opacity=".55"/><ellipse cx="138" cy="98" rx="7" ry="4" fill="#ffb3a0" opacity=".55"/>'
+     +'<path d="M88,104 q12,10 24,0" stroke="#1d2b1d" stroke-width="3" fill="none" stroke-linecap="round"/>'
+     +'<ellipse cx="76" cy="146" rx="12" ry="6" fill="url(#fgBack)"/><ellipse cx="124" cy="146" rx="12" ry="6" fill="url(#fgBack)"/></svg>';
+  }
+  /* Adult Frog: the full frog — big glossy eyes, wide smile, long
+     hind legs, blush cheeks and a pale belly. */
+  return '<svg viewBox="0 0 200 170" role="img" aria-label="Adult Frog">'+defs
+   +'<ellipse cx="100" cy="154" rx="62" ry="10" fill="rgba(10,40,30,.2)"/>'
+   +'<ellipse cx="52" cy="126" rx="26" ry="13" fill="url(#fgBack)" transform="rotate(-20 52 126)"/>'
+   +'<ellipse cx="148" cy="126" rx="26" ry="13" fill="url(#fgBack)" transform="rotate(20 148 126)"/>'
+   +'<ellipse cx="40" cy="138" rx="13" ry="8" fill="url(#fgBack)" transform="rotate(-30 40 138)"/>'
+   +'<ellipse cx="160" cy="138" rx="13" ry="8" fill="url(#fgBack)" transform="rotate(30 160 138)"/>'
+   +'<g class="frog-body"><ellipse cx="100" cy="102" rx="62" ry="48" fill="url(#fgBack)"/>'
+   +'<ellipse cx="100" cy="118" rx="42" ry="32" fill="url(#fgBelly)"/>'
+   +'<circle cx="66" cy="82" r="5" fill="#2e7d32" opacity=".4"/><circle cx="136" cy="88" r="4" fill="#2e7d32" opacity=".4"/><circle cx="104" cy="72" r="3.5" fill="#2e7d32" opacity=".35"/></g>'
+   + eye(72)+eye(128)
+   +'<ellipse cx="58" cy="96" rx="9" ry="5" fill="#ffb3a0" opacity=".55"/><ellipse cx="142" cy="96" rx="9" ry="5" fill="#ffb3a0" opacity=".55"/>'
+   +'<path d="M84,102 q16,14 32,0" stroke="#1d2b1d" stroke-width="3.5" fill="none" stroke-linecap="round"/>'
+   +'<circle cx="92" cy="86" r="1.8" fill="#1d2b1d"/><circle cx="108" cy="86" r="1.8" fill="#1d2b1d"/>'
+   +'<ellipse cx="72" cy="148" rx="15" ry="7" fill="url(#fgBack)"/><ellipse cx="128" cy="148" rx="15" ry="7" fill="url(#fgBack)"/></svg>';
+}
 function careReady(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; return (nowMs||Date.now())-at>=CARE_COOLDOWN_MS; }
 function careReadyInHrs(care,id,nowMs){ var at=Date.parse(((care||{})[id]||{}).at||'')||0; var left=at+CARE_COOLDOWN_MS-(nowMs||Date.now()); return left>0?Math.ceil(left/3600000):0; }
 function careAllToday(care,day){ return CARE_ACTIONS.every(function(a){ return ((care||{})[a.id]||{}).day===day; }); }
@@ -2211,7 +2353,7 @@ function mergeCare(a,b){ var out={}; ['feed','clean','play'].forEach(function(id
    to Adult Frog. The view and the growth stage are separate now. */
 var critterView=null;
 function critterHTML(){
-  var e=ex(); var view=(critterView==null?e.critterStage:critterView); var st=STAGES[view];
+  var e=ex(); var view=(critterView==null?e.critterStage:critterView); var st=STAGES[view]; var grownUp=e.critterStage>=3;
   if(!e.discoveredCritters)e.discoveredCritters=[];
   var visiting=visitingCritters();
   var sel=selCritter?CRITTERS.find(function(c){return c.id===selCritter;}):null;
@@ -2234,17 +2376,32 @@ function critterHTML(){
   }).join('');
   return pageHero('🐸','Critter Lab','Watch your frog grow, then discover many more Singapore critters — pond, garden, sky and night. New visitors are spotlighted every week.','Stage '+(e.critterStage+1)+' of 4 · '+e.discoveredCritters.length+' of '+CRITTERS.length+' critters discovered')
    +'<div class="card"><h3 style="margin-top:0">🐸 Meet '+esc(e.critterName)+'!</h3>'
-   +'<div style="position:relative;overflow:hidden;border-radius:14px">'
-   +'<img class="stageimg '+(careFx?(careFx.a==='clean'?'fx-wiggle':'fx-hop'):'')+'" style="height:'+(150+view*30)+'px" src="'+STAGE_IMGS[view]+'" alt="'+esc(e.critterName)+' the '+esc(st[1])+'">'
+   +'<div class="pond" id="pond">'
+   +'<span class="pond-lily" style="left:5%;top:10%;width:66px;height:26px"></span>'
+   +'<span class="pond-lily" style="right:6%;top:16%;width:52px;height:22px"></span>'
+   +'<span class="pond-lily" style="left:14%;bottom:8%;width:44px;height:18px"></span>'
+   +'<span class="pond-bubble" style="left:22%;top:26%;width:10px;height:10px"></span>'
+   +'<span class="pond-bubble" style="right:24%;top:38%;width:7px;height:7px"></span>'
+   +'<span class="pond-bubble" style="left:64%;top:14%;width:8px;height:8px"></span>'
+   +'<div id="frogBubble" class="frog-bubble" style="display:none"></div>'
+   +'<div id="frogWrap" class="frog-wrap" style="left:'+frogPos.x+'%;top:'+frogPos.y+'%">'
+   +'<div class="frog-bob '+(careFx?(careFx.a==='clean'?'fx-wiggle':'fx-hop'):'')+'" style="height:'+(150+view*30)+'px">'+frogSVG(view)+'</div>'
    +(careFx?CARE_FX[careFx.a].map(function(em,i){ return '<span class="fx-float" style="left:'+[16,46,72][i]+'%;animation-delay:'+(i*0.18)+'s">'+em+'</span>'; }).join(''):'')
    +'</div>'
-   +'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>🌱 Growing up — Stage '+(e.critterStage+1)+' of 4</b><span class="small muted">'+(e.careGrewDay===todayKey()?'Grew today! 🎉':careTodayCount(e.care)+'/3 cares today')+'</span></div>'
+   +'<div id="pondDirt"></div>'
+   +'<div id="pondToy" class="pond-toy" style="display:none;left:70%;top:30%">🎾</div>'
+   +'</div>'
+   +'<p class="small muted" style="margin:8px 0 0">👆 Tap '+esc(e.critterName)+' to say hello — or drag it around the pond!</p>'
+   +'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>🌱 Growing up — Stage '+(e.critterStage+1)+' of 4</b><span class="small muted">'+(grownUp?'All grown up! 🎓':(e.careGrewDay===todayKey()?'Grew today! 🎉':careTodayCount(e.care)+'/3 cares today'))+'</span></div>'
    +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(careTodayCount(e.care)/3*100)+'%"></div></div>'
-   +'<p class="small muted" style="margin:6px 0 0">'+(e.careGrewDay===todayKey()?esc(e.critterName)+' grew a little today! Come back tomorrow to grow again. 🌱':(3-careTodayCount(e.care))+' more care'+((3-careTodayCount(e.care))>1?'s':'')+' today and '+esc(e.critterName)+' grows a stage! 🌱')+'</p></div>'
+   +'<p class="small muted" style="margin:6px 0 0">'+(grownUp?esc(e.critterName)+' is all grown up — a full Adult Frog! 🎓 Keep caring for ⭐ stars and happy hops.':(e.careGrewDay===todayKey()?esc(e.critterName)+' grew a little today! Come back tomorrow to grow again. 🌱':(3-careTodayCount(e.care))+' more care'+((3-careTodayCount(e.care))>1?'s':'')+' today and '+esc(e.critterName)+' grows a stage! 🌱'))+'</p></div>'
    +'<div class="speech" style="margin-top:14px"><b>'+esc(e.critterName)+'</b> is at the <b>'+st[1]+'</b> stage. '+st[2]+'</div>'
    +'<label class="flabel">Name your critter</label><div style="display:flex;gap:8px"><input class="field" id="critName" value="'+esc(e.critterName)+'" maxlength="16"><button class="btn" id="critSave">Save name</button></div>'
    +'<h4 style="margin:20px 0 8px">Care for '+esc(e.critterName)+' — each care earns ⭐ 1 star!</h4>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'+CARE_ACTIONS.map(function(a){ var ready=careReady(e.care,a.id,Date.now()); return '<button class="btn'+(ready?'':' ghost')+'" data-care="'+a.id+'" '+(ready?'':'disabled')+'>'+a.e+' '+a.name+(ready?'':' · again in '+careReadyInHrs(e.care,a.id,Date.now())+'h')+'</button>'; }).join('')+'</div>'
+   +(pondMode==='feed'?'<div class="card" style="margin-top:10px"><h4 style="margin:0 0 8px">What should '+esc(e.critterName)+' eat?</h4><div style="display:flex;gap:8px;flex-wrap:wrap">'+FOODS.map(function(f){ return '<button class="btn" data-food="'+f.name+'">'+f.e+' '+f.name+'</button>'; }).join('')+'</div><div style="margin-top:10px"><button class="btn ghost" id="careCancel">Not now</button></div></div>':'')
+   +(pondMode==='clean'?'<div class="speech" style="margin-top:10px">The pond got muddy! Rub the brown dirt spots away — tap one, or drag across them. 🧽 <button class="btn ghost" id="careCancel">Not now</button></div>':'')
+   +(pondMode==='play'?'<div class="speech" style="margin-top:10px">Move your finger or mouse around the pond — '+esc(e.critterName)+' chases the ball! 🎾 <span id="playCount"></span> <button class="btn ghost" id="careCancel">Stop playing</button></div>':'')
    +(careMsg?'<div class="speech" style="margin-top:10px">'+esc(careMsg)+'</div>':'')
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
    +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
@@ -2264,17 +2421,111 @@ function bindCritter(){
     } else sndPop();
     save(); render(); }; });
   var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
-  document.querySelectorAll('[data-care]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-care'); var a=CARE_ACTIONS.find(function(x){return x.id===id;}); if(!a)return;
+  /* Record one care: the SAME rules as the old one-tap buttons —
+     1 star, 4-hour cooldown, all three in one day grows the frog
+     one stage (once a day, never past Adult Frog). Only the way the
+     child gets here changed: each care is now a little activity
+     (pick a food, rub the dirt away, chase the ball) that calls
+     this when it finishes. */
+  function recordCare(id,msg){
+    var a=CARE_ACTIONS.find(function(x){return x.id===id;}); if(!a)return;
     /* Resolve the explorer fresh: a sync merge replaces the DB
        object, and a care written through a stale copy would be lost. */
     var eNow=ex(); if(!eNow||!careReady(eNow.care,id,Date.now()))return;
     if(!eNow.care)eNow.care={};
     eNow.care[id]={at:new Date().toISOString(), day:todayKey()};
-    eNow.stars+=1; careMsg=a.msg; careFx={a:id, k:Date.now()};
+    eNow.stars+=1; careMsg=msg||a.msg; careFx={a:id, k:Date.now()};
     setTimeout(function(){ careFx=null; }, 1700);
+    pondMode=null; dirtLeft=null; if(playTimer){ clearInterval(playTimer); playTimer=null; }
     /* All three cares in one day: the frog grows one stage, once a day. */
-    if(careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3){ eNow.critterStage++; eNow.careGrewDay=todayKey(); careMsg=a.msg+' And look — '+eNow.critterName+' grew a little! 🌱'; sndFanfare(); } else sndCorrect();
-    save(); render(); }; });
+    if(careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3){ eNow.critterStage++; eNow.careGrewDay=todayKey(); careMsg=(msg||a.msg)+' And look — '+eNow.critterName+' grew a little! 🌱'; sndFanfare(); } else sndCorrect();
+    save(); render();
+  }
+  function placeFrog(){ var w=document.getElementById('frogWrap'); if(w){ w.style.left=frogPos.x+'%'; w.style.top=frogPos.y+'%'; } }
+  function hopToward(x,y){ frogPos={x:frogPos.x+(x-frogPos.x)*0.35, y:frogPos.y+(y-frogPos.y)*0.35}; placeFrog(); }
+  /* Tap the frog: replay the happy reaction (hop + floating emoji +
+     speech bubble) even while every care is on cooldown. */
+  function frogTap(){
+    var eNow=ex(); if(!eNow)return;
+    var line=FROG_LINES[Math.floor(Math.random()*FROG_LINES.length)];
+    careFx={a:'play', k:Date.now()};
+    setTimeout(function(){ careFx=null; }, 1700);
+    sndPop(); render();
+    var b=document.getElementById('frogBubble'); if(b){ b.textContent='💬 '+line; b.style.display='block'; }
+    if(frogBubbleTimer)clearTimeout(frogBubbleTimer);
+    frogBubbleTimer=setTimeout(function(){ var b2=document.getElementById('frogBubble'); if(b2)b2.style.display='none'; },2600);
+  }
+  function startCareActivity(id){
+    var eNow=ex(); if(!eNow||!careReady(eNow.care,id,Date.now()))return;
+    pondMode=id; if(id==='clean')dirtLeft=5;
+    sndPop(); render();
+  }
+  function spawnDirt(){
+    var d=document.getElementById('pondDirt'); if(!d)return;
+    d.innerHTML=''; if(dirtLeft==null)dirtLeft=5;
+    for(var i=0;i<dirtLeft;i++){
+      var s=document.createElement('button'); s.type='button'; s.className='dirt-spot';
+      s.style.left=(8+Math.random()*78)+'%'; s.style.top=(10+Math.random()*68)+'%';
+      s.setAttribute('aria-label','Dirt spot — rub to clean');
+      var rub=function(ev){ if(ev)ev.preventDefault(); var el=ev.currentTarget; if(!el||!el.parentNode)return; el.parentNode.removeChild(el); dirtLeft--; sndPop(); if(dirtLeft<=0){ dirtLeft=null; recordCare('clean'); } };
+      s.addEventListener('pointerdown',rub);
+      s.addEventListener('pointerover',function(ev){ if(ev.buttons)rub(ev); });
+      d.appendChild(s);
+    }
+  }
+  function startPlayMode(){
+    var pond=document.getElementById('pond'); if(!pond)return;
+    var toy=document.getElementById('pondToy'); if(!toy)return;
+    toy.style.display='block'; pond.style.touchAction='none';
+    /* The 8-second clock survives a re-render mid-game: only start
+       it when no clock is already running. */
+    if(!playTimer){
+      var remain=8; var cd=document.getElementById('playCount'); if(cd)cd.textContent='8s to go!';
+      playTimer=setInterval(function(){
+        remain--;
+        var c2=document.getElementById('playCount'); if(c2)c2.textContent=remain>0?remain+'s to go!':'';
+        if(remain<=0){ clearInterval(playTimer); playTimer=null; if(pondMode==='play')recordCare('play'); }
+      },1000);
+    }
+    pond.onpointermove=function(ev){
+      if(pondMode!=='play')return;
+      var r=pond.getBoundingClientRect();
+      var x=Math.max(4,Math.min(92,(ev.clientX-r.left)/r.width*100));
+      var y=Math.max(8,Math.min(88,(ev.clientY-r.top)/r.height*100));
+      toy.style.left=x+'%'; toy.style.top=y+'%'; hopToward(x,y);
+    };
+  }
+  document.querySelectorAll('[data-care]').forEach(function(b){ b.onclick=function(){ startCareActivity(b.getAttribute('data-care')); }; });
+  document.querySelectorAll('[data-food]').forEach(function(b){ b.onclick=function(){ var f=FOODS.find(function(x){return x.name===b.getAttribute('data-food');}); if(!f)return; recordCare('feed','Yum! '+ex().critterName+' gobbled the '+f.e+' '+f.name+'! 😋'); }; });
+  var cc=document.getElementById('careCancel'); if(cc)cc.onclick=function(){ pondMode=null; dirtLeft=null; if(playTimer){ clearInterval(playTimer); playTimer=null; } render(); };
+  /* The live frog: it wanders the pond on its own, can be dragged
+     directly, and a tap (a press without dragging) says hello. */
+  var wrap=document.getElementById('frogWrap');
+  if(wrap){
+    wrap.addEventListener('pointerdown',function(ev){ frogDragging=true; frogDragMoved=false; frogDownX=ev.clientX; frogDownY=ev.clientY; frogPausedUntil=Date.now()+3000; try{ wrap.setPointerCapture(ev.pointerId); }catch(err){} });
+    wrap.addEventListener('pointermove',function(ev){
+      if(!frogDragging)return;
+      if(Math.abs(ev.clientX-frogDownX)+Math.abs(ev.clientY-frogDownY)>8)frogDragMoved=true;
+      if(!frogDragMoved)return;
+      var pond=document.getElementById('pond'); if(!pond)return;
+      var r=pond.getBoundingClientRect();
+      frogPos={x:Math.max(4,Math.min(90,(ev.clientX-r.left)/r.width*100)), y:Math.max(10,Math.min(84,(ev.clientY-r.top)/r.height*100))};
+      placeFrog();
+    });
+    wrap.addEventListener('pointerup',function(){ if(!frogDragging)return; frogDragging=false; frogPausedUntil=Date.now()+2500; if(!frogDragMoved)frogTap(); });
+    wrap.addEventListener('pointercancel',function(){ frogDragging=false; });
+  }
+  if(frogTimer)clearInterval(frogTimer);
+  frogTimer=setInterval(function(){
+    if(route!=='critter'||pondMode==='play'||frogDragging||Date.now()<frogPausedUntil)return;
+    var w2=document.getElementById('frogWrap'); if(!w2)return;
+    frogPos={x:8+Math.random()*76, y:14+Math.random()*62};
+    placeFrog();
+    var bob=w2.querySelector('.frog-bob');
+    if(bob&&!careFx){ bob.classList.remove('fx-hop'); void bob.offsetWidth; bob.classList.add('fx-hop'); setTimeout(function(){ bob.classList.remove('fx-hop'); },950); }
+  },3800);
+  if(pondMode==='clean')spawnDirt();
+  if(pondMode==='play')startPlayMode();
 }
 
 /* ============================================================ TREASURE REALM */
