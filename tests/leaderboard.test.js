@@ -257,8 +257,8 @@ test('completion screens show the new-fastest badge, recorded on both paths', ()
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'memory');") >= 0, 'memory win records the best on the live explorer');
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'parking');") >= 0, 'parking completion records the best on the live explorer');
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'crossword');") >= 0, 'crossword completion records the best on the live explorer');
-  assert.ok(bindSrc.indexOf('live.stars+=') >= 0, 'stars are awarded to the live explorer, not a stale copy');
-  assert.equal((bindSrc.match(/live\.stars\+=Math\.min\(gState\.score,gState\.rounds\)/g) || []).length, 3,
+  assert.ok(bindSrc.indexOf('earnStars(live,') >= 0, 'stars are awarded to the live explorer, not a stale copy');
+  assert.equal((bindSrc.match(/earnStars\(live,Math\.min\(gState\.score,gState\.rounds\)\)/g) || []).length, 3,
     'round-game awards are capped at the round count (generic, crossword, parking), so a 6-round game can never pay 7 stars');
 });
 
