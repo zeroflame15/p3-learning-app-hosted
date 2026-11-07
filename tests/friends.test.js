@@ -395,6 +395,7 @@ function clientPrelude() {
     + 'function fmtPlaySecs(s){ s=Math.max(0,Math.round(s||0)); return s<60?s+\'s\':Math.floor(s/60)+\'m \'+String(s%60).padStart(2,\'0\')+\'s\'; }\n'
     + 'var GAMES=[{id:\'word\',name:\'Word Garden\'},{id:\'number\',name:\'Number Pop\'},{id:\'memory\',name:\'Memory Match\'},{id:\'sort\',name:\'Speed Sort\'}];\n'
     + 'var friendsCache=null; var friendsUnconfigured=false;\n'
+    + 'var pendingReqCount=0;\n'
     + 'var frErrMsg=\'\';\n'
     + 'var toastCalls=[]; function toast(m){ toastCalls.push(m); }\n';
 }
