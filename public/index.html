@@ -48,6 +48,11 @@ a{color:var(--sky)}
 .topbar{display:flex;align-items:center;gap:10px;padding:12px 20px;position:sticky;top:0;background:var(--bg);z-index:20;border-bottom:2px solid var(--line)}
 .topbar .page-title{font-family:"Fredoka";font-weight:800;font-size:1.3rem}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:2px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:900;font-size:.9rem}
+/* Game timer chip: dark forest-green ink on solid white, so it stays
+   readable on every game hero — the plain .chip inherits the Play
+   route's cream text (#f5f1e6) on its pale-mint pill, which was
+   nearly invisible (seen live 2026-11-07). */
+.timechip{background:#fff;color:#1e3a24;border-color:#1e3a24}
 .iconbtn{width:42px;height:42px;border-radius:50%;border:2px solid var(--line);background:var(--panel);font-size:1.1rem;display:inline-flex;align-items:center;justify-content:center}
 .iconbtn.on{background:var(--amber);border-color:var(--amber)}
 .avatarbtn{width:46px;height:46px;border-radius:50%;border:3px solid var(--amber);background:var(--panel);padding:0;overflow:hidden;display:inline-flex}
@@ -2141,11 +2146,21 @@ var GAMES=[
  {id:'sentence',e:'📝',name:'Sentence Builder',blurb:'Put the words in the right order.',rounds:6},
  {id:'crossword',e:'🧩',name:'Crossword Quest',blurb:'Solve the clues and fill the grid!',rounds:6},
  {id:'parking',e:'🚗',name:'Exit Parking',blurb:'Slide the cars and free the red car!',rounds:4}];
-var gState=null;
+var gState=null, gameTimer=null;
 /* Fastest-time helpers for the Play Arcade. Best times are
    best-ever (kept across days), stored per explorer as
    e.playBest[gameId] = {secs, day}. */
 function fmtPlaySecs(s){ s=Math.max(0,Math.round(s||0)); var m=Math.floor(s/60), r=s%60; return m>0?(m+'m '+String(r).padStart(2,'0')+'s'):(s+'s'); }
+/* The game timer chip ticks every second from the moment a game
+   starts — it used to sit at 0s until the first tap, because the
+   chip only re-rendered on an interaction (seen live 2026-11-07).
+   The interval clears itself the moment the chip is gone (game
+   finished, Back pressed, or route changed). */
+function tickGameTime(){
+  var el=document.getElementById('gameTime');
+  if(!el||!gState||!gState.startedAt){ if(gameTimer){clearInterval(gameTimer);gameTimer=null;} return; }
+  el.textContent='⏱ '+fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000)));
+}
 /* Stops the timer started by startGame (gState.startedAt) and keeps
    the run only if it beats the stored best. Also stashes the run's
    time on gState.lastSecs for the completion screen. Returns true
@@ -2537,6 +2552,13 @@ function startGame(id){
     else if(p&&p.deck&&p.deck.length===12)gState.deck=p.deck.slice();
   }
   go('game');
+  /* The typeof guard keeps startGame runnable in the standalone
+     test harnesses, where the page-level gameTimer global is not
+     declared; on the real page it is always defined. */
+  if(typeof gameTimer!=='undefined'&&typeof tickGameTime==='function'){
+    if(gameTimer){clearInterval(gameTimer);gameTimer=null;}
+    gameTimer=setInterval(tickGameTime,1000);
+  }
 }
 /* The answer buttons for one round. Number Pop renders its options
    as 🎈 balloons falling from the top (staggered, then a gentle
@@ -2567,7 +2589,7 @@ function gameHTML(){
   var e=ex(); var g=GAMES.find(function(x){return x.id===gState.id;});
   if(gState.id==='memory'){
     if(gState.matched.length>=12) return '<div class="card" style="text-align:center"><div class="trophy">🃏</div><h2>Memory Match complete!</h2><p style="font-weight:800">You found all 6 pairs in '+gState.moves+' moves. Otter-brain power!</p>'+(gState.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(gState.lastSecs)+'</p>':'')+(gState.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<button class="btn" id="gBack">Back to Play 🎮</button></div>';
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🃏 Memory Match</b><div class="small muted">Find all 6 pairs — Pip is watching your otter-brain go!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><h3 style="margin-top:0">Moves: '+gState.moves+'</h3><p class="muted" style="font-weight:700">Tap two cards. Find all 6 pairs! Your progress is saved if you leave.</p><div class="memgrid">'+gState.deck.map(function(c,i){ var isM=gState.matched.indexOf(i)>=0, isO=gState.open.indexOf(i)>=0; return '<button class="memcard '+(isM?'matched':isO?'open':'')+'" data-mem="'+i+'">'+((isM||isO)?c:'❓')+'</button>'; }).join('')+'</div><button class="btn ghost" id="gQuit" style="margin-top:14px">Save &amp; quit</button></div>';
   }
   if(gState.idx>=gState.rounds){
@@ -2580,7 +2602,7 @@ function gameHTML(){
     XWORDS.forEach(function(wd,wi){ for(var k=0;k<wd.w.length;k++){ var key=(wd.x+wd.dx*k)+','+(wd.y+wd.dy*k); (cellWord[key]=cellWord[key]||[]).push(wi); } if(!cellNum[wd.x+','+wd.y])cellNum[wd.x+','+wd.y]=wd.num; });
     var grid='';
     for(var gy=0;gy<5;gy++){ for(var gx=0;gx<5;gx++){ var key2=gx+','+gy, ws=cellWord[key2]; if(!ws){ grid+='<div class="xwcell blank"></div>'; continue; } var shown=''; for(var wi2=0;wi2<ws.length;wi2++){ if(gState.filled[ws[wi2]]){ var wd2=XWORDS[ws[wi2]]; shown=wd2.w[(gx-wd2.x)*wd2.dx+(gy-wd2.y)*wd2.dy]; break; } } grid+='<div class="xwcell'+(shown?' lit':'')+'">'+(cellNum[key2]?'<span class="xwnum">'+cellNum[key2]+'</span>':'')+shown+'</div>'; } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🧩 Crossword Quest</b><div class="small muted">Answer the clue to fill the word into the grid!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🧩 Crossword Quest</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<div class="xwgrid">'+grid+'</div>'
      +'<div class="bigq">'+esc(qx.q)+'</div>'
@@ -2593,14 +2615,14 @@ function gameHTML(){
     gState.cars.forEach(function(c){ parkCarCells(c).forEach(function(p){ occ[p[0]+','+p[1]]=c; }); });
     var lot='';
     for(var py=0;py<PARKH;py++){ for(var px=0;px<PARKW;px++){ var cc=occ[px+','+py]; if(cc){ lot+='<button class="parkcar'+(cc.id==='red'?' red':'')+'" data-car="'+cc.id+'" data-cx="'+px+'" data-cy="'+py+'">'+cc.e+'</button>'; } else if(px===PARKEXIT.x&&py===PARKEXIT.y){ lot+='<div class="parkcell exit">🏁</div>'; } else { lot+='<div class="parkcell"></div>'; } } }
-    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+    return '<div class="flowhero">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">🚗 Exit Parking</b><div class="small muted">Slide the cars out of the way and drive the red car to the 🏁!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
      +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🚗 Exit Parking</span><span class="chip">Level '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Moves: '+gState.moves+'</span><span class="chip">⭐ '+gState.score+' stars</span></div>'
      +'<p class="muted" style="font-weight:700">Tap a car to slide it one cell — tap the end you want it to move towards. Get 🚗 to the 🏁 on the right!</p>'
      +'<div class="parklot">'+lot+'</div>'
      +'<button class="btn ghost" id="gBack" style="margin-top:14px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   var q=genRound(gState.id, gState.idx, gState.seed);
-  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
+  return '<div class="flowhero gametheme-'+g.id+'">'+pipSVG(40,e.glow)+'<div><b style="font-family:\'Fredoka\'">'+g.e+' '+g.name+'</b><div class="small muted">Quick rounds, big brain — go, explorer!</div></div><span class="chip timechip" id="gameTime" style="margin-left:auto;flex:0 0 auto">⏱ '+(gState.startedAt?fmtPlaySecs(Math.max(0,Math.floor((Date.now()-gState.startedAt)/1000))):'0s')+'</span></div>'
    +'<div class="card"><button class="btn ghost" id="gBackSave" style="margin-bottom:10px">← Back to Play</button><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">'+g.e+' '+g.name+'</span><span class="chip">Round '+(gState.idx+1)+' of '+gState.rounds+'</span><span class="chip">Just '+(gState.rounds-gState.idx-1)+' more to go!</span></div>'
    +'<div class="bigq">'+esc(q.q)+'</div>'
    + gameOptsHTML(q)
