@@ -188,3 +188,62 @@ test('growth is visible: the frog picture gets taller each stage, and a bar show
   assert.ok(page.includes('Grew today!'), 'a growth today is celebrated');
   assert.ok(!page.includes('Today: '), 'the old text-only today line is gone');
 });
+
+/* --- Play ball-chase (seen live 2026-11-07): the ball appeared and
+   the 10s session ran, but the frog never chased the pointer — it
+   stayed within ~10px, and the ball stayed top-right then vanished
+   within ~3s. The chase was a single pond.onpointermove property
+   handler on a pond element that every render() rebuilds, so the
+   handler died whenever the page re-rendered mid-game (and the toy
+   was hardcoded display:none in the markup, so a re-render hid it
+   again). The chase is now a document-level listener that re-fetches
+   the live pond and toy on every move, the toy renders visible while
+   play is on, and the frog tracks fast during play. --- */
+test('Play: the ball chases the pointer — a document-level listener that re-fetches the live pond and toy', () => {
+  assert.ok(!html.includes('pond.onpointermove='), 'the fragile pond.onpointermove property binding is gone');
+  const bind = html.slice(html.indexOf('function bindCritter(){'));
+  const start = bind.indexOf('function startPlayMode(){');
+  assert.ok(start >= 0, 'startPlayMode exists');
+  const play = bind.slice(start, bind.indexOf('document.querySelectorAll', start));
+  assert.ok(play.includes("document.addEventListener('pointermove',playPointerHandler)"), 'the chase is a document-level pointermove listener, so it survives the pond being rebuilt');
+  const handler = play.slice(play.indexOf('playPointerHandler=function(ev){'), play.indexOf("document.addEventListener('pointermove',playPointerHandler)"));
+  assert.ok(handler.includes("document.getElementById('pond')"), 'the handler re-fetches the live pond on every move');
+  assert.ok(handler.includes("document.getElementById('pondToy')"), 'the handler re-fetches the live toy on every move');
+  assert.ok(handler.includes("if(t.style.display==='none')t.style.display='block'"), 'the handler re-shows the toy if a re-render hid it');
+  assert.ok(handler.includes('hopToward(x,y,0.6)'), 'the chase uses a fast hop step so the frog visibly closes the gap');
+  assert.ok(play.includes("if(playPointerHandler){ document.removeEventListener('pointermove',playPointerHandler); playPointerHandler=null; }"), 're-binding removes the previous listener first, so there is never more than one');
+});
+
+test('Play: the toy renders visible and the pond tracks fast while play is on, even after a re-render', () => {
+  const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
+  assert.ok(page.includes("pondMode==='play'?'block':'none'"), 'the toy is visible in the markup while play is on, not hardcoded display:none');
+  assert.ok(page.includes("pondMode==='play'?' playing':''"), 'the pond gets a playing class while play is on');
+  assert.ok(html.includes('.pond.playing .frog-wrap{transition:left .3s ease-out,top .3s ease-out}'), 'the frog tracks fast during play instead of drifting on the 1.3s wander transition');
+});
+
+test('Play: the chase listener is removed when play ends', () => {
+  assert.ok(html.includes('function stopPlayChase(){'), 'stopPlayChase exists');
+  const stop = html.slice(html.indexOf('function stopPlayChase(){'), html.indexOf('function stopPlayChase(){') + 400);
+  assert.ok(stop.includes("document.removeEventListener('pointermove',playPointerHandler)"), 'stopPlayChase removes the document listener');
+  assert.ok(stop.includes('playPointerHandler=null'), 'stopPlayChase clears the handler');
+  const record = html.slice(html.indexOf('function recordCare('), html.indexOf('function placeFrog(){'));
+  assert.ok(record.includes('stopPlayChase()'), 'recordCare removes the chase listener when the session ends');
+  const cancel = html.slice(html.indexOf("getElementById('careCancel')"));
+  assert.ok(cancel.slice(0, 400).includes('stopPlayChase()'), 'Stop playing removes the chase listener too');
+});
+
+test('Play: hopToward on a fast step moves the frog most of the way to the pointer', () => {
+  const m = html.match(/function hopToward\(x,y,step\)\{([^\n]*)\}/);
+  assert.ok(m, 'hopToward takes a step parameter');
+  let frogPos = { x: 50, y: 56 };
+  let placed = null;
+  const placeFrog = () => { placed = { x: frogPos.x, y: frogPos.y }; };
+  const hopToward = eval('(function hopToward(x,y,step){' + m[1] + '})');
+  hopToward(90, 80, 0.6);
+  assert.equal(Math.round(frogPos.x), 74, 'a fast step covers 60% of the gap in x');
+  assert.equal(Math.round(frogPos.y * 10) / 10, 70.4, 'a fast step covers 60% of the gap in y');
+  assert.deepEqual(placed, frogPos, 'placeFrog is called so the frog visibly moves');
+  frogPos = { x: 50, y: 56 };
+  hopToward(90, 80);
+  assert.equal(Math.round(frogPos.x), 64, 'the default step is still 0.35, so wandering callers are unchanged');
+});
