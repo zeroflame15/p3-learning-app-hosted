@@ -1,6 +1,7 @@
 // Trivia Time: endless Primary 3 questions with a hint, then the
 // answer on tap. Categories must match what the child learns:
-// English, Maths, Science and Chinese.
+// English, Maths, Science and Chinese — plus General Knowledge
+// for extra knowledge outside school subjects.
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -37,18 +38,21 @@ test('Trivia Time is in the sidebar with a page title and a route', () => {
   assert.ok(html.includes("else if(route==='friends')c.innerHTML=friendsListHTML(),bindFriends();"), 'friends route renders friendsListHTML');
 });
 
-test('trivia bank covers all four learning categories with real questions, hints and answers', () => {
+test('trivia bank covers all four learning categories plus General Knowledge, with real questions, hints and answers', () => {
   const TRIVIA = eval(grabVar('TRIVIA') + '\n;TRIVIA');
-  assert.ok(TRIVIA.length >= 40, 'a proper bank, got ' + TRIVIA.length);
+  assert.ok(TRIVIA.length >= 50, 'a proper bank, got ' + TRIVIA.length);
   const cats = {};
   for (const t of TRIVIA) {
-    assert.ok(['eng', 'math', 'sci', 'chi'].includes(t.cat), 'category is a learning subject: ' + t.cat);
+    assert.ok(['eng', 'math', 'sci', 'chi', 'gen'].includes(t.cat), 'category is a learning subject or General Knowledge: ' + t.cat);
     assert.ok(t.q && t.q.length > 5, 'a real question: ' + t.q);
     assert.ok(t.hint && t.hint.length > 3, 'every question has a hint: ' + t.q);
     assert.ok(t.a && t.a.length > 0, 'every question has an answer: ' + t.q);
+    // The answer must not leak inside its own question or hint —
+    // otherwise "hidden until tapped" is a lie for that card.
+    assert.ok(!t.q.includes(t.a) && !t.hint.includes(t.a), 'answer stays hidden in its own card: ' + t.q);
     cats[t.cat] = (cats[t.cat] || 0) + 1;
   }
-  for (const c of ['eng', 'math', 'sci', 'chi']) {
+  for (const c of ['eng', 'math', 'sci', 'chi', 'gen']) {
     assert.ok((cats[c] || 0) >= 8, 'at least 8 ' + c + ' questions, got ' + (cats[c] || 0));
   }
   const qs = TRIVIA.map(function (t) { return t.q; });
@@ -57,8 +61,8 @@ test('trivia bank covers all four learning categories with real questions, hints
 
 test('trivia shows the question and hint, hides the answer until tapped, then moves on', () => {
   var triviaState = null; // eslint-disable-line no-unused-vars
-  var TRIVIA_CATS = { all: ['🎲', 'All topics'], eng: ['📖', 'English'], math: ['🔢', 'Maths'], sci: ['🔬', 'Science'], chi: ['🀄', 'Chinese'] }; // eslint-disable-line no-unused-vars
-  assert.ok(html.includes("TRIVIA_CATS={all:['🎲','All topics'],eng:['📖','English'],math:['🔢','Maths'],sci:['🔬','Science'],chi:['🀄','Chinese']}"), 'real category labels match the stub');
+  var TRIVIA_CATS = { all: ['🎲', 'All topics'], eng: ['📖', 'English'], math: ['🔢', 'Maths'], sci: ['🔬', 'Science'], chi: ['🀄', 'Chinese'], gen: ['🌍', 'General Knowledge'] }; // eslint-disable-line no-unused-vars
+  assert.ok(html.includes("TRIVIA_CATS={all:['🎲','All topics'],eng:['📖','English'],math:['🔢','Maths'],sci:['🔬','Science'],chi:['🀄','Chinese'],gen:['🌍','General Knowledge']}"), 'real category labels match the stub');
   function esc(s) { // eslint-disable-line no-unused-vars
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
