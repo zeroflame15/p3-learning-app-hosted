@@ -111,68 +111,58 @@ test('bindQuiz pauses on answer and resumes on Next; finishRound records the que
   assert.ok(persistSrc.indexOf('elapsed:learnElapsedSecs()') >= 0, 'saved progress carries the answer-only elapsed time');
 });
 
-test('learnBoardHTML has one board per quest, ranked by fastest time', () => {
+test('learnBoardHTML has one board per quest, family and friends together, ranked by fastest time', () => {
   var DB = { // eslint-disable-line no-unused-vars
     explorers: [
-      { name: 'Jiyuna', face: '🦦', stars: 40, learnBest: { 'eng-story': { secs: 65, day: '2026-11-07' }, 'math-mrt': { secs: 30, day: '2026-11-07' } } },
+      { id: 'e1', name: 'Jiyuna', face: '🦦', stars: 40, friends: ['XYZ789', 'MNP456', 'QQQ111'], deletedFriends: [], friendCode: 'ABC2DE',
+        learnBest: { 'eng-story': { secs: 65, day: '2026-11-07' }, 'math-mrt': { secs: 30, day: '2026-11-07' } } },
       { name: 'Sibling', face: '🐸', stars: 55, learnBest: { 'sci-frog': { secs: 120, day: '2026-11-07' } } },
       { name: 'Cousin', face: '🦁', stars: 10, learnBest: { 'eng-story': { secs: 50, day: '2026-11-07' } } },
     ],
+    activeId: 'e1',
   };
   var TOPICS = TOPICS9; // eslint-disable-line no-unused-vars
+  var friendsCache = [ // eslint-disable-line no-unused-vars
+    { code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { 'learn-eng-story': { secs: 40 }, word: { secs: 25 } } },
+    { code: 'MNP456', name: 'Mei', stars: 5, bestTimes: { 'learn-eng-story': { secs: 44 } } },
+    { code: 'QQQ111', name: 'Ned', stars: 0, bestTimes: {} },
+  ];
+  var frErrMsg = ''; // eslint-disable-line no-unused-vars
+  var friendsUnconfigured = false; // eslint-disable-line no-unused-vars
+  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
   const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
   const learnBoardHTML = eval('(' + fnText('function learnBoardHTML(){') + ')');
   const out = learnBoardHTML();
-  assert.ok(out.indexOf('Quest leaderboard') >= 0, 'leaderboard heading present');
+  assert.ok(out.indexOf('Quest leaderboard') >= 0, 'one combined leaderboard heading');
+  assert.ok(out.indexOf('Friends quest board') < 0, 'no separate friends board any more');
   assert.ok(out.indexOf('Fastest time wins') >= 0, 'ranked by time, not stars');
+  assert.ok(out.indexOf('family and friends together') >= 0, 'the board says it combines everyone');
   for (const name of ['Story Words', 'MRT Numbers', 'Frog Life']) {
     assert.ok(out.indexOf(name) >= 0, 'a board for ' + name);
   }
   assert.ok(out.indexOf('Listen Up') < 0, 'no board for a quest nobody has timed');
+  // Story Words: friend Kai (40s) beats Cousin (50s) and Jiyuna (65s); friend Mei (44s) sits between them.
   const iStory = out.indexOf('Story Words'), iMath = out.indexOf('MRT Numbers');
   const storyBoard = out.slice(iStory, iMath);
-  assert.ok(storyBoard.indexOf('Cousin') < storyBoard.indexOf('Jiyuna'), 'Story Words ranked fastest first: Cousin 50s, Jiyuna 65s');
+  assert.ok(storyBoard.indexOf('Kai') < storyBoard.indexOf('Mei'), 'Kai 40s before Mei 44s');
+  assert.ok(storyBoard.indexOf('Mei') < storyBoard.indexOf('Cousin'), 'Mei 44s before Cousin 50s');
+  assert.ok(storyBoard.indexOf('Cousin') < storyBoard.indexOf('Jiyuna'), 'Cousin 50s before Jiyuna 65s');
   assert.ok(storyBoard.indexOf('Sibling') < 0, 'Sibling has no Story Words time, so not on that board');
-  assert.ok(storyBoard.indexOf('⏱ 50s') >= 0, 'fastest quest time shown');
-  DB = { explorers: [] };
-  assert.equal(learnBoardHTML(), '', 'no explorers, no leaderboard section');
-  DB = { explorers: [{ name: 'Nobody', face: '🦦', stars: 0, learnBest: {} }] };
-  assert.equal(learnBoardHTML(), '', 'explorers with no timed quests, no leaderboard section');
-});
-
-test('learnFriendsBoardHTML ranks friends per quest by fastest time', () => {
-  var TOPICS = TOPICS9; // eslint-disable-line no-unused-vars
-  var DB = { explorers: [{ id: 'e1', name: 'Jiyuna', friends: ['XYZ789', 'MNP456'], deletedFriends: [], friendCode: 'ABC2DE' }], activeId: 'e1' }; // eslint-disable-line no-unused-vars
-  function ex() { return DB.explorers[0]; } // eslint-disable-line no-unused-vars
-  var friendsCache = [ // eslint-disable-line no-unused-vars
-    { code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { 'learn-eng-story': { secs: 50 }, word: { secs: 25 } } },
-    { code: 'MNP456', name: 'Mei', stars: 5, bestTimes: { 'learn-eng-story': { secs: 44 } } },
-  ];
-  const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
-  const learnFriendsBoardHTML = eval('(' + fnText('function learnFriendsBoardHTML(){') + ')');
-  const out = learnFriendsBoardHTML();
-  assert.ok(out.indexOf('Friends quest board') >= 0, 'friends quest board heading');
-  assert.ok(out.indexOf('Story Words') >= 0, 'a board for Story Words');
-  assert.ok(out.indexOf('MRT Numbers') < 0, 'no board for a quest no friend has timed');
-  const iStory = out.indexOf('Story Words');
-  const storyBoard = out.slice(iStory);
-  assert.ok(storyBoard.indexOf('Mei') < storyBoard.indexOf('Kai'), 'Mei 44s beats Kai 50s');
-  assert.ok(storyBoard.indexOf('⏱ 44s') >= 0, 'fastest friend time shown');
+  assert.ok(storyBoard.indexOf('⏱ 40s') >= 0, 'fastest quest time shown');
+  assert.ok(storyBoard.indexOf('👥 Friend') >= 0, 'friend rows carry the Friend tag');
+  assert.ok(storyBoard.indexOf('🦦') >= 0, 'family rows still show the face');
   assert.ok(out.indexOf('Number Pop') < 0, 'Play times never leak onto the quest board');
-  // A friend with no timed quest yet still shows up — on a waiting
-  // line, like the Play friends board — so the section is never
-  // mysteriously absent from the Learn page.
-  friendsCache = [{ code: 'XYZ789', name: 'Kai', stars: 30, bestTimes: { word: { secs: 25 } } }];
-  DB.explorers[0].friends = ['XYZ789'];
-  const waiting = learnFriendsBoardHTML();
-  assert.ok(waiting.indexOf('Friends quest board') >= 0, 'the board shows even before any friend has timed a quest');
-  assert.ok(waiting.indexOf('Kai — no timed quests yet.') >= 0, 'Kai sits on the waiting line');
-  assert.ok(waiting.indexOf('Story Words') < 0, 'no quest board until a friend actually has a time');
+  // Ned has no timed quest: on the waiting line, not on a board.
+  assert.ok(out.indexOf('Ned — no timed quests yet.') >= 0, 'a friend with no times sits on the waiting line');
+  assert.ok(out.indexOf('id="frCode"') >= 0 && out.indexOf('id="frSend"') >= 0, 'add-a-friend row stays on the board');
+  DB = { explorers: [] };
+  const noEx = learnBoardHTML();
+  assert.ok(noEx.indexOf('Pick an explorer') >= 0, 'no explorers: the board says to pick one first');
+  DB = { explorers: [{ id: 'e1', name: 'Nobody', face: '🦦', stars: 0, friends: [], deletedFriends: [], learnBest: {} }], activeId: 'e1' };
   friendsCache = [];
-  DB.explorers[0].friends = [];
-  const none = learnFriendsBoardHTML();
-  assert.ok(none.indexOf('Friends quest board') >= 0, 'the board shows even with no friends at all');
-  assert.ok(none.indexOf('No friends yet') >= 0, 'and it says so plainly');
+  const noTimes = learnBoardHTML();
+  assert.ok(noTimes.indexOf('No timed quests yet') >= 0, 'nobody timed anything: the board invites the first run');
+  assert.ok(noTimes.indexOf('No friends yet') >= 0, 'and it says there are no friends yet');
 });
 
 test('merge keeps the fastest quest time and the banked quest seconds', () => {
