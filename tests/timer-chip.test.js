@@ -59,21 +59,20 @@ test('startGame starts a 1s tick and clears any previous game timer', function (
   assert.ok(body.includes('clearInterval(gameTimer)'), 'startGame must clear a previous gameTimer first');
 });
 
-test('every pill on the Play route is dark-on-white (the header and leaderboard pills too)', function () {
-  const m = html.match(/\.app\.route-play \.chip\{([^}]*)\}/);
-  assert.ok(m, '.app.route-play .chip rule not found');
-  const rule = m[1];
-  const fg = (rule.match(/color:\s*(#[0-9a-f]{3,6})/i) || [])[1];
-  const bg = (rule.match(/background:\s*(#[0-9a-f]{3,6})/i) || [])[1];
-  assert.ok(fg && bg, 'route-play chip rule needs an explicit text colour and background');
-  const ratio = contrast(fg, bg);
-  assert.ok(ratio >= 4.5, 'route-play chip contrast ' + ratio.toFixed(2) + ':1 is below WCAG AA 4.5:1 (' + fg + ' on ' + bg + ')');
+test('pills on the Play route read fine on the light aqua theme (no dark override needed)', function () {
+  const main = html.match(/\.app\.route-play \.main\{background:(#[0-9a-f]{6})\}/);
+  assert.ok(main, 'the Play route has a light background');
+  assert.ok(contrast('#1e3a24', main[1]) >= 4.5, 'dark ink on the aqua Play background, ratio ' + contrast('#1e3a24', main[1]).toFixed(2));
+  assert.ok(!/\.app\.route-play \.chip\{/.test(html), 'no Play chip override left — the plain .chip reads fine on a light route');
+  // The default .chip is dark ink on a very light mint pill.
+  const ratio = contrast('#1e3a24', '#f0f7ec');
+  assert.ok(ratio >= 4.5, 'default chip contrast ' + ratio.toFixed(2) + ':1 is below WCAG AA 4.5:1');
   // The pale pills the live check flagged are plain .chip spans, so
-  // this one rule covers them all — parking Level/Moves/stars,
+  // the default chip covers them all — parking Level/Moves/stars,
   // crossword Round/stars, the generic Round pill, and the arcade
   // leaderboard best-time pill.
-  assert.ok(html.includes('<span class="chip">Level '), 'parking header still uses plain .chip (covered by the route rule)');
-  assert.ok(html.includes('<span class="chip">Round '), 'crossword/generic header still uses plain .chip (covered by the route rule)');
+  assert.ok(html.includes('<span class="chip">Level '), 'parking header still uses plain .chip (covered by the default chip)');
+  assert.ok(html.includes('<span class="chip">Round '), 'crossword/generic header still uses plain .chip (covered by the default chip)');
 });
 
 test('sidebar critter card uses full ink, not the muted soft ink', function () {

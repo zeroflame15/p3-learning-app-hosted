@@ -114,3 +114,24 @@ test('departures kept: Treasure Realm HTML untouched by the palette pass', () =>
   assert.ok(treasure.includes('Every treasure DOES something'), 'treasure purpose line intact');
   assert.ok(!treasure.includes('#eaf5e6') && !treasure.includes('themedots'), 'no palette edits inside treasureHTML');
 });
+
+test('Play and Treasure keep their own colours, in the same light family as the mint world', () => {
+  // Requested 2026-11-07: the dark navy arcade and deep purple cave
+  // felt like different apps. Both routes are light pastels now —
+  // Play a soft aqua, Treasure a soft lavender — with white cards
+  // and dark text, so no route needs a contrast override any more.
+  const play = html.match(/\.app\.route-play \.main\{background:(#[0-9a-f]{6})\}/);
+  const treasure = html.match(/\.app\.route-treasure \.main\{background:(#[0-9a-f]{6})\}/);
+  assert.ok(play, 'a Play background rule exists');
+  assert.ok(treasure, 'a Treasure background rule exists');
+  assert.equal(play[1], '#d8f1ea', 'Play is a soft aqua');
+  assert.equal(treasure[1], '#ece7f7', 'Treasure is a soft lavender');
+  assert.notEqual(play[1], treasure[1], 'the two routes still look different from each other');
+  assert.ok(ratio('#1e3a24', play[1]) >= 4.5, 'dark ink reads on the aqua Play background');
+  assert.ok(ratio('#1e3a24', treasure[1]) >= 4.5, 'dark ink reads on the lavender Treasure background');
+  for (const dark of ['#0e1230', '#232154', '#2a1b4d', '#1b1030', '#3a2a63']) {
+    assert.ok(!html.includes(dark), 'dark route colour ' + dark + ' is gone');
+  }
+  assert.ok(!/\.app\.route-(play|treasure) \.card\{/.test(html), 'no dark card overrides left on either route');
+  assert.ok(!/\.app\.route-(play|treasure) \.chip\{/.test(html), 'no chip overrides left on either route');
+});

@@ -100,7 +100,7 @@ test('warm-up banks never repeat quest wording (real content)', () => {
   // extract each topic block by its warm: [...] and quest: [...] arrays
   // via the Q('...') question strings, and check overlap per topic.
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  const topicRe = /\{id:'([a-z0-9-]+)',sub:'[a-z]+'[\s\S]*?quest:\[([\s\S]*?)\],\s*warm:\[([\s\S]*?)\],\s*retry:/g;
+  const topicRe = /\{id:'([a-z0-9-]+)',(?:img:'[^']+',)?sub:'[a-z]+'[\s\S]*?quest:\[([\s\S]*?)\],\s*warm:\[([\s\S]*?)\],\s*retry:/g;
   let m, checked = 0;
   while ((m = topicRe.exec(html))) {
     const qs = [...m[2].matchAll(/Q\('([^']+)/g)].map((x) => ({ q: x[1] }));

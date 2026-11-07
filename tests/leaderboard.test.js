@@ -35,6 +35,11 @@ function esc(s) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
 }
+// The page's icon helper, mirrored here so the eval'd board and card
+// functions (which call ic) close over it. The stub games below have
+// no img field, so ic falls back to the emoji — the same fallback
+// the page uses when a file fails to load.
+function ic(src, emo, cls) { return src ? '<img class="' + (cls || 'ic-sm') + '" src="' + src + '" alt="">' : emo; }
 const GAMES9 = [
   { id: 'word', e: '🌷', name: 'Word Garden', blurb: 'Grow flowers by picking the right word.', rounds: 6 },
   { id: 'number', e: '🎈', name: 'Number Pop', blurb: 'Pop balloons with quick mental maths.', rounds: 6 },

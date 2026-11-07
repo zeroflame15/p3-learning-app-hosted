@@ -30,8 +30,8 @@ function grabVar(name) {
 }
 
 test('Trivia Time is in the sidebar with a page title and a route', () => {
-  assert.ok(html.includes("['trivia','🎲','Trivia']"), 'Trivia in NAV');
-  assert.ok(html.includes("['friends','👥','Friends']"), 'Friends in NAV');
+  assert.ok(html.includes("['trivia','🎲','Trivia','icons/nav-trivia.webp']"), 'Trivia in NAV');
+  assert.ok(html.includes("['friends','👥','Friends','icons/nav-friends.webp']"), 'Friends in NAV');
   assert.ok(html.includes("trivia:'Trivia Time'"), 'Trivia page title');
   assert.ok(html.includes("friends:'My Friends'"), 'Friends page title');
   assert.ok(html.includes("else if(route==='trivia')c.innerHTML=triviaHTML(),bindTrivia();"), 'trivia route renders triviaHTML');

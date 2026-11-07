@@ -43,6 +43,7 @@ function makeGame() {
   return eval(stubTopics + helpers + '\n'
     + gamesSrc + '\n'
     + grabLine('esc') + '\n'
+    + grabLine('ic') + '\n'
     + grabLine('fmtPlaySecs') + '\n'
     + grab('playElapsedSecs') + '\n'
     + 'var PRAISE=["Great!"]; var ENCOURAGE=["Try again!"];\n'

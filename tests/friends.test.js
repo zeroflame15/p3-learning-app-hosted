@@ -385,8 +385,12 @@ function grab(name) {
 
 // Stubs the grabbed client functions need (mirrors the page's own
 // helpers and state, cut down to what friends code touches).
+// ic() is the page's real icon helper, grabbed verbatim — the boards
+// it renders call it, so the eval'd code needs it in scope.
+const icFn = clientSrc.slice(clientSrc.indexOf('function ic(src,emo,cls){'), clientSrc.indexOf('\n', clientSrc.indexOf('function ic(src,emo,cls){')));
 function clientPrelude() {
   return 'var SYNC_ALPHABET=\'ABCDEFGHJKMNPQRSTUVWXYZ23456789\';\n'
+    + icFn + '\n'
     + 'var DB={explorers:[{id:\'e1\',name:\'Jiyuna\',friendCode:\'ABC2DE\',friends:[\'XYZ789\'],stars:10,playBest:{word:{secs:42,day:\'2026-11-07\'},number:{secs:30,day:\'2026-11-07\'}}}],activeId:\'e1\'};\n'
     + 'var saveLocalCalls=0; function saveLocal(){ saveLocalCalls++; }\n'
     + 'function syncCodeValid(v){ return /^[A-Z2-9]{6}$/.test(String(v||\'\')) && String(v).split(\'\').every(function(ch){ return SYNC_ALPHABET.indexOf(ch)>=0; }); }\n'

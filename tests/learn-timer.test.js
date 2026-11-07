@@ -40,6 +40,11 @@ function esc(s) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
   });
 }
+// The page's icon helper, mirrored here so the eval'd board function
+// (which calls ic) closes over it. The stub topics below have no img
+// field, so ic falls back to the emoji — the same fallback the page
+// uses when a file fails to load.
+function ic(src, emo, cls) { return src ? '<img class="' + (cls || 'ic-sm') + '" src="' + src + '" alt="">' : emo; }
 
 const TOPICS9 = [
   { id: 'eng-story', sub: 'eng', icon: '📖', name: 'Story Words' },

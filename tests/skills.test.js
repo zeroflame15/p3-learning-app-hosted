@@ -25,7 +25,7 @@ test('17 skills, unique ids, every skill is complete', () => {
 
 test('all 14 Learn topics map to exactly one skill', () => {
   const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
-  const topicIds = [...html.matchAll(/\{id:'([a-z0-9-]+)',sub:/g)].map((m) => m[1]);
+  const topicIds = [...html.matchAll(/\{id:'([a-z0-9-]+)',(?:img:'[^']+',)?sub:/g)].map((m) => m[1]);
   assert.equal(topicIds.length, 14, 'expected 14 topics, got ' + topicIds);
   for (const id of topicIds) {
     const mapped = SKILLS.filter((s) => s.topicId === id);
