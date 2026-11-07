@@ -25,7 +25,13 @@ const stubTopics = 'var TOPICS=['
   + '{quest:[{q:"Q3",o:["i","j","k","l"],a:2,c:"",j:""},{q:"Q4",o:["m","n","o","p"],a:3,c:"",j:""}],fresh:[]}];\n';
 const helpers = ['hashStr', 'seededShuffle', 'optsShuffled', 'shuffle']
   .map(grab).join('\n');
-const genRound = eval(stubTopics + helpers + '\n' + grab('genRound') + '\n;genRound');
+// Revamp batch B: genRound now reads the tiered sort sets, scramble
+// words and race ramp that live in the block just before genRound, so
+// the harness evals that block too (empty on a pre-revamp page, where
+// the old genRound simply ignores it).
+const revampStart = clientSrc.indexOf('var SORT_SETS=');
+const revampBlock = revampStart >= 0 ? clientSrc.slice(revampStart, clientSrc.indexOf('function genRound')) : '';
+const genRound = eval(stubTopics + helpers + '\n' + revampBlock + '\n' + grab('genRound') + '\n;genRound');
 
 test('Number Pop options are identical on every re-render of the same round', () => {
   for (const seed of [0, 12345, 987654321]) {

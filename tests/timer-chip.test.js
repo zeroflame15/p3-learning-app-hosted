@@ -45,9 +45,9 @@ test('timer chip has dark ink on a solid light pill (WCAG AA)', function () {
   assert.ok(ratio >= 4.5, 'timechip contrast ' + ratio.toFixed(2) + ':1 is below WCAG AA 4.5:1 (' + fg + ' on ' + bg + ')');
 });
 
-test('all four game-hero timer chips use .timechip with id gameTime', function () {
+test('all five game-hero timer chips use .timechip with id gameTime', function () {
   const chips = html.match(/<span class="chip timechip" id="gameTime"/g) || [];
-  assert.equal(chips.length, 4, 'expected 4 game timer chips, found ' + chips.length);
+  assert.equal(chips.length, 5, 'expected 5 game timer chips, found ' + chips.length);
   // The Learn warm-up chip is a different chip and must stay untouched.
   assert.ok(html.includes('id="wuTime"'), 'warm-up chip (wuTime) must still exist');
   assert.ok(!html.includes('chip timechip" id="wuTime"'), 'warm-up chip must not become a timechip');

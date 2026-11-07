@@ -190,6 +190,9 @@ test('playHTML renders arcade cards with theme line, gradient band, best time an
   };
   var pageHero = function () { return '<div class="hero">HERO</div>'; }; // eslint-disable-line no-unused-vars
   var ex = function () { return DB.explorers[0]; }; // eslint-disable-line no-unused-vars
+  function playMinutesToday() { return 0; } // eslint-disable-line no-unused-vars
+  function playLimit() { return 20; } // eslint-disable-line no-unused-vars
+  function canPlay() { return true; } // eslint-disable-line no-unused-vars
   const gameState = eval('(' + fnText('function gameState(e, gameId, dayKey, doneG){') + ')'); // eslint-disable-line no-unused-vars
   const fmtPlaySecs = eval('(' + fnText('function fmtPlaySecs(s){') + ')'); // eslint-disable-line no-unused-vars
   var friendsCache = null; // eslint-disable-line no-unused-vars
@@ -248,7 +251,7 @@ test('Memory Match, Crossword and Exit Parking show the timer chip during play',
      had none (time only on completion) and Crossword had none
      either. All four in-game heroes now carry the same chip. */
   const chips = (gameSrc.match(/margin-left:auto;flex:0 0 auto">⏱ '\+\(fmtPlaySecs\(playElapsedSecs\(\)\)\)/g) || []).length;
-  assert.equal(chips, 4, 'timer chip in all four in-game heroes (generic, memory, crossword, parking), got ' + chips);
+  assert.equal(chips, 5, 'timer chip in all five in-game heroes (generic, memory, crossword, parking, sentence), got ' + chips);
 });
 
 test('completion screens show the new-fastest badge, recorded on both paths', () => {
@@ -265,9 +268,11 @@ test('completion screens show the new-fastest badge, recorded on both paths', ()
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'memory');") >= 0, 'memory win records the best on the live explorer');
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'parking');") >= 0, 'parking completion records the best on the live explorer');
   assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'crossword');") >= 0, 'crossword completion records the best on the live explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'sentence');") >= 0, 'sentence completion records the best on the live explorer');
+  assert.ok(bindSrc.indexOf("gState.newBest=recordPlayBest(live,'scramble');") >= 0, 'scramble completion records the best on the live explorer (its own Next binding, not the generic one)');
   assert.ok(bindSrc.indexOf('earnStars(live,') >= 0, 'stars are awarded to the live explorer, not a stale copy');
-  assert.equal((bindSrc.match(/earnStars\(live,Math\.min\(gState\.score,gState\.rounds\)\)/g) || []).length, 3,
-    'round-game awards are capped at the round count (generic, crossword, parking), so a 6-round game can never pay 7 stars');
+  assert.equal((bindSrc.match(/earnStars\(live,Math\.min\(gState\.score,gState\.rounds\)\)/g) || []).length, 5,
+    'round-game awards are capped at the round count (generic, crossword, parking, sentence, scramble), so a 6-round game can never pay 7 stars');
 });
 
 test('every inline script block in the page still parses', () => {

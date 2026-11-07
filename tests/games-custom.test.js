@@ -39,6 +39,7 @@ const stubTopics = 'var TOPICS=['
 const helpers = ['hashStr', 'seededShuffle', 'optsShuffled'].map((n) => grab(n)).join('\n');
 
 const XWORDS = HAS_XW ? eval(grabVar('XWORDS') + '\n;XWORDS') : null;
+const XWGRIDS = HAS_XW && html.includes('var XWGRIDS=') ? eval(grabVar('XWGRIDS') + '\n;XWGRIDS') : null;
 const PARKLEVELS = HAS_PARK ? eval(grabVar('PARKLEVELS') + '\n;PARKLEVELS') : null;
 
 /* ---------------- Crossword Quest ---------------- */
@@ -110,46 +111,67 @@ test('crossword branches exist in the page (grid, typing input, clue list, toggl
 
 /* ---------------- Exit Parking ---------------- */
 
-const PARK_PRELUDE = 'var PARKW=4, PARKH=4;\n';
+const PARK_PRELUDE = 'var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};\n';
 const parkFns = HAS_PARK
-  ? eval(PARK_PRELUDE + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon'].map((n) => grab(n)).join('\n')
-    + '\n;({parkCarCells:parkCarCells,parkOccupied:parkOccupied,parkCanMove:parkCanMove,parkMove:parkMove,parkWon:parkWon})')
+  ? eval(PARK_PRELUDE + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon', 'parkLevelStars'].map((n) => grab(n)).join('\n')
+    + '\n;({parkCarCells:parkCarCells,parkOccupied:parkOccupied,parkCanMove:parkCanMove,parkMove:parkMove,parkWon:parkWon,parkLevelStars:parkLevelStars})')
   : null;
 
-// Hand-verified solutions: [carId, direction] per step.
+// BFS-minimal solutions: [carId, direction] per step. The length of
+// each solution is the level's par.
 const SOLUTIONS = [
   [['b1', 'u'], ['red', 'r'], ['red', 'r']],
-  [['y1', 'u'], ['g1', 'u'], ['g1', 'u'], ['red', 'r'], ['red', 'r']],
-  [['a1', 'l'], ['b1', 'u'], ['c1', 'u'], ['c1', 'u'], ['red', 'r'], ['red', 'r']],
-  [['a1', 'l'], ['b1', 'u'], ['b1', 'u'], ['c1', 'u'], ['red', 'r'], ['red', 'r']],
+  [['y1', 'u'], ['red', 'r'], ['g1', 'u'], ['g1', 'u'], ['red', 'r']],
+  [['a1', 'l'], ['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['c1', 'u'], ['red', 'r']],
+  [['a1', 'l'], ['b1', 'u'], ['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['red', 'r']],
+  [['b1', 'u'], ['red', 'r'], ['c1', 'd'], ['red', 'r'], ['red', 'r']],
+  [['b1', 'u'], ['red', 'r'], ['red', 'r'], ['f1', 'u'], ['f1', 'u'], ['red', 'r']],
+  [['c1', 'u'], ['f1', 'l'], ['b1', 'u'], ['red', 'r'], ['red', 'r'], ['red', 'r']],
+  [['c1', 'd'], ['c1', 'd'], ['g1', 'l'], ['b1', 'd'], ['red', 'r'], ['red', 'r'], ['red', 'r']],
+  [['b1', 'u'], ['red', 'r'], ['c1', 'd'], ['red', 'r'], ['red', 'r'], ['red', 'r']],
+  [['c1', 'u'], ['f1', 'l'], ['b1', 'd'], ['b1', 'd'], ['b1', 'd'], ['red', 'r'], ['red', 'r'], ['red', 'r'], ['red', 'r']],
+  [['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['c1', 'u'], ['red', 'r'], ['d1', 'u'], ['red', 'r'], ['red', 'r']],
+  [['b1', 'u'], ['b1', 'u'], ['red', 'r'], ['c1', 'u'], ['red', 'r'], ['d1', 'u'], ['d1', 'u'], ['red', 'r'], ['red', 'r']],
 ];
+const PARS = [3, 5, 6, 6, 5, 6, 6, 7, 6, 9, 8, 9];
+const DIMS = [[4, 4], [4, 4], [4, 4], [4, 4], [5, 5], [5, 5], [5, 5], [5, 5], [6, 6], [6, 6], [6, 6], [6, 6]];
+const EXITS = [[3, 2], [3, 2], [3, 2], [3, 2], [4, 2], [4, 2], [4, 2], [4, 2], [5, 2], [5, 2], [5, 3], [5, 3]];
 
 test('each parking level starts legal and is solvable by its verified move sequence', { skip: !HAS_PARK }, () => {
-  assert.equal(PARKLEVELS.length, 4, 'four levels, one per round');
-  assert.ok(html.includes('var PARKW=4, PARKH=4'), 'lot is 4x4 in the page');
+  assert.equal(PARKLEVELS.length, 12, 'twelve levels, one per round');
+  assert.ok(html.includes('var PARKW=4, PARKH=4'), 'the 4x4 globals stay for the old 1-arg calls');
   PARKLEVELS.forEach((lv, li) => {
-    let cars = lv.cars.map((c) => ({ id: c.id, e: c.e, o: c.o, x: c.x, y: c.y, len: c.len }));
-    // No two cars overlap, every car is inside the lot, red starts at (0,2).
+    assert.deepEqual([lv.w, lv.h], DIMS[li], 'level ' + (li + 1) + ' is ' + DIMS[li][0] + 'x' + DIMS[li][1]);
+    assert.deepEqual([lv.exit.x, lv.exit.y], EXITS[li], 'level ' + (li + 1) + ' exit is ' + EXITS[li]);
+    assert.equal(lv.par, PARS[li], 'level ' + (li + 1) + ' par is ' + PARS[li]);
+    assert.equal(SOLUTIONS[li].length, lv.par, 'level ' + (li + 1) + ': the verified solution is exactly par long');
+    let cars = lv.cars.map((c) => ({ id: c.id, e: c.e, o: c.o, x: c.x, y: c.y, len: c.len, bg: c.bg }));
+    // No two cars overlap, every car is inside the lot, red starts at the exit row.
     const seen = {};
     cars.forEach((c) => {
       assert.ok(c.o === 'h' || c.o === 'v', 'level ' + (li + 1) + ' car ' + c.id + ' has an orientation');
+      assert.ok(c.bg && c.bg.length > 0, 'level ' + (li + 1) + ' car ' + c.id + ' has a colour');
       parkFns.parkCarCells(c).forEach((p) => {
-        assert.ok(p[0] >= 0 && p[0] < 4 && p[1] >= 0 && p[1] < 4, 'level ' + (li + 1) + ' car ' + c.id + ' stays in the lot');
+        assert.ok(p[0] >= 0 && p[0] < lv.w && p[1] >= 0 && p[1] < lv.h, 'level ' + (li + 1) + ' car ' + c.id + ' stays in the lot');
         assert.ok(!seen[p[0] + ',' + p[1]], 'level ' + (li + 1) + ': cars must not overlap at ' + p);
         seen[p[0] + ',' + p[1]] = c.id;
       });
     });
     const red = cars.find((c) => c.id === 'red');
-    assert.deepEqual([red.o, red.x, red.y, red.len], ['h', 0, 2, 2], 'level ' + (li + 1) + ': red car starts at (0,2), horizontal, len 2');
-    assert.ok(!parkFns.parkWon(cars), 'level ' + (li + 1) + ': not already won at the start');
+    assert.deepEqual([red.o, red.x, red.y, red.len], ['h', 0, lv.exit.y, 2], 'level ' + (li + 1) + ': red car starts at (0,' + lv.exit.y + '), horizontal, len 2');
+    assert.ok(!parkFns.parkWon(cars, lv), 'level ' + (li + 1) + ': not already won at the start');
     // Simulate the verified solution, one legal slide at a time.
     SOLUTIONS[li].forEach((step) => {
       const id = step[0], dir = step[1];
-      assert.ok(parkFns.parkCanMove(cars, id, dir), 'level ' + (li + 1) + ': ' + id + ' can slide ' + dir);
-      cars = parkFns.parkMove(cars, id, dir);
+      assert.ok(parkFns.parkCanMove(cars, id, dir, lv), 'level ' + (li + 1) + ': ' + id + ' can slide ' + dir);
+      cars = parkFns.parkMove(cars, id, dir, lv);
       assert.ok(cars, 'level ' + (li + 1) + ': ' + id + ' ' + dir + ' produces a new layout');
     });
-    assert.ok(parkFns.parkWon(cars), 'level ' + (li + 1) + ': red car reaches the exit after the solution');
+    assert.ok(parkFns.parkWon(cars, lv), 'level ' + (li + 1) + ': red car reaches the exit after the solution');
+    // Star rating: par is 3 stars, par+2 is 2, anything more is 1.
+    assert.equal(parkFns.parkLevelStars(lv.par, lv.par), 3, 'level ' + (li + 1) + ': par earns 3 stars');
+    assert.equal(parkFns.parkLevelStars(lv.par + 2, lv.par), 2, 'level ' + (li + 1) + ': par+2 earns 2 stars');
+    assert.equal(parkFns.parkLevelStars(lv.par + 3, lv.par), 1, 'level ' + (li + 1) + ': par+3 earns 1 star');
   });
 });
 
@@ -163,6 +185,16 @@ test('parking moves are refused when blocked, out of bounds, or against the grai
   cars = parkFns.parkMove(cars, 'b1', 'u');
   assert.ok(parkFns.parkCanMove(cars, 'red', 'r'), 'once blue moves, red can drive right');
   assert.equal(parkFns.parkMove(cars, 'nope', 'r'), null, 'an unknown car cannot move');
+  // The level argument is optional: old 1-arg calls still use the 4x4 globals.
+  assert.ok(parkFns.parkWon([{ id: 'red', e: '🚗', o: 'h', x: 2, y: 2, len: 2 }]), 'parkWon with no level defaults to the 4x4 exit');
+  assert.equal(parkFns.parkWon([{ id: 'red', e: '🚗', o: 'h', x: 2, y: 2, len: 2 }], PARKLEVELS[7]), false, 'a 4x4 win position is not a win on a 5x5 level');
+});
+
+test('parking level colours survive a move (parkMove carries bg)', { skip: !HAS_PARK }, () => {
+  const cars = PARKLEVELS[5].cars;
+  const moved = parkFns.parkMove(cars, 'b1', 'u', PARKLEVELS[5]);
+  assert.ok(moved, 'the move is legal');
+  moved.forEach((c, i) => assert.equal(c.bg, cars[i].bg, 'car ' + c.id + ' keeps its colour after a move'));
 });
 
 /* ---------------- Save / restore (both games) ---------------- */
@@ -174,9 +206,9 @@ function harness() {
     + "{id:'memory',e:'🃏',name:'Memory Match',rounds:0},"
     + "{id:'sort',e:'🧺',name:'Speed Sort',rounds:6},"
     + "{id:'crossword',e:'🧩',name:'Crossword Quest',rounds:6},"
-    + "{id:'parking',e:'🚗',name:'Exit Parking',rounds:4}];\n"
+    + "{id:'parking',e:'🚗',name:'Exit Parking',rounds:12}];\n"
     + 'var PARKLEVELS=' + JSON.stringify(PARKLEVELS) + ';\n'
-    + 'var PARKW=4, PARKH=4;\n'
+    + 'var PARKW=4, PARKH=4, PARKEXIT={x:3,y:2};\n'
     + 'var gState=null;\n'
     + 'var DB={explorers:[{id:"e1",stars:0,badges:[],playProgress:{},playFresh:{},playDoneDay:{}}],activeId:"e1"};\n'
     + 'function ex(){ return DB.explorers[0]; }\n'
@@ -184,14 +216,16 @@ function harness() {
     + 'function save(){}\n'
     + 'function go(){}\n'
     + 'function shuffle(a){ return a.slice(); }\n'
-    + 'function toast(){}\n';
+    + 'function toast(){}\n'
+    + 'function canPlay(){ return true; }\n';
   const src = prelude + helpers + '\n'
     + 'var XWORDS=' + JSON.stringify(XWORDS) + ';\n'
+    + (XWGRIDS ? 'var XWGRIDS=' + JSON.stringify(XWGRIDS) + ';\n' + grab('xwGridOfDay') + '\n' : '')
     + grab('xwNextUnsolved') + '\n'
     + ['parkCarCells', 'parkOccupied', 'parkCanMove', 'parkMove', 'parkWon'].map((n) => grab(n)).join('\n') + '\n'
     + grab('playElapsedSecs') + '\n'
     + grab('startGame') + '\n' + grab('saveGameProgress', 'save(); }') + '\n'
-    + ';({startGame:startGame,saveGameProgress:saveGameProgress,parkMove:parkMove,parkWon:parkWon,'
+    + ';({startGame:startGame,saveGameProgress:saveGameProgress,parkMove:parkMove,parkWon:parkWon,xwGridOfDay:(typeof xwGridOfDay==="function"?xwGridOfDay:null),'
     + 'getState:function(){ return gState; },setState:function(s){ gState=s; },getDB:function(){ return DB; }});';
   return eval(src);
 }
@@ -201,7 +235,7 @@ test('parking progress saves mid-level car positions and restores them on resume
   fns.startGame('parking');
   let st = fns.getState();
   assert.equal(st.idx, 0, 'fresh game starts at level 1');
-  assert.equal(st.rounds, 4, 'four levels');
+  assert.equal(st.rounds, 12, 'twelve levels');
   // Slide blue up, drive red right once, then save mid-level.
   st.cars = fns.parkMove(st.cars, 'b1', 'u');
   st.cars = fns.parkMove(st.cars, 'red', 'r');
@@ -209,6 +243,7 @@ test('parking progress saves mid-level car positions and restores them on resume
   fns.saveGameProgress();
   const saved = JSON.parse(JSON.stringify(fns.getDB().explorers[0].playProgress.parking));
   assert.equal(saved.idx, 0, 'saved level is 1');
+  assert.equal(saved.v, 2, 'the save carries the v:2 marker for the 12-level game');
   assert.deepEqual(saved.cars, st.cars, 'saved car positions match the live lot');
   // Leave and come back: positions must restore, not reset to level 1 fresh.
   fns.setState(null);
@@ -224,12 +259,23 @@ test('parking progress saves mid-level car positions and restores them on resume
 
 test('parking replay after completion starts fresh at level 1', { skip: !HAS_PARK }, () => {
   const fns = harness();
-  fns.getDB().explorers[0].playProgress.parking = { idx: 4, score: 4, seed: 1, cars: PARKLEVELS[3].cars };
+  fns.getDB().explorers[0].playProgress.parking = { idx: 12, score: 12, seed: 1, v: 2, cars: PARKLEVELS[11].cars };
   fns.startGame('parking');
   const st = fns.getState();
   assert.equal(st.idx, 0, 'completed game replays from level 1');
   assert.equal(st.score, 0, 'score resets on replay');
   assert.deepEqual(st.cars, PARKLEVELS[0].cars, 'replay uses the level 1 layout');
+});
+
+test('a legacy 4-level parking save resumes at level 5 with fresh cars, not the old 4x4 lot', { skip: !HAS_PARK }, () => {
+  const fns = harness();
+  // An old save: finished all 4 levels, no v marker, level-4 cars.
+  fns.getDB().explorers[0].playProgress.parking = { idx: 4, score: 4, seed: 1, cars: PARKLEVELS[3].cars };
+  fns.startGame('parking');
+  const st = fns.getState();
+  assert.equal(st.idx, 4, 'the old finished game continues at level 5, not level 1');
+  assert.deepEqual(st.cars, PARKLEVELS[4].cars, 'level 5 loads its own fresh layout, not the saved 4x4 lot');
+  assert.equal(st.score, 4, 'the old score carries over');
 });
 
 test('crossword solved words and typed letters save with progress and resume', { skip: !HAS_XW }, () => {
@@ -241,6 +287,8 @@ test('crossword solved words and typed letters save with progress and resume', {
   assert.deepEqual(st.filled, [false, false, false, false, false, false], 'nothing solved yet');
   assert.deepEqual(st.letters, {}, 'no typed letters yet');
   assert.equal(st.sel, 0, 'first unsolved word selected (CAT)');
+  assert.ok(st.gridId >= 0 && st.gridId < 6, 'a grid is picked for the run');
+  if (fns.xwGridOfDay) assert.equal(st.gridId, fns.xwGridOfDay(), 'a fresh run takes today\'s grid');
   // Solve CAT and CAR, type one letter of TIP, then save mid-game.
   st.filled = [true, true, false, false, false, false];
   st.idx = 2; st.score = 2;
@@ -249,24 +297,31 @@ test('crossword solved words and typed letters save with progress and resume', {
   const saved = JSON.parse(JSON.stringify(fns.getDB().explorers[0].playProgress.crossword));
   assert.equal(saved.idx, 2, 'two words solved');
   assert.equal(saved.score, 2, 'saved score is 2');
+  assert.equal(saved.gridId, st.gridId, 'the grid id is saved with the game');
   assert.deepEqual(saved.filled, [true, true, false, false, false, false], 'solved words are saved');
   assert.deepEqual(saved.letters, { '2,1': 'I' }, 'typed letters are saved');
-  // Leave and come back: same words solved, same letters, next word selected.
+  // Leave and come back: same grid, same words solved, same letters, next word selected.
   fns.setState(null);
   fns.startGame('crossword');
   st = fns.getState();
+  assert.equal(st.gridId, saved.gridId, 'the resume keeps the saved grid, not a fresh one');
   assert.equal(st.idx, 2, 'resumed with 2 words solved');
   assert.equal(st.score, 2, 'resumed with the same score');
   assert.deepEqual(st.filled, [true, true, false, false, false, false], 'solved words are restored');
   assert.deepEqual(st.letters, { '2,1': 'I' }, 'typed letters are restored');
   assert.equal(st.sel, 2, 'the next unsolved word (TIP) is selected on resume');
 });
+
 test('the explorer merge keeps parking cars and crossword filled words', { skip: !HAS_PARK || !HAS_XW }, () => {
   const line = html.split('\n').find((l) => l.includes('Object.keys(b.playProgress'));
   assert.ok(line, 'the playProgress merge line exists');
   assert.ok(line.includes('cars:'), 'merge keeps cars (otherwise save() would wipe mid-level lots)');
   assert.ok(line.includes('filled:'), 'merge keeps filled (otherwise save() would wipe the crossword grid)');
   assert.ok(line.includes('open:'), 'merge keeps open (otherwise save() would wipe face-up Memory cards at quit time)');
+  assert.ok(line.includes('gridId:'), 'merge keeps gridId (otherwise a resume would load the wrong grid for its filled words)');
+  assert.ok(line.includes('built:'), 'merge keeps the sentence build (otherwise save() would wipe a half-built sentence)');
+  assert.ok(line.includes('sent:'), 'merge keeps the sentence key (otherwise a build could restore onto the wrong sentence)');
+  assert.ok(line.includes('v:'), 'merge keeps the parking version marker');
 });
 
 test('both games render their own back button and styles', { skip: !HAS_XW || !HAS_PARK }, () => {
@@ -278,6 +333,6 @@ test('both games render their own back button and styles', { skip: !HAS_XW || !H
   assert.ok(game.includes('PARKEXIT'), 'parking branch marks the exit');
   const bind = html.slice(html.indexOf('function bindGame(){'), html.indexOf('function saveGameProgress(){'));
   assert.ok(bind.includes("if(gState.id==='parking')"), 'bindGame has a parking branch');
-  assert.ok(bind.includes('parkMove(gState.cars, id, dir)'), 'car taps slide via parkMove');
-  assert.ok(bind.includes('parkWon(gState.cars)'), 'win detection uses parkWon');
+  assert.ok(bind.includes('parkMove(gState.cars, id, dir, lv)'), 'car taps slide via parkMove');
+  assert.ok(bind.includes('parkWon(gState.cars, lv)'), 'win detection uses parkWon');
 });

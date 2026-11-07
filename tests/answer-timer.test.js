@@ -75,15 +75,29 @@ test('pausePlayTimer banks the window and freezes the clock; resumePlayTimer res
 test('bindGame pauses on every answer tap and resumes on Next (question games only)', () => {
   const bindSrc = fnText('function bindGame(){');
   const pauses = (bindSrc.match(/pausePlayTimer\(\); saveGameProgress\(\); render\(\);/g) || []).length;
-  assert.equal(pauses, 1, 'one answer handler pauses before saving (generic only — crossword types continuously now), got ' + pauses);
+  assert.equal(pauses, 4, 'four answer handlers pause before saving (generic tap + Number Pop escape timeout + scramble auto-check + sentence solve), got ' + pauses);
   const resumes = (bindSrc.match(/if\(gState\.idx<gState\.rounds\)resumePlayTimer\(\);/g) || []).length;
-  assert.equal(resumes, 1, 'one Next handler resumes when another round follows (generic only), got ' + resumes);
+  assert.equal(resumes, 2, 'two one-line Next handlers resume when another round follows (generic + sentence); scramble resumes inside its own block, got ' + resumes);
   // Memory, Parking and Crossword are continuous play: no pause
   // anywhere in their handlers, and the timer chip keeps ticking.
   const pauseCalls = (bindSrc.match(/pausePlayTimer\(\)/g) || []).length;
-  assert.equal(pauseCalls, 1, 'exactly one pause site (generic answers), got ' + pauseCalls);
+  assert.equal(pauseCalls, 4, 'exactly four pause sites (generic tap + Number Pop escape + scramble auto-check + sentence solve), got ' + pauseCalls);
+  // The third pause site is the scramble check, not a stray one:
+  // it sits inside scrCheck, the function that grades a filled board.
+  const scrCheckAt = bindSrc.indexOf('function scrCheck(){');
+  assert.ok(scrCheckAt >= 0, 'scramble grades through scrCheck');
+  assert.ok(bindSrc.slice(scrCheckAt).indexOf('pausePlayTimer(); saveGameProgress(); render();') >= 0,
+    'scrCheck pauses the clock before saving, like every other answer');
+  // The fourth pause site is the sentence solve: it sits inside
+  // senSolve, which both solve paths (strip complete, correct
+  // punctuation) call, so the clock freezes exactly once per round.
+  const senSolveAt = bindSrc.indexOf('function senSolve(){');
+  assert.ok(senSolveAt >= 0, 'sentence grades through senSolve');
+  assert.ok(bindSrc.slice(senSolveAt).indexOf('pausePlayTimer(); saveGameProgress(); render();') >= 0,
+    'senSolve pauses the clock before saving, like every other answer');
+  assert.ok(bindSrc.indexOf('senSolve();') >= 0, 'both sentence solve paths call senSolve');
   const resumeCalls = (bindSrc.match(/resumePlayTimer\(\)/g) || []).length;
-  assert.equal(resumeCalls, 1, 'exactly one resume site (generic Next), got ' + resumeCalls);
+  assert.equal(resumeCalls, 3, 'exactly three resume sites (generic Next + sentence Next + scramble Next), got ' + resumeCalls);
   const saveSrc = fnBody('function saveGameProgress(){');
   assert.ok(saveSrc.indexOf('var elapsed=playElapsedSecs();') >= 0, 'saved elapsed is the answer-only time');
 });

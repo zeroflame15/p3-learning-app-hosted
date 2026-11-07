@@ -35,16 +35,22 @@ const stubTopics = 'var TOPICS=['
   + '{quest:[{q:"Q3",o:["i","j","k","l"],a:2,c:"",j:""},{q:"Q4",o:["m","n","o","p"],a:3,c:"",j:""}],fresh:[]}];\n';
 const helpers = ['hashStr', 'seededShuffle', 'optsShuffled', 'shuffle']
   .map(grab).join('\n');
+// Revamp batch B: genRound now reads the tiered sort sets, scramble
+// words and race ramp that live in the block just before genRound, so
+// the harness evals that block too (empty on a pre-revamp page).
+const revampStart = clientSrc.indexOf('var SORT_SETS=');
+const revampBlock = revampStart >= 0 ? clientSrc.slice(revampStart, clientSrc.indexOf('function genRound')) : '';
 const hclWordsSrc = clientSrc.match(/var HCL_WORDS=\[[^\]]*\];/)[0];
 const gamesSrc = clientSrc.match(/var GAMES=\[[\s\S]*?\];/)[0];
 
 // Live handles for the game functions, with gState settable per test.
 function makeGame() {
-  return eval(stubTopics + helpers + '\n'
+  return eval(stubTopics + helpers + '\n' + revampBlock + '\n'
     + gamesSrc + '\n'
     + grabLine('esc') + '\n'
     + grabLine('ic') + '\n'
     + grabLine('fmtPlaySecs') + '\n'
+    + grabLine('streakChipHTML') + '\n'
     + grab('playElapsedSecs') + '\n'
     + 'var PRAISE=["Great!"]; var ENCOURAGE=["Try again!"];\n'
     + 'function pipSVG(){ return ""; }\n'
@@ -153,7 +159,7 @@ test('the back-save handler saves first, then leaves — and sits before the mem
   assert.ok(bindGame.includes("querySelectorAll('[data-gopt]')"), 'option tap wiring still present');
 });
 
-test('Number Pop renders its options as balloons falling from the top', () => {
+test('Number Pop renders its options as balloons rising on a countdown', () => {
   const g = makeGame();
   g.setState({ id: 'number', idx: 0, score: 0, picked: null, answered: false, rounds: 6, seed: 777 });
   const html = g.html();
@@ -164,17 +170,22 @@ test('Number Pop renders its options as balloons falling from the top', () => {
   assert.ok(html.includes('🎈'), 'each balloon shows the 🎈 emoji');
   for (let i = 0; i < 4; i++) {
     assert.ok(html.includes('data-gopt="' + i + '"'), 'balloon ' + i + ' keeps the data-gopt tap wiring');
-    assert.ok(html.includes('--d:-' + (i * 1.25) + 's'), 'balloon ' + i + ' is staggered with a negative delay, so it starts mid-fall');
     assert.ok(html.includes('<span class="b-num">' + q.o[i] + '</span>'),
       'balloon ' + i + ' holds option ' + q.o[i]);
   }
   assert.ok(!html.includes('class="optbtn'), 'Number Pop no longer uses plain option buttons');
-  // The fall loops continuously from the top (not a one-off entrance
-  // that leaves the balloons sitting in a static row), and was added
-  // after the Play CSS anchor.
-  assert.ok(clientSrc.includes('@keyframes balloonFall'), 'balloonFall keyframes exist');
-  assert.ok(clientSrc.includes('balloonFall 5s linear infinite'), 'the fall loops continuously');
-  assert.ok(clientSrc.includes('translateY(210px)'), 'the fall ends below the row — the balloons really fall through');
+  // The balloons RISE from the bottom and escape on a countdown:
+  // one rise per round, lasting the escape window (10s for round 1
+  // at the mid level), with a shrinking bar above them. Answered
+  // rounds stop dead so the right balloon stays visible.
+  assert.ok(html.includes('--rise:10s'), 'round 1 rises over the 10s escape window');
+  assert.ok(html.includes('escapebar'), 'a countdown bar sits above the balloons');
+  assert.ok(html.includes('⏳ Pop the right balloon before they float away'), 'the countdown is explained');
+  assert.ok(clientSrc.includes('@keyframes balloonRise'), 'balloonRise keyframes exist');
+  assert.ok(clientSrc.includes('balloonRise var(--rise,10s) linear both'), 'the rise runs once over the escape window, not in a loop');
+  assert.ok(clientSrc.includes('translateY(210px)'), 'the rise starts below the row — the balloons really rise up');
+  assert.ok(clientSrc.includes('translateY(-170px)'), 'the rise ends above the row — escaped balloons float away');
+  assert.ok(!clientSrc.includes('balloonFall'), 'the old falling loop is gone');
   assert.ok(clientSrc.includes('.balloonrow') && clientSrc.indexOf('.balloonrow') > clientSrc.indexOf('.memcard.matched{'),
     'balloon CSS is appended after the .memcard.matched rule');
 });
@@ -206,6 +217,7 @@ test('a correct balloon pops; a wrong pick marks the right balloon', () => {
   assert.ok(right.includes('popped'), 'the picked correct balloon gets the pop class');
   assert.ok(right.includes('💥'), 'the popped balloon bursts');
   assert.ok(right.includes('class="balloon right popped"'), 'correct pick is marked right and popped');
+  assert.ok(right.includes('balloonwrap done'), 'an answered round stops the rise so the answer stays visible');
   const wrongPick = (q.a + 1) % 4;
   g.setState({ id: 'number', idx: 1, score: 0, picked: wrongPick, answered: true, rounds: 6, seed: 777 });
   const wrong = g.html();
@@ -245,30 +257,34 @@ test('Word Garden still uses plain option buttons', () => {
     'Word Garden is untouched by the balloon/tile renders');
 });
 
-// Regression snapshots: genRound is untouched by this batch, so its
-// outputs must be byte-identical to the pre-change values.
+// Regression snapshots: genRound('number') WAS changed by revamp batch A
+// (level ramp + table-neighbour distractors, all × now), so the number
+// snapshots below are the NEW baseline, recomputed from the patched
+// page. genRound('sort') was rebuilt by revamp batch B (24 tiered sets,
+// category-named questions), so the sort snapshots are B's values,
+// generated from the patched page — they pin the new behaviour.
 const SNAPSHOTS = {
   number: {
-    '0|0': { q: '3 × 2 = ?', o: ['6', '8', '7', '5'], a: 0 },
-    '0|1': { q: '10 + 7 = ?', o: ['16', '17', '18', '19'], a: 1 },
-    '0|2': { q: '17 × 3 = ?', o: ['52', '51', '50', '53'], a: 1 },
-    '777|0': { q: '13 × 10 = ?', o: ['131', '132', '129', '130'], a: 3 },
-    '777|1': { q: '12 + 7 = ?', o: ['19', '18', '20', '21'], a: 0 },
-    '777|2': { q: '11 × 3 = ?', o: ['34', '35', '33', '32'], a: 2 },
-    '4242|0': { q: '14 × 10 = ?', o: ['140', '139', '141', '142'], a: 0 },
-    '4242|1': { q: '15 + 5 = ?', o: ['19', '20', '21', '22'], a: 1 },
-    '4242|2': { q: '16 × 8 = ?', o: ['130', '129', '127', '128'], a: 3 },
+    '0|0': { q: '2 × 2 = ?', o: ['4', '2', '1', '6'], a: 0 },
+    '0|1': { q: '5 × 7 = ?', o: ['30', '35', '40', '28'], a: 1 },
+    '0|2': { q: '8 × 4 = ?', o: ['36', '32', '28', '24'], a: 1 },
+    '777|0': { q: '2 × 7 = ?', o: ['12', '7', '24', '14'], a: 3 },
+    '777|1': { q: '5 × 4 = ?', o: ['20', '16', '30', '25'], a: 0 },
+    '777|2': { q: '8 × 8 = ?', o: ['49', '56', '64', '72'], a: 2 },
+    '4242|0': { q: '3 × 8 = ?', o: ['24', '14', '32', '27'], a: 0 },
+    '4242|1': { q: '4 × 4 = ?', o: ['12', '16', '20', '25'], a: 1 },
+    '4242|2': { q: '9 × 7 = ?', o: ['72', '70', '56', '63'], a: 3 },
   },
   sort: {
-    '0|0': { q: 'Which one does NOT belong?', o: ['🍎', '🍌', '🍇', '🐶'], a: 3 },
-    '0|1': { q: 'Which one does NOT belong?', o: ['🚗', '🚌', '🚲', '🍕'], a: 3 },
-    '0|2': { q: 'Which one does NOT belong?', o: ['🐸', '🐢', '🦁', '🚀'], a: 3 },
-    '777|0': { q: 'Which one does NOT belong?', o: ['🍔', '🖍️', '📚', '✏️'], a: 0 },
-    '777|1': { q: 'Which one does NOT belong?', o: ['🌧', '🏖', '⛈', '☔'], a: 1 },
-    '777|2': { q: 'Which one does NOT belong?', o: ['🐙', '🐟', '🍩', '🦀'], a: 2 },
-    '4242|0': { q: 'Which one does NOT belong?', o: ['🍇', '🍌', '🍎', '🐶'], a: 3 },
-    '4242|1': { q: 'Which one does NOT belong?', o: ['🚌', '🚗', '🍕', '🚲'], a: 2 },
-    '4242|2': { q: 'Which one does NOT belong?', o: ['🐸', '🚀', '🦁', '🐢'], a: 1 },
+    '0|0': { q: 'Which one is NOT a fruit?', o: ['🍎', '🍌', '🍇', '🐶'], a: 3 },
+    '0|1': { q: 'Which one is NOT a vehicle?', o: ['🚗', '🚌', '🚲', '🍕'], a: 3 },
+    '0|2': { q: 'Which one is NOT an animal?', o: ['🐸', '🐢', '🦁', '🚀'], a: 3 },
+    '777|0': { q: 'Which one is NOT an animal?', o: ['🐸', '🦁', '🚀', '🐢'], a: 2 },
+    '777|1': { q: 'Which one is NOT a pet?', o: ['🐱', '🐶', '🦁', '🐹'], a: 2 },
+    '777|2': { q: 'Which one is NOT a bird?', o: ['🐧', '🦉', '🦅', '🐝'], a: 3 },
+    '4242|0': { q: 'Which one is NOT an insect?', o: ['🐝', '🐞', '🐸', '🦋'], a: 2 },
+    '4242|1': { q: 'Which one is NOT an animal?', o: ['🦁', '🚀', '🐢', '🐸'], a: 1 },
+    '4242|2': { q: 'Which one has NO engine?', o: ['🚢', '✈️', '🚂', '🚲'], a: 3 },
   },
 };
 
