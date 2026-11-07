@@ -51,61 +51,78 @@ module.exports = async (req, res) => {
   const examples = Array.isArray(body?.examples) ? body.examples.filter((e) => e && typeof e.q === 'string' && Array.isArray(e.o)) : [];
 
   const startedAt = Date.now();
-  const prompt = buildLiveGenPrompt('NTUC Totals', level, LIVE_GEN_COUNT, examples);
-
-  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  let r = null;
-  let lastStatus = 0;
-  let lastText = '';
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, 20000);
+  // Retry loop: a generated set fails validation often (the model
+  // slips at least one question per set of 5 in live testing), so one
+  // bad set must not end the experiment for the day. Up to 3
+  // generation attempts, but never start a new one after 15s — the
+  // client aborts at 20s, so the answer must be on its way by then.
+  // Each failed attempt's reasons are fed back into the next prompt,
+  // so the model gets a second chance at exactly what it got wrong.
+  const MAX_GEN_ATTEMPTS = 3;
+  const GEN_BUDGET_MS = 15000;
+  const MODEL_TIMEOUT_MS = 12000;
+  let attempts = 0;
+  let lastReasons = null;
+  let lastParseError = null;
+  let lastModelError = null;
+  for (let attempt = 0; attempt < MAX_GEN_ATTEMPTS; attempt++) {
+    if (attempt > 0 && Date.now() - startedAt > GEN_BUDGET_MS) break;
+    attempts++;
+    const prompt = buildLiveGenPrompt('NTUC Totals', level, LIVE_GEN_COUNT, examples)
+      + (lastReasons ? '\nYour previous set was rejected for: ' + lastReasons.join(', ') + '. Fix those problems and try again with a fresh set of 5 different questions.' : '');
+    let r = null;
     try {
-      r = await fetch(`${BASE}/chat/completions`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-        signal: ctrl.signal,
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1200,
-          temperature: 0.7,
-        }),
-      });
-      clearTimeout(timer);
-      if (r.ok) break;
-      lastStatus = r.status;
-      lastText = await r.text().catch(() => '');
-      if (![502, 503, 504].includes(r.status)) break;
-      if (attempt === 0) await sleep(1500);
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => { try { ctrl.abort(); } catch (e) {} }, MODEL_TIMEOUT_MS);
+      try {
+        r = await fetch(`${BASE}/chat/completions`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            model: MODEL,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 1200,
+            temperature: 0.7,
+          }),
+        });
+      } finally { clearTimeout(timer); }
     } catch (e) {
-      clearTimeout(timer);
       console.error('generate-questions model fetch failed', e && e.name);
-      if (attempt === 0) { await sleep(1500); continue; }
-      return json(res, 502, { error: 'model_api_unreachable', live: false, fallback: true });
+      lastModelError = { error: 'model_api_unreachable' };
+      continue;
     }
+    if (!r || !r.ok) {
+      const lastStatus = r ? r.status : 0;
+      const lastText = r ? await r.text().catch(() => '') : '';
+      if (![502, 503, 504].includes(lastStatus)) {
+        console.error('generate-questions model api error', lastStatus, String(lastText).slice(0, 200));
+        return json(res, 502, { error: 'model_api_error', status: lastStatus, live: false, fallback: true });
+      }
+      lastModelError = { error: 'model_api_error', status: lastStatus };
+      continue;
+    }
+    let raw = '';
+    try {
+      const data = await r.json();
+      raw = data?.choices?.[0]?.message?.content || '';
+    } catch (e) {
+      lastModelError = { error: 'model_api_unreachable' };
+      continue;
+    }
+    const parsed = parseLiveGenReply(raw);
+    if (parsed.error) { lastParseError = parsed.error; lastReasons = null; continue; }
+    const check = validateLiveGenSet(parsed.questions, bankStems);
+    if (!check.ok) { lastReasons = check.reasons; lastParseError = null; continue; }
+    return json(res, 200, {
+      live: true, source: 'live', topicId: LIVE_GEN_TOPIC, level, day,
+      questions: parsed.questions, generatedMs: Date.now() - startedAt, validated: true, attempts,
+    });
   }
-  if (!r || !r.ok) {
-    console.error('generate-questions model api error', lastStatus, String(lastText).slice(0, 200));
-    return json(res, 502, { error: 'model_api_error', status: lastStatus, live: false, fallback: true });
-  }
-  let raw = '';
-  try {
-    const data = await r.json();
-    raw = data?.choices?.[0]?.message?.content || '';
-  } catch (e) {
-    return json(res, 502, { error: 'model_api_unreachable', live: false, fallback: true });
-  }
-  const parsed = parseLiveGenReply(raw);
-  if (parsed.error) {
-    return json(res, 502, { error: parsed.error, live: false, fallback: true, rawPreview: String(raw).slice(0, 200) });
-  }
-  const check = validateLiveGenSet(parsed.questions, bankStems);
-  if (!check.ok) {
-    return json(res, 502, { error: 'generated_set_invalid', live: false, fallback: true, reasons: check.reasons });
-  }
-  return json(res, 200, {
-    live: true, source: 'live', topicId: LIVE_GEN_TOPIC, level, day,
-    questions: parsed.questions, generatedMs: Date.now() - startedAt, validated: true,
-  });
+  // Every attempt failed: report the most informative failure so the
+  // parent-page experiment card can say what actually happened.
+  if (lastReasons) return json(res, 502, { error: 'generated_set_invalid', live: false, fallback: true, reasons: lastReasons, attempts });
+  if (lastParseError) return json(res, 502, { error: lastParseError, live: false, fallback: true, attempts });
+  if (lastModelError) return json(res, 502, { ...lastModelError, live: false, fallback: true, attempts });
+  return json(res, 502, { error: 'model_api_unreachable', live: false, fallback: true, attempts });
 };
