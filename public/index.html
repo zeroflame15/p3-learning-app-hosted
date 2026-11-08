@@ -3006,6 +3006,11 @@ function mergeExplorer(a,b){
   e.playDoneDay=unionObjLatest(a.playDoneDay,b.playDoneDay);
   e.hclMissed=unionArr(a.hclMissed,b.hclMissed);
   e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
+  /* A removed bookmark must stay removed: without a tombstone the
+     union above would resurrect it from any other device's copy
+     on the next sync — the same trap clear-all had with threads. */
+  e.deletedFavAnswers=unionArr(a.deletedFavAnswers||[],b.deletedFavAnswers||[]);
+  if(e.deletedFavAnswers.length)e.favAnswers=e.favAnswers.filter(function(f){ return e.deletedFavAnswers.indexOf(f)<0; });
   var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
   Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh,elapsed:Math.max(x.elapsed||0,y.elapsed||0)}); });
   /* A finished run's progress must not come back from the server:
@@ -3306,7 +3311,7 @@ function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🦦', glow:'#ffb020', badge:'⭐', look:{color:'',hair:'',accessory:''}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
-    threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
+    threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
@@ -6970,14 +6975,14 @@ function askHTML(){
      +'<div class="card"><h3 style="margin-top:0">💬 My chats with Pip</h3><p class="muted" style="font-weight:700">Tap a chat to keep talking about that topic, or start a brand-new one.</p>'
      +'<button class="btn" id="newThread">➕ New chat</button>'
      +(e.threads.length?' <button class="btn ghost" id="clearThreads">🗑 Clear all chats</button>':'')
-     +'<div style="margin-top:14px">'+(e.threads.length?e.threads.map(function(t){ return '<button class="threadrow" data-thread="'+t.id+'"><span>💬 '+esc(t.title)+'</span><span class="small muted">'+t.msgs.length+' messages</span></button>'; }).join(''):'<p class="muted" style="font-weight:700">No chats yet — start your first one!</p>')+'</div>'
-     +(e.treasures.indexOf('bookmark')>=0&&e.favAnswers.length?'<h4>🔖 Golden Bookmark — saved answers</h4>'+e.favAnswers.map(function(f){return '<div class="feedback ok" style="font-weight:700">'+esc(f)+'</div>';}).join(''):'')
+     +'<div style="margin-top:14px">'+(e.threads.length?e.threads.map(function(t){ return '<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><button class="threadrow" style="flex:1;margin-bottom:0" data-thread="'+t.id+'"><span>💬 '+esc(t.title)+'</span><span class="small muted">'+t.msgs.length+' messages</span></button><button class="btn ghost" style="padding:8px 12px;flex:none" data-delthread="'+t.id+'" title="Delete this chat">🗑</button></div>'; }).join(''):'<p class="muted" style="font-weight:700">No chats yet — start your first one!</p>')+'</div>'
+     +(e.treasures.indexOf('bookmark')>=0&&e.favAnswers.length?'<h4>🔖 Golden Bookmark — saved answers</h4>'+e.favAnswers.map(function(f,fi){return '<div class="feedback ok" style="font-weight:700;display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><span>'+esc(f)+'</span><button class="btn ghost" style="padding:4px 10px;flex:none" data-unfav="'+fi+'" title="Remove from Golden Bookmark">✕</button></div>';}).join(''):'')
      +'</div>';
   }
   var th=e.threads.find(function(t){return t.id===activeThread;});
   return '<button class="btn ghost" id="askBack">← All chats</button>'
    +'<div class="card" style="margin-top:12px"><div style="display:flex;gap:10px;align-items:center">'+pipSVG(52,e.glow)+'<div><h3 style="margin:0">'+esc(th.title)+'</h3><span class="small muted">Pip only remembers this chat’s topic</span></div></div>'
-   +'<div class="chatlog" id="chatlog">'+th.msgs.filter(function(m){ return !isThinkingMsg(m); }).map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">🔖 Save</button>':'')+' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-flag="'+mi+'">🚩 Flag this</button>'+(m.skill?'<br><span class="small muted">📚 Method: '+esc(m.skill)+' · Skills v1</span>':''):'')+'</div>'; }).join('')+(asking[th.id]?'<div class="msg pip">Pip is thinking… 🦦</div>':'')+'</div>'
+   +'<div class="chatlog" id="chatlog">'+th.msgs.filter(function(m){ return !isThinkingMsg(m); }).map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">'+(e.favAnswers.indexOf(m.text)>=0?'✓ Saved':'🔖 Save')+'</button>':'')+' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-flag="'+mi+'">🚩 Flag this</button>'+(m.skill?'<br><span class="small muted">📚 Method: '+esc(m.skill)+' · Skills v1</span>':''):'')+'</div>'; }).join('')+(asking[th.id]?'<div class="msg pip">Pip is thinking… 🦦</div>':'')+'</div>'
    +'<div class="chatbar"><input class="field" id="askInput" placeholder="Ask Pip anything…" maxlength="300"><button class="btn" id="askSend">Ask ➤</button></div>'
    +'<p class="small muted">Pip is a friendly practice buddy built into this app — for big questions, also check with a teacher or grown-up.</p></div>';
 }
@@ -6993,9 +6998,18 @@ function bindAsk(){
     e.threads=[]; e.threadsClearedAt=new Date().toISOString(); activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
   };
   document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ activeThread=b.getAttribute('data-thread'); render(); }; });
+  /* Delete ONE chat (2026-11-08, Bryan): the list used to offer only
+     "Clear all chats". A per-chat bin uses the same deletedThreadIds
+     tombstone as clear-all, so the deleted chat can never come back
+     from another device's copy on the next sync. */
+  document.querySelectorAll('[data-delthread]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-delthread'); var th=e.threads.find(function(t){return t.id===id;}); if(!window.confirm('Delete this chat with Pip? “'+(th?th.title:'')+'” will be deleted on all linked devices. Your saved Golden Bookmark answers stay.'))return; e.deletedThreadIds=unionArr(e.deletedThreadIds||[],[id]); e.threads=e.threads.filter(function(t){ return t.id!==id; }); if(activeThread===id)activeThread=null; save(); render(); toast('Chat deleted 🗑'); }; });
+  /* Unbookmark one saved answer (2026-11-08, Bryan): the Golden
+     Bookmark list had no way to remove an answer. The text goes on
+     deletedFavAnswers so the merge can never resurrect it. */
+  document.querySelectorAll('[data-unfav]').forEach(function(b){ b.onclick=function(){ var fi=parseInt(b.getAttribute('data-unfav'),10); var txt=e.favAnswers[fi]; if(txt==null)return; e.favAnswers.splice(fi,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); }; });
   var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
   document.querySelectorAll('[data-listen]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); speakPip(th.msgs[parseInt(b.getAttribute('data-listen'),10)].text); }; });
-  document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; if(e.favAnswers.indexOf(txt)<0)e.favAnswers.push(txt); save(); toast('Saved to your Golden Bookmark! 🔖'); }; });
+  document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; var ix=e.favAnswers.indexOf(txt); if(ix>=0){ e.favAnswers.splice(ix,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); } else { e.favAnswers.push(txt); save(); render(); toast('Saved to your Golden Bookmark! 🔖'); } }; });
   document.querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=function(){
     var th=e.threads.find(function(t){return t.id===activeThread;}); var mi=parseInt(b.getAttribute('data-flag'),10);
     var pipMsg=th.msgs[mi]; var kidMsg=null; for(var i=mi-1;i>=0;i--){ if(th.msgs[i].who==='kid'){ kidMsg=th.msgs[i]; break; } }
