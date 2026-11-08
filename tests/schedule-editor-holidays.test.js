@@ -288,20 +288,21 @@ test('readFamilyPlanFromForm: a normal day keeps its subjects, study time and no
   assert.equal(plan[1].note, 'Swim class in the morning', 'note updated');
 });
 
-test('syncRestDay: ticking rest disables + clears subjects and disables study time; unticking re-enables', () => {
+test('syncRestDay: ticking rest disables subjects WITHOUT clearing them; unticking restores the ticks', () => {
   const { sync, els } = editorEngine({ 3: { rest: false, subs: ['chi'], study: 'Light study 3:00–4:00pm', note: 'Higher Chinese 5:00–7:00pm' } });
   sync(3);
   assert.equal(els['[data-fssub="3:chi"]'].disabled, false, 'subjects enabled while not a rest day');
   assert.equal(els['[data-fsstime="3"]'].disabled, false, 'study time enabled while not a rest day');
   els['[data-fsrest="3"]'].checked = true;
   sync(3);
-  assert.equal(els['[data-fssub="3:chi"]'].checked, false, 'ticked subject is cleared on rest');
+  assert.equal(els['[data-fssub="3:chi"]'].checked, true, 'ticked subject is KEPT (only disabled) on rest');
   assert.equal(els['[data-fssub="3:chi"]'].disabled, true, 'subject checkbox is disabled on rest');
   assert.equal(els['[data-fssub="3:eng"]'].disabled, true, 'all four subjects are disabled on rest');
   assert.equal(els['[data-fsstime="3"]'].disabled, true, 'study time is disabled on rest');
   assert.equal(els['[data-fsnote="3"]'].disabled, false, 'the Note stays editable on a rest day');
   els['[data-fsrest="3"]'].checked = false;
   sync(3);
+  assert.equal(els['[data-fssub="3:chi"]'].checked, true, 'the tick is restored when rest is unticked');
   assert.equal(els['[data-fssub="3:chi"]'].disabled, false, 'subjects re-enable when rest is unticked');
   assert.equal(els['[data-fsstime="3"]'].disabled, false, 'study time re-enables when rest is unticked');
 });
