@@ -2192,19 +2192,25 @@ function mergeExplorer(a,b){
   e.stuckCount=unionObjMax(a.stuckCount,b.stuckCount);
   /* Weak-topic boost records (2026-11-07): one record per topic,
      {at, flagScore, prevScore, lastScore, lastDay, missed:{q,a},
-     lastBoost:{score,day}, clearedAt, dismissedAt, starDay}.
+     lastBoost:{score,day,source}, clearedAt, dismissedAt, starDay,
+     tries, triesDay}.
      at = when the flag was set (first time two stuck quest runs in
      a row, or a re-flag after a clear/dismiss); flagScore = the
      quest score that set it; prevScore/lastScore = the last two
      QUEST scores (boost scores never touch them); missed = the
      first question missed in the run that set the flag; lastBoost =
-     the most recent boost drill result; clearedAt = a boost score
-     of 4/5+ cleared it; dismissedAt = a parent dismissed it;
-     starDay = the day boost stars were last awarded.
+     the most recent boost drill result, with source 'live' (Pip made
+     the questions) or 'bank' (the pre-written cousins); clearedAt =
+     a boost score of 4/5+ cleared it; dismissedAt = a parent
+     dismissed it; starDay = the day boost stars were last awarded;
+     tries/triesDay = how many boost drills were finished on
+     triesDay — the count seeds the bank draw, so a same-day Maths
+     retake draws different questions instead of the same five.
      Merge rules, per topic: at/flagScore follow the later at;
      prevScore/lastScore/missed follow the later lastDay (a tie goes
      to b, the local side); lastBoost follows the later day (tie to
-     b); clearedAt/dismissedAt/starDay take the later value (max).
+     b); clearedAt/dismissedAt/starDay take the later value (max);
+     tries follows the later triesDay (tie: the higher count).
      Records are NEVER deleted — a delete does not sync, so a clear
      or dismiss is a timestamp on the record, and a fresh at after
      that timestamp re-flags the topic. */
@@ -2213,6 +2219,7 @@ function mergeExplorer(a,b){
     if((_y.at||'')>(_x.at||'')){ _x.at=_y.at; if(_y.flagScore!=null)_x.flagScore=_y.flagScore; }
     if((_y.lastDay||'')>=(_x.lastDay||'')){ _x.prevScore=_y.prevScore; _x.lastScore=_y.lastScore; _x.lastDay=_y.lastDay; if(_y.missed)_x.missed=JSON.parse(JSON.stringify(_y.missed)); }
     if(((_y.lastBoost||{}).day||'')>=((_x.lastBoost||{}).day||'')){ if(_y.lastBoost)_x.lastBoost=JSON.parse(JSON.stringify(_y.lastBoost)); }
+    if(((_y.triesDay||'')>(_x.triesDay||''))||((_y.triesDay||'')===(_x.triesDay||'')&&(_y.tries||0)>(_x.tries||0))){ _x.triesDay=_y.triesDay; _x.tries=_y.tries||0; }
     if((_y.clearedAt||'')>(_x.clearedAt||''))_x.clearedAt=_y.clearedAt;
     if((_y.dismissedAt||'')>(_x.dismissedAt||''))_x.dismissedAt=_y.dismissedAt;
     if((_y.starDay||'')>(_x.starDay||''))_x.starDay=_y.starDay;
@@ -2834,7 +2841,11 @@ function homeHTML(){
      and parentHTML — same rule, kept inline so the page functions
      stay self-contained for the standalone test harnesses.) */
   var boostTopics=TOPICS.filter(function(t){ var r=(e.boost||{})[t.id]; if(r){ return r.lastScore<3&&r.prevScore!=null&&r.prevScore<3&&!(r.dismissedAt&&r.at&&r.dismissedAt>=r.at)&&!(r.clearedAt&&r.at&&r.clearedAt>=r.at); } return e.stuck&&e.stuck.indexOf(t.id)>=0; }).slice(0,2);
-  var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p><button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>'; }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
+  /* Retake rule, kept inline (twin of boostRetakeAllowed in
+     lib/rules.js): Maths may retake the same day; other subjects
+     get one drill per topic per day. Inline so the page functions
+     stay self-contained for the standalone test harnesses. */
+  var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; var _can=(t.sub==='math'||(((r&&r.lastBoost)||{}).day||'')!==todayKey()); return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p>'+(_can?'<button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>':'<p class="small muted" style="font-weight:700;margin:6px 0">Boost done for today — Pip will have fresh questions tomorrow! 🌙</p>'); }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
   return lvlPrompt+'<div class="homegrid">'+hero+questCard+'</div>'
    + boostCard
    + planSectionHTML(e, todayPlan, todayEvent)
@@ -3153,6 +3164,8 @@ function learnHTML(){
        var lb=(e.learnBest||{})[t.id];
        /* Boost flag for this card (twin of the home/parent checks). */
        var _r=(e.boost||{})[t.id]; var bB=_r?(_r.lastScore<3&&_r.prevScore!=null&&_r.prevScore<3&&!(_r.dismissedAt&&_r.at&&_r.dismissedAt>=_r.at)&&!(_r.clearedAt&&_r.at&&_r.clearedAt>=_r.at)):((e.stuck||[]).indexOf(t.id)>=0);
+       /* Retake rule, kept inline (twin of boostRetakeAllowed in lib/rules.js): Maths retakes today, others wait until tomorrow. */
+       var _canBoost=!bB||(t.sub==='math'||(((_r&&_r.lastBoost)||{}).day||'')!==todayKey());
        var bestLine=lb?('⏱ Best: '+fmtPlaySecs(lb.secs)):('⏱ No time yet — be the first!');
        var pct=st==='completed-today'?100:(done?Math.round(done/5*100):(prog?Math.round(prog.idx/5*100):0));
        var count=st==='completed-today'?'5 / 5':(done?done+' / 5':(prog?prog.idx+' / 5':'0 / 5'));
@@ -3168,7 +3181,7 @@ function learnHTML(){
        +(t.id===LIVE_GEN_TOPIC?'<p class="small muted" style="margin:10px 0 0">✨ Fresh from Pip — this quest tries live-made questions (experiment).</p>':'')
        +(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')
        +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
-       +(bB?'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — 5 quick questions with Pip</span></p><button class="btn teal" data-boost="'+t.id+'" style="margin-top:8px">🌱 Start my boost</button>':'')
+       +(bB?(_canBoost?'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — 5 quick questions with Pip</span></p><button class="btn teal" data-boost="'+t.id+'" style="margin-top:8px">🌱 Start my boost</button>':'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — done for today, fresh questions tomorrow</span></p>'):'')
        +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button></div>'; }).join('');
     }
   }
@@ -3536,6 +3549,68 @@ function liveGenExperimentHTML(sel){
    +'<p style="font-weight:700;margin:6px 0">'+line+'</p>'
    +'<p class="small muted" style="font-weight:700">Counts are from this device only (the live set is cached on the device, not synced). Full comparison: EXPERIMENT-REPORT.md in the project.</p></div>';
 }
+/* ---------- Maths boost — live-made drill questions ----------
+   (2026-11-08) While the child reads Pip's explanation on the tip
+   screen, startBoostFlow asks Pip to make 5 fresh questions modelled
+   on the exact one she missed (same skill, easier first). Design, on
+   purpose (mirrors the quest live-gen flow):
+   - NO localStorage cache: every drill fetches fresh, so a same-day
+     retake never repeats the last set. The set lives only in
+     cur.boostList for the drill in progress.
+   - The server validates every question (recompute included); the
+     client re-validates with the same mirror before using a set.
+     ANY failure, timeout or a fetch still loading when she taps
+     Start falls back SILENTLY to the bank list — the child never
+     sees an error, and the parent-page boost card records which one
+     played (source 'live' or 'bank' on lastBoost).
+   - The swap only happens while the tip screen is still showing
+     (!cur.tipSeen) and only into the drill that asked for it
+     (cur===myCur): a set that lands mid-drill never swaps the
+     questions under her.
+   Placed here, after liveGenExperimentHTML, on purpose: the
+   live-gen client tests extract fetchLiveGenQuestions with a
+   next-function slice, so no top-level statements may sit between
+   that function and the next function declaration. */
+var boostFetchState={status:'idle', reason:null, topicId:null};
+var boostFetchPromise=null;
+function fetchBoostLiveQuestions(topicId, level, modelOn){
+  var t=topicById(topicId);
+  if(!t||t.sub!=='math'||!modelOn||typeof modelOn.q!=='string')return Promise.resolve(null);
+  if(boostFetchState.status==='pending'&&boostFetchState.topicId===topicId)return boostFetchPromise;
+  var e=ex(); if(!e)return Promise.resolve(null);
+  var day=todayKey();
+  boostFetchState={status:'pending', reason:null, topicId:topicId};
+  function hardTimeout(ms){ return new Promise(function(res){ setTimeout(function(){ res(null); }, ms); }); }
+  boostFetchPromise=(function(){
+    var ctrl=null, timer=null;
+    try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(err){} },20000); }catch(err){ ctrl=null; }
+    var work=(async function(){
+      try{
+        var examples=poolQuestions(t, level).slice(0,2);
+        var opts={method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({topicId:topicId, level:level, count:LIVE_GEN_COUNT, day:day, bankStems:liveGenBankStems(t, level), examples:examples, modelOn:{q:modelOn.q, o:modelOn.o, a:modelOn.a, c:modelOn.c||''}})};
+        if(ctrl)opts.signal=ctrl.signal;
+        var r=await fetch('/api/generate-questions', opts);
+        if(!r.ok){
+          // Name the failure honestly: a 502 validation rejection is
+          // not a timeout — the parent page records the fallback.
+          try{ var ej=await r.json(); if(ej&&ej.error==='generated_set_invalid')boostFetchState={status:'failed', reason:'validation-failed'}; }catch(err){}
+          return null;
+        }
+        var j=await r.json();
+        if(!j||!j.live||!Array.isArray(j.questions))return null;
+        if(!validateLiveGenClient(j.questions, liveGenBankStems(t, level)).ok){ boostFetchState={status:'failed', reason:'client-validation-failed'}; return null; }
+        boostFetchState={status:'ok', reason:null, topicId:topicId};
+        return j.questions;
+      }catch(err){ return null; }
+      finally{ if(timer)clearTimeout(timer); }
+    })();
+    return Promise.race([work, hardTimeout(25000)]).then(function(out){
+      if(!out&&boostFetchState.status==='pending')boostFetchState={status:'failed', reason:'timeout-or-fetch-failed', topicId:topicId};
+      return out;
+    });
+  })();
+  return boostFetchPromise;
+}
 /* ---------- Server-bank pilot — one topic only (math-ntuc) ----------
    The year's questions live in Supabase (sb_questions); the app only
    pulls one day's set at a time, so the app stays lean. Design, on
@@ -3778,21 +3853,30 @@ function beginQuest(topicId){
   cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now(), liveGen:liveGen, liveGenSource:liveGenSource};
   persistProgress(); go('quiz');
 }
-function boostListFor(t, level, explorerId, dayStr){
+/* Boost retake rules (2026-11-08) — mirrors of lib/rules.js:
+   boostRetakeAllowed / boostTriesToday. The page carries the same
+   functions — change both. A Maths topic may be drilled again the
+   same day until the flag clears; every other subject gets one
+   drill per topic per day. */
+function boostRetakeAllowed(isMaths, lastBoostDay, today){ if(isMaths)return true; return (lastBoostDay||'')!==today; }
+function boostTriesToday(rec, today){ if(!rec||rec.triesDay!==today)return 0; return rec.tries||0; }
+function boostListFor(t, level, explorerId, dayStr, attempt){
   /* Pip's Boost drill (2026-11-07): 5 questions, easier first — the
      first 3 are cousins of the ones she missed (retry bank), the
      last 2 are fresh questions on the same topic (fresh bank). Both
      draws are seeded by day + topic + explorer, so a re-render never
-     re-draws mid-drill and a second boost the same day is a different
-     set. No procedural/code-generated questions here: Learn has no
-     procedural generator today (genRound is a Play-games generator),
-     so the drill draws from the banks — at most 5 bank questions per
-     flagged topic per day, on top of the 5 quest + 4 warm-up she
-     already does. A procedural Maths generator is the recommended
-     follow-up if bank burn becomes the bottleneck. */
+     re-draws mid-drill. A Maths retake the same day (2026-11-08)
+     draws a DIFFERENT set: attempt = how many drills she already
+     finished today, and it joins the seed — attempt 0 is exactly
+     the old draw, so a first drill is unchanged. No procedural /
+     code-generated questions here: Learn has no procedural generator
+     today (genRound is a Play-games generator), so the drill draws
+     from the banks. */
+  var att=(attempt||0);
+  var salt=att>0?'|try'+att:'';
   var rb=bankFor(t,'retry',level), fb=bankFor(t,'fresh',level);
-  var rIdx=seededShuffle(rb.map(function(_,i){ return i; }), hashStr('boost|retry|'+t.id+'|'+dayStr+'|'+explorerId)).slice(0,3);
-  var fIdx=seededShuffle(fb.map(function(_,i){ return i; }), hashStr('boost|fresh|'+t.id+'|'+dayStr+'|'+explorerId));
+  var rIdx=seededShuffle(rb.map(function(_,i){ return i; }), hashStr('boost|retry|'+t.id+'|'+dayStr+'|'+explorerId+salt)).slice(0,3);
+  var fIdx=seededShuffle(fb.map(function(_,i){ return i; }), hashStr('boost|fresh|'+t.id+'|'+dayStr+'|'+explorerId+salt));
   var list=rIdx.map(function(i){ return rb[i]; }).filter(Boolean);
   var need=5-list.length;
   list=list.concat(fIdx.slice(0,need).map(function(i){ return fb[i]; }).filter(Boolean));
@@ -3801,13 +3885,37 @@ function boostListFor(t, level, explorerId, dayStr){
 function startBoostFlow(topicId){
   var e=ex(), t=topicById(topicId);
   if(!t){ toast('That quest is missing — try another one.'); return; }
-  var list=boostListFor(t, levelNum(e), e.id, todayKey());
+  var _rec=(e.boost||{})[topicId]||{};
+  /* Retake gate (2026-11-08): a Maths boost may be retaken the same
+     day until the flag clears; every other subject gets one drill
+     per topic per day. The gate lives here, not just on the cards,
+     so a stale card can never start a second drill. */
+  if(!boostRetakeAllowed(t.sub==='math', (_rec.lastBoost||{}).day, todayKey())){ toast('Pip will have fresh questions for this one tomorrow — one boost a day is plenty!'); return; }
+  var _attempt=boostTriesToday(_rec, todayKey());
+  var list=boostListFor(t, levelNum(e), e.id, todayKey(), _attempt);
   if(!list.length){ toast('Pip has no practice questions for this one yet — try the quest instead!'); return; }
   /* Session-only run: it replaces cur (an in-progress quest's saved
      e.progress is untouched, so the quest still resumes), it never
      writes progress, and it never touches completed / completedDay /
      learnBest. */
-  cur={topicId:topicId, phase:'boost', idx:0, score:0, wrong:[], picked:null, answered:false, boostList:list, tipSeen:false, answerSecs:0, startedAt:null};
+  cur={topicId:topicId, phase:'boost', idx:0, score:0, wrong:[], picked:null, answered:false, boostList:list, boostSource:'bank', tipSeen:false, answerSecs:0, startedAt:null};
+  /* Maths only: while she reads Pip's explanation on the tip screen,
+     ask Pip to make 5 fresh questions modelled on the exact one she
+     missed (same skill, easier first). If the set lands before she
+     taps Start — and passes the same validator as the quest flow —
+     it replaces the bank list; ANY failure (or a slow fetch) just
+     keeps the bank list, silently. No cache: every drill fetches
+     fresh, so a retake never repeats the last set. */
+  if(t.sub==='math'){
+    var _tipQ=null; ['quest','fresh','retry'].forEach(function(k){ bankFor(t,k,levelNum(e)).forEach(function(qq){ if(_rec.missed&&qq.q===_rec.missed.q)_tipQ=qq; }); });
+    var _model=_tipQ?{q:_tipQ.q,o:_tipQ.o,a:_tipQ.a,c:_tipQ.c||''}:(_rec.missed?{q:_rec.missed.q,a:_rec.missed.a}:null);
+    if(_model){
+      var _myCur=cur;
+      fetchBoostLiveQuestions(topicId, levelNum(e), _model).then(function(live){
+        if(live&&live.length===LIVE_GEN_COUNT&&cur===_myCur&&cur.phase==='boost'&&!cur.tipSeen){ cur.boostList=live; cur.boostSource='live'; }
+      });
+    }
+  }
   go('quiz');
 }
 function quizHTML(){
@@ -3833,7 +3941,7 @@ function quizHTML(){
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
-   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+(cur.liveGenSource==='live'?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
+   +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+((cur.liveGenSource==='live'||cur.boostSource==='live')?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q)+'</h3>'+listenBtn
    +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
@@ -3846,8 +3954,9 @@ function quizDoneHTML(t){
     var _bRec=(e.boost||{})[cur.topicId]||{};
     var _bCleared=!_bRec.at||!!(_bRec.clearedAt&&_bRec.clearedAt>=_bRec.at);
     var _bEarned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
+    var _isMath=t.sub==='math';
     var _bStars=_bEarned>0?('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' and earned ⭐ '+_bEarned+' stars!'):('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' — a boost replay, so no extra stars this time. You already earned them today!');
-    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+(_bCleared?'Boost complete — that tricky bit feels stronger now! Pip took it off the boost list. 🎉':'Boost complete — still a little wobbly, and that’s okay. Pip will keep it on the boost list and we’ll try again tomorrow. 💪')+'</div><div class="trophy">🌱</div><h2 style="margin:4px 0">Pip’s Boost complete!</h2><div class="starsRow">'+[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('')+'</div><p style="font-weight:900;font-size:1.1rem">'+_bStars+'</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button></div></div>';
+    return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+(_bCleared?'Boost complete — that tricky bit feels stronger now! Pip took it off the boost list. 🎉':(_isMath?'Boost complete — still a little wobbly, and that’s okay. Pip will keep it on the boost list — try again now, Pip has 5 fresh ones ready! 💪':'Boost complete — still a little wobbly, and that’s okay. Pip will keep it on the boost list and we’ll try again tomorrow. 💪'))+'</div><div class="trophy">🌱</div><h2 style="margin:4px 0">Pip’s Boost complete!</h2><div class="starsRow">'+[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('')+'</div><p style="font-weight:900;font-size:1.1rem">'+_bStars+'</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+(!_bCleared&&_isMath?'<button class="btn teal" id="boostRetry">🔁 Try again — 5 fresh ones</button>':'')+'</div></div>';
   }
   if(cur.phase==='retry'){
     return '<div class="card" style="text-align:center"><div class="trophy">🌟</div><h2>Second Chance complete!</h2><p style="font-weight:800">You got '+cur.score+' of '+questListFor(t,cur,levelNum(e)).length+' cousin questions right. Coming back and trying again is exactly how champions learn!</p><button class="btn" id="doneHome">Back to Learn 📚</button></div>';
@@ -3866,6 +3975,7 @@ function bindQuiz(){
   var done=cur.idx>=list.length;
   if(done){
     var dh=document.getElementById('doneHome'); if(dh)dh.onclick=function(){ cur=null; go('learn'); };
+    var br=document.getElementById('boostRetry'); if(br)br.onclick=function(){ startBoostFlow(cur.topicId); };
     var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ var rIdx=seededShuffle(bankFor(t,'retry',levelNum(e)).map(function(_,i){ return i; }), Date.now()>>>0).slice(0,3); cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong, retryPool:rIdx, answerSecs:0, startedAt:Date.now()}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
     return;
   }
@@ -3945,14 +4055,19 @@ function finishRound(t){
        score of 4/5 — or a perfect score on a shorter list — clears
        the flag. Anything less keeps the flag and records the drill
        for the parent page. Boost scores never touch the quest
-       lastScore/prevScore pair, so the parent trend stays quest-only. */
+       lastScore/prevScore pair, so the parent trend stays quest-only.
+       Maths topics may retake the same day until they clear (see
+       boostRetakeAllowed); the tries counter below seeds a fresh
+       bank draw per attempt, and lastBoost records whether Pip made
+       the questions ('live') or the bank cousins played ('bank'). */
     if(!e.boost)e.boost={};
     var _bb=e.boost[cur.topicId]||(e.boost[cur.topicId]={});
     var _bl=questListFor(t,cur,levelNum(e)).length;
     var _firstBoost=_bb.starDay!==todayKey();
     if(_firstBoost){ earnStars(e,cur.score); _bb.starDay=todayKey(); }
     cur.starsEarned=_firstBoost?cur.score:0;
-    _bb.lastBoost={score:cur.score,day:todayKey()};
+    _bb.lastBoost={score:cur.score,day:todayKey(),source:cur.boostSource||'bank'};
+    if(_bb.triesDay===todayKey()){ _bb.tries=(_bb.tries||0)+1; } else { _bb.triesDay=todayKey(); _bb.tries=1; }
     if(cur.score>=Math.min(4,_bl)){ _bb.clearedAt=new Date().toISOString(); }
     e.boost[cur.topicId]=_bb;
     save(); sndFanfare(); confettiStars();
@@ -6438,9 +6553,9 @@ function parentHTML(){
    +(tPlan.rest?' It is dance & art day — Pip will not set any extra study.':'');
   var doneList=Object.keys(sel.completed).map(function(id){ var t=topicById(id); return t.icon+' '+t.name+' ('+sel.completed[id]+'/5)'; });
   var boostSection='<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🌱 Needs a boost — '+esc(sel.name)+'</h3>'
-   +(boostRecs.length?boostRecs.map(function(x){ var r=x.r||{}; var trend=(r.lastScore!=null&&r.flagScore!=null)?(r.lastScore>r.flagScore?'Getting better 🌱':(r.lastScore===r.flagScore?'About the same — steady':'Still finding it tricky')):'—'; var acc=(r.prevScore!=null&&r.lastScore!=null)?('Last two quests: '+r.prevScore+'/5 then '+r.lastScore+'/5'):('Flagged before boost records began — the next quest will fill in the scores.'); var miss=(r.missed&&r.missed.q)?('Last trip-up: “'+esc(r.missed.q)+'” — the answer is “'+esc(r.missed.a)+'”.'):'No missed example saved yet — one will appear after the next quest.'; var when=r.at?('Flagged '+esc(r.at.slice(0,10))):'Flagged earlier'; var lb=(r.lastBoost&&r.lastBoost.day)?(' · Last boost: '+r.lastBoost.score+'/5 on '+esc(r.lastBoost.day)):'';
+   +(boostRecs.length?boostRecs.map(function(x){ var r=x.r||{}; var trend=(r.lastScore!=null&&r.flagScore!=null)?(r.lastScore>r.flagScore?'Getting better 🌱':(r.lastScore===r.flagScore?'About the same — steady':'Still finding it tricky')):'—'; var acc=(r.prevScore!=null&&r.lastScore!=null)?('Last two quests: '+r.prevScore+'/5 then '+r.lastScore+'/5'):('Flagged before boost records began — the next quest will fill in the scores.'); var miss=(r.missed&&r.missed.q)?('Last trip-up: “'+esc(r.missed.q)+'” — the answer is “'+esc(r.missed.a)+'”.'):'No missed example saved yet — one will appear after the next quest.'; var when=r.at?('Flagged '+esc(r.at.slice(0,10))):'Flagged earlier'; var lb=(r.lastBoost&&r.lastBoost.day)?(' · Last boost: '+r.lastBoost.score+'/5 on '+esc(r.lastBoost.day)+(r.lastBoost.source==='live'?' · ✨ Pip-made questions':' · 📚 bank questions')):'';
      return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(x.t.name)+'</b> · '+acc+'<br><span style="font-weight:700">'+miss+'</span><br><span class="small muted" style="font-weight:700">'+when+' · Trend: '+trend+lb+'</span><br><button class="btn ghost" data-boost-dismiss="'+x.t.id+'" style="margin-top:6px">Dismiss this flag</button></div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
-   +'<p class="small muted" style="font-weight:700">A topic flags only after two stuck quests in a row (under 3/5 each) — one wobbly day never flags. Pip starts a 5-question boost for her automatically; a boost score of 4/5 or better clears the flag. Dismissing only hides it for you — if she gets stuck twice again, Pip flags it fresh.</p></div>';
+   +'<p class="small muted" style="font-weight:700">A topic flags only after two stuck quests in a row (under 3/5 each) — one wobbly day never flags. Pip starts a 5-question boost for her automatically; a boost score of 4/5 or better clears the flag. Maths boosts can be retaken the same day until they clear (fresh questions each time); other subjects get one boost a day. Dismissing only hides it for you — if she gets stuck twice again, Pip flags it fresh.</p></div>';
   return '<h2 style="margin:0;font-size:1.55rem">🌙 Grown-ups — summary &amp; dashboard</h2><p class="muted" style="font-weight:700;margin:5px 0 14px">The evening summary and the full dashboard in one place — quests, screen time, Pip’s plan for tomorrow, and explorer controls. Everything here is from the linked family, refreshed from the server when you open this page.</p>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+DB.explorers.map(function(x){ return '<button class="btn '+(x.id===sel.id?'':'ghost')+'" data-psel="'+x.id+'">'+esc(x.name)+' · ⭐ '+x.stars+'</button>'; }).join('')+'<span style="flex:1"></span><button class="btn ghost" id="pLock">🔒 Lock</button></div>'
    +'<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🔗 Family sync — resume on any device</h3>'
