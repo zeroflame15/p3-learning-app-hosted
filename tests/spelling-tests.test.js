@@ -1,7 +1,6 @@
 // "My spelling tests" (2026-11-09): per-explorer English / Chinese
 // spelling lists with a test date and a routine (Recommended or the
-// explorer's own practice days), plus a practice view reusing the
-// HCL self-test pattern. Tests are stored per explorer and merged
+// explorer's own practice days), plus a self-test practice view. Tests are stored per explorer and merged
 // in mergeExplorer (union by id, missed/practised unioned), with a
 // deletedSpellingTests tombstone so a deleted test never comes back.
 'use strict';
@@ -123,9 +122,13 @@ test('spellStepFor: test tomorrow, practised, missed words, is redo', () => {
   assert.equal(s.key, 'redo', 'the day before, with missed words, redoes them');
 });
 
-test('spellStepFor: test tomorrow, practised, no missed words, is practise', () => {
+test('spellStepFor: test tomorrow, practised, no missed words, is redo (full-list check)', () => {
+  // The day before the test is always a redo (the plan says so) —
+  // with no missed words it is a final full-list check, not an
+  // empty self-test.
   const s = spellFns.spellStepFor(spellTest({ testDate: '2026-11-10', practised: ['2026-11-09'], missed: [] }), '2026-11-09');
-  assert.equal(s.key, 'practise', 'no missed words means a plain self-test');
+  assert.equal(s.key, 'redo', 'the day before is a redo even with no missed words');
+  assert.ok(s.text.includes('full-list'), 'it says the redo is a full-list check');
 });
 
 test('spellStepFor: test in 7 days, first day is learn, later day is practise', () => {
@@ -186,7 +189,7 @@ test('Learn page has a My spelling tests card with an Add button', () => {
   assert.ok(card.includes('spellStepFor(t)'), 'each row shows today’s step');
   const learn = fnBody('function learnHTML(');
   assert.ok(learn.includes('spellTestsEntryHTML(e)'), 'the card is on the Learn page');
-  assert.ok(learn.indexOf('spellTestsEntryHTML(e)') > learn.indexOf('hclEntryHTML(e)'), 'it sits after the HCL routine card');
+  assert.ok(!learn.includes('hclEntryHTML'), 'the HCL routine card is gone from Learn');
 });
 
 test('the add form has language, words, date and routine choice', () => {
@@ -201,7 +204,7 @@ test('the add form has language, words, date and routine choice', () => {
   assert.ok(form.includes("id:'sp'"), 'the new test gets a timestamp id');
 });
 
-test('the practice view reuses the HCL self-test pattern', () => {
+test('the practice view is a self-test', () => {
   const view = fnBody('function spellTestHTML(');
   assert.ok(view.includes('data-spelllisten'), 'a Listen button per word');
   assert.ok(view.includes('id="spStart"'), 'a Start the self-test button');

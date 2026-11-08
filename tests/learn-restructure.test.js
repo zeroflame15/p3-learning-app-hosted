@@ -79,7 +79,6 @@ function ic(src, emo, cls) { return src ? '<img class="' + (cls || 'ic-sm') + '"
 function pipSVG() { return '<svg>Pip</svg>'; }
 function pageHero(art, emo, title, sub, stat) { return '<section class="pagehero">' + title + '|' + sub + '|' + (stat || '') + '</section>'; }
 function learnPlanBannerHTML() { return '<!--PLAN-BANNER-->'; }
-function hclEntryHTML() { return '<!--HCL-ENTRY-->'; }
 function spellTestsEntryHTML() { return '<!--SPELL-TESTS-->'; }
 function learnBoardHTML() { return '<!--QUEST-BOARD-->'; }
 function studyPlanFor() { return { subs: [] }; }
@@ -263,7 +262,7 @@ test('landing: 4 subject cards in myKx order, with counts, session hint, level c
   assert.ok(out.includes('🎒 P3'), 'level chip on the landing hero');
   assert.ok(out.includes('Frog Quest'), 'hero keeps the Frog Quest story');
   assert.ok(out.includes('<!--PLAN-BANNER-->'), 'study-plan banner stays on the landing');
-  assert.ok(out.includes('<!--HCL-ENTRY-->'), 'spelling entry card stays on the landing');
+  assert.ok(out.includes('<!--SPELL-TESTS-->'), 'My spelling tests card stays on the landing');
   assert.ok(out.includes('<!--QUEST-BOARD-->'), 'quest leaderboard stays at the bottom');
   assert.ok(!out.includes('data-learn-topic'), 'no timeline rows on the landing');
   assert.ok(!out.includes('Questions on the way'), 'no locked-topic copy on the landing');
@@ -387,7 +386,8 @@ test('bindLearn wires the new navigation; go() resets to the subject cards', () 
   }
   assert.ok(bind.includes("document.querySelectorAll('[data-quest]')"), 'quest wiring kept');
   assert.ok(bind.includes("document.querySelectorAll('[data-boost]')"), 'boost wiring kept');
-  assert.ok(bind.includes("getElementById('hclOpen')"), 'spelling entry wiring kept');
+  assert.ok(bind.includes("getElementById('spAddBtn')"), 'spelling-tests add wiring kept');
+  assert.ok(bind.includes("querySelectorAll('[data-spellopen]')"), 'spelling-tests practise wiring kept');
   const go = grabFn('go(');
   assert.ok(go.includes('window.scrollTo(0,0)'), 'go() still scrolls to the top');
   assert.ok(go.includes('learnView'), 'go() resets the Learn view');

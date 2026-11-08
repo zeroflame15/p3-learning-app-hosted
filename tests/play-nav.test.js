@@ -40,7 +40,6 @@ const helpers = ['hashStr', 'seededShuffle', 'optsShuffled', 'shuffle']
 // the harness evals that block too (empty on a pre-revamp page).
 const revampStart = clientSrc.indexOf('var SORT_SETS=');
 const revampBlock = revampStart >= 0 ? clientSrc.slice(revampStart, clientSrc.indexOf('function genRound')) : '';
-const hclWordsSrc = clientSrc.match(/var HCL_WORDS=\[[^\]]*\];/)[0];
 const gamesSrc = clientSrc.match(/var GAMES=\[[\s\S]*?\];/)[0];
 
 // Live handles for the game functions, with gState settable per test.
@@ -63,58 +62,40 @@ function makeGame() {
     + ' round:function(id,idx,seed){ return genRound(id,idx,seed); } })');
 }
 
-// Live handles for the spelling card, with hclTest settable per test.
-function makeHcl() {
-  return eval(hclWordsSrc + '\n'
-    + grab('hclStepFor') + '\n'
-    + grabLine('esc') + '\n'
-    + 'var hclTest=null;\n'
-    + grab('hclCardHTML') + '\n'
-    + ';({ html:function(e){ return hclCardHTML(e); }, setTest:function(t){ hclTest=t; } })');
-}
-
-const MEM_DECK = ['🐸', '🐸', '🦦', '🦦', '🍓', '🍓', '⭐', '⭐', '🚀', '🚀', '🦋', '🦋'];
-
-test('spelling card has a Back to Learn button at the top, in list mode', () => {
-  const hcl = makeHcl();
-  const html = hcl.html({ hclMissed: [] });
-  assert.ok(html.includes('id="hclBack"'), 'list mode has the back button');
-  assert.ok(html.includes('← Back to Learn'), 'button reads "Back to Learn"');
-  assert.ok(html.indexOf('id="hclBack"') < html.indexOf('听写 Spelling routine'),
-    'back button sits at the top of the card, before the heading');
+// The hardcoded HCL routine is gone (2026-11-09): spelling is now
+// "My spelling tests" with a Pip-planned routine. The practice view
+// (spelltest route) still has a Back to Learn button at the top.
+test('the HCL routine is gone; Learn shows My spelling tests, not an HCL card', () => {
+  for (const name of ['hclStepFor', 'HCL_WORDS', 'hclMissed', 'hclTest', 'hclCardHTML', 'hclEntryHTML', 'spellingHTML', 'bindSpelling']) {
+    assert.ok(!clientSrc.includes(name), 'the page no longer references ' + name);
+  }
+  assert.ok(!clientSrc.includes("route==='spelling'"), 'the spelling sub-view route is gone');
+  const learn = grab('learnHTML');
+  assert.ok(learn.includes('spellTestsEntryHTML(e)'), 'Learn renders the My spelling tests card');
+  assert.ok(!learn.includes('hclEntryHTML'), 'Learn no longer renders an HCL entry card');
 });
 
-test('spelling card keeps the Back to Learn button during the self-test', () => {
-  const hcl = makeHcl();
-  hcl.setTest({ words: [{ w: '老师', p: 'lǎo shī', m: 'teacher' }], idx: 0 });
-  const html = hcl.html({ hclMissed: [] });
-  assert.ok(html.includes('id="hclBack"'), 'self-test mode has the back button');
-  assert.ok(html.includes('← Back to Learn'), 'button reads "Back to Learn"');
-});
-
-test('spelling Back button leaves the test and returns to Learn (top of page)', () => {
-  const bindSpelling = grab('bindSpelling');
-  const at = bindSpelling.indexOf("getElementById('hclBack')");
-  assert.ok(at >= 0, 'bindSpelling wires hclBack');
-  const handler = bindSpelling.slice(at);
-  assert.ok(handler.includes('hclTest=null'), 'leaving the card ends the self-test, so Learn shows the topic list');
+test('the spelling practice view has a Back to Learn button at the top', () => {
+  const view = grab('spellTestHTML');
+  assert.ok(view.includes('id="spBack"'), 'the practice view has the back button');
+  assert.ok(view.includes('← Back to Learn'), 'button reads "Back to Learn"');
+  assert.ok(view.indexOf('id="spBack"') < view.indexOf('spelling — '), 'back button sits at the top of the card, before the heading');
+  const bind = grab('bindSpellTest');
+  const at = bind.indexOf("getElementById('spBack')");
+  assert.ok(at >= 0, 'bindSpellTest wires spBack');
+  const handler = bind.slice(at);
+  assert.ok(handler.includes('spellTest=null'), 'leaving the view ends the self-test');
   assert.ok(handler.includes("go('learn')"), 'button goes to the Learn page');
-  // go() itself scrolls to the top on every route change.
   const goFn = grab('go');
   assert.ok(goFn.includes('window.scrollTo(0,0)'), 'go() scrolls to the top');
 });
 
-test('Learn shows a spelling entry card; the routine is its own sub-view', () => {
-  const learn = grab('learnHTML');
-  assert.ok(learn.includes('hclEntryHTML'), 'Learn renders the spelling entry card');
-  assert.ok(!learn.includes('hclCardHTML'), 'Learn no longer embeds the routine card');
-  const spell = grab('spellingHTML');
-  assert.ok(spell.includes('hclCardHTML'), 'the spelling sub-view renders the routine card');
-  assert.ok(clientSrc.includes("else if(route==='spelling')"), 'render routes to the spelling sub-view');
-  const bindLearn = grab('bindLearn');
-  assert.ok(bindLearn.indexOf("getElementById('hclBack')") < 0, 'bindLearn no longer wires the routine back button');
-  assert.ok(bindLearn.indexOf("getElementById('hclOpen')") >= 0, 'bindLearn wires the entry card button');
+test('the spelling practice view shows Pip’s plan with today highlighted', () => {
+  const view = grab('spellTestHTML');
+  assert.ok(view.includes('spellPlanLine(t, null, true)'), 'the plan line is in the practice view, highlighted');
 });
+
+const MEM_DECK = ['🐸', '🐸', '🦦', '🦦', '🍓', '🍓', '⭐', '⭐', '🚀', '🚀', '🦋', '🦋'];
 
 test('every in-progress game screen has a save-and-back button', () => {
   const g = makeGame();
