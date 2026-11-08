@@ -268,6 +268,8 @@ test('admin-reset-pin: correct password sets the new PIN and never returns the o
     assert.equal(routes.writes, 1, 'one Supabase write');
     assert.equal(routes.captured.code, 'ABC2DE');
     assert.equal(routes.captured.data.parentPin, '9999', 'new PIN written');
+    assert.ok(routes.captured.data.parentPinUpdatedAt, 'the reset stamps parentPinUpdatedAt so the merge takes it');
+    assert.ok(!isNaN(Date.parse(routes.captured.data.parentPinUpdatedAt)), 'the stamp is a valid timestamp');
     // The old PIN is gone from the saved record and from the reply.
     assert.ok(!JSON.stringify(routes.captured.data).includes('"parentPin":"1111"'), 'old PIN replaced in the saved record');
     assert.ok(!JSON.stringify(res.body).includes('1111'), 'old PIN not in the reply');

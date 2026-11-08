@@ -198,6 +198,7 @@ function scheduleEngine(db, drafts) {
   const code = 'var DB=' + JSON.stringify(db) + ';\n'
     + 'var fsEvDraft=' + JSON.stringify(d.ev || null) + ';\n'
     + 'var fsPlanDraft=' + JSON.stringify(d.plan || null) + ';\n'
+    + 'var fsSchedOpen=' + JSON.stringify(!!d.open) + ';\n'
     + (html.match(/var DOWS=\[[^\]]+\];/) || ['var DOWS=[];'])[0] + '\n'
     + (html.match(/var MONTHS=\[[^\]]+\];/) || ['var MONTHS=[];'])[0] + '\n'
     + (html.match(/var SUBJECTS=\{[^}]+\};/) || [])[0] + '\n'
@@ -210,6 +211,7 @@ function scheduleEngine(db, drafts) {
     + grabFn('studyPlanFor') + '\n'
     + grabFn('planDayLabel') + '\n'
     + grabFn('familyEventEmoji') + '\n'
+    + grabFn('familyScheduleSummaryHTML') + '\n'
     + grabFn('familyScheduleHTML') + '\n'
     + ';({familyScheduleHTML:familyScheduleHTML, setDB:function(v){DB=v;}, getDB:function(){return DB;}, setEvDraft:function(v){fsEvDraft=v;}, setPlanDraft:function(v){fsPlanDraft=v;}});';
   return eval(code);
