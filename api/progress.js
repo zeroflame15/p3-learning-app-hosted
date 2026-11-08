@@ -75,14 +75,49 @@ module.exports = async (req, res) => {
     }
     // Keep rows small: reject absurd payloads.
     if (JSON.stringify(body.data).length > 500000) return json(res, 413, { error: 'progress too large' });
+    // Revision guard for the family schedule (2026-11-09): the client
+    // merges before uploading, but a slow pull can still POST a stale
+    // plan AFTER a newer plan landed (a GET issued before the newer
+    // save, resolving after it). The server is the authority on
+    // revision: if the stored plan has a HIGHER familyPlanRev than the
+    // incoming one (or the same rev with a later timestamp), keep the
+    // stored schedule fields and only save the rest of the incoming
+    // record — explorer progress is never lost. The response reports
+    // the effective rev so the client can tell its plan write was
+    // superseded.
+    let writeData = body.data;
+    let planPreserved = false;
+    try {
+      const cur = await sb(`${TABLE}?code=eq.${encodeURIComponent(key)}&select=data`);
+      if (cur.ok) {
+        const curRows = await cur.json();
+        if (curRows.length && curRows[0].data) {
+          const stored = curRows[0].data;
+          const storedRev = stored.familyPlanRev || 0;
+          const incomingRev = body.data.familyPlanRev || 0;
+          const storedAt = Date.parse(stored.familyPlanUpdatedAt || '') || 0;
+          const incomingAt = Date.parse(body.data.familyPlanUpdatedAt || '') || 0;
+          if (storedRev > incomingRev || (storedRev === incomingRev && storedAt > incomingAt)) {
+            writeData = Object.assign({}, body.data, {
+              familyPlan: stored.familyPlan !== undefined ? stored.familyPlan : body.data.familyPlan,
+              familyPlanRev: stored.familyPlanRev,
+              familyPlanUpdatedAt: stored.familyPlanUpdatedAt,
+              familyEvents: stored.familyEvents !== undefined ? stored.familyEvents : body.data.familyEvents,
+              deletedFamilyEvents: stored.deletedFamilyEvents !== undefined ? stored.deletedFamilyEvents : body.data.deletedFamilyEvents,
+            });
+            planPreserved = true;
+          }
+        }
+      }
+    } catch (e) { /* guard is best-effort; a read failure falls through to a plain upsert */ }
     const r = await sb(`${TABLE}?on_conflict=code`, {
       method: 'POST',
       headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ code: key, data: body.data, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ code: key, data: writeData, updated_at: new Date().toISOString() }),
     });
     if (!r.ok) return json(res, 502, { error: 'supabase_write_failed' });
     const rows = await r.json().catch(() => []);
-    return json(res, 200, { ok: true, updatedAt: rows[0]?.updated_at || new Date().toISOString() });
+    return json(res, 200, { ok: true, updatedAt: rows[0]?.updated_at || new Date().toISOString(), familyPlanRev: writeData.familyPlanRev || 0, planPreserved });
   }
 
   return json(res, 405, { error: 'GET or POST only' });
