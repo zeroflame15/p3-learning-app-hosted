@@ -364,7 +364,7 @@ test('Memory Match stars by moves: par is about the deck size', () => {
 
 test('no new persisted fields: the memory save shape and merge are untouched', () => {
   const saveSrc = html.slice(html.indexOf('function saveGameProgress(){'), html.indexOf('/* ============================================================ ASK PIP'));
-  assert.ok(saveSrc.includes('e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, combo:gState.memCombo||null, open:gState.open.slice(), elapsed:elapsed}'),
+  assert.ok(saveSrc.includes('e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, combo:gState.memCombo||null, open:gState.open.slice(), elapsed:elapsed, at:Date.now()}'),
     'the memory save carries the picked combo (so a resume rebuilds the exact board) — still no pairs/level field');
   const mergeSrc = html.slice(html.indexOf('function mergeExplorer'), html.indexOf('function mergeFamilyDB'));
   assert.ok(mergeSrc.includes('matched:unionArr(x.matched,y.matched)'), 'the merge still unions matched pairs');

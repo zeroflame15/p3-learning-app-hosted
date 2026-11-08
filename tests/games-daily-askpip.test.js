@@ -411,7 +411,9 @@ test('api/ask-pip.js explain mode: Pip explains, hint first, answer only as a re
     assert.equal(seen.length, 1, 'one model call');
     const sys = seen[0].messages[0].content;
     assert.match(sys, /explain what the question is asking/i, 'the prompt asks Pip to explain the question');
-    assert.match(sys, /Do NOT say the answer first/i, 'the prompt forbids blurting the answer first');
+    assert.match(sys, /FIRST sentence must be a hint/i, 'the prompt leads with the hint-first rule');
+    assert.match(sys, /REFERENCE ONLY/i, 'the answer lives in a reference-only block');
+    assert.ok(sys.indexOf('FIRST sentence') < sys.indexOf('REFERENCE ONLY'), 'the hint-first rule comes before the answer reference');
     assert.match(sys, /56/, 'the correct answer is in the prompt as a reference');
     assert.match(sys, /7 groups of 8/, 'the clue is in the prompt');
     assert.match(sys, /under 90 words/i, 'the explain prompt keeps the length rule');
