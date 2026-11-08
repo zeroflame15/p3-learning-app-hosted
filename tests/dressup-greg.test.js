@@ -1,18 +1,45 @@
 // Dress-up + frog facts (requested 2026-11-08):
 //  1. "Change my name & look" grows a full-body avatar builder —
-//     ROUND 4 (realistic fur, texture, depth, 2026-11-08): the
-//     round-3 plush animals are pushed toward realistic, like
-//     Mira — fur strands and tufts, a faint grain, rim light,
-//     deeper shading, lifelike eyes; the frog, butterfly, turtle
-//     and panda are reworked to be cuter and more realistic.
-//     Same data model (e.look={color,accessory}), same 5 tiny
-//     accessories, NO hair. The editor works on a DRAFT copy of
-//     the look and only commits it on "Save my look" — Cancel
-//     discards the draft and changes nothing (round-3 bug, found
-//     live). A stored hair value is ignored.
+//     ROUND 5 (flat kawaii, sheet-exact, 2026-11-08): all 25
+//     animals from the parent's reference sheet, redrawn to match
+//     it exactly as closely as SVG allows — thick dark-brown
+//     outlines, flat fills, big glossy black eyes with white
+//     highlights, small simple mouths, pink blush cheeks. This is
+//     a STYLE RESET from the round-3/4 shaded 3D plush look: no
+//     gradients for shading, no fur texture, no grain. The parent
+//     asked for it directly: "Change them to these characters.
+//     exactly the same. No need change color option."
+//       • NO COLOUR OPTION: animals keep their own colours from
+//         the sheet. A stored look.color is ignored, like stored
+//         hair in round 2. The look is now
+//         {background:{shape,color,pattern,effect}}.
+//       • NO ACCESSORIES: the parent dropped them (2026-11-08 —
+//         per-animal positioning for 25 animals was too fiddly,
+//         as the chick proved). A stored look.accessory is
+//         ignored, the same way a stored colour is ignored.
+//       • CUSTOM BACKGROUND: shape × colour × pattern × effect,
+//         part of the look, shown everywhere the avatar appears.
+//         Patterns are drawn inside the shape, bold enough to
+//         read at 120px (dots 0.45, stars 0.6, stripes 0.3,
+//         hearts 0.55 — the first version was too faint); the
+//         effects now include three animated ones (twinkle,
+//         bubbles, petals) alongside plain / glitter / glow /
+//         shine, all respecting reduced motion. The petals are
+//         soft pink at 0.6, in the margins, so they read.
+//       • TAP TO PLAY: tapping the animal makes it do a happy
+//         jump with squash-and-stretch plus a tiny sparkle burst
+//         (the frog hops higher, the rabbit wiggles its ears
+//         faster). The idle bob/blink keep running underneath.
+//       • A soft ground shadow under the feet, so the character
+//         lifts off the background and pops.
+//     Same data model (e.look, lookAt), same draft editor —
+//     Cancel genuinely reverts (round-4 live check), Save commits.
+//     The otter and butterfly are gone (not on the sheet); a
+//     stored otter/butterfly face falls back to the chick.
 //  2. The explorer's avatar shows BIG in the top-left corner:
-//     the full-body character itself in the sidebar (130px) and
-//     in the mobile topbar (43px), refreshed on every save.
+//     the full-body character ON its background in the sidebar
+//     (130px) and in the mobile topbar (43px), refreshed on every
+//     save — and now on the Grand Door explorer tile (56px) too.
 //  3. Tapping the frog in the Critter Lab tells a fun fact about
 //     frogs (shuffled, no repeats until all 12 are told), in a
 //     speech bubble that names the frog by its own name.
@@ -58,8 +85,8 @@ const mergeExplorer = eval(
 
 function explorer(over) {
   return Object.assign({
-    name: 'MightyOtter', nameAt: null, glow: '#ffb020', badge: '⭐', face: '🦦',
-    look: { color: '', accessory: '' }, lookAt: null,
+    name: 'MightyOtter', nameAt: null, glow: '#ffb020', badge: '⭐', face: '🐤',
+    look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: null,
     stars: 0, critterStage: 0, badges: [], treasures: [], discoveredCritters: [],
     completed: {}, completedDay: {}, playDoneDay: {}, hclMissed: [], favAnswers: [],
     progress: {}, playProgress: {}, daily: {}, totalMinutes: 0, mood: {}, stuckCount: {},
@@ -71,239 +98,428 @@ function explorer(over) {
 
 const modal = fnBody('function openLookModal(){');
 
-test('new explorers start with an empty look', () => {
+test('new explorers start with the sheet default look', () => {
   const creator = fnBody('function newExplorer(name, code, level){');
-  assert.ok(creator.includes("look:{color:'',accessory:''}"), 'new explorers start with a natural animal, no accessory');
+  assert.ok(creator.includes("face:'🐤'"), 'new explorers start as the chick, the first animal on the sheet');
+  assert.ok(creator.includes("look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}"), 'new explorers start with a plain mint circle background, no pattern, no accessory');
   assert.ok(creator.includes('lookAt:null'), 'new explorers start with no look timestamp');
 });
 
 test('look merge: a later dress-up change wins, whichever side it is on', () => {
-  const server = explorer({ look: { color: '', accessory: '' }, lookAt: '2026-11-01T10:00:00.000Z' });
-  const local = explorer({ look: { color: '#ff8fa3', accessory: 'tinyhat' }, lookAt: '2026-11-06T08:00:00.000Z' });
+  const server = explorer({ look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: '2026-11-01T10:00:00.000Z' });
+  const local = explorer({ look: { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, lookAt: '2026-11-06T08:00:00.000Z' });
   const merged = mergeExplorer(server, local);
-  assert.deepEqual(merged.look, { color: '#ff8fa3', accessory: 'tinyhat' }, 'the later look wins whole');
+  assert.deepEqual(merged.look, { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, 'the later look wins whole, background included — pattern included');
   assert.equal(merged.lookAt, '2026-11-06T08:00:00.000Z', 'the winning look timestamp is kept');
   const merged2 = mergeExplorer(local, server);
-  assert.deepEqual(merged2.look, { color: '#ff8fa3', accessory: 'tinyhat' }, 'argument order must not matter for look either');
-  const older = explorer({ look: { color: '#ff8fa3', accessory: 'tinyhat' }, lookAt: '2026-11-06T08:00:00.000Z' });
-  const newer = explorer({ look: { color: '', accessory: '' }, lookAt: '2026-11-07T08:00:00.000Z' });
-  assert.deepEqual(mergeExplorer(older, newer).look, { color: '', accessory: '' }, 'a later reset back to natural also wins');
+  assert.deepEqual(merged2.look, { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, 'argument order must not matter for look either');
+  const older = explorer({ look: { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, lookAt: '2026-11-06T08:00:00.000Z' });
+  const newer = explorer({ look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: '2026-11-07T08:00:00.000Z' });
+  assert.deepEqual(mergeExplorer(older, newer).look, { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, 'a later reset back to the default also wins');
 });
 
 test('look merge: a tie goes to the local side, legacy keeps the server look', () => {
   const at = '2026-11-06T08:00:00.000Z';
-  const server = explorer({ look: { color: '#2dd4bf', accessory: '' }, lookAt: at });
-  const local = explorer({ look: { color: '#c084fc', accessory: 'necklace' }, lookAt: at });
-  assert.deepEqual(mergeExplorer(server, local).look, { color: '#c084fc', accessory: 'necklace' }, 'tie goes to the local side, like name/look');
-  const legacyServer = explorer({ look: { color: '#7db4ff', accessory: '' }, lookAt: null });
-  const legacyLocal = explorer({ look: { color: '', accessory: 'flower' }, lookAt: null });
-  assert.deepEqual(mergeExplorer(legacyServer, legacyLocal).look, { color: '#7db4ff', accessory: '' }, 'with no timestamps the server look stays (legacy)');
+  const server = explorer({ look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: at });
+  const local = explorer({ look: { background: { shape: 'star', color: 'sky', effect: 'shine', pattern: 'stripes' } }, lookAt: at });
+  assert.deepEqual(mergeExplorer(server, local).look, { background: { shape: 'star', color: 'sky', effect: 'shine', pattern: 'stripes' } }, 'tie goes to the local side, like name/look');
+  const legacyServer = explorer({ look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: null });
+  const legacyLocal = explorer({ look: { background: { shape: 'heart', color: 'pink', effect: 'plain', pattern: 'hearts' } }, lookAt: null });
+  assert.deepEqual(mergeExplorer(legacyServer, legacyLocal).look, { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, 'with no timestamps the server look stays (legacy)');
 });
 
 test('look merge: the merged look is a copy, not an alias of either side', () => {
-  const server = explorer({ look: { color: '', accessory: '' }, lookAt: '2026-11-01T10:00:00.000Z' });
-  const local = explorer({ look: { color: '#ff8fa3', accessory: 'tinyhat' }, lookAt: '2026-11-06T08:00:00.000Z' });
+  const server = explorer({ look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: '2026-11-01T10:00:00.000Z' });
+  const local = explorer({ look: { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, lookAt: '2026-11-06T08:00:00.000Z' });
   const merged = mergeExplorer(server, local);
-  merged.look.color = '#000000';
-  assert.equal(local.look.color, '#ff8fa3', 'mutating the merged look must not rewrite the local explorer');
+  merged.look.background.color = 'lemon';
+  assert.equal(local.look.background.color, 'pink', 'mutating the merged background must not rewrite the local explorer');
+  merged.look.background.pattern = 'stars';
+  assert.equal(local.look.background.pattern, 'dots', 'mutating the merged pattern must not rewrite the local explorer');
   const merge = fnBody('function mergeExplorer(a,b){');
   assert.ok(merge.includes('JSON.parse(JSON.stringify(b.look))'), 'the winning look must be deep-copied');
 });
 
-test('the look modal renders a full-body preview and two picker rows — colour and accessory, no hair', () => {
+test('the look modal renders a full-body preview, a 25-animal grid and a background picker — no colour, no hair, no accessories', () => {
   assert.ok(modal.includes('My full-body look'), 'modal must label the preview');
   assert.ok(modal.includes('id="lookPreview"'), 'the preview must have an id so taps can refresh it in place');
   assert.ok(modal.includes('avatarLookHTML(e.face,e.look,e.glow)'), 'the preview must render from the live face, look and glow');
-  assert.ok(modal.includes('Animal colour'), 'modal must label the colour row as the whole animal');
-  assert.ok(!modal.includes('Body colour'), 'the old body-only label is gone');
-  assert.ok(modal.includes('class="iconbtn lookColorPick"'), 'colours must be swatch buttons');
+  assert.ok(modal.includes('My animal friend'), 'modal must label the animal row');
+  assert.ok(modal.includes('LOOK_FACES.map'), 'the animal row renders from the 25-animal list');
+  assert.ok(modal.includes('My background'), 'modal must label the background section');
+  assert.ok(modal.includes('class="iconbtn bgShapePick"'), 'background shapes must be picker buttons');
+  assert.ok(modal.includes('class="iconbtn bgColorPick"'), 'background colours must be swatch buttons');
+  assert.ok(modal.includes('class="iconbtn bgPatternPick"'), 'background patterns must be picker buttons');
+  assert.ok(modal.includes('Polka dots'), 'the polka dots pattern is offered');
+  assert.ok(modal.includes('Stars'), 'the stars pattern is offered');
+  assert.ok(modal.includes('Stripes'), 'the stripes pattern is offered');
+  assert.ok(modal.includes('Hearts'), 'the hearts pattern is offered');
+  assert.ok(modal.includes('class="iconbtn bgEffectPick"'), 'background effects must be picker buttons');
+  assert.ok(modal.includes('✨ Glitter'), 'the glitter effect is offered');
+  assert.ok(modal.includes('🌟 Glow'), 'the glow effect is offered');
+  assert.ok(modal.includes('💫 Shine'), 'the shine effect is offered');
+  assert.ok(modal.includes('⭐ Twinkle'), 'the twinkle effect is offered');
+  assert.ok(modal.includes('🫧 Bubbles'), 'the bubbles effect is offered');
+  assert.ok(modal.includes('🌸 Petals'), 'the petals effect is offered');
+  assert.ok(!modal.includes('Animal colour'), 'there is no Animal colour section any more');
+  assert.ok(!modal.includes('lookColorPick'), 'there is no colour picker');
+  assert.ok(!modal.includes('LOOK_COLORS'), 'the colour list is gone from the modal');
+  assert.ok(!html.includes('var LOOK_COLORS='), 'the colour list is gone from the page');
   assert.ok(!modal.includes('Hair'), 'there is no hair row any more');
   assert.ok(!modal.includes('lookHairPick'), 'there is no hair picker');
   assert.ok(!html.includes('var LOOK_HAIRS='), 'the hair list is gone from the page');
-  assert.ok(modal.includes('Accessory'), 'modal must label the accessory row');
-  assert.ok(modal.includes('class="iconbtn lookAccPick"'), 'accessories must be icon buttons');
-  const colors = eval(grabVar('LOOK_COLORS') + '\n;LOOK_COLORS');
-  assert.equal(colors.length, 7, 'Natural plus 6 colours');
-  assert.equal(colors[0], '', 'Natural (no colour) comes first');
-  const accs = eval(grabVar('LOOK_ACCS') + '\n;LOOK_ACCS');
-  assert.deepEqual(accs, ['', 'necklace', 'tinyhat', 'flower', 'star', 'bow'], 'five tiny accessories plus none');
+  assert.ok(!modal.includes('>Accessory</label>'), 'there is no Accessory section any more');
+  assert.ok(!modal.includes('lookAccPick'), 'there is no accessory picker');
+  assert.ok(!html.includes('var LOOK_ACCS='), 'the accessory list is gone from the page');
+  assert.ok(!html.includes('AVATAR_ACCS'), 'the accessory drawings are gone from the page');
+  assert.ok(!html.includes('AV_ACC_OFF'), 'the per-animal accessory offsets are gone from the page');
+  const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
+  assert.equal(faces.length, 25, '25 animals from the sheet, got ' + faces.length);
+  assert.equal(faces[0], '🐤', 'the chick is first — it is the fallback for an otter or butterfly');
+  assert.ok(!faces.includes('🦦'), 'the otter is not on the sheet, so it is not in the picker');
+  assert.ok(!faces.includes('🦋'), 'the butterfly is not on the sheet, so it is not in the picker');
+  const shapes = eval(grabVar('LOOK_BG_SHAPES') + '\n;LOOK_BG_SHAPES');
+  assert.deepEqual(shapes, ['circle', 'heart', 'star', 'square', 'cloud', 'flower'], 'six background shapes');
+  const colors = eval(grabVar('LOOK_BG_COLOR_NAMES') + '\n;LOOK_BG_COLOR_NAMES');
+  assert.deepEqual(colors, ['mint', 'pink', 'sky', 'lilac', 'peach', 'lemon'], 'six pastel background colours');
+  const patterns = eval(grabVar('LOOK_BG_PATTERNS') + '\n;LOOK_BG_PATTERNS');
+  assert.deepEqual(patterns, ['', 'dots', 'stars', 'stripes', 'hearts'], 'four background patterns plus none');
+  const effects = eval(grabVar('LOOK_BG_EFFECTS') + '\n;LOOK_BG_EFFECTS');
+  assert.deepEqual(effects, ['plain', 'glitter', 'glow', 'shine', 'twinkle', 'bubbles', 'petals'], 'seven background effects — the three animated ones joined the four static ones');
 });
 
-test('avatarLookHTML: a 3D-shaded full-body character per animal, whole-animal colour, tiny accessories, no hair', () => {
-  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
-  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
-  const render = (face, look, glow) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look) + ',' + JSON.stringify(glow || '#ffb020') + ')');
-  // 3D structure: one svg, class av3d, a defs block with the six
-  // gradients, and the body/head filled by gradient, not flat colour.
-  const pinkFox = render('🦊', { color: '#ff8fa3', accessory: '' });
-  assert.ok(pinkFox.includes('data-animal="fox"'), 'the animal is drawn, not pasted: the fox renders');
-  assert.ok(pinkFox.includes('<svg class="av3d" viewBox="0 0 200 260"'), 'the whole character is one 3D svg on the shared grid');
-  assert.ok(pinkFox.includes('<defs>'), 'the gradients live in a defs block');
-  for (const g of ['gB', 'gH', 'gBel', 'gD', 'gSh', 'gGl']) {
-    assert.ok(pinkFox.includes('id="' + g), 'the ' + g + ' gradient is defined');
-  }
-  assert.ok(pinkFox.includes('fill="url(#gB'), 'the body is filled by the body gradient');
-  assert.ok(pinkFox.includes('fill="url(#gH'), 'the head is filled by the head gradient');
-  assert.ok(pinkFox.includes('fill="url(#gSh'), 'the ground shadow is a radial gradient, not a flat ellipse');
-  // Whole-animal colour now lives in the gradients: pink is the
-  // mid-stop of the body and head gradients, never a flat fill.
-  const pinkStops = (pinkFox.match(/stop-color="#ff8fa3"/g) || []).length;
-  assert.equal(pinkStops, 2, 'pink is the body and head gradient mid-stop — got ' + pinkStops);
-  assert.ok(!pinkFox.includes('fill="#ff8fa3"'), 'no flat pink fill anywhere: the colour is shaded, not stickered');
-  const naturalFox = render('🦊', { color: '', accessory: '' }, '#2dd4bf');
-  const natStops = (naturalFox.match(/stop-color="#e8743c"/g) || []).length;
-  assert.equal(natStops, 2, 'Natural fox wears its own orange in the gradients — got ' + natStops);
-  assert.ok(naturalFox.includes('stop-color="#c25a2e"'), 'the fox tail keeps its own dark accent gradient');
-  assert.ok(!naturalFox.includes('fill="#2dd4bf"'), 'Natural ignores the glow — the animal keeps its own colour');
-  // The dark edge is always a shade of the main colour, never the
-  // dark accent — so a pale animal never goes black at the edges.
-  // (The panda's dark accent IS black — its patches, ears and arms
-  // use it in the gD gradient — but its BODY gradient must not.)
-  const panda = render('🐼', { color: '', accessory: '' });
-  const pandaGB = panda.match(/<radialGradient id="gB\d+"[^]*?<\/radialGradient>/)[0];
-  assert.ok(pandaGB.includes('stop-color="#aca9a4"'), 'the panda body edge is a soft grey shade of its own white, not black');
-  assert.ok(!pandaGB.includes('stop-color="#26221f"'), 'the panda body gradient never goes black');
-  assert.ok(panda.includes('stop-color="#26221f"'), 'the panda dark accent (patches, ears, arms) is still black in its own gradient');
-  // No hair: a stored hair value changes nothing and renders nothing.
-  const withHair = render('🦦', { color: '', accessory: '', hair: 'long' });
-  const noHair = render('🦦', { color: '', accessory: '' });
-  assert.equal(withHair, noHair, 'a saved hair value is ignored, never rendered');
-  assert.ok(!withHair.includes('avatar-hair'), 'no hair group is ever drawn');
+test('avatarLookHTML: 25 flat kawaii characters, no colour, no accessories, backgrounds, ground shadow', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (face, look, glow) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look === undefined ? { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } } : look) + ',' + JSON.stringify(glow || '#ffb020') + ')');
+  // Flat kawaii structure: one svg, class av5, a defs block with the
+  // ground-shadow gradient ONLY — no shading gradients, no grain.
+  const chick = render('🐤', { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
+  assert.ok(chick.includes('data-animal="chick"'), 'the animal is drawn, not pasted: the chick renders');
+  assert.ok(chick.includes('<svg class="av5" viewBox="0 0 200 260"'), 'the whole character is one flat svg on the shared grid');
+  assert.ok(chick.includes('<defs>'), 'the defs block holds the ground shadow');
+  assert.ok(chick.includes('id="gSh'), 'the ground shadow is a radial gradient');
+  assert.ok(!chick.includes('url(#gB'), 'no body gradient: the animals are flat, not shaded');
+  assert.ok(!chick.includes('feTurbulence'), 'no grain: the flat style has no texture');
+  assert.ok(!html.includes('AVATAR_3D_CSS'), 'the 3D CSS variable is gone');
+  assert.ok(!html.includes('class="av3d"'), 'the 3D class is gone');
+  assert.ok(!html.includes('FULL-BODY LOOK — ROUND 4'), 'the round-4 block is gone');
+  // Flat fills: the chick is its own yellow, flat, with a thick
+  // dark-brown outline — exactly like the sheet.
+  assert.ok(chick.includes('fill="#ffd94a"'), 'the chick is flat yellow');
+  assert.ok(chick.includes('stroke="#4a3226"'), 'the outlines are thick dark brown');
+  // No colour option: a stored colour value changes nothing and
+  // never appears in the render.
+  const withColor = render('🐤', { color: '#ff0000' });
+  const plain = render('🐤', {});
+  assert.ok(!withColor.includes('#ff0000'), 'a stored colour value never appears in the render');
+  const norm = function (s) { return s.replace(/a\d+/g, 'aUID').replace(/animation-delay:[-0-9.]+s/g, 'animation-delay:X'); };
+  assert.equal(norm(withColor), norm(plain), 'a stored colour changes nothing else either');
+  assert.ok(!fn.includes('look.color'), 'the renderer never reads look.color');
   assert.ok(!html.includes('LOOK_HAIR'), 'no hair code remains in the page');
+  // No accessories: a stored accessory value changes nothing and
+  // never appears in the render — the necklace beads, the bow,
+  // the crown and the hat are all gone.
+  const withAcc = render('🐤', { accessory: 'necklace', background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
+  assert.ok(!withAcc.includes('M84,118 Q100,136'), 'a stored necklace never renders its beads');
+  assert.equal(norm(withAcc), norm(plain), 'a stored accessory changes nothing else either');
+  assert.ok(!fn.includes('look.accessory'), 'the renderer never reads look.accessory');
+  assert.ok(!fn.includes('AVATAR_ACCS'), 'the renderer never draws an accessory');
   // Unknown values degrade gracefully.
-  assert.ok(!render('🦦', { accessory: 'hat' }).includes('id="avatar-acc"'), 'an unknown accessory renders as no accessory');
-  assert.ok(render('👽', {}).includes('data-animal="otter"'), 'an unknown face falls back to the otter');
-  assert.ok(render('🦦', null).includes('<svg'), 'a legacy explorer without a look still renders');
+  assert.ok(render('👽', {}).includes('data-animal="chick"'), 'an unknown face falls back to the chick');
+  assert.ok(render('🦦', {}).includes('data-animal="chick"'), 'a stored otter falls back to the chick');
+  assert.ok(render('🦋', {}).includes('data-animal="chick"'), 'a stored butterfly falls back to the chick');
+  assert.ok(render('🐤', null).includes('<svg'), 'a legacy explorer without a look still renders');
   // Gradient ids are unique per render, so two characters on one
   // page never share a gradient. (Both renders must happen in ONE
   // eval: each eval re-declares avUid at 0, as the consts slice
   // carries it — in the app it is one module-level counter.)
-  const two = eval(consts + '\n' + fn + '\n;[avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020"),avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020")]');
-  assert.notEqual(two[0].match(/id="gB(\d+)"/)[1], two[1].match(/id="gB(\d+)"/)[1], 'each render gets its own gradient ids');
+  const two = eval(consts + '\n' + fn + '\n;[avatarLookHTML("🐤",{},"#ffb020"),avatarLookHTML("🐤",{},"#ffb020")]');
+  assert.notEqual(two[0].match(/id="gSh([^"]+)"/)[1], two[1].match(/id="gSh([^"]+)"/)[1], 'each render gets its own shadow gradient id');
   // Every animal is itself at a glance — its own recognition marker.
   const markers = [
-    ['🦦', 'rgba(74,44,26,0.5)', 'the otter has whiskers'],
-    ['🦦', 'rx="49"', 'the otter face is wider and flatter than a circle, not a bear'],
-    ['🐸', 'cy="46" r="17"', 'the frog has bigger eye bumps (round 4: r 17, not 15)'],
-    ['🦋', 'M90,102 C74,90 54,92 44,106', 'the butterfly has a scalloped upper wing, not a plain ellipse'],
-    ['🐱', 'M62,42 L56,10 L86,30 Z', 'the cat has pointed triangle ears'],
-    ['🐶', 'fill="#f08ba0"', 'the dog has its tongue out'],
-    ['🐰', 'cy="35" rx="9" ry="32"', 'the rabbit has long upright ears (reference ratio: 35px above the head top)'],
-    ['🦁', 'r="58"', 'the lion has a mane ring'],
-    ['🐼', 'rx="13.5" ry="17"', 'the panda has bigger, softer eye patches (round 4)'],
-    ['🦊', 'rotate(18 170 118)', 'the fox has a big bushy tail with a pale tip'],
-    ['🐢', 'stop-color="#4e8f4c"', 'the turtle shell is its own dark green gradient'],
-    ['🐢', 'M100,106 L118,116 L112,138 L100,146 L88,138 L82,116 Z', 'the turtle shell has a real scute pattern, not just segment lines'],
-    ['🐷', 'rx="16" ry="12"', 'the pig has a snout'],
-    ['🐵', 'cy="82" rx="34" ry="36"', 'the monkey has a light face patch'],
+    ['🐤', 'Q92,82 88,78', 'the chick has a little tuft on its head'],
+    ['🐴', 'M58,66 C56,34 78,20 100,20', 'the horse has a brown mane over its head'],
+    ['🐧', 'cy="188" rx="32" ry="38"', 'the penguin has a white belly'],
+    ['🐻', 'fill="#c98a4b"', 'the bear is brown with a lighter muzzle'],
+    ['🐢', 'fill="#a67c52"', 'the turtle has a brown shell'],
+    ['🐢', 'M100,124 L124,140 L112,172', 'the turtle shell has a scute pattern'],
+    ['🐼', 'rx="11" ry="16"', 'the panda has big black eye patches'],
+    ['🦁', 'fill="#e08a2e"', 'the lion has a big orange mane'],
+    ['🐱', 'M56,80 L40,76', 'the cat has whiskers'],
+    ['🐷', 'cy="90" rx="16" ry="11"', 'the pig has a snout'],
+    ['🦊', 'M146,182 C174,172 188,142', 'the fox has a big bushy tail'],
+    ['🐸', 'cy="46" r="17"', 'the frog has big eye bumps'],
+    ['🐘', 'M92,86 C90,110 88,130', 'the elephant has a trunk'],
+    ['🦒', 'M86,80 L86,150 Q86,162', 'the giraffe has a long neck'],
+    ['🐰', 'cy="35" rx="9" ry="32"', 'the rabbit has long upright ears'],
+    ['🐰', 'y="95" width="5.5" height="9"', 'the rabbit has buck teeth'],
+    ['🦉', 'cy="72" r="13"', 'the owl has big white eyes'],
+    ['🦝', 'M62,66 Q100,52 138,66', 'the raccoon has a dark eye mask'],
+    ['🐵', 'cy="80" rx="34" ry="32"', 'the monkey has a tan face patch'],
+    ['🐯', 'M88,44 Q90,50 88,56', 'the tiger has forehead stripes'],
+    ['🐊', 'M36,170 L40,170 L38,179 Z', 'the crocodile has a toothy grin'],
+    ['🐊', 'cy="192" rx="58" ry="30"', 'the crocodile is long and low — a horizontal body, not a round one'],
+    ['🐊', 'M148,178 C168,180 184,192 190,208', 'the crocodile has a tail to the side'],
+    ['🐊', 'M110,164 L116,150 L122,164 Z', 'the crocodile has back spikes'],
+    ['🐶', 'cy="72" rx="13" ry="15"', 'the dog has a brown patch over one eye'],
+    ['🦥', 'M44,212 L42,218', 'the sloth has tiny claws'],
+    ['🦆', 'cy="88" rx="14" ry="8"', 'the duck has a flat orange beak'],
+    ['🦛', 'cy="96" rx="30" ry="16"', 'the hippo has a big pink snout'],
+    ['🐑', 'M148,178 A24,24', 'the sheep has a fluffy scalloped wool body'],
+    ['🐨', 'cy="88" rx="10" ry="14"', 'the koala has a big black nose'],
   ];
   for (const [face, marker, msg] of markers) {
-    assert.ok(render(face, { color: '', accessory: '' }).includes(marker), msg);
+    assert.ok(render(face, {}).includes(marker), msg);
   }
-  // Geometry guards: heads never float above bodies (round-2 fixes).
-  const rabbit = render('🐰', { color: '', accessory: '' });
-  assert.ok(rabbit.includes('cy="174" rx="50" ry="50"'), 'the rabbit body starts above the chin, overlapping the head by 6px, so the head merges into the body with no seam');
-  assert.ok(rabbit.includes('cy="84" r="46"'), 'the rabbit head sits 8px lower so the long ears fit the grid');
-  assert.ok(rabbit.includes('cy="35" rx="9" ry="32"'), 'the rabbit ears are long and slim, tips 35px above the head top');
-  // Round 4: the head–body join is seamless because the head and
-  // the body share ONE userSpaceOnUse gradient (gR) — the per-shape
-  // gB gradient left a faint circular edge where the head's dark
-  // bottom met the body's light top (found live in round 3).
-  assert.ok(rabbit.includes('gradientUnits="userSpaceOnUse"'), 'the rabbit gets a shared userSpaceOnUse gradient');
-  assert.ok(rabbit.includes('id="gR'), 'the shared rabbit gradient is gR');
-  assert.ok(rabbit.includes('cy="174" rx="50" ry="50" fill="url(#gR'), 'the rabbit body is filled by the shared gradient');
-  assert.ok(rabbit.includes('cy="84" r="46" fill="url(#gR'), 'the rabbit head is filled by the shared gradient');
-  assert.ok(!rabbit.includes('cy="84" r="46" fill="url(#gB'), 'the rabbit head must not use the per-shape gradient');
-  assert.ok(!render('🦦', { color: '', accessory: '' }).includes('id="gR'), 'gR is rabbit-only — other animals keep gB');
-  const pig = render('🐷', { color: '', accessory: '' });
-  assert.ok(pig.includes('cy="172" rx="52" ry="50"'), 'the pig body starts at the chin too');
-  const turtle = render('🐢', { color: '', accessory: '' });
-  assert.ok(turtle.includes('cy="78" r="34"'), 'the turtle head sits down into the shell');
-  assert.ok(turtle.includes('M100,100'), 'the shell dome starts under the head');
-  const frog = render('🐸', { color: '', accessory: '' });
-  assert.ok(frog.includes('cy="178" rx="52" ry="48"'), 'the frog body touches the head');
-  // The chin crease: a soft dark ellipse under the head, so the
-  // head sits INTO the body on the animals that have the junction.
-  assert.ok(render('🦦', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the otter has a crease under the chin');
-  assert.ok(render('🐰', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the rabbit has a crease under the chin');
-  assert.ok(!render('🦋', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the butterfly has no head-body junction, so no crease');
-  assert.ok(!render('🐢', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the turtle head sits in the shell, so no crease');
-  // Tiny accessories: small touches, never covering the face.
-  const necklace = render('🦦', { color: '', accessory: 'necklace' });
-  assert.ok(necklace.includes('id="avatar-acc"'), 'the necklace renders as a group on top');
-  assert.ok(necklace.includes('M84,122 Q100,136 116,122'), 'the necklace is a small arc hugging the neck');
-  const hat = render('🦦', { color: '', accessory: 'tinyhat' });
-  assert.ok(hat.includes('fill="#8b5cf6"'), 'the tiny hat is the little purple top hat');
-  const flower = render('🦦', { color: '', accessory: 'flower' });
-  assert.ok(flower.includes('stroke="#e88aa0"'), 'the flower is a small daisy at the side of the head');
-  const star = render('🦦', { color: '', accessory: 'star' });
-  assert.ok(star.includes('stroke="#e8a100"'), 'the star is a small clip at the side of the head');
-  const bow = render('🦦', { color: '', accessory: 'bow' });
-  assert.ok(bow.includes('fill="#ef4444"'), 'the little bow sits at the neck');
-  const none = render('🦦', { color: '', accessory: '' });
-  assert.ok(!none.includes('id="avatar-acc"'), 'no accessory means no accessory group');
+  // The ground shadow: a soft ellipse under the feet, drawn between
+  // the background and the animal, so the character lifts off.
+  const heart = render('🐤', { background: { shape: 'heart', color: 'pink', effect: 'plain', pattern: '' } });
+  assert.ok(heart.includes('cy="246"'), 'the ground shadow sits under the feet');
+  const iBg = heart.indexOf('M100,246'), iSh = heart.indexOf('cy="246"'), iBob = heart.indexOf('av-bob');
+  assert.ok(iBg >= 0 && iSh > iBg && iBob > iSh, 'the shadow is drawn after the background and before the animal');
   // Width param: the same character at the sizes the app uses.
-  const big = render('🦦', { color: '', accessory: '' });
-  assert.ok(big.includes('width:190px;height:247px'), 'the modal preview defaults to 190px wide');
-  assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020",43)').includes('width:43px;height:56px'), 'the mobile topbar character is 43px wide');
-  assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020",130)').includes('width:130px;height:169px'), 'the sidebar character is 130px wide');
+  const big = render('🐤', {});
+  assert.ok(big.includes('width="190" height="247"'), 'the modal preview defaults to 190px wide');
+  assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",{},"#ffb020",43)').includes('width="43" height="56"'), 'the mobile topbar character is 43px wide');
+  assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",{},"#ffb020",130)').includes('width="130" height="169"'), 'the sidebar character is 130px wide');
+  assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",{},"#ffb020",56)').includes('width="56" height="73"'), 'the Grand Door tile character is 56px wide');
+});
+
+test('backgrounds: every shape, colour and effect renders, and none means none', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (look) => eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",' + JSON.stringify(look) + ',"#ffb020")');
+  const shapeMarkers = {
+    circle: 'r="92"', heart: 'M100,246', star: 'M100,40 L125,101',
+    square: 'rx="28"', cloud: 'M25,200', flower: 'M135,74 A40,40',
+  };
+  for (const [shape, marker] of Object.entries(shapeMarkers)) {
+    assert.ok(render({ background: { shape, color: 'mint', effect: 'plain', pattern: '' } }).includes(marker), 'the ' + shape + ' background renders');
+  }
+  const colors = eval(grabVar('LOOK_BG_COLORS') + '\n;LOOK_BG_COLORS');
+  for (const [name, hex] of Object.entries(colors)) {
+    assert.ok(render({ background: { shape: 'circle', color: name, effect: 'plain', pattern: '' } }).includes('fill="' + hex + '"'), 'the ' + name + ' background is ' + hex);
+  }
+  const noneBg = render({ background: { shape: 'circle', color: 'none', effect: 'plain', pattern: '' } });
+  for (const hex of Object.values(colors)) {
+    assert.ok(!noneBg.includes('fill="' + hex + '"'), 'no background means no background colour: ' + hex + ' is absent');
+  }
+  assert.ok(noneBg.includes('cy="246"'), 'no background still has the ground shadow under the feet');
+  const glitter = render({ background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: '' } });
+  assert.ok(glitter.includes('av-twinkle'), 'the glitter effect adds twinkling sparkles');
+  assert.ok(glitter.includes('class="av-twinkle"'), 'the sparkles are in the twinkle class');
+  const glow = render({ background: { shape: 'circle', color: 'mint', effect: 'glow', pattern: '' } });
+  assert.ok(glow.includes('feGaussianBlur'), 'the glow effect adds a blurred halo');
+  const shine = render({ background: { shape: 'circle', color: 'mint', effect: 'shine', pattern: '' } });
+  assert.ok(shine.includes('rotate(18 100 135)'), 'the shine effect adds a diagonal reflective band');
+  const plain = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
+  assert.ok(!plain.includes('av-twinkle'), 'plain has no sparkles');
+  assert.ok(!plain.includes('feGaussianBlur'), 'plain has no halo');
+  assert.ok(!plain.includes('rotate(18 100 135)'), 'plain has no shine band');
+  // Unknown background values degrade to the default.
+  assert.ok(render({ background: { shape: 'banana', color: 'mint', effect: 'plain', pattern: '' } }).includes('r="92"'), 'an unknown shape falls back to the circle');
+  assert.ok(render({ background: { shape: 'circle', color: 'purple', effect: 'plain', pattern: '' } }).includes('fill="#bfe8d8"'), 'an unknown colour falls back to mint');
+  assert.ok(!render({ background: { shape: 'circle', color: 'mint', effect: 'sparkle', pattern: '' } }).includes('av-twinkle'), 'an unknown effect falls back to plain');
+});
+
+test('background patterns: each one renders inside the shape, visible at 120px, and none means none', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (look) => eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",' + JSON.stringify(look) + ',"#ffb020")');
+  // The chick has no element of its own at these opacities, so any
+  // hit is the pattern. The first version was too faint at 120px
+  // (dots 0.32, stars 0.4, stripes 0.16, hearts 0.35) — the
+  // screen found the stars, hearts and stripes invisible — so
+  // they were bumped and the stars and hearts made bigger.
+  const dots = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: 'dots' } });
+  assert.ok(dots.includes('clip-path="url(#bgClip'), 'the dots are clipped to the background shape');
+  assert.ok(dots.includes('opacity="0.45"'), 'the dots read at 120px, and the animal still pops');
+  const stars = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: 'stars' } });
+  assert.ok(stars.includes('clip-path="url(#bgClip'), 'the stars are clipped to the background shape');
+  assert.ok(stars.includes('opacity="0.6"'), 'the stars are brighter, so they read at 120px');
+  assert.ok(stars.includes('M45,67'), 'the stars are bigger now (s=8), so they read at 120px');
+  const stripes = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: 'stripes' } });
+  assert.ok(stripes.includes('clip-path="url(#bgClip'), 'the stripes are clipped to the background shape');
+  assert.ok(stripes.includes('opacity="0.3"'), 'the stripes read at 120px');
+  const hearts = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: 'hearts' } });
+  assert.ok(hearts.includes('clip-path="url(#bgClip'), 'the hearts are clipped to the background shape');
+  assert.ok(hearts.includes('opacity="0.55"'), 'the hearts are brighter, so they read at 120px');
+  assert.ok(hearts.includes('scale(1.3)'), 'the hearts are bigger now, so they read as hearts at 120px');
+  // The pattern follows the shape, not just the circle.
+  const heartStripes = render({ background: { shape: 'heart', color: 'pink', effect: 'plain', pattern: 'stripes' } });
+  assert.ok(heartStripes.includes('opacity="0.3"'), 'stripes render on a heart background too');
+  assert.ok(heartStripes.includes('M100,246'), 'the heart shape is still the heart');
+  // None, missing and unknown all mean no pattern.
+  const none = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
+  assert.ok(!none.includes('opacity="0.45"') && !none.includes('opacity="0.6"') && !none.includes('opacity="0.3"') && !none.includes('opacity="0.55"'), 'no pattern means no pattern marks');
+  const missing = render({ background: { shape: 'circle', color: 'mint', effect: 'plain' } });
+  assert.ok(!missing.includes('opacity="0.45"') && !missing.includes('opacity="0.6"') && !missing.includes('opacity="0.3"') && !missing.includes('opacity="0.55"'), 'a stored background without a pattern falls back to none');
+  const unknown = render({ background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: 'zigzag' } });
+  assert.ok(!unknown.includes('opacity="0.45"') && !unknown.includes('opacity="0.6"') && !unknown.includes('opacity="0.3"') && !unknown.includes('opacity="0.55"'), 'an unknown pattern falls back to none');
+  // No background shape, no pattern to draw inside.
+  const noBg = render({ background: { shape: 'circle', color: 'none', effect: 'plain', pattern: 'dots' } });
+  assert.ok(!noBg.includes('opacity="0.45"'), 'no background colour means no pattern either');
+});
+
+test('animated background effects: twinkle, bubbles and petals render, clipped, and are CSS-animated', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (look) => eval(consts + '\n' + fn + '\n;avatarLookHTML("🐤",' + JSON.stringify(look) + ',"#ffb020")');
+  const twinkle = render({ background: { shape: 'circle', color: 'sky', effect: 'twinkle', pattern: '' } });
+  assert.ok(twinkle.includes('class="av-twinklebg"'), 'the twinkle effect draws fading star sparkles');
+  assert.ok(twinkle.includes('clip-path="url(#bgClip'), 'the twinkle stars are clipped to the shape');
+  const bubbles = render({ background: { shape: 'circle', color: 'sky', effect: 'bubbles', pattern: '' } });
+  assert.ok(bubbles.includes('class="av-bub"'), 'the bubbles effect draws drifting circles');
+  assert.ok(bubbles.includes('clip-path="url(#bgClip'), 'the bubbles are clipped to the shape');
+  const petals = render({ background: { shape: 'circle', color: 'sky', effect: 'petals', pattern: '' } });
+  assert.ok(petals.includes('class="av-pet"'), 'the petals effect draws drifting petals');
+  assert.ok(petals.includes('clip-path="url(#bgClip'), 'the petals are clipped to the shape');
+  // The petals are soft pink, not white — white petals on pale
+  // sky blue were invisible at 120px, and at 0.55 they barely
+  // read even at 3x zoom. The chick's own blush is the same
+  // pink, so count the difference against a plain render:
+  // seven petals, no more, no fewer. They are bigger than
+  // before, hold at 0.6 while they fall, and start in the
+  // margins and the top crescent, so they stay visible while
+  // they fall instead of hiding behind the animal.
+  const plainSky = render({ background: { shape: 'circle', color: 'sky', effect: 'plain', pattern: '' } });
+  const pinkIn = (s) => (s.match(/fill="#f7a8b8"/g) || []).length;
+  assert.equal(pinkIn(petals) - pinkIn(plainSky), 7, 'all seven petals are soft pink (the blush pink)');
+  assert.ok(petals.includes('M0,-9 C5,-3 5,5 0,9'), 'the petals are bigger than before');
+  assert.ok(petals.includes('translate(28 60)') && petals.includes('translate(172 50)'), 'the petals start in the margins, so they stay visible while they fall');
+  assert.ok(html.includes('15%{opacity:.6}85%{opacity:.6}'), 'the petals hold at 0.6 while they fall');
+  // The CSS animates them — slow and gentle, staggered by the
+  // inline delays, so they never move in lockstep.
+  for (const k of ['@keyframes av5TwinkleBg', '@keyframes av5Bub', '@keyframes av5Pet']) {
+    assert.ok(html.includes(k), 'the page style contains ' + k);
+  }
+  assert.ok(bubbles.includes('animation-delay:-'), 'the bubbles are staggered with negative delays');
+  assert.ok(petals.includes('animation-delay:-'), 'the petals are staggered with negative delays');
+  // The static glitter is unchanged — and it is not the twinkle
+  // effect (different class, different keyframes).
+  const glitter = render({ background: { shape: 'circle', color: 'sky', effect: 'glitter', pattern: '' } });
+  assert.ok(glitter.includes('class="av-twinkle"'), 'glitter still twinkles');
+  assert.ok(!glitter.includes('av-twinklebg'), 'glitter is not the twinkle effect');
+  // Reduced motion switches the animated backgrounds off, exactly
+  // like the bob and the blink.
+  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-bob,.av5 .av-blink,.av5 .av-earwig,.av5 .av-sway,.av5 .av-hop,.av5 .av-nod,.av5 .av-twinkle,.av5 .av-twinklebg,.av5 .av-bub,.av5 .av-pet{animation:none}'), 'the reduced-motion rule switches the animated backgrounds off');
+});
+
+test('tap to play: tapping the animal adds the play class, jumps it and bursts sparkles', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (face, look) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look || {}) + ',"#ffb020")');
+  const chick = render('🐤');
+  assert.ok(chick.includes('onclick="avatarPlay(this)"'), 'the svg is the tap target — every avatar renders through here, so the sidebar, the preview and the Grand Door tile all play');
+  assert.ok(chick.includes('class="av-jump"'), 'the animal sits in a jump group, so the trick moves the animal only — the background and ground shadow stay put');
+  assert.ok(chick.includes('class="av-sparkles"'), 'the sparkle burst group is in every render');
+  assert.ok(chick.includes('class="av-bob"'), 'the idle bob is still there underneath the trick');
+  // The CSS: the play animation, the frog's higher hop, the
+  // rabbit's faster ear wiggle, and the sparkle burst.
+  assert.ok(html.includes('.av5.av-play .av-jump{animation:av5Play .8s'), 'tapping adds the play jump');
+  assert.ok(html.includes('.av5[data-animal="frog"].av-play .av-jump{animation:av5PlayHop .8s'), 'the frog hops higher than the rest');
+  assert.ok(html.includes('.av5[data-animal="rabbit"].av-play .av-earwig{animation:av5EarWig .8s'), 'the rabbit wiggles its ears faster while it plays');
+  assert.ok(html.includes('.av5.av-play .av-sparkles{animation:av5Spark .8s'), 'tapping bursts the sparkles');
+  for (const k of ['@keyframes av5Play', '@keyframes av5PlayHop', '@keyframes av5Spark']) {
+    assert.ok(html.includes(k), 'the page style contains ' + k);
+  }
+  // Reduced motion switches the trick off — tapping does nothing
+  // visible, like the bob and the blink.
+  assert.ok(html.includes('.av5.av-play .av-jump,.av5.av-play .av-sparkles{animation:none!important}'), 'the reduced-motion rule switches the tap trick off');
+  // Functional: avatarPlay adds the class, ignores a second tap
+  // while it is playing, and takes the class off when the jump
+  // ends — but not when the sparkles finish on their own.
+  const playStart = html.indexOf('function avatarPlay(svg){');
+  assert.ok(playStart >= 0, 'avatarPlay found');
+  const playEnd = html.indexOf('\n}', playStart);
+  assert.ok(playEnd > playStart, 'avatarPlay ends');
+  const avatarPlay = eval(html.slice(playStart, playEnd + 2) + '\n;avatarPlay');
+  function fakeSvg() {
+    const classes = new Set();
+    const listeners = {};
+    return {
+      classList: { contains: (c) => classes.has(c), add: (c) => classes.add(c), remove: (c) => classes.delete(c) },
+      addEventListener: (t, f) => { listeners[t] = f; },
+      removeEventListener: (t) => { delete listeners[t]; },
+      fire: (t, e) => { if (listeners[t]) listeners[t](e); },
+      _classes: classes, _listeners: listeners,
+    };
+  }
+  const svg = fakeSvg();
+  avatarPlay(svg);
+  assert.ok(svg._classes.has('av-play'), 'a tap adds the play class');
+  assert.ok(svg._listeners.animationend, 'a tap listens for the end of the jump');
+  avatarPlay(svg);
+  assert.equal(Object.keys(svg._listeners).length, 1, 'a second tap while it is playing does nothing — no duplicate listener');
+  svg.fire('animationend', { animationName: 'av5Spark' });
+  assert.ok(svg._classes.has('av-play'), 'the sparkles finishing on their own must not end the trick early');
+  svg.fire('animationend', { animationName: 'av5Play' });
+  assert.ok(!svg._classes.has('av-play'), 'the jump ending takes the class off, so the idle life resumes');
+  assert.ok(!svg._listeners.animationend, 'the listener is removed when the trick ends');
+  const frog = fakeSvg();
+  avatarPlay(frog);
+  frog.fire('animationend', { animationName: 'av5PlayHop' });
+  assert.ok(!frog._classes.has('av-play'), 'the frog\'s higher hop ends the trick the same way');
 });
 
 test('idle life: every animal bobs and blinks, each with its own signature motion', () => {
-  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
-  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
-  const render = (face) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',{color:"",accessory:""},"#ffb020")');
-  const sig = {
-    '🦦': 'av-sway', '🐸': 'av-hop', '🦋': 'av-flutter-l', '🐱': 'av-sway',
-    '🐶': 'av-earwig', '🐰': 'av-earwig', '🦁': 'av-nod', '🐼': 'av-earwig',
-    '🦊': 'av-sway', '🐢': 'av-nod', '🐷': 'av-flop', '🐵': 'av-sway',
-  };
-  for (const [face, motion] of Object.entries(sig)) {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const render = (face) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',{},"#ffb020")');
+  const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
+  assert.equal(faces.length, 25, '25 animals');
+  for (const face of faces) {
     const s = render(face);
     assert.ok(s.includes('class="av-blink"'), face + ' blinks');
-    assert.ok(s.includes('av-bob') || s.includes('av-hop'), face + ' bobs (or hops)');
-    assert.ok(s.includes(motion), face + ' has its signature motion ' + motion);
+    assert.ok(s.includes('av-bob'), face + ' bobs');
     assert.ok(s.includes('animation-delay:'), face + ' staggers its motion so a page of animals never moves in lockstep');
   }
-  // The dog's tongue wags and the frog's eyes are green, like the
-  // live frog's.
-  assert.ok(render('🐶').includes('av-tongue'), 'the dog tongue wags');
-  assert.ok(render('🐸').includes('fill="#3a7d2c"'), 'the frog keeps its green iris');
+  const sig = { '🐸': 'av-hop', '🐘': 'av-sway', '🦒': 'av-nod', '🐰': 'av-earwig', '🐶': 'av-earwig' };
+  for (const [face, motion] of Object.entries(sig)) {
+    assert.ok(render(face).includes(motion), face + ' has its signature motion ' + motion);
+  }
+  // The frog's eyes are green, like the live frog's.
+  assert.ok(render('🐸').includes('fill="#3a7d2c"') || render('🐸').includes('fill="#2f7a3d"'), 'the frog keeps a green eye area, like the live frog');
   // The CSS itself is in the page's <style>, next to Pip's own
-  // animation rules — not only in the AVATAR_3D_CSS variable.
-  for (const k of ['@keyframes avBob', '@keyframes avBlink', '@keyframes avHop', '@keyframes avFlutterL', '@keyframes avFlutterR', '@keyframes avEarWig', '@keyframes avNod', '@keyframes avFlop', '@keyframes avSway', '@keyframes avTongue']) {
+  // animation rules — not only in the AVATAR_5_CSS variable.
+  for (const k of ['@keyframes av5Bob', '@keyframes av5Blink', '@keyframes av5Hop', '@keyframes av5EarWig', '@keyframes av5Nod', '@keyframes av5Sway', '@keyframes av5Twinkle']) {
     assert.ok(html.includes(k), 'the page style contains ' + k);
   }
-  assert.ok(html.includes('.av3d .av-bob'), 'the bob rule is scoped to avatar svgs');
-  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av3d .av-bob'), 'the reduced-motion rule switches the avatar motion off');
-  assert.ok(html.includes('var AVATAR_3D_CSS='), 'the CSS also lives in the AVATAR_3D_CSS variable (single source for the preview)');
+  assert.ok(html.includes('.av5 .av-bob'), 'the bob rule is scoped to avatar svgs');
+  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-bob'), 'the reduced-motion rule switches the avatar motion off');
+  assert.ok(html.includes('var AVATAR_5_CSS='), 'the CSS also lives in the AVATAR_5_CSS variable (single source for the preview)');
 });
 
-test('all 504 combinations render a 3D character', () => {
-  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
-  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
-  const faces = ['🦦', '🐸', '🦋', '🐱', '🐶', '🐰', '🦁', '🐼', '🦊', '🐢', '🐷', '🐵'];
-  assert.equal(faces.length, 12, '12 animals');
-  const colors = eval(grabVar('LOOK_COLORS') + '\n;LOOK_COLORS');
-  const accs = eval(grabVar('LOOK_ACCS') + '\n;LOOK_ACCS');
+test('all 25 animals render a flat character with the tap-to-play groups', () => {
+  const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face,look,glow,w){');
+  const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
   let n = 0;
   for (const f of faces) {
-    for (const c of colors) {
-      for (const a of accs) {
-        const s = eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(f) + ',{color:' + JSON.stringify(c) + ',accessory:' + JSON.stringify(a) + '},"#ffb020")');
-        assert.ok(s.includes('class="av3d"'), 'every combination renders a 3D svg: ' + f + ' ' + c + ' ' + a);
-        assert.ok(s.includes('<defs>'), 'every combination has its gradients: ' + f + ' ' + c + ' ' + a);
-        n++;
-      }
-    }
+    const s = eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(f) + ',{},"#ffb020")');
+    assert.ok(s.includes('class="av5"'), 'every animal renders a flat svg: ' + f);
+    assert.ok(s.includes('data-animal="'), 'every animal names itself: ' + f);
+    assert.ok(s.includes('cy="246"'), 'every animal has the ground shadow: ' + f);
+    assert.ok(s.includes('class="av-jump"'), 'every animal has the tap-to-play jump group: ' + f);
+    assert.ok(s.includes('class="av-sparkles"'), 'every animal has the tap-to-play sparkles: ' + f);
+    assert.ok(s.includes('onclick="avatarPlay(this)"'), 'every animal is tappable: ' + f);
+    n++;
   }
-  assert.equal(n, 504, '12 animals x 7 colours x 6 accessories');
+  assert.equal(n, 25, '25 animals');
 });
 
 test('look taps write to the draft only: no live write, no save, typed name kept, preview refreshed in place', () => {
-  const colorHandler = modal.slice(modal.indexOf("document.querySelectorAll('.lookColorPick')"), modal.indexOf("document.querySelectorAll('.lookAccPick')"));
-  const accHandler = modal.slice(modal.indexOf("document.querySelectorAll('.lookAccPick')"), modal.indexOf("document.getElementById('lkSave')"));
-  for (const [name, h, field] of [['colour', colorHandler, 'draft.look.color='], ['accessory', accHandler, 'draft.look.accessory=']]) {
+  const shapeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgShapePick')"), modal.indexOf("document.querySelectorAll('.bgColorPick')"));
+  const colorHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgColorPick')"), modal.indexOf("document.querySelectorAll('.bgPatternPick')"));
+  const patternHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgPatternPick')"), modal.indexOf("document.querySelectorAll('.bgEffectPick')"));
+  const effectHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgEffectPick')"), modal.indexOf("document.querySelectorAll('.glowPick')"));
+  for (const [name, h, field] of [
+    ['background shape', shapeHandler, 'draft.look.background.shape='],
+    ['background colour', colorHandler, 'draft.look.background.color='],
+    ['background pattern', patternHandler, 'draft.look.background.pattern='],
+    ['background effect', effectHandler, 'draft.look.background.effect='],
+  ]) {
     assert.ok(h.length > 0, name + ' handler found');
     assert.ok(h.includes(field), name + ' tap must write the look field to the draft');
     assert.ok(!h.includes('live.look'), name + ' tap must not touch the live look');
@@ -316,7 +532,7 @@ test('look taps write to the draft only: no live write, no save, typed name kept
     assert.ok(!h.includes('render()'), name + ' tap must not re-render while the modal is open');
   }
   // Face and glow taps write to the draft and refresh the preview too (face is the head).
-  const faceHandler = modal.slice(modal.indexOf("document.querySelectorAll('.facePick')"), modal.indexOf("document.querySelectorAll('.glowPick')"));
+  const faceHandler = modal.slice(modal.indexOf("document.querySelectorAll('.facePick')"), modal.indexOf("document.querySelectorAll('.bgShapePick')"));
   assert.ok(faceHandler.includes('draft.face='), 'face tap must write the draft face');
   assert.ok(!faceHandler.includes('live.face='), 'face tap must not touch the live face');
   assert.ok(!faceHandler.includes('save()'), 'face tap must not save');
@@ -325,7 +541,7 @@ test('look taps write to the draft only: no live write, no save, typed name kept
   assert.ok(glowHandler.includes('draft.glow='), 'glow tap must write the draft glow');
   assert.ok(!glowHandler.includes('save()'), 'glow tap must not save');
   assert.ok(glowHandler.includes('refreshLookPreview()'), 'glow tap must refresh the preview');
-  const badgeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.badgePick')"), modal.indexOf("document.querySelectorAll('.lookColorPick')"));
+  const badgeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.badgePick')"), modal.indexOf("document.getElementById('lkSave')"));
   assert.ok(badgeHandler.includes('draft.badge='), 'badge tap must write the draft badge');
   assert.ok(!badgeHandler.includes('save()'), 'badge tap must not save');
 });
@@ -368,7 +584,7 @@ test('frogTap tells the next fact, named by the frog itself', () => {
   assert.ok(rule[0].includes('text-align:center'), 'wrapped facts stay centred in the bubble');
 });
 
-test('the top-left avatar IS the full-body character, big, and it updates on every save', () => {
+test('the top-left avatar IS the full-body character on its background, big, and it updates on every save', () => {
   const render = fnBody('function render(){');
   assert.ok(render.includes('id="sideAvatar"'), 'the sidebar has a sideAvatar slot for the character');
   assert.ok(render.includes('avatarLookHTML(ex().face,ex().look,ex().glow,130)'), 'the sidebar character is the saved look, 130px wide');
@@ -385,87 +601,16 @@ test('the top-left avatar IS the full-body character, big, and it updates on eve
   assert.ok(!refresh.includes("document.getElementById('sideAvatar')"), 'a look tap must NOT touch the sidebar character');
   assert.ok(!refresh.includes("document.getElementById('tbChar')"), 'a look tap must NOT touch the mobile topbar character');
   const door = fnBody('function doorHTML(){');
-  assert.ok(door.includes("<span class=\"face\">'+e.face+'</span>"), 'Grand Door explorer chips still show the face emoji');
-});
-
-test('focus four: the frog, butterfly, turtle and panda are reworked — cuter and more realistic', () => {
-  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
-  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
-  const render = (face, look) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look || { color: '', accessory: '' }) + ',"#ffb020")');
-  // Frog: bigger eyes, skin bumps, wider smile, toe pads.
-  const frog = render('🐸');
-  assert.ok(frog.includes('class="av-skin"'), 'the frog has skin bumps');
-  assert.ok(frog.includes('cy="46" r="17"'), 'the frog eye bumps are bigger (r 17)');
-  assert.ok(frog.includes('r="11.5"'), 'the frog eye whites are bigger');
-  assert.ok(frog.includes('M70,96 Q100,114 130,96'), 'the frog smile is wider');
-  assert.ok(frog.includes('M60,226 l2,4'), 'the frog feet have toe pads');
-  assert.ok(frog.includes('fill="#3a7d2c"'), 'the frog keeps its green iris, like the live frog');
-  // Butterfly: scalloped patterned wings with veins, slimmer body, longer antennae.
-  const fly = render('🦋');
-  assert.ok(fly.includes('M90,102 C74,90 54,92 44,106'), 'the butterfly upper wing is scalloped');
-  assert.ok(fly.includes('M88,128 Q64,116 48,112'), 'the butterfly wings have veins');
-  assert.ok(fly.includes('cx="58" cy="112" r="5"'), 'the butterfly wings have spots');
-  assert.ok(fly.includes('rx="14" ry="36"'), 'the butterfly body is slimmer');
-  assert.ok(fly.includes('M88,40 Q78,18 68,8'), 'the butterfly antennae are longer and curved');
-  assert.ok(fly.includes('class="av-flutter-l"') && fly.includes('class="av-flutter-r"'), 'the wings still flutter');
-  // Turtle: real scute pattern, bigger eyes, blush.
-  const turtle = render('🐢');
-  assert.ok(turtle.includes('class="av-scute"'), 'the turtle shell has scutes');
-  assert.ok(turtle.includes('M100,106 L118,116 L112,138 L100,146 L88,138 L82,116 Z'), 'the central scute is a hexagon');
-  assert.ok(turtle.includes('rx="9" ry="11"'), 'the turtle eyes are bigger');
-  assert.ok(turtle.includes('cx="80" cy="82" r="3.5"'), 'the turtle has blush cheeks');
-  // Panda: fur tufts on the black patches, bigger warmer eyes.
-  const panda = render('🐼');
-  assert.ok(panda.includes('rx="13.5" ry="17"'), 'the panda eye patches are bigger and softer');
-  assert.ok(panda.includes('rx="7.5" ry="9"'), 'the panda eyes are bigger');
-  assert.ok(panda.includes('fill="#7a4a21"'), 'the panda eyes are warm brown, not black dots');
-  assert.ok((panda.match(/class="av-fur"/g) || []).length >= 3, 'the panda has fur tufts on its patches, ears and arms');
-});
-
-test('fur, texture and depth: furry animals have fur tufts, strands and grain; arms read as arms; the pig tail curls', () => {
-  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
-  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
-  const render = (face, look) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look || { color: '', accessory: '' }) + ',"#ffb020")');
-  const furry = ['🦦', '🐱', '🐶', '🐰', '🦁', '🐼', '🦊', '🐷', '🐵'];
-  for (const f of furry) {
-    const s = render(f);
-    assert.ok(s.includes('class="av-fur"'), f + ' has fur tufts and strands');
-    assert.ok(s.includes('filter="url(#fGr'), f + ' has the grain filter on its body and head');
-    assert.ok(s.includes('id="fGr'), f + ' defines the grain filter');
-  }
-  // Smooth-skinned animals get their own textures, not fur or grain.
-  assert.ok(!render('🐸').includes('class="av-fur"'), 'the frog has skin bumps, not fur');
-  assert.ok(!render('🐸').includes('filter="url(#fGr'), 'the frog has no grain');
-  assert.ok(!render('🦋').includes('class="av-fur"'), 'the butterfly has wing pattern, not fur');
-  assert.ok(!render('🐢').includes('class="av-fur"'), 'the turtle has scutes, not fur');
-  assert.ok(!render('🐢').includes('filter="url(#fGr'), 'the turtle has no grain');
-  // The otter's arms are narrow now, with toe lines — they read as arms, not wings.
-  const otter = render('🦦');
-  assert.ok(otter.includes('rx="7.5" ry="20"'), 'the otter arms are narrow');
-  assert.ok(otter.includes('M44,182 l5,4'), 'the otter paws have toe lines');
-  // The pig tail is a proper visible curl.
-  const pig = render('🐷');
-  assert.ok(pig.includes('M150,172 C162,166 172,170 170,180'), 'the pig tail curls');
-  assert.ok(!pig.includes('q14,-6 12,4'), 'the old tiny tail squiggle is gone');
-  // The flower has a stem, so it reads as attached (round-2 polish note).
-  const flower = render('🦦', { color: '', accessory: 'flower' });
-  assert.ok(flower.includes('M58,54 L56,63'), 'the flower has a stem down to the head');
-  // Rim light and dimensional noses.
-  assert.ok(otter.includes('M62,54 Q70,40 86,36'), 'the otter head has a rim-light arc');
-  assert.ok(otter.includes('r="1.5" fill="#ffffff" opacity="0.7"'), 'the otter nose has a highlight');
-  // Whole-animal colour still lives in the gradients: pink is the
-  // mid-stop of the body and head gradients, never a flat fill —
-  // even with fur strokes (they use a shade, not the main colour).
-  const pinkFox = render('🦊', { color: '#ff8fa3', accessory: '' });
-  assert.ok(!pinkFox.includes('fill="#ff8fa3"'), 'no flat pink fill anywhere, even with fur');
-  assert.ok(!pinkFox.includes('stroke="#ff8fa3"'), 'no flat pink fur stroke either');
+  assert.ok(door.includes('avatarLookHTML(e.face,e.look,e.glow,56)'), 'Grand Door explorer chips show the character on its background, 56px');
+  assert.ok(!door.includes("<span class=\"face\">'+e.face+'</span>"), 'the bare face emoji chip is gone from the Grand Door');
 });
 
 test('draft editor: picks never save, Save commits the draft, Cancel changes nothing', () => {
   // The editor works on a draft copy of the look (round-3 bug: every
   // pick saved live, so Cancel could not revert it).
   assert.ok(modal.includes('var draft={face:e.face'), 'the editor opens a draft copy of the look');
-  assert.ok(modal.includes("look:{color:(e.look||{}).color"), 'the draft copies the saved look, it does not alias it');
+  assert.ok(modal.includes('pattern:((e.look||{}).background||{}).pattern'), 'the draft copies the saved background pattern, it does not alias it');
+  assert.ok(modal.includes('background:{shape:((e.look||{}).background||{}).shape'), 'the draft copies the saved background too');
   assert.ok(modal.includes('avatarLookHTML(draft.face,draft.look,draft.glow)'), 'the preview renders from the draft');
   assert.equal((modal.match(/save\(\);/g) || []).length, 1, 'the whole editor saves exactly once — on Save my look');
   assert.ok(modal.includes('onclick="closeModal()">Cancel'), 'Cancel just closes the modal');
@@ -475,8 +620,8 @@ test('draft editor: picks never save, Save commits the draft, Cancel changes not
   // explorer, and prove it commits the draft and saves exactly once.
   const saveSrc = modal.slice(modal.indexOf("document.getElementById('lkSave').onclick"));
   const saveFn = saveSrc.slice(0, saveSrc.lastIndexOf('};') + 2);
-  var draft = { face: '🐸', glow: '#2dd4bf', badge: '🚀', look: { color: '#ff8fa3', accessory: 'tinyhat' } };
-  var live = { name: 'MightyOtter', face: '🦦', glow: '#ffb020', badge: '⭐', look: { color: '', accessory: '' }, lookAt: null, nameAt: null };
+  var draft = { face: '🐸', glow: '#2dd4bf', badge: '🚀', look: { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } } };
+  var live = { name: 'MightyOtter', face: '🐤', glow: '#ffb020', badge: '⭐', look: { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } }, lookAt: null, nameAt: null };
   var saved = 0, closed = 0, rendered = 0, toasted = '';
   var ex = function () { return live; };
   var save = function () { saved++; };
@@ -490,9 +635,10 @@ test('draft editor: picks never save, Save commits the draft, Cancel changes not
   assert.equal(live.face, '🐸', 'Save commits the draft animal');
   assert.equal(live.glow, '#2dd4bf', 'Save commits the draft glow');
   assert.equal(live.badge, '🚀', 'Save commits the draft badge');
-  assert.deepEqual(live.look, { color: '#ff8fa3', accessory: 'tinyhat' }, 'Save commits the draft look');
+  assert.deepEqual(live.look, { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, 'Save commits the draft look, background included — pattern included');
   assert.notEqual(live.look, draft.look, 'the committed look is a copy, not the draft object');
-  assert.deepEqual(draft.look, { color: '#ff8fa3', accessory: 'tinyhat' }, 'Save must not mutate the draft');
+  assert.notEqual(live.look.background, draft.look.background, 'the committed background is a copy too, not the draft object');
+  assert.deepEqual(draft.look, { background: { shape: 'heart', color: 'pink', effect: 'glitter', pattern: 'dots' } }, 'Save must not mutate the draft');
   assert.ok(typeof live.lookAt === 'string' && live.lookAt.length > 0, 'Save stamps lookAt');
   assert.equal(live.name, 'NewName', 'Save commits the typed name, trimmed');
   assert.equal(saved, 1, 'Save saves exactly once');

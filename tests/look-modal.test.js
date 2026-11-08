@@ -13,6 +13,14 @@
 //     Cancel, still changed the stored look: every pick saved live on
 //     tap. Picks now write to a DRAFT only; Save commits the draft
 //     into the live explorer (resolved fresh) and stamps lookAt.
+//  5. (Round 5, 2026-11-08) The background picker joins the draft:
+//     shape, colour, pattern and effect taps write to
+//     draft.look.background only, never to the live look, never
+//     save — Cancel reverts them too, and Save commits the whole
+//     background with the look. Accessories were dropped, so
+//     there is no accessory picker and a stored accessory is
+//     ignored. Tap to play needs no modal wiring: the preview svg
+//     carries its own onclick.
 // Fixes: pick taps update only the outlines in place and never rebuild
 // the modal or re-render; Save writes to the live object resolved with
 // ex() at click time; the chosen badge emoji now shows next to the
@@ -38,11 +46,15 @@ function fnText(marker) {
 }
 
 const modal = fnBody('function openLookModal(){');
-// Slice out just the two pick handlers (lkSave legitimately calls
+// Slice out just the pick handlers (lkSave legitimately calls
 // render() after closing the modal, so the no-render check must be
 // scoped to the pick handlers, not the whole function).
 const glowHandler = modal.slice(modal.indexOf("document.querySelectorAll('.glowPick')"), modal.indexOf("document.querySelectorAll('.badgePick')"));
 const badgeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.badgePick')"), modal.indexOf("document.getElementById('lkSave')"));
+const bgShapeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgShapePick')"), modal.indexOf("document.querySelectorAll('.bgColorPick')"));
+const bgColorHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgColorPick')"), modal.indexOf("document.querySelectorAll('.bgPatternPick')"));
+const bgPatternHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgPatternPick')"), modal.indexOf("document.querySelectorAll('.bgEffectPick')"));
+const bgEffectHandler = modal.slice(modal.indexOf("document.querySelectorAll('.bgEffectPick')"), modal.indexOf("document.querySelectorAll('.glowPick')"));
 const saveHandler = modal.slice(modal.indexOf("document.getElementById('lkSave')"));
 
 test('glow/badge taps never rebuild the modal and never re-render', () => {
@@ -64,6 +76,25 @@ test('glow/badge taps update only the outlines in place and keep the typed name'
   assert.ok(badgeHandler.includes("3px solid var(--amber)"), 'selected badge keeps the amber outline');
 });
 
+test('background taps never rebuild the modal, never re-render, and write to the draft only', () => {
+  for (const [name, h, field] of [
+    ['shape', bgShapeHandler, 'draft.look.background.shape='],
+    ['colour', bgColorHandler, 'draft.look.background.color='],
+    ['pattern', bgPatternHandler, 'draft.look.background.pattern='],
+    ['effect', bgEffectHandler, 'draft.look.background.effect='],
+  ]) {
+    assert.ok(h.length > 0, name + ' handler found');
+    assert.ok(h.includes(field), name + ' tap must write to the draft background');
+    assert.ok(!h.includes('live.look'), name + ' tap must not touch the live look');
+    assert.ok(!h.includes('save()'), name + ' tap must not save');
+    assert.ok(!h.includes('openLookModal()'), name + ' tap must not rebuild the modal');
+    assert.ok(!h.includes('render()'), name + ' tap must not re-render while the modal is open');
+    assert.ok(h.includes("document.getElementById('lkName')"), name + ' tap must read the name input so the typed name is preserved');
+    assert.ok(h.includes('keepEl.value=keep'), name + ' tap must restore the typed name');
+    assert.ok(h.includes('refreshLookPreview()'), name + ' tap must refresh the preview in place');
+  }
+});
+
 test('glow/badge taps write to the draft; Save resolves the live explorer fresh, never the captured one', () => {
   assert.ok(glowHandler.includes('draft.glow='), 'glow tap must write to the draft');
   assert.ok(badgeHandler.includes('draft.badge='), 'badge tap must write to the draft');
@@ -77,7 +108,11 @@ test('glow/badge taps write to the draft; Save resolves the live explorer fresh,
   assert.ok(saveHandler.includes('live.face=draft.face'), 'Save must commit the draft face');
   assert.ok(saveHandler.includes('live.glow=draft.glow'), 'Save must commit the draft glow');
   assert.ok(saveHandler.includes('live.badge=draft.badge'), 'Save must commit the draft badge');
-  assert.ok(saveHandler.includes('live.look={color:draft.look.color'), 'Save must commit the draft look');
+  assert.ok(saveHandler.includes('live.look={background:{shape:draft.look.background.shape'), 'Save must commit the draft look, background included');
+  assert.ok(saveHandler.includes('background:{shape:draft.look.background.shape'), 'Save must commit the draft background shape');
+  assert.ok(saveHandler.includes('color:draft.look.background.color'), 'Save must commit the draft background colour');
+  assert.ok(saveHandler.includes('pattern:draft.look.background.pattern'), 'Save must commit the draft background pattern');
+  assert.ok(saveHandler.includes('effect:draft.look.background.effect'), 'Save must commit the draft background effect');
   assert.ok(saveHandler.includes('live.name='), 'Save must assign the name to the live explorer');
   assert.ok(saveHandler.includes('live.nameAt='), 'Save must stamp the rename time on the live explorer');
   // Note: 'live.name=' contains 'e.name=' as a substring, so match on a
