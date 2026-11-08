@@ -118,23 +118,50 @@ test('the look modal renders a full-body preview and three picker rows', () => {
   assert.deepEqual(accs, ['', 'necklace', 'hat', 'glasses', 'bowtie'], 'four accessories plus none');
 });
 
-test('avatarLookHTML: full body in the chosen colour, hair and accessory, with a glow fallback', () => {
+test('avatarLookHTML: one illustrated character — drawn face, body in the chosen colour, fitted hair and accessory', () => {
   const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
   const out = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🦊", {color:"#ff8fa3",hair:"spiky",accessory:"hat"}, "#ffb020")');
-  assert.ok(out.includes('🦊'), 'the animal face is the head');
-  assert.ok(out.includes('background:#ff8fa3'), 'the body wears the chosen colour');
-  assert.ok(out.includes('<svg viewBox="0 0 120 60"'), 'hair renders as an SVG over the head');
-  assert.ok(out.includes('🎩'), 'the hat accessory shows');
+  assert.ok(out.includes('data-animal="fox"'), 'the animal is drawn, not pasted: the fox face renders');
+  assert.ok(out.includes('fill="#e8743c"'), 'the fox face wears its own colour');
+  assert.ok(out.includes('fill="#ff8fa3"'), 'the body wears the chosen colour');
+  assert.ok(out.includes('<svg viewBox="0 0 200 260"'), 'the whole character is one SVG on the shared grid');
+  assert.ok(out.includes('id="avatar-hair"'), 'hair renders as a group over the head');
+  assert.ok(out.includes('id="avatar-acc"'), 'the accessory renders as a group on top');
+  assert.ok(out.includes('fill="#8b5cf6"'), 'the hat is the purple top hat');
   const natural = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🐸", {color:"",hair:"",accessory:""}, "#2dd4bf")');
-  assert.ok(natural.includes('background:#2dd4bf'), 'Natural body falls back to the glow colour');
-  assert.ok(!natural.includes('<svg'), 'no hair means no hair SVG');
-  assert.ok(!natural.includes('🎩') && !natural.includes('📿'), 'no accessory means no accessory emoji');
+  assert.ok(natural.includes('fill="#2dd4bf"'), 'Natural body falls back to the glow colour');
+  assert.ok(!natural.includes('id="avatar-hair"'), 'no hair means no hair group');
+  assert.ok(!natural.includes('id="avatar-acc"'), 'no accessory means no accessory group');
   const legacy = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🦦", undefined, "#ffb020")');
-  assert.ok(legacy.includes('🦦'), 'a legacy explorer without a look still renders');
-  assert.ok(legacy.includes('background:#ffb020'), 'and its body falls back to glow');
+  assert.ok(legacy.includes('data-animal="otter"'), 'a legacy explorer without a look still renders');
+  assert.ok(legacy.includes('fill="#ffb020"'), 'and its body falls back to glow');
   const glasses = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🐱", {color:"",hair:"curly",accessory:"glasses"}, "#ffb020")');
-  assert.ok(glasses.includes('👓'), 'glasses show for the glasses choice');
+  assert.ok(glasses.includes('id="avatar-acc"'), 'glasses show for the glasses choice');
+  assert.ok(glasses.includes('stroke="#4a2c1a"'), 'the glasses ring the fixed eye positions');
   assert.ok(glasses.includes('circle'), 'curly hair is circles');
+  // Geometry guards: the torso starts high enough to tuck under the
+  // chin, and the face circle sits where the eyes are fixed.
+  assert.ok(out.includes('M100,112'), 'the torso starts under the chin, so the head can never float above the body');
+  assert.ok(out.includes('cy="76" r="46"'), 'the face circle is centred where the eyes are fixed');
+  // Revision 2 — the child-behaviour review's three required fixes.
+  const turtle = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🐢", {color:"",hair:"",accessory:""}, "#ffb020")');
+  assert.ok(turtle.includes('fill="#93cf6b"'), 'the turtle face is a yellower green than the frog');
+  assert.ok(turtle.includes('M56,62 A46,46'), 'the turtle wears a real shell cap on its forehead');
+  assert.ok(turtle.includes('fill="#5da85a"'), 'the shell cap is a filled dome, not a thin arc');
+  assert.ok(natural.includes('fill="#58b368"'), 'the frog keeps its own deeper green face');
+  assert.ok(!natural.includes('M56,62 A46,46'), 'the frog has no shell cap');
+  const otter = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🦦", {color:"",hair:"",accessory:""}, "#ffb020")');
+  assert.ok(otter.includes('rx="49"'), 'the otter face is wider and flatter than a circle');
+  assert.ok(otter.includes('rgba(74,44,26,0.5)'), 'the otter has whiskers');
+  assert.ok(otter.includes('fill="#f2d9b8"'), 'the otter muzzle is light and wide');
+  const longHair = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🦊", {color:"",hair:"long",accessory:""}, "#ffb020")');
+  assert.ok(longHair.includes('M58,106'), 'long hair is a one-piece bob framing the face, not two bars');
+  assert.ok(!longHair.includes('<rect x="48"'), 'the old earmuff bars are gone');
+  assert.ok(longHair.includes('id="avatar-ears-top"'), 'ears are re-drawn over the hair, so hair tucks behind them');
+  const rabbitLong = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🐰", {color:"",hair:"long",accessory:""}, "#ffb020")');
+  assert.ok(rabbitLong.includes('id="avatar-ears-top"'), 'the rabbit keeps its own ears in front of the long hair');
+  const lionHair = eval(consts + '\n' + fnText('function avatarLookHTML(face, look, glow){') + '\n;avatarLookHTML("🦁", {color:"",hair:"curly",accessory:""}, "#ffb020")');
+  assert.ok(!lionHair.includes('id="avatar-ears-top"'), 'the lion mane is not re-drawn over the hair');
 });
 
 test('look taps follow the face/glow/badge pattern: live explorer, lookAt, typed name kept, preview refreshed in place', () => {
