@@ -255,3 +255,15 @@ stars still only count on the first drill per topic per day.
 English, Science and Chinese boosts stay bank-only. The parent
 card shows whether the last boost used Pip-made or bank
 questions. Tests 525/525 green (490 existing + 35 new).
+
+## 11. Update 2026-11-08 — retake repeats fixed
+
+Live verification of the Maths boost found the retake repeating
+3 of the 5 drill questions verbatim. Cause: the boost fetch only
+excluded bank stems, never the previous drill's questions, so the
+validator had nothing to reject a repeat against — and the
+tightly-modelled prompt makes the generator reproduce them.
+Fix: starting a boost now passes the drill it replaces (a
+finished boost for the same topic) as exclusions to the live
+fetch, so the retake set cannot repeat it; the bank fallback is
+unaffected. Tests 529/529 green (525 + 4 new).
