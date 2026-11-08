@@ -36,7 +36,7 @@ test('entrance sound plays on a correct picture code', () => {
 });
 
 test('entrance sound plays for a brand-new explorer too', () => {
-  assert.ok(html.includes("sndEntrance(); toast('Welcome, '+name+'!"), 'creation plays the entrance');
+  assert.ok(html.includes("sndEntrance(); autoVibe(); toast('Welcome, '+name+'!"), 'creation plays the entrance and auto-plays the music');
 });
 
 test('sidebar selection uses the mystery sound, not the old pop', () => {
@@ -52,7 +52,8 @@ test('sidebar selection uses the mystery sound, not the old pop', () => {
 
 test('other taps keep their sounds: tiles still pop, correct answers still chime', () => {
   assert.ok(html.includes("sndPop(); go(b.getAttribute('data-go2'))"), 'home tiles still pop');
-  assert.ok(html.includes('function sndCorrect(){'), 'correct-answer chime untouched');
+  assert.ok(html.includes('function sndCorrect(streak){'), 'correct-answer chime takes the streak (no argument: exactly as before)');
+  assert.ok(html.includes('[523,659,784,1047]'), 'the same C–E–G–C arpeggio, transposed up by the streak');
   assert.ok(html.includes('function sndFanfare(){'), 'quest fanfare untouched');
 });
 

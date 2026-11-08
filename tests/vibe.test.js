@@ -44,3 +44,34 @@ test('vibe player loops the track and switches cleanly', () => {
   assert.ok(vibe.includes('stopVibe(true)'), 'starting one vibe stops the other first');
   assert.ok(html.includes("if(vibeId===id)stopVibe(); else startVibe(id)"), 'tapping the playing track pauses it');
 });
+
+test('Grand Door entry auto-plays Background Music', () => {
+  assert.ok(html.includes('function autoVibe()'), 'autoVibe helper exists');
+  const calls = (html.match(/sndEntrance\(\); autoVibe\(\);/g) || []).length;
+  assert.equal(calls, 2, 'both Grand Door entries (new + returning explorer) auto-play');
+});
+
+test('autoVibe: background music starts on entry, stays if already playing', () => {
+  // Run the vibe player block with a stub Audio (no real sound in tests).
+  const start = html.indexOf('var VIBES=');
+  const end = html.indexOf('/* Pip read-aloud', start);
+  const code = html.slice(start, end);
+  function AudioStub(file) { this.file = file; this.loop = false; this.volume = 0; this.played = false; this.paused = false; }
+  AudioStub.prototype.play = function () { this.played = true; return Promise.resolve(); };
+  AudioStub.prototype.pause = function () { this.paused = true; };
+  const fn = new Function('Audio', 'renderTop', code + '\n;return {startVibe:startVibe, stopVibe:stopVibe, autoVibe:autoVibe, getVibeId:function(){return vibeId;}, getVibeAudio:function(){return vibeAudio;}};');
+  const v = fn(AudioStub, function () {});
+  assert.equal(v.getVibeId(), null, 'nothing playing at first');
+  v.autoVibe();
+  assert.equal(v.getVibeId(), 'bg-music', 'autoVibe starts Background Music');
+  assert.ok(v.getVibeAudio(), 'an audio object is playing');
+  assert.equal(v.getVibeAudio().loop, true, 'it loops');
+  assert.equal(v.getVibeAudio().file, 'assets/vibe-background-music.mp3', 'it is the Background Music track');
+  const first = v.getVibeAudio();
+  v.autoVibe();
+  assert.equal(v.getVibeAudio(), first, 'autoVibe does not restart it when already playing');
+  v.startVibe('jungle-birds');
+  assert.equal(v.getVibeId(), 'jungle-birds', 'jungle birds can play');
+  v.autoVibe();
+  assert.equal(v.getVibeId(), 'bg-music', 'autoVibe switches back to Background Music');
+});

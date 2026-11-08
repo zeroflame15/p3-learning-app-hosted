@@ -19,7 +19,7 @@ function grabVar(name) {
   return html.slice(start, end + 2);
 }
 
-test('Jokes is in the sidebar and Friends is the last item', () => {
+test('Jokes is in the sidebar and Vibe is the last item', () => {
   const NAV = eval(grabVar('NAV') + '\n;NAV');
   assert.equal(NAV.length, 11, '11 nav items, got ' + NAV.length);
   const jokes = NAV.find(function (n) { return n[0] === 'jokes'; });
@@ -29,9 +29,10 @@ test('Jokes is in the sidebar and Friends is the last item', () => {
   assert.equal(jokes[3], '', 'Jokes has no custom icon file yet — emoji fallback via ic()');
   const idx = {};
   NAV.forEach(function (n, i) { idx[n[0]] = i; });
-  assert.ok(idx.jokes > idx.vibe, 'Jokes sits after Vibe, the other break section');
+  assert.ok(idx.vibe > idx.jokes, 'Vibe sits last, after Jokes');
   assert.ok(idx.jokes < idx.friends, 'Jokes comes before Friends');
-  assert.equal(NAV[NAV.length - 1][0], 'friends', 'Friends is the last sidebar item');
+  assert.equal(NAV[NAV.length - 2][0], 'friends', 'Friends is second-to-last');
+  assert.equal(NAV[NAV.length - 1][0], 'vibe', 'Vibe is the last sidebar item');
   assert.ok(html.includes("jokes:'Classroom Jokes'"), 'Jokes page title');
   assert.ok(html.includes("else if(route==='jokes')c.innerHTML=jokesHTML(),bindJokes();"), 'jokes route renders jokesHTML');
 });
