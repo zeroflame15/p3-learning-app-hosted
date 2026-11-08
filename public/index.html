@@ -3495,7 +3495,16 @@ function mergeFamilyDB(local, server){
   if(!local||!local.explorers||!local.explorers.length)return JSON.parse(JSON.stringify(server));
   var merged=JSON.parse(JSON.stringify(server));
   merged.syncCode=server.syncCode||local.syncCode||null;
-  merged.parentPin=server.parentPin||local.parentPin||null;
+  /* Parent PIN (2026-11-09): the PIN takes the later updatedAt, so a
+     parent-page change is not silently reverted by the server's older
+     copy on upload — and an admin reset (which writes straight to the
+     server with a fresh timestamp) still propagates to every device.
+     Never local-wins or server-wins outright: either would break one
+     of the two paths. */
+  var _ppAtS=Date.parse(server.parentPinUpdatedAt||'')||0, _ppAtL=Date.parse(local.parentPinUpdatedAt||'')||0;
+  if(_ppAtL>_ppAtS||(_ppAtL===_ppAtS&&_ppAtL>0)){ merged.parentPin=local.parentPin||null; merged.parentPinUpdatedAt=local.parentPinUpdatedAt; }
+  else if(_ppAtS>_ppAtL){ merged.parentPin=server.parentPin||null; merged.parentPinUpdatedAt=server.parentPinUpdatedAt; }
+  else { merged.parentPin=server.parentPin||local.parentPin||null; merged.parentPinUpdatedAt=server.parentPinUpdatedAt||local.parentPinUpdatedAt||null; }
   merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:(local.dailyLimit!=null?local.dailyLimit:30));
   merged.playLimit=(server.playLimit!=null?server.playLimit:(local.playLimit!=null?local.playLimit:20));
   merged.stageV=server.stageV||local.stageV||null;
@@ -3511,14 +3520,21 @@ function mergeFamilyDB(local, server){
   var _fe={}; (server.familyEvents||[]).forEach(function(ev){ _fe[ev.id]=JSON.parse(JSON.stringify(ev)); });
   (local.familyEvents||[]).forEach(function(ev){ if(!_fe[ev.id])_fe[ev.id]=JSON.parse(JSON.stringify(ev)); });
   merged.familyEvents=Object.keys(_fe).map(function(k){ return _fe[k]; }).filter(function(ev){ return merged.deletedFamilyEvents.indexOf(ev.id)<0; });
+  var _fpRevL=(local.familyPlanRev||0), _fpRevS=(server.familyPlanRev||0);
   var _fpAtS=Date.parse(server.familyPlanUpdatedAt||'')||0, _fpAtL=Date.parse(local.familyPlanUpdatedAt||'')||0;
-  /* Local wins on a tie when it carries a timestamp (2026-11-09):
-     a reset clears the plan to null with a fresh timestamp, and the
-     old tie branch (server.familyPlan||local.familyPlan) resurrected
-     the stale server timetable whenever the two timestamps matched. */
-  if(_fpAtL>_fpAtS||(_fpAtL===_fpAtS&&_fpAtL>0)){ merged.familyPlan=local.familyPlan?JSON.parse(JSON.stringify(local.familyPlan)):null; merged.familyPlanUpdatedAt=local.familyPlanUpdatedAt; }
-  else if(_fpAtS>_fpAtL){ merged.familyPlan=server.familyPlan?JSON.parse(JSON.stringify(server.familyPlan)):null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt; }
-  else { merged.familyPlan=server.familyPlan||local.familyPlan||null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt||local.familyPlanUpdatedAt||null; }
+  /* Revision wins over wall-clock time (2026-11-09): familyPlanRev is
+     a monotonic counter bumped on every Save/Reset, so a stale plan
+     from a device whose clock runs fast can never revert a
+     just-saved plan. Equal revisions fall back to the timestamp:
+     local wins on a tie when it carries a timestamp (a reset clears
+     the plan to null with a fresh timestamp, and the old tie branch
+     resurrected the stale server timetable whenever the two
+     timestamps matched). */
+  var _fpLocalWins=_fpRevL>_fpRevS||(_fpRevL===_fpRevS&&(_fpAtL>_fpAtS||(_fpAtL===_fpAtS&&_fpAtL>0)));
+  var _fpServerWins=_fpRevS>_fpRevL||(_fpRevL===_fpRevS&&_fpAtS>_fpAtL);
+  if(_fpLocalWins){ merged.familyPlan=local.familyPlan?JSON.parse(JSON.stringify(local.familyPlan)):null; merged.familyPlanUpdatedAt=local.familyPlanUpdatedAt; merged.familyPlanRev=_fpRevL; }
+  else if(_fpServerWins){ merged.familyPlan=server.familyPlan?JSON.parse(JSON.stringify(server.familyPlan)):null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt; merged.familyPlanRev=_fpRevS; }
+  else { merged.familyPlan=server.familyPlan||local.familyPlan||null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt||local.familyPlanUpdatedAt||null; merged.familyPlanRev=Math.max(_fpRevL,_fpRevS); }
   var byId={}; merged.explorers.forEach(function(e){ byId[e.id]=e; });
   (local.explorers||[]).forEach(function(e){
     if(byId[e.id]){ var i=merged.explorers.indexOf(byId[e.id]); merged.explorers[i]=mergeExplorer(byId[e.id], e); }
@@ -3566,16 +3582,17 @@ function syncFromServer(opts){
    an open modal. When it is not safe, the merge still happens
    silently in the background and the next safe render shows it. */
 function isModalOpen(){ var o=document.getElementById('overlay'); return !!(o&&o.classList.contains('open')); }
-/* True while the user is typing in the Grown-ups schedule form
-   (2026-11-09): a background pull must not re-render under their
-   fingers, or the half-typed event / timetable is wiped. The merge
-   still happens; the render is just deferred until they finish. */
+/* True while the user is typing in the Grown-ups schedule form or
+   the Change PIN field (2026-11-09): a background pull must not
+   re-render under their fingers, or the half-typed event / timetable
+   / PIN is wiped. The merge still happens; the render is just
+   deferred until they finish. */
 function isEditingSchedule(){
   if(typeof document==='undefined')return false;
   var a=document.activeElement;
   if(!a||!a.getAttribute)return false;
   var id=a.id||'';
-  if(id==='fsEvDate'||id==='fsEvName'||id==='fsEvKind'||id==='fsEvNote')return true;
+  if(id==='fsEvDate'||id==='fsEvName'||id==='fsEvKind'||id==='fsEvNote'||id==='pinCh')return true;
   return a.getAttribute('data-fsrest')!=null||a.getAttribute('data-fssub')!=null||a.getAttribute('data-fsstime')!=null||a.getAttribute('data-fsnote')!=null;
 }
 function safeToRender(){ return typeof route!=='undefined'&&route!=='quiz'&&route!=='warmup'&&route!=='game'&&route!=='admin'&&!isModalOpen()&&!(typeof isEditingSchedule==='function'&&isEditingSchedule()); }
@@ -9150,6 +9167,25 @@ function familyEventEmoji(kind){ return kind==='due'?'💻':(kind==='closure'?'�
    a half-typed event or timetable. Cleared on Add / Save / Reset. */
 var fsEvDraft=null;   // {date, name, kind, note}
 var fsPlanDraft=null; // familyPlan-shaped object, one entry per dow
+var fsSchedOpen=false; // the schedule editor is collapsed by default; the summary shows the saved setup
+var pinChangeOpen=false; // the Change PIN form is open (rendered by parentHTML, so a re-render never closes it)
+var pinChDraft=''; // the in-progress new PIN, restored into the form on every render
+/* Compact summary of the SAVED schedule, shown while the editor is
+   collapsed (the default): the current setup at a glance, so a
+   parent can see what is set without opening the long editor. It
+   reads the saved schedule (studyPlanFor / DB.familyEvents), never
+   the draft, so it always shows what is actually in use. */
+function familyScheduleSummaryHTML(){
+  var evs=(DB.familyEvents||[]).slice().sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
+  var custom=!!(DB.familyPlan)||evs.length>0;
+  if(!custom)return '<div style="font-weight:700">Using the built-in schedule. Tap \u201cChange schedule\u201d to set your own school events and weekly timetable.</div>';
+  var h='<div style="font-weight:700">';
+  if(evs.length){
+    h+='School events:<br>'+evs.map(function(ev){ return '\u00b7 '+esc(fmtDateStr(ev.date))+' \u2014 '+esc(ev.name)+(ev.kind==='closure'?' (school closed)':(ev.kind==='due'?' (due date)':'')); }).join('<br>')+'<br>';
+  }
+  h+='Timetable:<br>'+[1,2,3,4,5,6,0].map(function(dow){ var day=studyPlanFor(dow); return '\u00b7 <b>'+DOWS[dow]+'</b> '+esc(day.label)+(day.study?' \u00b7 '+esc(day.study):''); }).join('<br>');
+  return h+'</div>';
+}
 function familyScheduleHTML(){
   var evs=(DB.familyEvents||[]).slice().sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
   var evKind=(fsEvDraft&&fsEvDraft.kind)||'closure';
@@ -9170,15 +9206,18 @@ function familyScheduleHTML(){
      +'</div>';
   });
   var usingCustom=!!(DB.familyPlan);
-  return '<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🗓️ Our school &amp; study schedule</h3>'
-   +'<p class="muted" style="font-weight:700;margin:6px 0 10px">Set your own school events and weekly study timetable. '+(usingCustom?'Your family’s own schedule is in use — the built-in one is only a fallback.':'No custom schedule set yet — the app is using its built-in schedule. Set yours below and it takes over.')+'</p>'
-   +'<h4 style="margin:12px 0 6px">School events</h4>'
+  var editor='<h4 style="margin:12px 0 6px">School events</h4>'
    +(evRows||'<p style="font-weight:700">No custom school events yet.</p>')
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px"><div><label class="flabel">Date</label><input class="field" id="fsEvDate" type="date" style="width:170px" value="'+esc(fsEvDraft?fsEvDraft.date:'')+'"></div><div style="flex:1;min-width:180px"><label class="flabel">Event name</label><input class="field" id="fsEvName" placeholder="e.g. Sports Day — school closed" value="'+esc(fsEvDraft?fsEvDraft.name:'')+'"></div><div><label class="flabel">Kind</label><select class="field" id="fsEvKind" style="width:150px"><option value="closure"'+(evKind==='closure'?' selected':'')+'>School closed</option><option value="due"'+(evKind==='due'?' selected':'')+'>Due date</option><option value="event"'+(evKind==='event'?' selected':'')+'>School event</option></select></div><div style="flex:1;min-width:180px"><label class="flabel">Note (optional)</label><input class="field" id="fsEvNote" placeholder="e.g. No school today." value="'+esc(fsEvDraft?fsEvDraft.note:'')+'"></div><button class="btn" id="fsEvAdd">Add event</button></div>'
    +'<h4 style="margin:18px 0 6px">Weekly study timetable</h4>'
    +'<p class="small muted" style="font-weight:700;margin:0 0 6px">Tick the subjects for each day, or mark it a rest day. The day’s label is worked out from what you tick.</p>'
    +planRows
-   +'<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="fsPlanSave">Save timetable</button><button class="btn ghost" id="fsPlanReset">Reset to the default timetable</button></div></div>';
+   +'<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="fsPlanSave">Save timetable</button><button class="btn ghost" id="fsPlanReset">Reset to the default timetable</button></div>';
+  return '<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🗓️ Our school &amp; study schedule</h3>'
+   +'<p class="muted" style="font-weight:700;margin:6px 0 10px">Set your own school events and weekly study timetable. '+(usingCustom?'Your family’s own schedule is in use — the built-in one is only a fallback.':'No custom schedule set yet — the app is using its built-in schedule. Set yours below and it takes over.')+'</p>'
+   +familyScheduleSummaryHTML()
+   +'<div style="margin:10px 0 0"><button class="btn ghost" id="fsSchedToggle">'+(fsSchedOpen?'▴ Hide editor':'✏️ Change schedule')+'</button></div>'
+   +'<div id="fsSchedEditor"'+(fsSchedOpen?'':' style="display:none"')+'>'+editor+'</div></div>';
 }
 /* Read the timetable editor (one row per day) into a familyPlan
    object. The label is derived, and a day with no subjects that is
@@ -9268,7 +9307,9 @@ function parentHTML(){
    + DB.explorers.map(function(x){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+x.stars+' · '+Object.keys(x.completed).length+' quests</span><span style="flex:1"></span><button class="btn ghost" data-reset="'+x.id+'">🔑 Reset picture code</button><button class="btn coral" data-remove="'+x.id+'">Remove explorer</button></div>'; }).join('')
    +'<h4 style="margin-top:18px">🎒 Primary level — '+esc(sel.name)+'</h4><p style="font-weight:700">Current level: <b>P'+levelNum(sel)+'</b> — tap a level to change it. Quests, questions and games adapt to the new level.</p><div class="lvlpick" style="justify-content:flex-start">'+LEVELS.map(function(l){ return '<button type="button" class="lvlbtn'+(levelNum(sel)===+l.slice(1)?' sel':'')+'" data-plvl="'+l+'">'+l+'</button>'; }).join('')+'</div>'
    +'<div id="resetArea"></div>'
-   +'<h4 style="margin-top:18px">Parent PIN</h4><button class="btn ghost" id="pinChange">Change PIN</button> <span id="pinChangeArea"></span>'
+   +'<h4 style="margin-top:18px">Parent PIN</h4><button class="btn ghost" id="pinChange">Change PIN</button> <span id="pinChangeArea">'
+   +(pinChangeOpen?'<span style="display:inline-flex;gap:6px;margin-left:8px"><input class="field" id="pinCh" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN" style="width:170px" value="'+esc(pinChDraft)+'"><button class="btn" id="pinChSave">Save PIN</button></span>':'')
+   +'</span>'
    +'<p class="small muted" style="margin-top:14px">This page shows the linked family’s progress, refreshed from the server. There is no location tracking and no camera monitoring in this app.</p></div>'
    +friendRequestsCardHTML(sel);
 }
@@ -9277,7 +9318,7 @@ function bindParent(){
   if(!DB.parentPin){
     document.getElementById('pinSet').onclick=function(){ var a=document.getElementById('pinNew').value.trim(), b=document.getElementById('pinNew2').value.trim();
       if(!/^\d{4}$/.test(a)){ toast('PIN must be exactly 4 digits.'); return; } if(a!==b){ toast('The two PINs don’t match.'); return; }
-      DB.parentPin=a; parentUnlocked=true; save(); render(); };
+      DB.parentPin=a; DB.parentPinUpdatedAt=new Date().toISOString(); parentUnlocked=true; save(); render(); };
     return;
   }
   if(!parentUnlocked){
@@ -9316,12 +9357,23 @@ function bindParent(){
     openModal('<h3 style="margin-top:0">Remove '+esc(target.name)+'?</h3><p style="font-weight:700">This deletes this explorer and all their progress <b>everywhere, on every linked device</b>. This cannot be undone.</p><div style="display:flex;gap:10px"><button class="btn coral" id="rmYes">Yes, remove</button><button class="btn ghost" onclick="closeModal()">Keep explorer</button></div>');
     document.getElementById('rmYes').onclick=function(){ DB.explorers=DB.explorers.filter(function(x){return x.id!==target.id;}); if(DB.activeId===target.id)DB.activeId=DB.explorers.length?DB.explorers[0].id:null; save(); closeModal(); if(!DB.explorers.length){ parentUnlocked=false; go('door'); } else render(); };
   }; });
-  document.getElementById('pinChange').onclick=function(){
-    document.getElementById('pinChangeArea').innerHTML='<span style="display:inline-flex;gap:6px;margin-left:8px"><input class="field" id="pinCh" type="password" inputmode="numeric" maxlength="4" placeholder="New 4-digit PIN" style="width:170px"><button class="btn" id="pinChSave">Save PIN</button></span>';
-    document.getElementById('pinChSave').onclick=function(){ var v=document.getElementById('pinCh').value.trim(); if(!/^\d{4}$/.test(v)){ toast('PIN must be exactly 4 digits.'); return; } DB.parentPin=v; save(); toast('Parent PIN changed.'); render(); };
-  };
+  /* Change PIN (2026-11-09): the form lives in parentHTML (rendered
+     while pinChangeOpen) instead of being injected by innerHTML, so
+     a background re-render never closes it mid-typing; the typed
+     value is held in pinChDraft and restored on every render. */
+  document.getElementById('pinChange').onclick=function(){ pinChangeOpen=!pinChangeOpen; if(!pinChangeOpen)pinChDraft=''; render(); if(pinChangeOpen){ var el=document.getElementById('pinCh'); if(el)el.focus(); } };
+  (function(){
+    var pinChEl=document.getElementById('pinCh');
+    if(pinChEl)pinChEl.addEventListener('input',function(){ pinChDraft=pinChEl.value||''; });
+    var pinChSave=document.getElementById('pinChSave');
+    if(pinChSave)pinChSave.onclick=function(){ var v=(document.getElementById('pinCh').value||'').trim(); if(!/^\d{4}$/.test(v)){ toast('PIN must be exactly 4 digits.'); return; } DB.parentPin=v; DB.parentPinUpdatedAt=new Date().toISOString(); pinChangeOpen=false; pinChDraft=''; save(); toast('Parent PIN changed.'); render(); };
+  })();
   /* Our school & study schedule (2026-11-09): custom school events
-     and the weekly timetable, set here in the Grown-ups page. */
+     and the weekly timetable, set here in the Grown-ups page. The
+     editor is collapsed by default — the summary above it shows the
+     saved setup, and this toggle opens the editor to amend it. */
+  var fsTog=document.getElementById('fsSchedToggle');
+  if(fsTog)fsTog.onclick=function(){ fsSchedOpen=!fsSchedOpen; render(); };
   var fsAdd=document.getElementById('fsEvAdd');
   if(fsAdd)fsAdd.onclick=function(){
     var date=document.getElementById('fsEvDate').value;
@@ -9347,7 +9399,9 @@ function bindParent(){
   if(fsSave)fsSave.onclick=function(){
     DB.familyPlan=readFamilyPlanFromForm();
     DB.familyPlanUpdatedAt=new Date().toISOString();
+    DB.familyPlanRev=(DB.familyPlanRev||0)+1;
     fsPlanDraft=null;
+    fsSchedOpen=false;
     save(); toast('Timetable saved — the app now uses your family’s schedule.'); render();
   };
   var fsReset=document.getElementById('fsPlanReset');
@@ -9355,7 +9409,9 @@ function bindParent(){
     if(!confirm('Reset the timetable to the built-in default? Your custom timetable will be cleared.'))return;
     DB.familyPlan=null;
     DB.familyPlanUpdatedAt=new Date().toISOString();
+    DB.familyPlanRev=(DB.familyPlanRev||0)+1;
     fsPlanDraft=null;
+    fsSchedOpen=false;
     save(); toast('Timetable reset to the default.'); render();
   };
 /* Schedule drafts: capture every keystroke / toggle into the
