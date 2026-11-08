@@ -3358,13 +3358,13 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
+var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp'],['jokes','😂','Jokes',''],['friends','👥','Friends','icons/nav-friends.webp']];
 /* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
    replacing the flat emoji in the nav, game cards and quest cards.
    ic() renders the image, and falls back to the emoji if the file
    ever fails to load, so a missing file never leaves a blank hole. */
 function ic(src,emo,cls){ return src?'<img class="'+(cls||'ic-sm')+'" src="'+src+'" alt="" onerror="this.outerHTML=\''+emo+'\'">':emo; }
-var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
+var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',jokes:'Classroom Jokes',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
 function go(r){ var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
@@ -3419,6 +3419,7 @@ function render(){
   else if(route==='spelling')c.innerHTML=spellingHTML(),bindSpelling();
   else if(route==='play')c.innerHTML=playHTML(),bindPlay();
   else if(route==='trivia')c.innerHTML=triviaHTML(),bindTrivia();
+  else if(route==='jokes')c.innerHTML=jokesHTML(),bindJokes();
   else if(route==='friends')c.innerHTML=friendsListHTML(),bindFriends();
   else if(route==='ask')c.innerHTML=askHTML(),bindAsk();
   else if(route==='critter')c.innerHTML=critterHTML(),bindCritter();
@@ -5059,6 +5060,60 @@ function bindTrivia(){
   var nx=document.getElementById('tvNext'); if(nx)nx.onclick=function(){
     triviaState.idx++; triviaState.seen++; triviaState.revealed=false;
     if(triviaState.idx>=triviaState.order.length){ triviaState.order=triviaOrder(triviaState.cat); triviaState.idx=0; }
+    sndPop(); render();
+  };
+}
+
+
+/* ============================================================ CLASSROOM JOKES (requested 2026-11-08) — a
+   break section: one joke at a time, tap to reveal the punchline,
+   then another. Order is shuffled per visit, no repeats until all
+   24 have been told. Session-only state, nothing is saved. */
+var CLASS_JOKES=[
+ {q:'Why did the teddy bear say no to dessert?',a:'Because it was already stuffed!'},
+ {q:'Why is 6 afraid of 7?',a:'Because 7 8 9! (Seven ate nine!)'},
+ {q:'What do you call a fish without eyes?',a:'A fsh!'},
+ {q:'What did the big flower say to the little flower?',a:'Hi, bud!'},
+ {q:'What is a snake\'s favourite subject?',a:'Hisss-tory!'},
+ {q:'Why did the pencil go to the doctor?',a:'It felt a little blunt.'},
+ {q:'What did the zero say to the eight?',a:'Nice belt!'},
+ {q:'Why did the music teacher need a ladder?',a:'To reach the high notes!'},
+ {q:'What do you get when you cross a teacher with a vampire?',a:'Lots of blood tests!'},
+ {q:'Why was the computer cold in class?',a:'It left its Windows open!'},
+ {q:'What is the king of the classroom?',a:'The ruler!'},
+ {q:'Why did the clock go to the principal\'s office?',a:'For tocking too much!'},
+ {q:'What did the paper say to the pencil?',a:'You have a good point!'},
+ {q:'Why are ghosts bad at telling lies?',a:'Because you can see right through them!'},
+ {q:'What do you call a bear with no teeth?',a:'A gummy bear!'},
+ {q:'Why did the student bring a ladder to school?',a:'She wanted to go to high school!'},
+ {q:'What is a witch\'s favourite subject?',a:'Spelling!'},
+ {q:'Why did the boy put his money in the freezer?',a:'He wanted cold, hard cash!'},
+ {q:'What did one tomato say to the other?',a:'Let\'s ketchup!'},
+ {q:'Why did the cookie go to the doctor?',a:'It felt crumby!'},
+ {q:'What do you call cheese that isn\'t yours?',a:'Nacho cheese!'},
+ {q:'Why did the library book go to the gym?',a:'To work on its spine!'},
+ {q:'Why was the broom late for class?',a:'It overswept!'},
+ {q:'Why did the teacher wear sunglasses?',a:'Because her students were so bright!'}
+];
+var jokeState=null;
+function jokeOrder(){ var idx=[]; CLASS_JOKES.forEach(function(j,i){ idx.push(i); }); return shuffle(idx); }
+function jokesHTML(){
+  if(!jokeState)jokeState={order:jokeOrder(), idx:0, revealed:false, seen:0};
+  var j=CLASS_JOKES[jokeState.order[jokeState.idx]];
+  return pageHero('','😂','Classroom Jokes','A break from learning — read the joke, guess the ending, then tap to see the punchline. Have a good laugh, then back to the quests!','😂 '+CLASS_JOKES.length+' jokes')
+   +'<div class="card" style="text-align:center;max-width:640px;margin:0 auto">'
+   +'<span class="chip">Joke #'+(jokeState.seen+1)+'</span>'
+   +'<h2 style="margin:18px 0 6px;font-size:1.4rem">'+esc(j.q)+'</h2>'
+   +(jokeState.revealed
+     ?'<div class="feedback ok" style="font-size:1.15rem">😂 '+esc(j.a)+'</div><button class="btn" id="jkNext" style="margin-top:14px">Tell me another! 😂</button>'
+     :'<button class="btn" id="jkShow" style="margin-top:14px">Show the punchline 👀</button>')
+   +'<p class="small muted" style="font-weight:700;margin-top:14px">Take a breather — laughing is learning too. When you are ready, hop back to Learn for your next quest!</p></div>';
+}
+function bindJokes(){
+  var sh=document.getElementById('jkShow'); if(sh)sh.onclick=function(){ jokeState.revealed=true; sndCorrect(); render(); };
+  var nx=document.getElementById('jkNext'); if(nx)nx.onclick=function(){
+    jokeState.idx++; jokeState.seen++; jokeState.revealed=false;
+    if(jokeState.idx>=jokeState.order.length){ jokeState.order=jokeOrder(); jokeState.idx=0; }
     sndPop(); render();
   };
 }
@@ -7078,7 +7133,7 @@ function critterHTML(){
   var detail='';
   if(sel){
     var found=e.discoveredCritters.indexOf(sel.id)>=0;
-    detail='<div class="card" style="margin-top:16px;border-color:var(--teal)"><div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap"><div style="font-size:3.2rem">'+sel.e+'</div><div style="flex:1;min-width:220px"><h3 style="margin:0">'+esc(sel.name)+' '+(found?'<span class="pill done">✔ Discovered</span>':'<span class="pill prog">New discovery!</span>')+'</h3>'
+    detail='<div class="card" id="critterDetail" style="margin-top:16px;border-color:var(--teal)"><div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap"><div style="font-size:3.2rem">'+sel.e+'</div><div style="flex:1;min-width:220px"><h3 style="margin:0">'+esc(sel.name)+' '+(found?'<span class="pill done">✔ Discovered</span>':'<span class="pill prog">New discovery!</span>')+'</h3>'
      +'<p class="small muted" style="font-weight:800;margin:4px 0">Where it lives: '+esc(sel.habitat)+'</p>'
      +'<p style="font-weight:700;margin:6px 0">'+esc(sel.fact)+'</p>'
      +'<p style="font-weight:700;margin:6px 0">🔍 <b>How to spot it:</b> '+esc(sel.spot)+'</p></div></div></div>';
@@ -7090,7 +7145,7 @@ function critterHTML(){
     var foundN=list.filter(function(c){return e.discoveredCritters.indexOf(c.id)>=0;}).length;
     return '<div class="subjecthead"><span class="sdisc" style="background:var(--panel2)">'+cat.e+'</span><div><h3>'+esc(cat.name)+'</h3><div class="small muted">'+esc(cat.blurb)+' · '+foundN+' of '+list.length+' discovered</div></div></div>'
      +'<div class="grid c3 keep2">'+list.map(function(c){ var found=e.discoveredCritters.indexOf(c.id)>=0; var isVisiting=visiting.some(function(v){return v.id===c.id;});
-       return '<button type="button" class="stage '+(found?'sel':'')+'" data-critter="'+c.id+'" style="'+(found?'':'opacity:.92')+'"><span class="se">'+(found?c.e:'❓')+'</span>'+(found?esc(c.name):'Undiscovered critter')+'<span class="small muted">'+(found?esc(c.habitat):(isVisiting?'✨ Visiting this week — tap to discover!':'Tap to discover'))+'</span></button>'; }).join('')+'</div>';
+       return '<button type="button" class="stage '+(found?'sel':'')+'" data-critter="'+c.id+'" style="'+(found?'':'opacity:.92')+'"><span class="se">'+(found?c.e:'❓')+'</span>'+(found?esc(c.name):'Undiscovered critter')+'<span class="small muted">'+(found?esc(c.habitat):(isVisiting?'✨ Visiting this week — tap to discover!':'Tap to discover'))+'</span></button>'; }).join('')+'</div>'+(sel&&sel.cat===cat.id?detail:'');
   }).join('');
   return pageHero('icons/nav-critter.webp','🐸','Critter Lab','Watch your frog grow, then discover many more Singapore critters — pond, garden, sky and night. New visitors are spotlighted every week.','Stage '+(e.critterStage+1)+' of 4 · '+e.discoveredCritters.length+' of '+CRITTERS.length+' critters discovered')
    +'<div class="card"><h3 style="margin-top:0">🐸 Meet '+esc(e.critterName)+'!</h3>'
@@ -7124,7 +7179,7 @@ function critterHTML(){
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
    +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
    +'<p class="small muted" style="margin-top:12px">Visit every stage to earn the 🐸 Critter Friend badge.</p></div>'
-   + visitingHTML + detail
+   + visitingHTML
    +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🔍 Critters to discover</h3><p class="muted" style="font-weight:700;margin:0">Tap any critter to discover it and learn how to spot the real one in Singapore. Discover 5 for the 🔍 Critter Spotter badge, and 12 for the 🌿 Young Naturalist badge!</p><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;margin-top:14px"><span>Discovery collection</span><span>'+e.discoveredCritters.length+' / '+CRITTERS.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.discoveredCritters.length/CRITTERS.length*100)+'%"></div></div></div>'
    + collectionHTML;
 }
@@ -7137,7 +7192,9 @@ function bindCritter(){
       if(e.discoveredCritters.length>=12)awardBadge('naturalist','🌿 Young Naturalist');
       if(e.discoveredCritters.length>=CRITTERS.length)confettiStars();
     } else sndPop();
-    save(); render(); }; });
+    save(); render();
+    /* The detail card now sits right under this critter's category, so bring it into view instead of making the child scroll up to find it. */
+    var cd=document.getElementById('critterDetail'); if(cd)cd.scrollIntoView({behavior:'smooth',block:'nearest'}); }; });
   var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
   /* Record one care: the SAME rules as the old one-tap buttons —
      1 star, 4-hour cooldown, all three in one day grows the frog
