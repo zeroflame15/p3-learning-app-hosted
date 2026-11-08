@@ -34,7 +34,7 @@ a{color:var(--sky)}
 
 /* ---------- Layout ---------- */
 .app{display:flex;min-height:100vh}
-.sidebar{width:228px;flex:0 0 228px;background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh;z-index:30}
+.sidebar{width:228px;flex:0 0 228px;background:var(--nav);color:var(--nav-ink);display:flex;flex-direction:column;padding:18px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:30}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
 .brand .bname{font-family:"Fredoka";font-weight:800;font-size:1.15rem;line-height:1.1}
 .brand .bsub{font-size:.72rem;opacity:.75;font-weight:700}
@@ -3058,7 +3058,7 @@ function mergeExplorer(a,b){
   Object.keys(prog).forEach(function(k){ var dd=(a.completedDay&&a.completedDay[k])||(b.completedDay&&b.completedDay[k]); if(dd&&prog[k]&&!prog[k].fresh)delete prog[k]; });
   e.progress=prog;
   var play={}; Object.keys(a.playProgress||{}).forEach(function(k){ play[k]=a.playProgress[k]; });
-  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,open:((y.elapsed||0)>=(x.elapsed||0)?(y.open||[]):(x.open||[])),cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),v:x.v||y.v,starTotal:Math.max(x.starTotal||0,y.starTotal||0),starDay:((x.starDay||'')>=(y.starDay||'')?x.starDay:y.starDay),starBanked:((x.starDay||'')>(y.starDay||'')?(x.starBanked||0):((y.starDay||'')>(x.starDay||'')?(y.starBanked||0):Math.max(x.starBanked||0,y.starBanked||0))),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),gridId:((x.idx||0)>(y.idx||0)?(x.gridId!=null?x.gridId:y.gridId):(y.gridId!=null?y.gridId:x.gridId)),letters:((x.elapsed||0)>=(y.elapsed||0)?mergeLetters(x.letters,y.letters):mergeLetters(y.letters,x.letters)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked))),built:((x.idx||0)>(y.idx||0)?(x.built||y.built):(y.built||x.built)),locked:((x.idx||0)>(y.idx||0)?(x.locked||y.locked):(y.locked||x.locked)),punct:((x.idx||0)>(y.idx||0)?(x.punct||y.punct):(y.punct||x.punct)),done:((x.idx||0)>(y.idx||0)?x.done:((y.idx||0)>(x.idx||0)?y.done:(x.done||y.done))),sent:((x.idx||0)>(y.idx||0)?(x.sent||y.sent):(y.sent||x.sent))}); });
+  Object.keys(b.playProgress||{}).forEach(function(k){ var x=play[k], y=b.playProgress[k]; play[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),seed:x.seed||y.seed,matched:unionArr(x.matched,y.matched),moves:Math.max(x.moves||0,y.moves||0),won:x.won||y.won,deck:x.deck||y.deck,round:x.round||y.round,flips:x.flips||y.flips,open:((y.elapsed||0)>=(x.elapsed||0)?(y.open||[]):(x.open||[])),cars:((x.idx||0)>(y.idx||0)?(x.cars||y.cars):(y.cars||x.cars)),v:x.v||y.v,starTotal:Math.max(x.starTotal||0,y.starTotal||0),starDay:((x.starDay||'')>=(y.starDay||'')?x.starDay:y.starDay),starBanked:((x.starDay||'')>(y.starDay||'')?(x.starBanked||0):((y.starDay||'')>(x.starDay||'')?(y.starBanked||0):Math.max(x.starBanked||0,y.starBanked||0))),filled:((x.idx||0)>(y.idx||0)?(x.filled||y.filled):(y.filled||x.filled)),gridId:((x.idx||0)>(y.idx||0)?(x.gridId!=null?x.gridId:y.gridId):(y.gridId!=null?y.gridId:x.gridId)),letters:((x.elapsed||0)>=(y.elapsed||0)?mergeLetters(x.letters,y.letters):mergeLetters(y.letters,x.letters)),elapsed:Math.max(x.elapsed||0,y.elapsed||0),answered:((x.idx||0)>(y.idx||0)?x.answered:((y.idx||0)>(x.idx||0)?y.answered:(x.answered||y.answered))),picked:((x.idx||0)>(y.idx||0)?x.picked:((y.idx||0)>(x.idx||0)?y.picked:((x.score||0)>=(y.score||0)?(x.picked!=null?x.picked:y.picked):y.picked))),built:((x.idx||0)>(y.idx||0)?(x.built||y.built):(y.built||x.built)),locked:((x.idx||0)>(y.idx||0)?(x.locked||y.locked):(y.locked||x.locked)),punct:((x.idx||0)>(y.idx||0)?(x.punct||y.punct):(y.punct||x.punct)),done:((x.idx||0)>(y.idx||0)?x.done:((y.idx||0)>(x.idx||0)?y.done:(x.done||y.done))),sent:((x.idx||0)>(y.idx||0)?(x.sent||y.sent):(y.sent||x.sent)),keys:((x.idx||0)>(y.idx||0)?(x.keys||y.keys):(y.keys||x.keys)),combo:(x.combo||y.combo)}); });
   e.playProgress=play;
   /* Fastest game times: keep the smaller secs per game (best ever). The
      day tag follows the winning side, so the board shows when the best
@@ -3080,6 +3080,7 @@ function mergeExplorer(a,b){
   var pd={}; Object.keys(a.playDaily||{}).forEach(function(k){ pd[k]=a.playDaily[k]; });
   Object.keys(b.playDaily||{}).forEach(function(k){ pd[k]=Math.max(pd[k]||0,b.playDaily[k]); });
   e.playDaily=pd;
+  (function(){ var ps={}, k; Object.keys(a.playSeen||{}).forEach(function(k){ var r=a.playSeen[k]||{}; ps[k]={day:r.day||'', keys:(r.keys||[]).slice()}; }); Object.keys(b.playSeen||{}).forEach(function(k){ var x=ps[k], y=b.playSeen[k]||{}; if(!x){ ps[k]={day:y.day||'', keys:(y.keys||[]).slice()}; return; } if((y.day||'')>(x.day||'')){ ps[k]={day:y.day||'', keys:(y.keys||[]).slice()}; } else if((y.day||'')===(x.day||'')){ (y.keys||[]).forEach(function(key){ if(ps[k].keys.indexOf(key)<0)ps[k].keys.push(key); }); if(ps[k].keys.length>1000)ps[k].keys=ps[k].keys.slice(-1000); } }); e.playSeen=ps; })();
   e.mood=Object.assign({},b.mood||{},a.mood||{});
   e.stuckCount=unionObjMax(a.stuckCount,b.stuckCount);
   /* Weak-topic boost records (2026-11-07): one record per topic,
@@ -3347,7 +3348,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
 }
@@ -3407,7 +3408,7 @@ var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','i
    ever fails to load, so a missing file never leaves a blank hole. */
 function ic(src,emo,cls){ return src?'<img class="'+(cls||'ic-sm')+'" src="'+src+'" alt="" onerror="this.outerHTML=\''+emo+'\'">':emo; }
 var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',jokes:'Classroom Jokes',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
-function go(r){ var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
+function go(r){ if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
      progress, not a stale copy from this device. */
@@ -5103,6 +5104,290 @@ function questListFor(t, c, level){
   var pool=poolQuestions(t, level);
   return c.pool.map(function(pi){ var q=pool[pi]; if(!q)return null; return c.fresh?optsShuffled(q, hashStr(t.id+'#'+pi)):q; }).filter(Boolean);
 }
+/* ---------- Daily game refresh + Ask Pip from a question (2026-11-08) ----------
+   Feature 1 — every game pulls a FRESH set each day, with no repeated
+   question inside the same day. How it works, per game:
+     * Word Garden / Speed Sort / Word Scramble / Sentence Builder /
+       Number Pop: each round is PICKED (not seeded) from that round's
+       pool, unseen first. e.playSeen[gameId] = {day, keys:[...]}
+       records every question the explorer has seen today; a run
+       takes the first pick in the day's seeded shuffle that is
+       neither seen today nor already picked this run. A small bank
+       degrades gracefully — a round whose pool is exhausted reuses
+       that round's first pick for the day, never the same question
+       twice in one day while the bank still has unseen ones.
+     * Maths Race: rounds are generated from a seed, not picked from
+       a bank, so the seed is SEARCHED (pickRaceSeed): the first of
+       24 candidate seeds whose 6 questions are all unseen today
+       (and distinct within the run) wins; a nearly-exhausted bank
+       takes the least-colliding seed.
+     * Memory Match: the 12 combos (3 pair-counts x 4 themes) are
+       picked the same unseen-first way; the deck is built from the
+       picked combo with a seeded shuffle (no more Math.random).
+     * Crossword Quest: the grid already rotates daily (xwGridOfDay)
+       — one grid per day, family-wide — so nothing changes; a
+       same-day replay replays today's grid.
+     * Exit Parking: 18 fixed levels in order, each played once —
+       no repeats are possible, so nothing changes.
+   Feature 2 — Ask Pip from a question: see askPipAbout() below. The
+   child opens a NEW Ask Pip thread with the question, Pip explains
+   it there (hint first, never the answer first), and "Back to my
+   question" returns them to the exact question with the answer-only
+   timer paused while they were away.
+   The rules that must match lib/rules.js live there too
+   (pickDailyGameKeys / mergePlaySeen) — change both. */
+
+/* Number Pop's (a,b) ranges, hoisted out of genRound (same values)
+   so the daily picker can enumerate a round's pool. */
+var NUM_RANGES={low:[[2,3,2,5],[4,5,2,9],[2,5,2,9]],mid:[[2,5,2,9],[6,9,2,9],[12,59,2,9]],high:[[6,9,2,9],[12,59,2,9],[12,99,3,9]]};
+
+/* Memory Match combos: 3 pair-counts x 4 themes = 12 boards.
+   Pure arithmetic on the seed, so a run's combo is reproducible. */
+function memoryComboFor(seed){ var pairs=[4,6,8][(((seed||0)%3)+3)%3]; var themeIdx=Math.floor((seed||0)/3)%4; return {pairs:pairs, themeIdx:themeIdx, key:'mem|'+themeIdx+'|'+pairs}; }
+function memComboFromKey(key){ var p=String(key||'').split('|'); return {themeIdx:+p[1]||0, pairs:+p[2]||4, key:key}; }
+
+/* A round's pool: the pick-strings one round of a game may draw from.
+   Returns null for games with no pickable pool (race is seed-searched,
+   crossword's grid rotates by day already, parking's levels are fixed).
+   A "pick" is the question's identity: the question text for word /
+   sort / number / race, the word for scramble, the sentence text for
+   sentence, the combo key for memory. */
+function gamePoolFor(gameId, idx, tier){
+  tier=tier||'mid';
+  if(gameId==='word'){ var pool=[]; [0,1,2,3].forEach(function(ti){ var t=TOPICS[ti]; if(t)pool=pool.concat(t.quest||[],t.fresh||[]); }); return pool.map(function(q){ return q.q; }); }
+  if(gameId==='sort'){ var maxT=sortTierMax(tier); return SORT_SETS.filter(function(s){ return s.t<=maxT; }).map(function(s){ return s.q; }); }
+  if(gameId==='scramble'){ var band=scrBandFor(idx, tier); return SCR_WORDS.filter(function(w){ return w.b===band; }).map(function(w){ return w.w; }); }
+  if(gameId==='sentence'){ return sentPool(tier).map(function(s){ return sentKey(s); }); }
+  if(gameId==='number'){ var rg=(NUM_RANGES[tier]||NUM_RANGES.mid)[idx<2?0:(idx<4?1:2)]; var out=[]; for(var a=rg[0];a<=rg[1];a++){ for(var b=rg[2];b<=rg[3];b++){ out.push(a+' × '+b+' = ?'); } } return out; }
+  if(gameId==='memory'){ var combos=[]; for(var th=0;th<4;th++){ [4,6,8].forEach(function(p){ combos.push('mem|'+th+'|'+p); }); } return combos; }
+  return null;
+}
+
+/* Pick one round's content per round, unseen first: for each round,
+   shuffle that round's pool with the day's seed and take the first
+   pick that is neither seen today nor already picked this run. When
+   a round's pool is exhausted (every pick seen), reuse the day's
+   first pick for that round that this run has not shown yet — a
+   small bank still plays, and a run never shows the same question
+   twice. Deterministic: the same (game, day, salt, seen) always
+   gives the same run. */
+function pickGameKeys(gameId, tier, rounds, seenKeys, salt){
+  var seen={}; (seenKeys||[]).forEach(function(k){ seen[k]=1; });
+  var taken={}, picked=[];
+  for(var i=0;i<rounds;i++){
+    var pool=gamePoolFor(gameId, i, tier);
+    if(!pool||!pool.length){ picked.push(null); continue; }
+    var order=seededShuffle(pool, hashStr(salt+'|round'+i));
+    var choice=null;
+    for(var j=0;j<order.length;j++){ if(!seen[order[j]]&&!taken[order[j]]){ choice=order[j]; break; } }
+    if(choice==null){ for(var k=0;k<order.length;k++){ if(!taken[order[k]]){ choice=order[k]; break; } } }
+    if(choice==null)choice=order[0];
+    picked.push(choice); taken[choice]=1;
+  }
+  return picked;
+}
+
+/* The questions one run asks, as pick-strings, for a given seed —
+   used to record what a run showed (and to score candidate seeds
+   for Maths Race). For the pick-based games the run's keys ARE the
+   picks; for race the seed decides them; for memory it is the combo. */
+function gameRunKeys(gameId, seed, tier, rounds){
+  rounds=rounds||6; tier=tier||'mid';
+  if(gameId==='sentence'){ var out=[]; for(var i=0;i<rounds;i++){ out.push(sentKey(sentFor(seed,i,tier))); } return out; }
+  if(gameId==='memory'){ return [memoryComboFor(seed).key]; }
+  if(gameId==='crossword'||gameId==='parking')return [];
+  var keys=[];
+  for(var i=0;i<rounds;i++){
+    var q=genRound(gameId,i,seed,tier);
+    if(gameId==='scramble')keys.push(q.word||q.q);
+    else keys.push(q.q);
+  }
+  return keys;
+}
+
+/* Maths Race is the one game whose rounds are not picked from a
+   bank — they are generated from a seed, and the generation logic
+   (add/sub/mul/missing-number kinds) is too tangled to enumerate
+   as a pool. So race keeps a seed, but the seed is searched: try
+   candidate seeds and keep the first whose questions are all
+   unseen today (and distinct within the run). The sum-space is
+   large, so a clean seed is found in a try or two; when the bank
+   is exhausted the least-colliding seed wins. */
+function pickRaceSeed(tier, rounds, seenKeys, salt){
+  var seen={}; (seenKeys||[]).forEach(function(k){ seen[k]=1; });
+  var best=null, bestScore=1e9;
+  for(var k=0;k<24;k++){
+    var seed=hashStr(salt+'|try'+k);
+    var keys=gameRunKeys('race', seed, tier, rounds);
+    var score=0, inRun={};
+    keys.forEach(function(key){ if(seen[key])score++; if(inRun[key])score++; inRun[key]=1; });
+    if(score===0)return {seed:seed, keys:keys};
+    if(score<bestScore){ bestScore=score; best={seed:seed, keys:keys}; }
+  }
+  return best;
+}
+
+/* Seen-questions store: e.playSeen[gameId] = {day, keys:[...]}.
+   Record a run's keys (union, today only); read today's keys.
+   The merge of two playSeen records lives in mergeExplorer (inlined
+   there, so the standalone mergeExplorer test harnesses keep working)
+   and in lib/rules.js (mergePlaySeen) — same rule, change both. */
+function playSeenToday(e, gameId, day){
+  var rec=(e&&e.playSeen&&e.playSeen[gameId])||null;
+  if(!rec||rec.day!==day)return [];
+  return (rec.keys||[]).slice();
+}
+function recordPlaySeen(e, gameId, day, keys){
+  if(!e.playSeen)e.playSeen={};
+  var rec=e.playSeen[gameId];
+  if(!rec||rec.day!==day)rec=e.playSeen[gameId]={day:day, keys:[]};
+  (keys||[]).forEach(function(k){ if(k!=null&&rec.keys.indexOf(k)<0)rec.keys.push(k); });
+  if(rec.keys.length>1000)rec.keys=rec.keys.slice(-1000);
+  return rec.keys;
+}
+
+/* Number Pop's balloon-escape countdown, armed as a named function
+   so the Ask Pip return path can re-arm it with the banked seconds.
+   Sets gState.escapeDeadline too (the banked remaining time). */
+function armNumberEscape(secs){
+  if(!gState||gState.id!=='number'||gState.answered)return;
+  if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
+  var s=secs||10;
+  var escId=setTimeout(function(){
+    if(!gState||gState.id!=='number'||gState.answered||gState.escapeTimer!==escId)return;
+    gState.escapeTimer=null; gState.escapeDeadline=null; gState.picked=null; gState.answered=true; gState.streak=0; sndWrong(); pausePlayTimer(); saveGameProgress(); render();
+  }, s*1000);
+  gState.escapeTimer=escId;
+  gState.escapeDeadline=Date.now()+s*1000;
+}
+
+/* ---------- Ask Pip from a question (2026-11-08) ---------- */
+/* Where the child came from when they opened Ask Pip from a
+   question, so the "Back to my question" button can take them
+   back to the exact question. Session-only, never saved. */
+var askReturn=null;
+/* Paused countdowns banked while the child is with Pip (race
+   seconds left, Number Pop escape seconds left). Session-only. */
+var askPipPause=null;
+function bankSecsLeft(deadline, now){ if(!deadline)return 0; return Math.max(0, Math.ceil((deadline-(now||Date.now()))/1000)); }
+
+/* The thread title carries the topic/game and the question, so the
+   child and the parent can find it again in the chat list. */
+function askThreadTitle(ctx){
+  var label=(ctx&&ctx.label)||'';
+  var q=(ctx&&ctx.question)||'';
+  var t='❓ '+(label?label+': ':'')+q;
+  return t.length>48?t.slice(0,48)+'…':t;
+}
+function askKidText(ctx){
+  var q=(ctx&&ctx.question)||'';
+  var opts=(ctx&&ctx.options&&ctx.options.length)?' The choices are: '+ctx.options.join(', ')+'.':'';
+  return 'Pip, can you help me with this question? “'+q+'”'+opts;
+}
+/* Build a new Ask Pip thread for one question. Pure (no DOM):
+   the caller pauses timers, saves, and navigates. */
+function newAskQuestionThread(ctx){
+  var kid=askKidText(ctx);
+  var th={id:'t'+Date.now(), title:askThreadTitle(ctx), msgs:[{who:'kid', text:kid}], qctx:{src:(ctx&&ctx.src)||'', label:(ctx&&ctx.label)||'', q:(ctx&&ctx.question)||''}};
+  return th;
+}
+/* Offline fallback for a question explanation: guide with the
+   question's own clue and Pip's skill method — never the bare
+   answer. Used when the live call fails, so the child still gets
+   help and the question is never lost. */
+function pipExplainFallback(ctx){
+  var q=(ctx&&ctx.question)||'this question';
+  var parts=['Let’s think about this one together! 🦦'];
+  parts.push('The question is: “'+q+'”');
+  if(ctx&&ctx.options&&ctx.options.length)parts.push('Your choices are: '+ctx.options.join(', ')+'.');
+  if(ctx&&ctx.clue)parts.push('Here is a clue: '+ctx.clue);
+  var sk=skillForQuestionClient(q);
+  if(sk)parts.push('Pip’s method: '+sk.method);
+  parts.push('Try the first step, then tell me what you get — I am right here!');
+  return parts.join(' ');
+}
+/* Send one question-explanation to Pip in a thread. Mirrors
+   doSend's pipeline: live call, "Pip is thinking…" is UI-only,
+   offline fallback, and the reply lands in the thread it was
+   asked in even if the child switched chats. Skips pipHelp on
+   purpose — this is a curriculum question, not an app-help one. */
+function pipExplainSend(th, ctx){
+  var kidText=th.msgs.length?th.msgs[th.msgs.length-1].text:askKidText(ctx);
+  var hist=th.msgs.slice(-8).map(function(m){ return {role:m.who, text:m.text}; });
+  var eNow=ex(); if(!eNow)return;
+  asking[th.id]=kidText;
+  save(); render();
+  var log=document.getElementById('chatlog'); if(log)log.scrollTop=log.scrollHeight;
+  askPipLive(kidText, hist, eNow.name, {mode:'explain', explain:{topic:(ctx&&ctx.label)||'', answer:(ctx&&ctx.answer)||'', clue:(ctx&&ctx.clue)||''}}).then(function(live){
+    delete asking[th.id];
+    var eLive=ex(); var th2=eLive?eLive.threads.find(function(t){ return t.id===th.id; }):null;
+    if(!th2){ save(); render(); return; }
+    if(live){ th2.msgs.push({who:'pip', text:live.reply, skill:live.skillName||'', skillId:live.skillId||'', agent:live.agentName||'', agentId:live.agentId||'', signature:live.signature||'', hintFirst:!!live.hintFirst, live:true}); }
+    else { var sk2=skillForQuestionClient(kidText); th2.msgs.push({who:'pip', text:pipExplainFallback(ctx), skill:sk2?sk2.name:'', skillId:sk2?sk2.id:'', live:false}); }
+    save(); render();
+    var log2=document.getElementById('chatlog'); if(log2)log2.scrollTop=log2.scrollHeight;
+  }).catch(function(){
+    try{
+      delete asking[th.id];
+      var eLive2=ex(); var th3=eLive2?eLive2.threads.find(function(t){ return t.id===th.id; }):null;
+      if(th3){ th3.msgs.push({who:'pip', text:pipExplainFallback(ctx), live:false}); }
+      save(); render();
+    }catch(e2){}
+  });
+}
+/* Open Ask Pip about the question on screen. Pauses the
+   answer-only timer (and any countdown) FIRST — Pip time is not
+   answering time — saves the banked time, opens a NEW thread with
+   the question, and goes to Ask Pip. The child returns with
+   "Back to my question" (returnFromAskPip). */
+function askPipAbout(ctx){
+  var e=ex(); if(!e)return;
+  var src=(ctx&&ctx.src)||'';
+  askPipPause=null;
+  if(src==='warmup'){
+    if(typeof warm!=='undefined'&&warm&&warm.timer){ clearInterval(warm.timer); warm.timer=null; }
+  } else if(src==='quest'){
+    pauseLearnTimer();
+    if(typeof cur!=='undefined'&&cur&&cur.phase==='quest')persistProgress(); else save();
+  } else if(src==='game'){
+    if(typeof gState!=='undefined'&&gState){
+      if(gState.id==='race'&&gState.raceDeadline&&!gState.answered){ askPipPause={raceLeft:bankSecsLeft(gState.raceDeadline)}; gState.raceDeadline=null; }
+      if(gState.id==='number'&&gState.escapeTimer){ askPipPause=askPipPause||{}; askPipPause.escLeft=bankSecsLeft(gState.escapeDeadline); clearTimeout(gState.escapeTimer); gState.escapeTimer=null; gState.escapeDeadline=null; }
+    }
+    pausePlayTimer();
+    saveGameProgress();
+  }
+  var th=newAskQuestionThread(ctx);
+  e.threads.unshift(th); activeThread=th.id;
+  var routeBack=src==='warmup'?'warmup':(src==='quest'?'quiz':'game');
+  askReturn={route:routeBack, threadId:th.id};
+  save();
+  go('ask');
+  pipExplainSend(th, ctx);
+}
+/* Back from Ask Pip to the exact question. Resumes the timers
+   (and any banked countdown) and goes to the stored route. Only
+   an UNANSWERED round resumes its clock — an answered round's
+   clock stays paused until Next, exactly as before. */
+function returnFromAskPip(){
+  var ret=askReturn; askReturn=null;
+  var paused=askPipPause; askPipPause=null;
+  activeThread=null;
+  if(!ret){ go('ask'); return; }
+  if(ret.route==='quiz'){
+    if(typeof cur!=='undefined'&&cur&&!cur.answered)resumeLearnTimer();
+  } else if(ret.route==='game'){
+    if(typeof gState!=='undefined'&&gState&&!gState.answered)resumePlayTimer();
+    if(typeof gState!=='undefined'&&gState){
+      if(gState.id==='race'&&paused&&paused.raceLeft>0&&!gState.answered){ gState.raceDeadline=Date.now()+paused.raceLeft*1000; }
+      if(gState.id==='number'&&paused&&paused.escLeft>0&&!gState.answered&&typeof armNumberEscape==='function'){ armNumberEscape(paused.escLeft); }
+    }
+    if(typeof gameTimer!=='undefined'&&typeof tickGameTime==='function'){ if(gameTimer){ clearInterval(gameTimer); gameTimer=null; } gameTimer=setInterval(tickGameTime,1000); }
+  }
+  /* warmup: bindWarmup re-arms the 60s countdown on render. */
+  go(ret.route);
+}
+
 /* ---------- Live-generated questions — EXPERIMENT, one topic only ----------
    math-ntuc ("NTUC Totals") quests may use a fresh 5-question set made
    live by Pip (Gemini, via /api/generate-questions) instead of the
@@ -5561,6 +5846,7 @@ function warmupHTML(){
    +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🔥 Brain warm-up · '+esc(t.name)+'</span><span class="chip">⏱ <span id="wuTime">'+warm.left+'</span>s</span><span class="chip">Question '+(warm.idx+1)+' of '+warm.order.length+'</span></div>'
    +'<h3 style="margin-top:14px">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'
    +'<div id="wuOpts">'+q.o.map(function(o,i){ var cls='optbtn'; if(warm.answered){ if(i===q.a)cls+=' right'; else if(i===warm.picked)cls+=' wrong'; } else if(i===warm.picked)cls+=' picked'; return '<button class="'+cls+'" data-wopt="'+i+'" '+(warm.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
+   +'<div style="margin-top:10px"><button class="btn ghost" id="wuAskPip">🦦 Ask Pip about this question</button></div>'
    +'<div id="wuFb">'+(warm.answered?('<div class="feedback '+(warm.picked===q.a?'ok':'no')+'">'+(warm.picked===q.a?'Correct! Warm brain, go go go! 🔥':'Not quite — the answer is “'+esc(q.o[q.a])+'”. Warm-up tries still count!')+'</div><button class="btn" id="wuNext">'+(warm.idx+1>=warm.order.length?'Finish warm-up':'Next ▶')+'</button>'):'')+'</div>'
    +'<button class="btn ghost" id="wuSkip" style="margin-top:10px">Skip warm-up</button></div>';
 }
@@ -5575,6 +5861,9 @@ function bindWarmup(){
   }; });
   var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ warm.idx++; warm.picked=null; warm.answered=false; render(); };
   var sk=document.getElementById('wuSkip'); if(sk)sk.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
+  /* Ask Pip about this warm-up question: Pip explains it in a new
+     thread, and the 60s countdown pauses while the child is away. */
+  var wa=document.getElementById('wuAskPip'); if(wa)wa.onclick=function(){ var wq=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]]; askPipAbout({src:'warmup', topicId:warm.topicId, label:topicById(warm.topicId).name, question:wq.q, options:wq.o.slice(), answer:wq.o[wq.a], clue:wq.c||''}); };
   var st=document.getElementById('wuStart'); if(st)st.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
 }
 function beginQuest(topicId){
@@ -5702,6 +5991,7 @@ function quizHTML(){
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+listenBtn
    +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
+   +'<div style="margin-top:10px"><button class="btn ghost" id="qAskPip">🦦 Ask Pip about this question</button></div>'
    +'<div id="qFb">'+fb+'</div>'
    +'<button class="btn ghost" id="qQuit" style="margin-top:8px">'+(cur.phase==='boost'?'Stop my boost for now':'Save &amp; quit — resume later')+'</button></div>';
 }
@@ -5748,6 +6038,9 @@ function bindQuiz(){
   }
   var q=list[cur.idx];
   var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); speakPip(m?m[0]:q.q); toast('Listen… now say it out loud like Pip!'); };
+  /* Ask Pip about this quest question: Pip explains it in a new
+     thread, and the answer-only clock pauses while the child is away. */
+  var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:q.o.slice(), answer:q.o[q.a], clue:q.c||''}); };
   document.querySelectorAll('[data-qopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-qopt'),10); cur.picked=i; cur.answered=true;
     if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:q.o[q.a]}; } }
@@ -6739,12 +7032,12 @@ var SENTENCES=[
 ];
 function sentTierNum(tier){ return tier==='low'?1:(tier==='high'?3:2); }
 function sentPool(tier){ var n=sentTierNum(tier); return SENTENCES.filter(function(s){ return s.t===n; }); }
-function sentFor(seed, idx, tier){ var pool=sentPool(tier); var order=seededShuffle(pool.map(function(_,i){return i;}), hashStr('sb|'+seed)); return pool[order[idx%pool.length]]; }
+function sentFor(seed, idx, tier, pick){ var pool=sentPool(tier); if(pick!=null){ var pi=-1; pool.forEach(function(s,qi){ if(sentKey(s)===pick)pi=qi; }); if(pi>=0)return pool[pi]; } var order=seededShuffle(pool.map(function(_,i){return i;}), hashStr('sb|'+seed)); return pool[order[idx%pool.length]]; }
 function sentBank(s, seed, idx){ return seededShuffle(s.w.map(function(_,i){return i;}), hashStr('sbb|'+seed+'|'+idx)); }
 function sentLocked(built, bank){ return built.map(function(b,i){ return b!=null&&bank[b]===i; }); }
 function sentSolved(built, bank){ var l=sentLocked(built,bank); return l.length>0&&l.every(function(x){ return x; }); }
 function sentKey(s){ return s.w.join(' '); }
-function genRound(gameId, idx, seed, tier){
+function genRound(gameId, idx, seed, tier, pick){
   seed=seed||0;
   tier=tier||'mid';
   if(gameId==='word'){
@@ -6755,6 +7048,7 @@ function genRound(gameId, idx, seed, tier){
        plays instead of crashing. */
     var pool=[];
     [0,1,2,3].forEach(function(ti){ var t=TOPICS[ti]; if(t)pool=pool.concat(t.quest||[],t.fresh||[]); });
+    if(pick!=null){ var pi=-1; pool.forEach(function(qq,qi){ if(qq.q===pick)pi=qi; }); if(pi>=0)return optsShuffled(pool[pi], hashStr('wo|'+seed+'|'+idx)); }
     if(!seed)return pool[idx%pool.length];
     var order=seededShuffle(pool.map(function(_,i){return i;}), hashStr('word|'+seed));
     return optsShuffled(pool[order[idx%order.length]], hashStr('wo|'+seed+'|'+idx));
@@ -6768,6 +7062,7 @@ function genRound(gameId, idx, seed, tier){
        the category and `why` explains it in the feedback. */
     var maxT=sortTierMax(tier);
     var pool=SORT_SETS.filter(function(s){ return s.t<=maxT; });
+    if(pick!=null){ var si=-1; pool.forEach(function(ss,qi){ if(ss.q===pick)si=qi; }); if(si>=0){ var sp=pool[si]; return optsShuffled({q:sp.q, o:sp.items, a:3, c:sp.why, j:''}, hashStr('so2|'+seed+'|'+idx)); } }
     if(!seed){ var s0=pool[idx%pool.length]; return {q:s0.q, o:s0.items, a:3, c:s0.why, j:''}; }
     var sord=seededShuffle(pool.map(function(_,i){return i;}), hashStr('so|'+seed+'|'+tier));
     var s=pool[sord[idx%pool.length]];
@@ -6785,6 +7080,7 @@ function genRound(gameId, idx, seed, tier){
     var wpool=SCR_WORDS.filter(function(w){ return w.b===band; });
     var worder=seededShuffle(wpool.map(function(_,i){return i;}), hashStr('scw|'+seed+'|'+band+'|'+tier));
     var entry=wpool[worder[idx%wpool.length]];
+    if(pick!=null){ var pe=null; SCR_WORDS.forEach(function(w){ if(w.w===pick)pe=w; }); if(pe)entry=pe; }
     var word=entry.w;
     /* Deterministic scramble of the word's own letters — never the
        word itself, so the question always has something to solve. */
@@ -6829,7 +7125,9 @@ function genRound(gameId, idx, seed, tier){
   var RANGES={low:[[2,3,2,5],[4,5,2,9],[2,5,2,9]],mid:[[2,5,2,9],[6,9,2,9],[12,59,2,9]],high:[[6,9,2,9],[12,59,2,9],[12,99,3,9]]};
   var rg=(RANGES[tier]||RANGES.mid)[idx<2?0:(idx<4?1:2)];
   var hs=hashStr('num|'+seed+'|'+idx);
-  if(!seed){ a=rg[0]+((idx*7)%(rg[1]-rg[0]+1)); b=rg[2]+((idx*5)%(rg[3]-rg[2]+1)); }
+  var pm=(pick!=null?String(pick).match(/^(\d+) × (\d+) = \?$/):null);
+  if(pm){ a=+pm[1]; b=+pm[2]; }
+  else if(!seed){ a=rg[0]+((idx*7)%(rg[1]-rg[0]+1)); b=rg[2]+((idx*5)%(rg[3]-rg[2]+1)); }
   else { a=rg[0]+(hs%(rg[1]-rg[0]+1)); b=rg[2]+((Math.floor(hs/32))%(rg[3]-rg[2]+1)); }
   var ans=a*b;
   /* Table-neighbour distractors: change one factor at a time
@@ -6979,8 +7277,30 @@ function startGame(id){
      game replays from here with a FRESH mix, never the same 6
      rounds again. Resume must never be re-rolled — a child who
      left at question 4 comes back to question 4. */
-  var seed;
-  if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ }
+  /* Daily refresh (2026-11-08): a fresh run draws a set that avoids
+     every question this explorer already saw today (e.playSeen);
+     a replay is a fresh set too, never yesterday's and never the
+     run just played. An unfinished game keeps its rounds exactly
+     as they were — resume must never be re-rolled. The hasDaily
+     guard keeps the old seed selection as a fallback: the standalone
+     startGame test harnesses eval it without the new helpers, and
+     they must keep working. On the real page the helpers are always
+     defined, so the new path always runs. */
+  var seed, runKeys=null, runCombo=null;
+  var day=todayKey();
+  var hasDaily=(typeof pickGameKeys==='function'&&typeof playSeenToday==='function'&&typeof recordPlaySeen==='function'&&typeof gameRunKeys==='function'&&typeof pickRaceSeed==='function'&&typeof memoryComboFor==='function'&&typeof memComboFromKey==='function');
+  if(p&&!doneP){ seed=p.seed||0; /* unfinished game: keep its rounds exactly as they were */ if(hasDaily){ runKeys=(p.keys&&p.keys.length)?p.keys.slice():gameRunKeys(id, seed, (typeof levelTier==='function'?levelTier(e):'mid'), gDef.rounds); if(id==='memory'&&p.combo)runCombo=p.combo.key||null; if(runKeys&&runKeys.length)recordPlaySeen(e, id, day, runKeys); } }
+  else if(hasDaily){
+    var seenToday=playSeenToday(e, id, day);
+    var salt='play|'+id+'|'+day+'|'+e.id;
+    var tierNow=(typeof levelTier==='function'?levelTier(e):'mid');
+    if(id==='race'){ var rp=pickRaceSeed(tierNow, gDef.rounds, seenToday, salt); seed=rp.seed; runKeys=rp.keys; }
+    else if(id==='memory'){ var mp=pickGameKeys('memory', tierNow, 1, seenToday, salt); runCombo=mp[0]||null; seed=hashStr(salt+'|'+(runCombo||'mem')); runKeys=runCombo?[runCombo]:[]; }
+    else if(id==='crossword'||id==='parking'){ seed=hashStr(salt+'|run'); runKeys=[]; }
+    else { runKeys=pickGameKeys(id, tierNow, gDef.rounds, seenToday, salt); seed=hashStr(salt+'|run|'+(runKeys[0]||'')); }
+    if(runKeys&&runKeys.length)recordPlaySeen(e, id, day, runKeys);
+    save();
+  }
   else if(doneP){ seed=hashStr('play|'+id+'|'+todayKey()+'|'+e.id+'|'+Date.now()); /* replay: a fresh seed every time, so replays are never the same 6 rounds */ }
   else { var rec=e.playFresh[id]; if(!rec||rec.day!==todayKey()){ rec={day:todayKey(), seed:hashStr('play|'+id+'|'+todayKey()+'|'+e.id)}; e.playFresh[id]=rec; save(); } seed=rec.seed; }
   /* Memory levels (4/6/8 pairs) and 4 themed decks rotate by the
@@ -6990,7 +7310,7 @@ function startGame(id){
      deck itself is saved, so a resume always restores the exact
      board the child left — the level is never recomputed on
      resume. No new persisted field: pairs = deck.length/2. */
-  if(id==='memory'){ var MEMDECKS=[['🐸','🦦','🍓','⭐','🚀','🦋','🐢','🦁'],['🍎','🍌','🍇','🍓','🥝','🍊','🍉','🍍'],['🐟','🐙','🦀','🐢','🐬','🦈','🐳','🦭'],['🚀','⭐','🌙','🪐','☀️','🌟','🛸','👽']]; var memPairs=[4,6,8][(((seed||0)%3)+3)%3]; var memTheme=MEMDECKS[Math.floor((seed||0)/3)%4]; var memCards=[]; memTheme.slice(0,memPairs).forEach(function(em){ memCards.push(em,em); }); gState={id:id, deck:shuffle(memCards), open:(p&&p.open?p.open.slice():[]), matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false}; }
+  if(id==='memory'){ var MEMDECKS=[['🐸','🦦','🍓','⭐','🚀','🦋','🐢','🦁'],['🍎','🍌','🍇','🍓','🥝','🍊','🍉','🍍'],['🐟','🐙','🦀','🐢','🐬','🦈','🐳','🦭'],['🚀','⭐','🌙','🪐','☀️','🌟','🛸','👽']]; var memCombo; if(runCombo&&typeof memComboFromKey==='function')memCombo=memComboFromKey(runCombo); else if(p&&p.combo)memCombo=p.combo; else if(typeof memoryComboFor==='function')memCombo=memoryComboFor(seed); else memCombo={pairs:[4,6,8][(((seed||0)%3)+3)%3], themeIdx:Math.floor((seed||0)/3)%4}; var memTheme=MEMDECKS[memCombo.themeIdx]; var memCards=[]; memTheme.slice(0,memCombo.pairs).forEach(function(em){ memCards.push(em,em); }); gState={id:id, deck:((typeof seededShuffle==='function')?seededShuffle(memCards, seed):shuffle(memCards)), open:(p&&p.open?p.open.slice():[]), matched:(p?p.matched:[]), lock:false, moves:(p?p.moves:0), won:false, memCombo:memCombo}; }
   else if(id==='parking'){ var lv=(!p||doneP)?0:p.idx, sc=(!p||doneP)?0:p.score; var useSaved=p&&!doneP&&p.cars&&(p.idx<4||p.v===2); gState={id:id, idx:lv, score:sc, moves:0, rounds:gDef.rounds, starTotal:(!p||doneP)?0:(p.starTotal||0), starBanked:(!p?0:(p.starBanked||0)), starDay:(!p?null:(p.starDay||null)), cars:(useSaved?p.cars:PARKLEVELS[lv].cars).map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; }
   else if(id==='crossword'){
     /* Six themed grids rotate by day — the whole family gets the
@@ -7009,6 +7329,7 @@ function startGame(id){
   else if(id==='sentence'){ var sidx=(!p||doneP)?0:p.idx, ssc=(!p||doneP)?0:p.score; gState={id:id, idx:sidx, score:ssc, rounds:gDef.rounds, built:[], locked:[], punct:null, done:false, answered:(!p||doneP)?false:!!p.done}; }
   else { var g=GAMES.find(function(x){return x.id===id;}); gState={id:id, idx:(p?p.idx:0), score:(p?p.score:0), picked:null, answered:false, rounds:g.rounds}; if(gState.idx>=g.rounds){ gState.idx=0; gState.score=0; } else if(p){ gState.answered=!!p.answered; gState.picked=(p.picked!=null?p.picked:null); } }
   gState.seed=seed;
+  gState.keys=runKeys;
   /* Difficulty tier for this run (session-only, like the streak —
      never saved or merged). levelTier is guarded for the
      standalone test harnesses, where it is not defined; they get
@@ -7025,7 +7346,7 @@ function startGame(id){
        the exact board the child left (the tiles themselves are
        session-only and never saved). An answered round shows the
        word already built. */
-    var rq=genRound('scramble', gState.idx, gState.seed, gState.tier);
+    var rq=genRound('scramble', gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
     var si=scrInitState(rq);
     gState.scrTiles=si.tiles; gState.scrBuilt=si.built; gState.scrWord=rq.word; gState.scrScr=rq.scr;
     if(gState.answered)gState.scrBuilt=rq.word.split('');
@@ -7037,7 +7358,7 @@ function startGame(id){
      sentence (a replay deals a fresh sentence, so a stale build
      is never restored onto the wrong words). */
   if(id==='sentence'&&typeof sentFor==='function'){
-    var ss=sentFor(gState.seed, gState.idx, gState.tier);
+    var ss=sentFor(gState.seed, gState.idx, gState.tier, (gState.keys||[])[gState.idx]);
     var sb=sentBank(ss, gState.seed, gState.idx);
     var sk=sentKey(ss);
     var okR=p&&!doneP&&p.sent===sk&&p.built&&p.built.length===ss.w.length;
@@ -7187,6 +7508,7 @@ function gameHTML(){
      +'<p class="muted" style="font-weight:700;margin:10px 0 0">👆 Tap a square to pick its word — tap the same square again to switch between Across and Down. The hint lights up too!</p>'
      +'<div class="xwclues">'+clues+'</div>'
      +'<p class="small muted" style="font-weight:700;margin:8px 0 0">Type with your keyboard — green means it fits! ✔ A correct word turns green and its hint greys out.</p>'
+     +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
      +'<button class="btn ghost" id="gBack" style="margin-top:8px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   if(gState.id==='parking'){
@@ -7211,7 +7533,7 @@ function gameHTML(){
      +'<button class="btn ghost" id="gBack" style="margin-top:14px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   if(gState.id==='sentence'){
-    var s=gState.sbSent||sentFor(gState.seed, gState.idx, gState.tier);
+    var s=gState.sbSent||sentFor(gState.seed, gState.idx, gState.tier, (gState.keys||[])[gState.idx]);
     var bank=gState.sentBank||sentBank(s, gState.seed, gState.idx);
     var locked=sentLocked(gState.built, bank);
     var stripDone=sentSolved(gState.built, bank);
@@ -7242,9 +7564,10 @@ function gameHTML(){
      +'<p class="muted" style="font-weight:700;text-align:center">Tap a word to place it. Tap a placed word to send it back.</p>'
      +'<div style="text-align:center"><button class="btn ghost" id="sbReset">↺ Start over</button></div>'
      +fb
+     +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
      +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
-  var q=genRound(gState.id, gState.idx, gState.seed, gState.tier);
+  var q=genRound(gState.id, gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
   /* Word Garden: a real garden strip — one flower blooms per
      correct answer, the rest stay sprouts, and a streak of 2+
      brings out the sunshine. Built inline (not a helper) so the
@@ -7258,6 +7581,7 @@ function gameHTML(){
    +'<div class="bigq">'+esc(q.q)+'</div>'
    +(gState.id==='race'&&typeof raceTrackHTML==='function'?raceTrackHTML(e):'')
    + gameOptsHTML(q)
+   +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
    +(gState.answered?'<div class="feedback '+(gState.picked===q.a?'ok':'no')+'">'+(gState.picked===q.a?PRAISE[gState.idx%PRAISE.length]:(gState.timedOut?'⏰ Time’s up! ':'')+ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(q.o[q.a])+'”.')+(gState.id==='number'&&gState.picked===q.a&&(gState.streak||0)>=2?' 🎈 Pop combo ×'+gState.streak+'!':'')+(q.c?'<br>💡 '+esc(q.c):'')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
    +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
 }
@@ -7442,6 +7766,9 @@ function bindGame(){
     if(gState.idx>=gState.rounds)return;
     var input=document.getElementById('xwInput');
     var checkBtn=document.getElementById('xwCheck');
+    /* Ask Pip about the selected crossword clue: Pip explains it in
+       a new thread, and the answer-only clock pauses while away. */
+    var gaXw=document.getElementById('gAskPip'); if(gaXw)gaXw.onclick=function(){ var wd=XWORDS[gState.sel]; askPipAbout({src:'game', gameId:'crossword', label:'Crossword Quest', question:'Crossword clue '+wd.num+' '+wd.dir+': '+wd.clue+' ('+wd.w.length+' letters)', answer:wd.w, clue:''}); };
     /* Typing updates the grid cells in place — a full re-render
        here would drop the input's focus on every keystroke. */
     function paintCells(){
@@ -7547,8 +7874,11 @@ function bindGame(){
   }
   if(gState.id==='sentence'){
     if(gState.idx>=gState.rounds)return;
-    var s=gState.sbSent||sentFor(gState.seed, gState.idx, gState.tier);
+    var s=gState.sbSent||sentFor(gState.seed, gState.idx, gState.tier, (gState.keys||[])[gState.idx]);
     var bank=gState.sentBank||sentBank(s, gState.seed, gState.idx);
+    /* Ask Pip about this sentence: Pip explains it in a new thread,
+       and the answer-only clock pauses while the child is away. */
+    var gaSen=document.getElementById('gAskPip'); if(gaSen)gaSen.onclick=function(){ askPipAbout({src:'game', gameId:'sentence', label:'Sentence Builder', question:'Put these words in the right order: '+bank.map(function(wi){ return s.w[wi]; }).join(', ')+'.', answer:s.w.join(' ')+(s.p||'.'), clue:s.c}); };
     /* Scoring a finished sentence: one star, streak up, the
        pitch-ladder correct jingle, and the answer-only clock
        freezes — exactly like the generic answer tap. */
@@ -7609,7 +7939,7 @@ function bindGame(){
        generic Next. */
     var nx2=document.getElementById('gNext'); if(nx2)nx2.onclick=function(){
       gState.idx++; gState.answered=false; gState.done=false; gState.punct=null; gState.punctWrong=false;
-      var ns=sentFor(gState.seed, gState.idx, gState.tier);
+      var ns=sentFor(gState.seed, gState.idx, gState.tier, (gState.keys||[])[gState.idx]);
       var nb=sentBank(ns, gState.seed, gState.idx);
       gState.sbSent=ns; gState.sentBank=nb; gState.sent=sentKey(ns);
       gState.built=ns.w.map(function(){ return null; });
@@ -7623,7 +7953,10 @@ function bindGame(){
   }
   if(gState.id==='scramble'){
     if(gState.idx>=gState.rounds)return;
-    var sq=genRound('scramble', gState.idx, gState.seed, gState.tier);
+    var sq=genRound('scramble', gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
+    /* Ask Pip about this scramble: Pip explains the word in a new thread,
+       and the answer-only clock pauses while the child is away. */
+    var gaScr=document.getElementById('gAskPip'); if(gaScr)gaScr.onclick=function(){ askPipAbout({src:'game', gameId:'scramble', label:'Word Scramble', question:'Unscramble these letters to make a word: '+sq.scr.split('').join(' ')+'. Hint: '+sq.c, answer:sq.word, clue:sq.c}); };
     /* Tapping a letter drops it into the first empty slot, with a
        rising celesta tick per letter placed — the deeper into the
        word, the higher the note. */
@@ -7683,7 +8016,7 @@ function bindGame(){
     var nx3=document.getElementById('gNext'); if(nx3)nx3.onclick=function(){
       gState.idx++; gState.picked=null; gState.answered=false; gState.scrHintShown=false;
       if(gState.idx<gState.rounds){
-        var nq=genRound('scramble', gState.idx, gState.seed, gState.tier);
+        var nq=genRound('scramble', gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
         var ns3=scrInitState(nq);
         gState.scrTiles=ns3.tiles; gState.scrBuilt=ns3.built; gState.scrWord=nq.word; gState.scrScr=nq.scr;
         resumePlayTimer();
@@ -7698,7 +8031,10 @@ function bindGame(){
   /* A stale escape timer from the previous render must never fire
      into this round — a re-render re-arms it below. */
   if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
-  var q=genRound(gState.id, gState.idx, gState.seed, gState.tier);
+  var q=genRound(gState.id, gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
+  /* Ask Pip about this question: Pip explains it in a new thread,
+     and the answer-only clock pauses while the child is away. */
+  var ga=document.getElementById('gAskPip'); if(ga)ga.onclick=function(){ askPipAbout({src:'game', gameId:gState.id, label:(GAMES.find(function(x){return x.id===gState.id;})||{}).name||gState.id, question:q.q, options:q.o.slice(), answer:q.o[q.a], clue:q.c||''}); };
   document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
     if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
@@ -7719,12 +8055,7 @@ function bindGame(){
      checked on fire so a stale timer from an earlier render can
      never mark the wrong round. */
   if(gState.id==='number'&&!gState.answered){
-    var escSecs=Math.max(4,((gState.tier==='low')?12:((gState.tier==='high')?8:10))-gState.idx);
-    var escId=setTimeout(function(){
-      if(!gState||gState.id!=='number'||gState.answered||gState.escapeTimer!==escId)return;
-      gState.escapeTimer=null; gState.picked=null; gState.answered=true; gState.streak=0; sndWrong(); pausePlayTimer(); saveGameProgress(); render();
-    }, escSecs*1000);
-    gState.escapeTimer=escId;
+    armNumberEscape(Math.max(4,((gState.tier==='low')?12:((gState.tier==='high')?8:10))-gState.idx));
   }
   var nx=document.getElementById('gNext'); if(nx)nx.onclick=function(){
     if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
@@ -7738,7 +8069,7 @@ function bindGame(){
     render();
   };
 }
-function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=playElapsedSecs(); if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, v:2, starTotal:gState.starTotal||0, starBanked:gState.starBanked||0, starDay:gState.starDay||null, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, gridId:gState.gridId, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false], letters:Object.assign({},gState.letters||{})}; else if(gState.id==='sentence')e.playProgress.sentence={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, built:(gState.built||[]).slice(), locked:(gState.locked||[]).slice(), punct:gState.punct||null, done:!!gState.done, answered:!!gState.done, sent:gState.sent||''}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null)};
+function saveGameProgress(){ var e=ex(); if(!gState)return; var elapsed=playElapsedSecs(); if(gState.id==='memory')e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, combo:gState.memCombo||null, open:gState.open.slice(), elapsed:elapsed}; else if(gState.id==='parking')e.playProgress.parking={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, v:2, starTotal:gState.starTotal||0, starBanked:gState.starBanked||0, starDay:gState.starDay||null, cars:gState.cars.map(function(c){ return {id:c.id,e:c.e,o:c.o,x:c.x,y:c.y,len:c.len,bg:c.bg}; })}; else if(gState.id==='crossword')e.playProgress.crossword={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, gridId:gState.gridId, filled:gState.filled?gState.filled.slice():[false,false,false,false,false,false], letters:Object.assign({},gState.letters||{})}; else if(gState.id==='sentence')e.playProgress.sentence={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, built:(gState.built||[]).slice(), locked:(gState.locked||[]).slice(), punct:gState.punct||null, done:!!gState.done, answered:!!gState.done, sent:gState.sent||'', keys:(gState.keys?gState.keys.slice():[])}; else e.playProgress[gState.id]={idx:gState.idx, score:gState.score, seed:gState.seed, elapsed:elapsed, answered:!!gState.answered, picked:(gState.picked!=null?gState.picked:null), keys:(gState.keys?gState.keys.slice():[])};
   var gDef=GAMES.find(function(x){return x.id===gState.id;});
   var doneNow=gState.id==='memory'?!!gState.won:(gDef&&gState.idx>=gDef.rounds);
   if(doneNow){ if(!e.playDoneDay)e.playDoneDay={}; e.playDoneDay[gState.id]=todayKey(); }
@@ -7751,7 +8082,7 @@ var activeThread=null;
    messages, never saved, and never synced, so it can never get
    stuck on screen or be resurrected by a sync merge. */
 var asking={};
-async function askPipLive(text, history, name){
+async function askPipLive(text, history, name, opts){
   /* This call must NEVER reject and NEVER hang: a failed or stuck
      model call resolves to null and the caller falls back to Pip's
      built-in answer. Two nets, because one was not enough live —
@@ -7770,7 +8101,7 @@ async function askPipLive(text, history, name){
     try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(e){} },20000); }catch(e){ ctrl=null; }
     var work=(async function(){
       try{
-        var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10)})};
+        var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10),mode:(opts&&opts.mode)||'',explain:(opts&&opts.explain)||null})};
         if(ctrl)opts.signal=ctrl.signal;
         var r=await fetch('/api/ask-pip',opts);
         if(!r.ok)return null;
@@ -7856,6 +8187,7 @@ function askHTML(){
   }
   var th=e.threads.find(function(t){return t.id===activeThread;});
   return '<button class="btn ghost" id="askBack">← All chats</button>'
+   +(askReturn&&askReturn.threadId===th.id?'<button class="btn" id="askReturnBtn" style="margin-top:8px;margin-left:8px">← Back to my question</button>':'')
    +'<div class="card" style="margin-top:12px"><div style="display:flex;gap:10px;align-items:center">'+pipSVG(52,e.glow)+'<div><h3 style="margin:0">'+esc(th.title)+'</h3><span class="small muted">Pip only remembers this chat’s topic</span></div></div>'
    +'<div class="chatlog" id="chatlog">'+th.msgs.filter(function(m){ return !isThinkingMsg(m); }).map(function(m,mi){ return '<div class="msg '+m.who+'">'+esc(m.text)+(m.who==='pip'?'<br>'+(e.treasures.indexOf('bookmark')>=0?' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-fav="'+mi+'">'+(e.favAnswers.indexOf(m.text)>=0?'✓ Saved':'🔖 Save')+'</button>':'')+' <button class="btn ghost" style="padding:5px 12px;font-size:.8rem;margin-top:6px" data-flag="'+mi+'">🚩 Flag this</button>'+(m.skill?'<br><span class="small muted">📚 Method: '+esc(m.skill)+' · Skills v1</span>':''):'')+'</div>'; }).join('')+(asking[th.id]?'<div class="msg pip">Pip is thinking… 🦦</div>':'')+'</div>'
    +'<div class="chatbar"><input class="field" id="askInput" placeholder="Ask Pip anything…" maxlength="300"><button class="btn" id="askSend">Ask ➤</button></div>'
@@ -7883,6 +8215,7 @@ function bindAsk(){
      deletedFavAnswers so the merge can never resurrect it. */
   document.querySelectorAll('[data-unfav]').forEach(function(b){ b.onclick=function(){ var fi=parseInt(b.getAttribute('data-unfav'),10); var txt=e.favAnswers[fi]; if(txt==null)return; e.favAnswers.splice(fi,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); }; });
   var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
+  var rb=document.getElementById('askReturnBtn'); if(rb)rb.onclick=function(){ returnFromAskPip(); };
   document.querySelectorAll('[data-listen]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); speakPip(th.msgs[parseInt(b.getAttribute('data-listen'),10)].text); }; });
   document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; var ix=e.favAnswers.indexOf(txt); if(ix>=0){ e.favAnswers.splice(ix,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); } else { e.favAnswers.push(txt); save(); render(); toast('Saved to your Golden Bookmark! 🔖'); } }; });
   document.querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=function(){
