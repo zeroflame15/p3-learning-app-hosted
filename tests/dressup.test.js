@@ -1,14 +1,15 @@
 // Dress-up expansion for "Change my name & look" (2026-11-07):
 //  1. MORE ANIMALS: a "My animal friend" picker row with 12 cute
-//     animated animals; tapping one sets live.face and stamps lookAt,
-//     following the exact glow/badge tap pattern (resolve the live
-//     explorer fresh, preserve a typed unsaved name, update outlines
-//     in place, never rebuild the modal).
+//     animated animals; tapping one writes the DRAFT face (round 4:
+//     Cancel must revert — picks never write to the live explorer
+//     or save; only "Save my look" commits the draft), following
+//     the exact glow/badge tap pattern (preserve a typed unsaved
+//     name, update outlines in place, never rebuild the modal).
 //  2. MORE COLOURS: GLOWS grows from 6 to 12.
 //  3. MORE BADGES: the badge list grows from 6 to 16.
-// The 2026-11-06 merge fix is untouched: glow/badge taps still
-// resolve ex() fresh, never rebuild the modal, and stamp lookAt;
-// Save still stamps nameAt on the live explorer.
+// The 2026-11-06 merge fix is untouched: Save still resolves ex()
+// fresh, never rebuilds the modal, and stamps nameAt; the draft
+// commit stamps lookAt on Save.
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -68,11 +69,12 @@ test('16 badges render (the original 6 first, then 10 new)', () => {
   assert.ok(modal.includes("(e.badge===b?'outline:3px solid var(--amber)':'')"), 'the current badge keeps the amber outline');
 });
 
-test('animal tap sets face + lookAt on the live explorer and preserves a typed unsaved name', () => {
+test('animal tap writes the draft face and preserves a typed unsaved name', () => {
   assert.ok(faceHandler.length > 0, 'facePick handler found');
-  assert.ok(faceHandler.includes('var live=ex();'), 'animal tap must resolve the live explorer at click time');
-  assert.ok(faceHandler.includes('live.face='), 'animal tap must write the face to the live explorer');
-  assert.ok(faceHandler.includes('live.lookAt=new Date().toISOString()'), 'animal tap must stamp lookAt, same as glow/badge');
+  assert.ok(faceHandler.includes('draft.face='), 'animal tap must write the face to the draft');
+  assert.ok(!faceHandler.includes('live.face='), 'animal tap must not touch the live face');
+  assert.ok(!faceHandler.includes('live.lookAt='), 'animal tap must not stamp lookAt (Save does that)');
+  assert.ok(!faceHandler.includes('save()'), 'animal tap must not save (Cancel must still revert it)');
   assert.ok(faceHandler.includes("document.getElementById('lkName')"), 'animal tap must read the name input so the typed name is preserved');
   assert.ok(faceHandler.includes('keepEl.value=keep'), 'animal tap must restore the typed name after updating the outlines');
   assert.ok(faceHandler.includes('style.outline'), 'animal tap must update the button outlines in place');
@@ -82,20 +84,26 @@ test('animal tap sets face + lookAt on the live explorer and preserves a typed u
 });
 
 test('existing glow/badge/name behaviour is unchanged', () => {
-  // Glow and badge handlers keep the 2026-11-06 fix exactly.
+  // Glow and badge handlers keep the 2026-11-06 fix exactly, except
+  // they now write to the draft (round 4) instead of the live explorer.
   for (const h of [glowHandler, badgeHandler]) {
     assert.ok(h.length > 0, 'pick handler found');
-    assert.ok(h.includes('var live=ex();'), 'pick tap must resolve the live explorer at click time');
-    assert.ok(h.includes('live.lookAt=new Date().toISOString()'), 'pick tap must stamp lookAt');
+    assert.ok(!h.includes('var live=ex();'), 'pick tap must not resolve the live explorer — it writes the draft');
+    assert.ok(!h.includes('live.lookAt=new Date().toISOString()'), 'pick tap must not stamp lookAt (Save does that)');
+    assert.ok(!h.includes('save()'), 'pick tap must not save');
     assert.ok(h.includes("document.getElementById('lkName')"), 'pick tap must read the name input');
     assert.ok(h.includes('keepEl.value=keep'), 'pick tap must restore the typed name');
     assert.ok(!h.includes('openLookModal()'), 'pick tap must not rebuild the modal');
     assert.ok(!h.includes('render()'), 'pick tap must not re-render while the modal is open');
   }
-  assert.ok(glowHandler.includes('live.glow='), 'glow tap still writes to the live explorer');
-  assert.ok(badgeHandler.includes('live.badge='), 'badge tap still writes to the live explorer');
-  // Save still stamps nameAt on the live explorer only.
+  assert.ok(glowHandler.includes('draft.glow='), 'glow tap writes the draft glow');
+  assert.ok(badgeHandler.includes('draft.badge='), 'badge tap writes the draft badge');
+  // Save still resolves the live explorer fresh and stamps nameAt —
+  // and now it commits the whole draft and stamps lookAt too.
   assert.ok(saveHandler.includes('var live=ex();'), 'Save must resolve the live explorer at click time');
+  assert.ok(saveHandler.includes('live.face=draft.face'), 'Save must commit the draft face');
+  assert.ok(saveHandler.includes('live.look={color:draft.look.color'), 'Save must commit the draft look');
+  assert.ok(saveHandler.includes('live.lookAt=new Date().toISOString()'), 'Save must stamp lookAt');
   assert.ok(saveHandler.includes('live.name='), 'Save must assign the name to the live explorer');
   assert.ok(saveHandler.includes('live.nameAt=new Date().toISOString()'), 'Save must stamp nameAt');
   assert.ok(!/\be\.name=v/.test(saveHandler), 'Save must not write the name to the captured explorer object');

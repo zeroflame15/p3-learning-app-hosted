@@ -9,11 +9,15 @@
 //     claimed success.
 //  3. The "My badge" emoji picker (e.badge) was saved but NEVER displayed
 //     anywhere — only the earned achievement badges (e.badges) show.
+//  4. (Round 4, found live 2026-11-08) Picking an animal, then tapping
+//     Cancel, still changed the stored look: every pick saved live on
+//     tap. Picks now write to a DRAFT only; Save commits the draft
+//     into the live explorer (resolved fresh) and stamps lookAt.
 // Fixes: pick taps update only the outlines in place and never rebuild
-// the modal or re-render; every handler resolves the live explorer with
-// ex() at click time; Save writes to that live object; the chosen badge
-// emoji now shows next to the explorer's name in the sidebar, profile
-// menu, Grand Door chips and Home greeting.
+// the modal or re-render; Save writes to the live object resolved with
+// ex() at click time; the chosen badge emoji now shows next to the
+// explorer's name in the sidebar, profile menu, Grand Door chips and
+// Home greeting.
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -60,12 +64,20 @@ test('glow/badge taps update only the outlines in place and keep the typed name'
   assert.ok(badgeHandler.includes("3px solid var(--amber)"), 'selected badge keeps the amber outline');
 });
 
-test('glow/badge taps and Save resolve the live explorer fresh, never the captured one', () => {
-  assert.ok(glowHandler.includes('var live=ex();'), 'glow tap must resolve the live explorer at click time');
-  assert.ok(badgeHandler.includes('var live=ex();'), 'badge tap must resolve the live explorer at click time');
-  assert.ok(glowHandler.includes('live.glow='), 'glow tap must write to the live explorer');
-  assert.ok(badgeHandler.includes('live.badge='), 'badge tap must write to the live explorer');
+test('glow/badge taps write to the draft; Save resolves the live explorer fresh, never the captured one', () => {
+  assert.ok(glowHandler.includes('draft.glow='), 'glow tap must write to the draft');
+  assert.ok(badgeHandler.includes('draft.badge='), 'badge tap must write to the draft');
+  assert.ok(!glowHandler.includes('var live=ex();'), 'glow tap must not resolve the live explorer — it writes the draft');
+  assert.ok(!badgeHandler.includes('var live=ex();'), 'badge tap must not resolve the live explorer — it writes the draft');
+  assert.ok(!glowHandler.includes('live.glow='), 'glow tap must not write to the live explorer');
+  assert.ok(!badgeHandler.includes('live.badge='), 'badge tap must not write to the live explorer');
+  assert.ok(!glowHandler.includes('save()'), 'glow tap must not save');
+  assert.ok(!badgeHandler.includes('save()'), 'badge tap must not save');
   assert.ok(saveHandler.includes('var live=ex();'), 'Save must resolve the live explorer at click time, not the one captured at modal open');
+  assert.ok(saveHandler.includes('live.face=draft.face'), 'Save must commit the draft face');
+  assert.ok(saveHandler.includes('live.glow=draft.glow'), 'Save must commit the draft glow');
+  assert.ok(saveHandler.includes('live.badge=draft.badge'), 'Save must commit the draft badge');
+  assert.ok(saveHandler.includes('live.look={color:draft.look.color'), 'Save must commit the draft look');
   assert.ok(saveHandler.includes('live.name='), 'Save must assign the name to the live explorer');
   assert.ok(saveHandler.includes('live.nameAt='), 'Save must stamp the rename time on the live explorer');
   // Note: 'live.name=' contains 'e.name=' as a substring, so match on a
@@ -75,9 +87,10 @@ test('glow/badge taps and Save resolve the live explorer fresh, never the captur
   assert.ok(saveHandler.includes("toast('Looking great, '+live.name"), 'the success toast must name the live explorer');
 });
 
-test('the timestamped name/look merge is unchanged by the modal fix', () => {
-  assert.ok(glowHandler.includes('live.lookAt=new Date().toISOString()'), 'glow change still stamps lookAt');
-  assert.ok(badgeHandler.includes('live.lookAt=new Date().toISOString()'), 'badge change still stamps lookAt');
+test('the timestamped name/look merge is unchanged by the draft fix', () => {
+  assert.ok(!glowHandler.includes('live.lookAt=new Date().toISOString()'), 'glow tap no longer stamps lookAt (Save does)');
+  assert.ok(!badgeHandler.includes('live.lookAt=new Date().toISOString()'), 'badge tap no longer stamps lookAt (Save does)');
+  assert.ok(saveHandler.includes('live.lookAt=new Date().toISOString()'), 'Save stamps lookAt when it commits the draft');
   assert.ok(saveHandler.includes('live.nameAt=new Date().toISOString()'), 'rename still stamps nameAt');
 });
 
