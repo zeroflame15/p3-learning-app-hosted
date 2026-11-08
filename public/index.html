@@ -3578,7 +3578,7 @@ function isEditingSchedule(){
   if(id==='fsEvDate'||id==='fsEvName'||id==='fsEvKind'||id==='fsEvNote')return true;
   return a.getAttribute('data-fsrest')!=null||a.getAttribute('data-fssub')!=null||a.getAttribute('data-fsstime')!=null||a.getAttribute('data-fsnote')!=null;
 }
-function safeToRender(){ return typeof route!=='undefined'&&route!=='quiz'&&route!=='warmup'&&route!=='game'&&!isModalOpen()&&!(typeof isEditingSchedule==='function'&&isEditingSchedule()); }
+function safeToRender(){ return typeof route!=='undefined'&&route!=='quiz'&&route!=='warmup'&&route!=='game'&&route!=='admin'&&!isModalOpen()&&!(typeof isEditingSchedule==='function'&&isEditingSchedule()); }
 function autoPull(){
   if(typeof document==='undefined'||document.visibilityState!=='visible')return;
   refreshFriendBadge();
@@ -3736,6 +3736,9 @@ function go(r){ if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r
 function render(){
   ensureFriendCode();
   var root=document.getElementById('root');
+  /* Admin page (Bryan only): a standalone page — no sidebar, no
+     explorer needed — reachable only by a direct link (#admin). */
+  if(route==='admin'){ root.innerHTML=adminHTML(); bindAdmin(); return; }
   /* Every visit starts at the Grand Door: route 'door' always shows
      the Door (enter a family code, or pick an existing explorer and
      tap their picture code), even when this device already has an
@@ -3759,7 +3762,7 @@ function render(){
   root.innerHTML='<div class="app route-'+routeCls+'">'
    +'<aside class="sidebar"><div class="brand" style="flex-direction:column;align-items:center;text-align:center;padding:6px 4px 14px;gap:6px"><div id="sideAvatar" style="width:130px;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,130)+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
-   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices · family code '+esc(DB.syncCode):'Progress is saved on this device only.')+'</div></aside>'
+   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices':'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span class="tbPip" style="line-height:0">'+pipSVG(34,ex().glow)+'</span><span class="tbChar" id="tbChar" style="display:none;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,43)+'</span><span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<button class="chip" id="tbStars" title="See your stars in the Treasure Realm" aria-label="Open the Treasure Realm">⭐ '+ex().stars+'</button>'
    +'<button class="chip" id="tbMute" title="Sound on or off" aria-label="Toggle sound">'+(isMuted()?'🔇':'🔊')+'</button>'
@@ -9383,6 +9386,109 @@ function bindParent(){
   (function(){ var sel=DB.explorers.find(function(x){return x.id===parentSel;})||ex(); if(sel)renderParentFriends(sel); })();
 }
 
+/* ============================================================
+   ADMIN PAGE (for Bryan, the app owner, ONLY)
+   Reachable ONLY by a direct link (#admin) — it is NOT linked
+   from anywhere in the app: no sidebar button, no Grand Door
+   link, no parent-page link. The master admin password is
+   checked SERVER-SIDE on every admin request (ADMIN_PASSWORD
+   env var, Vercel); the password is kept only in memory for
+   this tab and is never stored in localStorage. The admin page
+   lets Bryan find a family (by code or by explorer name) and
+   reset its parent PIN when a parent forgot it. Explorer names
+   are not unique, so a name search may return several families
+   and Bryan picks the right one — the reset always acts on the
+   family CODE of the family he picked, never on a name.
+   ============================================================ */
+var adminPw=null, adminResults=[], adminMsg='', adminOk='', adminResetCode=null;
+function adminHTML(){
+  var h='<div style="max-width:560px;margin:0 auto;padding:24px 14px"><div class="card"><h2 style="margin-top:0">🔐 Admin — reset a forgotten parent PIN</h2>'
+   +'<p class="muted" style="font-weight:700">For the app owner only. This page is not linked from anywhere in the app — only a direct link reaches it, and the master admin password is checked on the server for every step.</p>';
+  if(!adminPw){
+    h+='<label class="flabel">Master admin password</label><input class="field" id="admPw" type="password" placeholder="Master admin password" style="text-align:center"><div style="margin-top:12px"><button class="btn" id="admUnlock">Unlock</button></div>'
+     +(adminMsg?'<div class="feedback no" style="margin-top:12px">'+esc(adminMsg)+'</div>':'');
+  } else {
+    h+='<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap"><p style="font-weight:800;margin:0">🔓 Unlocked as admin</p><button class="btn ghost" id="admLock">🔒 Lock</button></div>'
+     +'<p style="font-weight:700">Find a family by its 6-letter family code, or by the child’s explorer name. A name may match several families — pick the right one before resetting.</p>'
+     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><div style="flex:1;min-width:200px"><label class="flabel">Family code or explorer name</label><input class="field" id="admQ" placeholder="e.g. ABC2DE or Star"></div><button class="btn" id="admSearch">Search</button></div>'
+     +(adminMsg?'<div class="feedback no" style="margin-top:12px">'+esc(adminMsg)+'</div>':'')
+     +(adminOk?'<div class="feedback yes" style="margin-top:12px">'+esc(adminOk)+'</div>':'');
+    if(adminResults.length){
+      h+='<h4 style="margin:18px 0 6px">Matching families</h4>'+adminResults.map(function(f){
+        var names=f.explorers.map(function(x){ return esc(x.name)+' ('+esc(x.level)+')'; }).join(', ')||'(no explorers)';
+        return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b style="letter-spacing:2px">'+esc(f.code)+'</b> · '+names+'<br><button class="btn ghost" data-admreset="'+esc(f.code)+'" style="margin-top:6px">Reset PIN</button></div>';
+      }).join('');
+    }
+    if(adminResetCode){
+      h+='<div class="card" style="margin-top:14px"><h4 style="margin-top:0">New PIN for family '+esc(adminResetCode)+'</h4><p class="small muted" style="font-weight:700">Type the new 4-digit PIN twice. Tell the parent the new PIN afterwards — they use it to open the Grown-ups page.</p><label class="flabel">New 4-digit PIN</label><input class="field" id="admPin1" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="text-align:center"><label class="flabel">Type it again</label><input class="field" id="admPin2" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN again" style="text-align:center"><div style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="admDoReset">Reset PIN</button><button class="btn ghost" id="admCancelReset">Cancel</button></div></div>';
+    }
+  }
+  return h+'</div></div>';
+}
+function bindAdmin(){
+  function postAdmin(path, body){
+    return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){ return r.json().then(function(j){ return {status:r.status,body:j}; }); });
+  }
+  function serverMsg(x){
+    if(x.status===503)return 'Admin is not set up yet — set the ADMIN_PASSWORD env var on the server and redeploy.';
+    if(x.status===502)return 'Could not reach the family records. Check the server setup and try again.';
+    return (x.body&&x.body.error)||'Something went wrong.';
+  }
+  function needUnlock(){ adminPw=null; adminResults=[]; adminResetCode=null; adminMsg='Wrong password — please unlock again.'; adminOk=''; render(); }
+  var pwEl=document.getElementById('admPw');
+  if(pwEl)pwEl.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); var u=document.getElementById('admUnlock'); if(u)u.click(); } });
+  var unlock=document.getElementById('admUnlock');
+  if(unlock)unlock.onclick=function(){
+    var pw=document.getElementById('admPw').value;
+    if(!pw){ adminMsg='Type the master admin password.'; render(); return; }
+    /* Verify the password with a probe: an empty-code find returns
+       400 when the password is right and 401 when it is wrong, so
+       no family data is ever sent for a password check. */
+    postAdmin('/api/admin-find',{password:pw,code:''}).then(function(x){
+      if(x.status===401){ adminMsg='Wrong password — try again.'; render(); return; }
+      if(x.status===503||x.status===502){ adminMsg=serverMsg(x); render(); return; }
+      adminPw=pw; adminMsg=''; adminOk=''; render();
+    }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
+  };
+  var lock=document.getElementById('admLock');
+  if(lock)lock.onclick=function(){ adminPw=null; adminResults=[]; adminMsg=''; adminOk=''; adminResetCode=null; render(); };
+  var qEl=document.getElementById('admQ');
+  if(qEl)qEl.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); var s=document.getElementById('admSearch'); if(s)s.click(); } });
+  var search=document.getElementById('admSearch');
+  if(search)search.onclick=function(){
+    var q=document.getElementById('admQ').value.trim();
+    if(!q){ adminMsg='Type a family code or an explorer name.'; render(); return; }
+    var body={password:adminPw};
+    var code=q.toUpperCase().replace(/[\s-]/g,'');
+    if(/^[A-Z2-9]{6}$/.test(code))body.code=code; else body.name=q;
+    postAdmin('/api/admin-find',body).then(function(x){
+      if(x.status===401){ needUnlock(); return; }
+      if(x.status===503||x.status===502){ adminMsg=serverMsg(x); render(); return; }
+      if(x.status!==200){ adminMsg=serverMsg(x); render(); return; }
+      adminResults=x.body.families||[]; adminResetCode=null;
+      if(adminResults.length){ adminOk='Found '+adminResults.length+' famil'+(adminResults.length===1?'y':'ies')+'. Pick the right one to reset its PIN.'; adminMsg=''; }
+      else { adminMsg='No family found for that search. Check the code or name and try again.'; adminOk=''; }
+      render();
+    }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
+  };
+  document.querySelectorAll('[data-admreset]').forEach(function(b){ b.onclick=function(){ adminResetCode=b.getAttribute('data-admreset'); adminMsg=''; adminOk=''; render(); var el=document.getElementById('admPin1'); if(el)el.focus(); }; });
+  var cancel=document.getElementById('admCancelReset');
+  if(cancel)cancel.onclick=function(){ adminResetCode=null; render(); };
+  var doReset=document.getElementById('admDoReset');
+  if(doReset)doReset.onclick=function(){
+    var a=document.getElementById('admPin1').value.trim(), b=document.getElementById('admPin2').value.trim();
+    if(!/^\d{4}$/.test(a)){ adminMsg='The new PIN must be exactly 4 digits.'; render(); return; }
+    if(a!==b){ adminMsg='The two PINs do not match.'; render(); return; }
+    postAdmin('/api/admin-reset-pin',{password:adminPw,code:adminResetCode,newPin:a}).then(function(x){
+      if(x.status===401){ needUnlock(); return; }
+      if(x.status===503||x.status===502){ adminMsg=serverMsg(x); render(); return; }
+      if(x.status!==200){ adminMsg=serverMsg(x); render(); return; }
+      adminOk='PIN reset for family '+x.body.code+' — tell the parent the new PIN. They use it to open the Grown-ups page.';
+      adminMsg=''; adminResetCode=null; render();
+    }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
+  };
+}
+
 /* ============================================================ BOOT */
 load();
 ensureSyncCode();
@@ -9409,6 +9515,10 @@ window.addEventListener('storage',function(ev){
   if(!ev||ev.key!==LSKEY||!DB)return;
   if(mergeStoredIntoDB()){ saveLocal(); if(safeToRender())render(); }
 });
+/* Admin page (Bryan only): reachable ONLY by a direct link
+   (#admin). It is not linked from anywhere in the app. */
+if(typeof location!=='undefined'&&location.hash==='#admin'){ route='admin'; }
+if(typeof window!=='undefined')window.addEventListener('hashchange',function(){ if(location.hash==='#admin'&&route!=='admin'){ route='admin'; render(); } });
 render();
 </script>
 </body>
