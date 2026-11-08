@@ -12,15 +12,26 @@
 // MODEL_API_KEY, MODEL_ID, MODEL_API_BASE — on Vercel these point at
 // the Gemini free tier).
 // Body: { topicId: 'math-ntuc', level: 1-6, count?: 5, day?: 'YYYY-MM-DD',
-//         bankStems: [normalised bank stems], examples?: [{q,o,a}] }
+//         bankStems: [normalised bank stems], examples?: [{q,o,a}],
+//         modelOn?: {q, o?, a, c?} — boost mode (see below) }
 // Reply (200): { live:true, topicId, level, day, questions, generatedMs, validated:true, source:'live' }
 // Errors: 400 bad topic/body, 405 POST only, 502 model/validation
 // failure (client falls back), 503 live_pip_not_configured.
+// BOOST MODE (Maths boost, 2026-11-08): when modelOn is present the
+// caller is a Maths boost drill, not a quest — the set is modelled on
+// the exact question she missed (same skill, easier first). Any of
+// the four Maths topics (math-mrt, math-hawker, math-ntuc, math-frac)
+// may generate in this mode; the quest flow stays math-ntuc-only.
+// modelOn.a is either an answer INDEX (with o: 4 options, from the
+// bank question) or the answer TEXT (from the boost record, when the
+// missed question was itself live-made and is not in the bank).
+// Validation is identical to quest mode; ANY failure falls back
+// silently to the bank cousins, exactly as a quest does.
 'use strict';
 
 const {
-  LIVE_GEN_TOPIC, LIVE_GEN_COUNT, validateLiveGenSet, buildLiveGenPrompt,
-  parseLiveGenReply, liveGenNormStem,
+  LIVE_GEN_TOPIC, LIVE_GEN_COUNT, LIVE_GEN_BOOST_TOPICS, validateLiveGenSet,
+  buildLiveGenPrompt, buildLiveGenBoostPrompt, parseLiveGenReply, liveGenNormStem,
 } = require('../lib/live-gen');
 
 const BASE = process.env.MODEL_API_BASE || 'https://api.meta.ai/v1';
@@ -38,8 +49,22 @@ module.exports = async (req, res) => {
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return json(res, 400, { error: 'bad json', fallback: true }); } }
-  // Experiment gate: exactly one topic, nothing else may generate.
-  if (body?.topicId !== LIVE_GEN_TOPIC) {
+  // Model-on (boost) mode: a Maths boost drill asks for 5 questions
+  // modelled on the exact question she missed. Any of the four Maths
+  // topics may generate in this mode; the quest flow stays
+  // math-ntuc-only, untouched.
+  const modelOn = (body && typeof body.modelOn === 'object' && body.modelOn) ? body.modelOn : null;
+  const isBoost = !!modelOn;
+  if (isBoost) {
+    if (!LIVE_GEN_BOOST_TOPICS.includes(body?.topicId)) {
+      return json(res, 400, { error: 'boost_maths_only', fallback: true });
+    }
+    const modelOk = typeof modelOn.q === 'string' && modelOn.q.trim().length > 0
+      && ((typeof modelOn.a === 'number' && Array.isArray(modelOn.o) && modelOn.o.length === 4 && Number.isInteger(modelOn.a) && modelOn.a >= 0 && modelOn.a <= 3)
+        || (typeof modelOn.a === 'string' && modelOn.a.trim().length > 0));
+    if (!modelOk) return json(res, 400, { error: 'bad modelOn', fallback: true });
+  } else if (body?.topicId !== LIVE_GEN_TOPIC) {
+    // Experiment gate: exactly one topic, nothing else may generate.
     return json(res, 400, { error: 'experiment_topic_only', topicId: LIVE_GEN_TOPIC, fallback: true });
   }
   const level = (typeof body?.level === 'number' && body.level >= 1 && body.level <= 6) ? Math.floor(body.level) : 3;
@@ -68,7 +93,9 @@ module.exports = async (req, res) => {
   for (let attempt = 0; attempt < MAX_GEN_ATTEMPTS; attempt++) {
     if (attempt > 0 && Date.now() - startedAt > GEN_BUDGET_MS) break;
     attempts++;
-    const prompt = buildLiveGenPrompt('NTUC Totals', level, LIVE_GEN_COUNT, examples)
+    const prompt = (isBoost
+      ? buildLiveGenBoostPrompt(body.topicId, level, LIVE_GEN_COUNT, examples, modelOn)
+      : buildLiveGenPrompt('NTUC Totals', level, LIVE_GEN_COUNT, examples))
       + (lastReasons ? '\nYour previous set was rejected for: ' + lastReasons.join(', ') + '. Fix those problems and try again with a fresh set of 5 different questions.' : '');
     let r = null;
     try {
@@ -115,7 +142,7 @@ module.exports = async (req, res) => {
     const check = validateLiveGenSet(parsed.questions, bankStems);
     if (!check.ok) { lastReasons = check.reasons; lastParseError = null; continue; }
     return json(res, 200, {
-      live: true, source: 'live', topicId: LIVE_GEN_TOPIC, level, day,
+      live: true, source: 'live', topicId: isBoost ? body.topicId : LIVE_GEN_TOPIC, level, day,
       questions: parsed.questions, generatedMs: Date.now() - startedAt, validated: true, attempts,
     });
   }
