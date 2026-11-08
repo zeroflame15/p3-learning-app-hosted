@@ -163,7 +163,7 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 @keyframes frogBlink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
 .frog-body{transform-box:fill-box;transform-origin:50% 100%;animation:frogBreathe 3.2s ease-in-out infinite}
 @keyframes frogBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03,1.05)}}
-.frog-bubble{position:absolute;left:50%;top:10px;transform:translateX(-50%);max-width:88%;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:800;font-size:.92rem;z-index:6;box-shadow:var(--shadow);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frog-bubble{position:absolute;left:50%;top:10px;transform:translateX(-50%);max-width:88%;background:#fff;border:2px solid var(--line);border-radius:14px;padding:8px 12px;font-weight:800;font-size:.92rem;z-index:6;box-shadow:var(--shadow);text-align:center;line-height:1.35}
 .frog-bubble:after{content:'';position:absolute;left:50%;bottom:-9px;margin-left:-8px;border:8px solid transparent;border-top-color:#fff;border-bottom:0}
 .dirt-spot{position:absolute;width:36px;height:28px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a9805a,#6b4a2a 70%);border:0;cursor:pointer;z-index:4;pointer-events:auto;box-shadow:inset 0 -3px 5px rgba(0,0,0,.3)}
 .dirt-spot:hover{transform:scale(1.12)}
@@ -3136,7 +3136,7 @@ function mergeExplorer(a,b){
   var _nAtA=Date.parse((a&&a.nameAt)||'')||0, _nAtB=Date.parse((b&&b.nameAt)||'')||0;
   if(_nAtB>_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; } else if(_nAtA>_nAtB){ if(a.name!=null)e.name=a.name; e.nameAt=a.nameAt; } else if(_nAtA&&_nAtB&&_nAtB===_nAtA){ if(b.name!=null)e.name=b.name; e.nameAt=b.nameAt; }
   var _lAtA=Date.parse((a&&a.lookAt)||'')||0, _lAtB=Date.parse((b&&b.lookAt)||'')||0;
-  if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; if(a.face!=null)e.face=a.face; e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; e.lookAt=b.lookAt; }
+  if(_lAtB>_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; if(b.look!=null)e.look=JSON.parse(JSON.stringify(b.look)); e.lookAt=b.lookAt; } else if(_lAtA>_lAtB){ if(a.glow!=null)e.glow=a.glow; if(a.badge!=null)e.badge=a.badge; if(a.face!=null)e.face=a.face; if(a.look!=null)e.look=JSON.parse(JSON.stringify(a.look)); e.lookAt=a.lookAt; } else if(_lAtA&&_lAtB&&_lAtB===_lAtA){ if(b.glow!=null)e.glow=b.glow; if(b.badge!=null)e.badge=b.badge; if(b.face!=null)e.face=b.face; if(b.look!=null)e.look=JSON.parse(JSON.stringify(b.look)); e.lookAt=b.lookAt; }
   /* Weekly theme: same later-timestamp-wins rule as name/look. The
      merge used to rebuild the explorer from the server copy and
      never took the local theme, so tapping a theme chip changed
@@ -3304,7 +3304,7 @@ function ensureFriendCode(e){
 }
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
-    face:'🦦', glow:'#ffb020', badge:'⭐', stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
+    face:'🦦', glow:'#ffb020', badge:'⭐', look:{color:'',hair:'',accessory:''}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
@@ -3451,11 +3451,50 @@ function toggleMenu(){
   document.getElementById('mLook').onclick=function(){ h.innerHTML=''; openLookModal(); };
   var fc=document.getElementById('mFriendCode'); if(fc)fc.onclick=function(){ var live=ex(); var code=live&&live.friendCode?live.friendCode:''; if(!code)return; function done(){ toast('Friend code copied — share it so a friend can add '+live.name+'!'); } if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done,function(){ toast('Friend code: '+code); }); } else { var ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(err){ toast('Friend code: '+code); } document.body.removeChild(ta); } };
 }
+
+/* ============================================================
+   FULL-BODY LOOK (2026-11-08, Bryan): the "Change my name &
+   look" modal grows a dress-up builder — body colour, hair and
+   accessory, on top of the animal face. Emoji + CSS only, no new
+   image files. Stored as e.look={color,hair,accessory}, stamped by
+   the same e.lookAt as face/glow/badge, merged later-wins. */
+var LOOK_COLORS=['','#ff8fa3','#ffb020','#2dd4bf','#7db4ff','#c084fc','#8b5e3c'];
+var LOOK_HAIRS=['','spiky','curly','long','bun'];
+var LOOK_HAIR_LABELS={'':'None','spiky':'Spiky','curly':'Curly','long':'Long','bun':'Bun'};
+var LOOK_HAIR_SHAPES={
+ spiky:'<path d="M15,58 L28,12 L42,46 L55,6 L70,46 L84,12 L96,48 L108,22 L110,58 Z" fill="#6b4423"/>',
+ curly:'<circle cx="32" cy="40" r="17" fill="#6b4423"/><circle cx="60" cy="32" r="19" fill="#6b4423"/><circle cx="88" cy="40" r="17" fill="#6b4423"/>',
+ long:'<rect x="12" y="14" width="17" height="46" rx="8" fill="#6b4423"/><rect x="91" y="14" width="17" height="46" rx="8" fill="#6b4423"/>',
+ bun:'<circle cx="60" cy="24" r="15" fill="#6b4423"/><rect x="34" y="40" width="52" height="10" rx="5" fill="#6b4423"/>'};
+var LOOK_ACCS=['','necklace','hat','glasses','bowtie'];
+var LOOK_ACC_EMOJI={necklace:'📿',hat:'🎩',glasses:'👓',bowtie:'🎀'};
+var LOOK_ACC_LABELS={necklace:'Necklace',hat:'Hat',glasses:'Glasses',bowtie:'Bow tie'};
+/* Full-body preview: the animal emoji is the head, a CSS shape in
+   the chosen colour is the body (Natural = the explorer's glow),
+   hair is an SVG over the head, the accessory is an emoji overlaid
+   where it belongs. Tolerates a missing look (legacy explorers). */
+function avatarLookHTML(face, look, glow){
+  look=look||{};
+  var body=look.color||glow||'#7cc46a';
+  var hair=look.hair||'', acc=look.accessory||'';
+  var accPos={hat:'top:0;font-size:2.6rem',glasses:'top:56px;font-size:2.4rem',necklace:'top:108px;font-size:1.9rem',bowtie:'top:106px;font-size:1.9rem'};
+  return '<div style="position:relative;height:182px;display:flex;flex-direction:column;align-items:center">'
+   +'<div style="font-size:4rem;line-height:1;margin-top:30px">'+(face||'🦦')+'</div>'
+   +'<div style="width:118px;height:62px;margin-top:-12px;border-radius:46% 46% 42% 42%/72% 72% 28% 28%;background:'+body+'"></div>'
+   +(hair?'<div style="position:absolute;left:50%;transform:translateX(-50%);top:2px;width:120px"><svg viewBox="0 0 120 60" style="width:120px;height:60px;display:block">'+LOOK_HAIR_SHAPES[hair]+'</svg></div>':'')
+   +(acc?'<div style="position:absolute;left:50%;transform:translateX(-50%);'+accPos[acc]+'">'+LOOK_ACC_EMOJI[acc]+'</div>':'')
+   +'</div>';
+}
+
 function openLookModal(){
   var e=ex();
   openModal('<h3 style="margin-top:0">Change my name &amp; look 🎨</h3>'
    +'<label class="flabel">Magic name</label><input class="field" id="lkName" value="'+esc(e.name)+'" maxlength="20">'
    +'<label class="flabel">My animal friend</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['🦦','🐸','🦋','🐱','🐶','🐰','🦁','🐼','🦊','🐢','🐷','🐵'].map(function(a){return '<button class="iconbtn facePick" data-f="'+a+'" style="font-size:1.2rem;'+(e.face===a?'outline:3px solid var(--ink)':'')+'">'+a+'</button>';}).join('')+'</div>'
+   +'<label class="flabel">My full-body look</label><div id="lookPreview" class="card" style="padding:12px;margin-bottom:4px">'+avatarLookHTML(e.face,e.look,e.glow)+'</div>'
+   +'<label class="flabel">Body colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_COLORS.map(function(c){ var cur=(e.look||{}).color||''; return '<button class="iconbtn lookColorPick" data-c="'+c+'" style="background:'+(c||'repeating-linear-gradient(45deg,#ffffff 0 4px,#e8e2d4 4px 8px)')+';'+(cur===c?'outline:3px solid var(--ink)':'')+'" aria-label="Body colour '+(c||'natural')+'"></button>'; }).join('')+'</div>'
+   +'<label class="flabel">Hair</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_HAIRS.map(function(h){ var cur=(e.look||{}).hair||''; return '<button class="btn'+(cur===h?'':' ghost')+' lookHairPick" data-h="'+h+'" style="padding:8px 10px">'+(h?'<span style="display:inline-block;width:24px;vertical-align:middle"><svg viewBox="0 0 120 60" style="width:24px;height:12px;display:block">'+LOOK_HAIR_SHAPES[h]+'</svg></span> ':'')+LOOK_HAIR_LABELS[h]+'</button>'; }).join('')+'</div>'
+   +'<label class="flabel">Accessory</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_ACCS.map(function(a){ var cur=(e.look||{}).accessory||''; return '<button class="iconbtn lookAccPick" data-a="'+a+'" style="font-size:1.2rem;'+(cur===a?'outline:3px solid var(--ink)':'')+'" aria-label="'+(a?LOOK_ACC_LABELS[a]:'No accessory')+'">'+(a?LOOK_ACC_EMOJI[a]:'🚫')+'</button>'; }).join('')+'</div>'
    +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
    +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡','🐸','🦋','🌟','💎','🎨','🏆','🌸','🍀','🎵','❤️'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
    +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -3466,9 +3505,16 @@ function openLookModal(){
      opened: the background sync (~800ms after a save) replaces the
      whole DB object, so that captured copy is detached and a write to
      it is silently lost. Resolve the live explorer fresh on every tap. */
-  document.querySelectorAll('.facePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var f=b.getAttribute('data-f'); if(live.face!==f){ live.face=f; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.facePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
-  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(live.glow!==g){ live.glow=g; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  /* Refresh the full-body preview in place after a look tap —
+     same rule as the outlines: never rebuild the modal (that
+     would throw away a typed unsaved name). */
+  function refreshLookPreview(){ var live=ex(); var pv=document.getElementById('lookPreview'); if(live&&pv)pv.innerHTML=avatarLookHTML(live.face,live.look,live.glow); }
+  document.querySelectorAll('.facePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var f=b.getAttribute('data-f'); if(live.face!==f){ live.face=f; live.lookAt=new Date().toISOString(); save(); refreshLookPreview(); } document.querySelectorAll('.facePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(live.glow!==g){ live.glow=g; live.lookAt=new Date().toISOString(); save(); refreshLookPreview(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var bd=b.getAttribute('data-b'); if(live.badge!==bd){ live.badge=bd; live.lookAt=new Date().toISOString(); save(); } document.querySelectorAll('.badgePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--amber)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.lookColorPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var c=b.getAttribute('data-c'); if(!live.look)live.look={color:'',hair:'',accessory:''}; if((live.look.color||'')!==c){ live.look.color=c; live.lookAt=new Date().toISOString(); save(); refreshLookPreview(); } document.querySelectorAll('.lookColorPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.lookHairPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var h=b.getAttribute('data-h'); if(!live.look)live.look={color:'',hair:'',accessory:''}; if((live.look.hair||'')!==h){ live.look.hair=h; live.lookAt=new Date().toISOString(); save(); refreshLookPreview(); } document.querySelectorAll('.lookHairPick').forEach(function(x){ x.classList.toggle('ghost',x!==b); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.lookAccPick').forEach(function(b){ b.onclick=function(){ var live=ex(); if(!live)return; var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var a=b.getAttribute('data-a'); if(!live.look)live.look={color:'',hair:'',accessory:''}; if((live.look.accessory||'')!==a){ live.look.accessory=a; live.lookAt=new Date().toISOString(); save(); refreshLookPreview(); } document.querySelectorAll('.lookAccPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
 }
 function openModal(html){
@@ -7035,8 +7081,18 @@ var CARE_FX={feed:['🪰','💕','✨'],clean:['🫧','✨','💧'],play:['🎾'
 var careFx=null;
 /* What the frog says when tapped — a tap always replays the happy
    reaction (hop + floating emoji + bubble), even while every care
-   is on cooldown. */
-var FROG_LINES=['Ribbit! That tickles! 🐸','I love my pond! 💧','Hop hop hooray! 🎉','You are my favourite explorer! ⭐','Ribbit ribbit! Let’s play! 🎾','I’m growing big and strong! 🌱'];
+   is on cooldown. Now the frog tells FUN FACTS about frogs (Bryan,
+   2026-11-08): one per tap, shuffled, no repeats until all 12
+   have been told, then reshuffled. The bubble shows the frog's own
+   name (e.critterName), so the fact reads as the frog telling it.
+   Session-only state, never saved or synced. The old greeting
+   lines are gone. */
+var FROG_FACTS=['Frogs soak up water through their skin — they never take a sip like we do!','A group of frogs is called an army!','Frogs use their eyes to help push food down when they swallow!','Glass frogs are see-through — you can spot their tiny organs inside!','A frog’s tongue is stuck on at the front of its mouth, so it can flick it out super fast!','Some frogs can jump 20 times their own body length!','Tadpoles breathe with gills like fish, then grow lungs as they turn into frogs!','A frog’s big bulging eyes help it see almost all around!','The tiniest frog in the world is smaller than a coin!','Some frogs can change colour to hide from hungry hunters!','Frogs have hopped around Earth for more than 200 million years!','The round circle behind a frog’s eye is its ear — its eardrum!'];
+var frogFactState=null;
+function nextFrogFact(){
+  if(!frogFactState||frogFactState.idx>=frogFactState.order.length){ frogFactState={order:shuffle(FROG_FACTS.map(function(f,i){ return i; })), idx:0}; }
+  return FROG_FACTS[frogFactState.order[frogFactState.idx++]];
+}
 /* Foods on the Feed menu — the child picks one, the frog gobbles it. */
 var FOODS=[{e:'🪰',name:'fly'},{e:'🦟',name:'mozzie'},{e:'🐛',name:'wriggly worm'}];
 /* Pond UI state only — never saved, never synced. frogPos is where
@@ -7222,11 +7278,11 @@ function bindCritter(){
      speech bubble) even while every care is on cooldown. */
   function frogTap(){
     var eNow=ex(); if(!eNow)return;
-    var line=FROG_LINES[Math.floor(Math.random()*FROG_LINES.length)];
+    var line=nextFrogFact();
     careFx={a:'play', k:Date.now()};
     setTimeout(function(){ careFx=null; }, 1700);
     sndPop(); render();
-    var b=document.getElementById('frogBubble'); if(b){ b.textContent='💬 '+line; b.style.display='block'; }
+    var b=document.getElementById('frogBubble'); if(b){ b.textContent='💬 '+(eNow.critterName||'Frog')+': '+line; b.style.display='block'; }
     if(frogBubbleTimer)clearTimeout(frogBubbleTimer);
     frogBubbleTimer=setTimeout(function(){ var b2=document.getElementById('frogBubble'); if(b2)b2.style.display='none'; },2600);
   }
