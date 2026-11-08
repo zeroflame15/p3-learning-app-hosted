@@ -34,10 +34,10 @@ const TOPICS = eval('(' + extractVar(html, 'TOPICS') + ')');
 
 test('every nav item, game and quest has an icon: a custom file, or an emoji fallback', () => {
   const wanted = [];
-  NAV.forEach(function (n) { wanted.push(['nav ' + n[0], n[3]]); });
+  NAV.forEach(function (n) { wanted.push(['nav ' + n[0], n[3], n[1]]); });
   GAMES.forEach(function (g) { wanted.push(['game ' + g.id, g.img]); });
   TOPICS.forEach(function (t) { wanted.push(['quest ' + t.id, t.img, t.icon]); });
-  assert.equal(wanted.length, 50, '10 nav + 9 games + 31 quests');
+  assert.equal(wanted.length, 51, '11 nav + 9 games + 31 quests');
   let wired = 0, fallback = 0;
   for (const [label, file, emo] of wanted) {
     if (file) {
@@ -57,12 +57,13 @@ test('every nav item, game and quest has an icon: a custom file, or an emoji fal
       // img:'' — ic() falls back to the emoji, which renders fine.
       // Gap-fill (2026-11-08): the 17 new topics use img:'' on
       // purpose; custom 3D art for them is a separate follow-up.
+      // The Jokes nav item (2026-11-08) is img:'' too.
       fallback++;
       assert.ok(emo, label + ' has an emoji fallback icon');
     }
   }
   assert.equal(wired, 33, '33 wired icons: 10 nav + 9 games + 14 quests');
-  assert.equal(fallback, 17, '17 emoji-fallback topics (the gap-fill topics)');
+  assert.equal(fallback, 18, '18 emoji-fallback entries (17 gap-fill topics + the Jokes nav item)');
   const onDisk = fs.readdirSync(ICONS_DIR).filter(function (f) { return f.endsWith('.webp'); });
   assert.equal(onDisk.length, 33, 'exactly the 33 wired icons on disk, no strays');
 });
@@ -113,6 +114,7 @@ test('every section top shows the same big artwork, not the old flat emoji', () 
     ['Critter Lab', 'icons/nav-critter.webp', '🐸'],
     ['Treasure', 'icons/nav-treasure.webp', '💎'],
     ['Vibe', 'icons/nav-vibe.webp', '🎵'],
+    ['Jokes', '', '😂'],
     ['Create', 'icons/nav-create.webp', '🎨'],
   ];
   for (const [name, art, emo] of sections) {
