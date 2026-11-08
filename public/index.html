@@ -331,29 +331,38 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .otter3d .tongue{transform-box:fill-box;transform-origin:50% 0;animation:tongueWig 3.4s ease-in-out infinite}
 @keyframes tongueWig{0%,100%{transform:rotate(-2deg) scaleY(1)}50%{transform:rotate(3deg) scaleY(1.08)}}
 @media (prefers-reduced-motion: reduce){.otter3d,.otter3d .eye,.otter3d .pawwave,.otter3d .leafsway,.otter3d .earl,.otter3d .earr,.otter3d .tongue{animation:none}}
-/* Avatar characters (round 4, realistic fur + idle life) — same source as AVATAR_3D_CSS in the avatar block below. */
-
-.av3d .av-bob{transform-box:fill-box;transform-origin:50% 100%;animation:avBob 3.6s ease-in-out infinite}
-@keyframes avBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
-.av3d .av-blink{transform-box:fill-box;transform-origin:center;animation:avBlink 4.6s infinite}
-@keyframes avBlink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}}
-.av3d .av-earwig{transform-box:fill-box;transform-origin:50% 100%;animation:avEarWig 5s ease-in-out infinite}
-@keyframes avEarWig{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-8deg)}94%{transform:rotate(6deg)}}
-.av3d .av-sway{transform-box:fill-box;transform-origin:50% 0;animation:avSway 3.8s ease-in-out infinite}
-@keyframes avSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
-.av3d .av-flutter-l{transform-box:fill-box;transform-origin:100% 50%;animation:avFlutterL 1.8s ease-in-out infinite}
-.av3d .av-flutter-r{transform-box:fill-box;transform-origin:0% 50%;animation:avFlutterR 1.8s ease-in-out infinite}
-@keyframes avFlutterL{0%,100%{transform:scaleX(1) rotate(0deg)}50%{transform:scaleX(.45) rotate(-14deg)}}
-@keyframes avFlutterR{0%,100%{transform:scaleX(1) rotate(0deg)}50%{transform:scaleX(.45) rotate(14deg)}}
-.av3d .av-hop{transform-box:fill-box;transform-origin:50% 100%;animation:avHop 2.8s ease-in-out infinite}
-@keyframes avHop{0%,78%,100%{transform:translateY(0) scale(1,1)}86%{transform:translateY(-7px) scale(.98,1.04)}92%{transform:translateY(0) scale(1.05,.94)}}
-.av3d .av-nod{transform-box:fill-box;transform-origin:50% 100%;animation:avNod 4.2s ease-in-out infinite}
-@keyframes avNod{0%,84%,100%{transform:rotate(0deg)}88%{transform:rotate(3deg)}92%{transform:rotate(-2deg)}}
-.av3d .av-tongue{transform-box:fill-box;transform-origin:50% 0;animation:avTongue 3.4s ease-in-out infinite}
-@keyframes avTongue{0%,100%{transform:rotate(-2deg) scaleY(1)}50%{transform:rotate(3deg) scaleY(1.1)}}
-.av3d .av-flop{transform-box:fill-box;transform-origin:50% 0;animation:avFlop 4.4s ease-in-out infinite}
-@keyframes avFlop{0%,82%,100%{transform:rotate(0)}88%{transform:rotate(-10deg)}94%{transform:rotate(7deg)}}
-@media (prefers-reduced-motion: reduce){.av3d .av-bob,.av3d .av-blink,.av3d .av-earwig,.av3d .av-sway,.av3d .av-flutter-l,.av3d .av-flutter-r,.av3d .av-hop,.av3d .av-nod,.av3d .av-tongue,.av3d .av-flop{animation:none}}
+/* Avatar characters (round 5, flat kawaii + idle life) — same source as AVATAR_5_CSS in the avatar block below. */
+.av5{cursor:pointer}
+.av5 .av-bob{transform-box:fill-box;transform-origin:50% 100%;animation:av5Bob 3.6s ease-in-out infinite}
+.av5 .av-blink{transform-box:fill-box;transform-origin:center;animation:av5Blink 4.6s infinite}
+.av5 .av-earwig{transform-box:fill-box;transform-origin:50% 100%;animation:av5EarWig 5s ease-in-out infinite}
+.av5 .av-sway{transform-box:fill-box;transform-origin:50% 0;animation:av5Sway 3.8s ease-in-out infinite}
+.av5 .av-hop{transform-box:fill-box;transform-origin:50% 100%;animation:av5Hop 2.8s ease-in-out infinite}
+.av5 .av-nod{transform-box:fill-box;transform-origin:50% 100%;animation:av5Nod 4.2s ease-in-out infinite}
+.av5 .av-twinkle{animation:av5Twinkle 2.2s ease-in-out infinite}
+.av5 .av-jump{transform-box:fill-box;transform-origin:50% 100%}
+.av5 .av-sparkles{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}
+.av5.av-play .av-jump{animation:av5Play .8s cubic-bezier(.34,1.56,.64,1)}
+.av5[data-animal="frog"].av-play .av-jump{animation:av5PlayHop .8s cubic-bezier(.34,1.56,.64,1)}
+.av5[data-animal="rabbit"].av-play .av-earwig{animation:av5EarWig .8s ease-in-out infinite!important;animation-delay:0s!important}
+.av5.av-play .av-sparkles{animation:av5Spark .8s ease-out}
+.av5 .av-twinklebg{transform-box:fill-box;transform-origin:center;animation:av5TwinkleBg 3s ease-in-out infinite}
+.av5 .av-bub{animation:av5Bub 7s linear infinite}
+.av5 .av-pet{transform-box:fill-box;transform-origin:center;animation:av5Pet 8s linear infinite}
+@keyframes av5Bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
+@keyframes av5Blink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}}
+@keyframes av5EarWig{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}
+@keyframes av5Sway{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+@keyframes av5Hop{0%,55%,100%{transform:translateY(0)}12%{transform:translateY(-8px)}30%{transform:translateY(0)}42%{transform:translateY(-4px)}}
+@keyframes av5Nod{0%,100%{transform:rotate(0deg)}30%{transform:rotate(3deg)}65%{transform:rotate(-3deg)}}
+@keyframes av5Twinkle{0%,100%{opacity:.25}50%{opacity:1}}
+@keyframes av5Play{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-26px) scale(.96,1.06)}55%{transform:translateY(0) scale(1.08,.9)}75%{transform:translateY(-8px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}
+@keyframes av5PlayHop{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-38px) scale(.96,1.06)}55%{transform:translateY(0) scale(1.08,.9)}75%{transform:translateY(-10px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}
+@keyframes av5Spark{0%{opacity:0;transform:scale(.5)}30%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:scale(.7)}}
+@keyframes av5TwinkleBg{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes av5Bub{0%{transform:translateY(0);opacity:0}15%{opacity:.5}85%{opacity:.5}100%{transform:translateY(-170px);opacity:0}}
+@keyframes av5Pet{0%{transform:translateY(-25px) rotate(0deg);opacity:0}15%{opacity:.6}85%{opacity:.6}100%{transform:translateY(190px) rotate(160deg);opacity:0}}
+@media (prefers-reduced-motion: reduce){.av5 .av-bob,.av5 .av-blink,.av5 .av-earwig,.av5 .av-sway,.av5 .av-hop,.av5 .av-nod,.av5 .av-twinkle,.av5 .av-twinklebg,.av5 .av-bub,.av5 .av-pet{animation:none}.av5.av-play .av-jump,.av5.av-play .av-sparkles{animation:none!important}}
 
 
 /* ---------- Home: terrarium hero + weekly theme (mirrors the Muse version) ---------- */
@@ -3337,7 +3346,7 @@ function ensureFriendCode(e){
 }
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
-    face:'🦦', glow:'#ffb020', badge:'⭐', look:{color:'',accessory:''}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
+    face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, critterName:'Splash', critterNameAt:null, critterStage:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
@@ -3486,515 +3495,825 @@ function toggleMenu(){
 }
 
 /* ============================================================
-   FULL-BODY LOOK — ROUND 4 (realistic fur, texture, depth,
-   2026-11-08): the same 12 complete full-body animals as
-   round 3 (body IS the animal, whole-animal colour, no hair,
-   tiny accessories, idle life), pushed further toward
-   realistic, like Mira — the rendered 3D otter with soft
-   visible fur, layered depth and glossy dimensional eyes.
-   The parent asked for it directly: "change the frog,
-   butterfly, tortoise, panda. make them cuter. all animals
-   become more realistic like mira. Textures, fur, depth."
-     • FUR: fine strand strokes following the fur flow,
-       plus short tuft strokes at the silhouette — cheeks,
-       chest, ear tips, tail tips — so the edge reads fuzzy,
-       not cut-out; a faint feTurbulence grain over the body
-       and head of furry animals (one filter per render) for
-       a soft furry surface;
-     • DEPTH: rim light along the top-left edge, ambient
-       occlusion where limbs meet the body, deeper gradients,
-       toe lines on the feet, dimensional noses;
-     • EYES: iris rim + inner ring + an upper-lid shadow, so
-       the eyes sit IN the face instead of on it.
-   FOCUS FOUR — visibly reworked, cuter and more realistic:
-   the FROG (bigger eyes, skin bumps, wider smile, toe pads),
-   the BUTTERFLY (scalloped patterned wings with veins,
-   slimmer segmented body, longer antennae), the TURTLE
-   (real scute pattern with borders and a rim, bigger eyes)
-   and the PANDA (fur tufts on the black patches, bigger
-   warmer eyes, soft white fur).
-   COLOUR: the gradients are derived from the chosen colour,
-   so a pink otter is a pink furry otter — its fur, shadows
-   and belly follow the colour. Natural = the animal's own
-   colour; the dark edge is always a shade of the main colour
-   (never the animal's dark accent — the panda's body edge is
-   grey, not black), while natDark stays for the animal's own
-   dark parts (panda's patches, turtle's shell, lion's mane).
-   ANIMATION (CSS only, classes in AVATAR_3D_CSS): gentle
-   bobbing, blinking every few seconds, and one signature
-   motion per animal — all slow and calm, transform/opacity
-   only, so a child feels the animal is alive, not dancing.
-   The svg carries class="av3d", so the rules only touch
+   FULL-BODY LOOK — ROUND 5 (flat kawaii, sheet-exact,
+   2026-11-08): all 25 animals from the parent's reference
+   sheet, redrawn to match it exactly as closely as SVG
+   allows — thick dark-brown outlines, flat fills, big glossy
+   black eyes with white highlights, small simple mouths,
+   pink blush cheeks. This is a STYLE RESET from the round-3/4
+   shaded 3D plush look: no gradients for shading, no fur
+   texture, no grain — flat colours, exactly like the sheet.
+   The parent asked for it directly: "Change them to these
+   characters. exactly the same. No need change color option."
+     • NO COLOUR OPTION: animals keep their own colours from
+       the sheet. A stored e.look.color is NEVER read (the
+       same way stored hair was ignored in round 2).
+     • NO ACCESSORIES: the parent dropped them (2026-11-08 —
+       per-animal positioning for 25 animals was too fiddly,
+       as the chick proved). A stored e.look.accessory is
+       NEVER read, the same way a stored colour is ignored.
+     • CUSTOM BACKGROUND: shape (circle, heart, star, rounded
+       square, cloud, flower) × colour (6 pastels + none) ×
+       pattern (none, polka dots, stars, stripes, hearts) ×
+       effect (plain, glitter, glow, shine, twinkle, bubbles,
+       petals) — part of the look. Patterns and animated
+       effects are drawn INSIDE the shape (clipped to it),
+       subtle so the animal still pops.
+     • TAP TO PLAY: tapping the animal makes it do a happy
+       jump with squash-and-stretch plus a tiny sparkle burst.
+       The frog hops higher, the rabbit wiggles its ears
+       faster. The idle bob/blink keep running underneath and
+       the trick ends by itself, so the idle life resumes.
+     • GROUND SHADOW: a soft ellipse under the feet, between
+       the background and the animal, so the character lifts
+       off the background and pops — flat and soft, not a heavy
+       3D drop shadow.
+   ANIMATION (CSS only, classes in AVATAR_5_CSS): gentle
+   bobbing, blinking every few seconds, and a signature motion
+   for the obvious ones — all slow and calm, transform/opacity
+   only. The svg carries class="av5", so the rules only touch
    avatar characters.
-   GEOMETRY: the round-3 coordinates are the base; only the
-   focus four and the otter's arms change shape (see
-   design-4.md). Stored as e.look={color,accessory}, stamped
-   by e.lookAt, merged later-wins. */
-var LOOK_COLORS=['','#ff8fa3','#ffb020','#2dd4bf','#7db4ff','#c084fc','#8b5e3c'];
-/* Mix a hex colour toward white (f>0) or black (f<0). */
-function shade(hex,f){
-  var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
-  var t=f<0?0:255, p=Math.abs(f);
-  r=Math.round(r+(t-r)*p); g=Math.round(g+(t-g)*p); b=Math.round(b+(t-b)*p);
-  return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+   OTTER + BUTTERFLY are gone (not in the sheet): a stored
+   face of 🦦 or 🦋 falls back gracefully to the chick (the
+   first animal on the sheet). Stored as e.look=
+   {background:{shape,color,pattern,effect}}, stamped by
+   e.lookAt, merged later-wins (whole look object). */
+var AV_INK='#4a3226';
+var AV_EYE='#26221f';
+var AV_BLUSH='#f7a8b8';
+/* Background shapes, colours and effects. Colours are pastel,
+   matching the cute theme; 'none' means no background at all. */
+var LOOK_BG_SHAPES=['circle','heart','star','square','cloud','flower'];
+var LOOK_BG_COLORS={mint:'#bfe8d8',pink:'#ffd6e0',sky:'#cfe8ff',lilac:'#e6d9ff',peach:'#ffe3c7',lemon:'#fff3b0'};
+var LOOK_BG_COLOR_NAMES=['mint','pink','sky','lilac','peach','lemon'];
+var LOOK_BG_EFFECTS=['plain','glitter','glow','shine','twinkle','bubbles','petals'];
+/* Background patterns, drawn inside the shape (clipped to it) in
+   white at low opacity, so the animal still pops off it. '' is none. */
+var LOOK_BG_PATTERNS=['','dots','stars','stripes','hearts'];
+/* One background shape, centred on (100,135), ~190 wide. The
+   element has no fill/stroke — bgShapeEl adds them. */
+var BG_SHAPE_EL={
+ circle:'<circle cx="100" cy="135" r="92"/>',
+ heart:'<path d="M100,246 C54,212 4,176 4,120 C4,82 32,48 66,48 C84,48 96,60 100,78 C104,60 116,48 134,48 C168,48 196,82 196,120 C196,176 146,212 100,246 Z"/>',
+ star:'<path d="M100,40 L125,101 L190,106 L140,148 L156,212 L100,177 L44,212 L60,148 L10,106 L75,101 Z"/>',
+ square:'<rect x="12" y="48" width="176" height="176" rx="28"/>',
+ cloud:'<path d="M25,200 A25,25 0 0 1 18,160 A32,32 0 0 1 45,105 A32,32 0 0 1 95,85 A30,30 0 0 1 145,100 A28,28 0 0 1 182,140 A28,28 0 0 1 185,195 Q100,212 25,200 Z"/>',
+ flower:'<path d="M135,74 A40,40 0 0 1 170,135 A40,40 0 0 1 135,196 A40,40 0 0 1 65,196 A40,40 0 0 1 30,135 A40,40 0 0 1 65,74 A40,40 0 0 1 135,74 Z"/>'
+};
+function bgShapeEl(shape, fill, stroke){
+  var el=BG_SHAPE_EL[shape]||BG_SHAPE_EL.circle;
+  return el.replace('/>', ' fill="'+fill+'" stroke="'+(stroke||AV_INK)+'" stroke-width="3" stroke-linejoin="round"/>');
 }
-/* Whole-animal palette for one look: main is the picked colour or
-   the animal's own natural colour; hi/edge are the gradient ends
-   (always shades of main, so the body edge never goes black on a
-   pale animal); dark is the animal's own dark accent (panda's
-   black, turtle's shell green, lion's mane) for its dark parts. */
-function lookPal(color, nat, natDark){
-  var main=color||nat;
-  var dark=color?shade(main,-0.38):natDark;
-  return {main:main, light:shade(main,0.62), lighter:shade(main,0.82),
-    dark:dark, dark2:shade(dark,0.15), dark3:shade(dark,-0.22),
-    hi:shade(main,0.42), edge:shade(main,-0.30), deep:shade(dark,-0.18),
-    bellyEnd:shade(main,0.25),
-    fur:shade(main,-0.18), furHi:shade(main,0.38),
-    ink:'#26221f', white:'#ffffff', nat:!color};
-}
-/* A soft white sheen where the top-left light hits the form. */
-function avSheen(u,cx,cy,rx,ry,op,rot){
-  return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="url(#gGl'+u+')" opacity="'+op+'"'+(rot?' transform="rotate('+rot+' '+cx+' '+cy+')"':'')+'/>';
-}
-/* The darker crease under the chin, where the head meets the body. */
-function avCrease(cx,cy,rx,ry){
-  return '<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+rx+'" ry="'+ry+'" fill="#000000" opacity="0.10"/>';
-}
-/* A rim-light arc along the top-left edge of a form, in a lighter
-   shade of the animal's colour. */
-function avRim(d,col){
-  return '<path d="'+d+'" fill="none" stroke="'+col+'" stroke-width="3" stroke-linecap="round" opacity="0.5"/>';
-}
-/* Fur: tufts and strands. Wrapped in class="av-fur" so tests can
-   find them. Tufts are short strokes that cross the silhouette a
-   little — fur is fuzzy at the edge, not cut out. Strands stay
-   inside the form, following the fur flow. */
-function avFur(s){
-  return '<g class="av-fur" fill="none" stroke-linecap="round">'+s+'</g>';
-}
-/* Big glossy kawaii eyes (the live frog's eye: white, iris, pupil,
-   two catchlights), wrapped in the blink group. Round 4 adds an
-   iris rim, a lighter inner ring and an upper-lid shadow, so the
-   eyes sit IN the face. p.bdelay staggers the blink so a page of
-   animals never blinks in lockstep. */
-function avEyes(p){
-  var d=p?p.bdelay:'-0.4s';
-  return '<g class="av-blink" style="animation-delay:'+d+'">'
-  +'<ellipse cx="82" cy="74" rx="10" ry="12" fill="#ffffff"/><ellipse cx="118" cy="74" rx="10" ry="12" fill="#ffffff"/>'
-  +'<circle cx="83" cy="76" r="6.5" fill="#7a4a21"/><circle cx="117" cy="76" r="6.5" fill="#7a4a21"/>'
-  +'<circle cx="83" cy="76" r="6.5" fill="none" stroke="#4a2c14" stroke-width="1"/><circle cx="117" cy="76" r="6.5" fill="none" stroke="#4a2c14" stroke-width="1"/>'
-  +'<circle cx="83" cy="76" r="4.5" fill="none" stroke="#a06a35" stroke-width="1" opacity="0.7"/><circle cx="117" cy="76" r="4.5" fill="none" stroke="#a06a35" stroke-width="1" opacity="0.7"/>'
-  +'<circle cx="83" cy="77" r="3.6" fill="#26221f"/><circle cx="117" cy="77" r="3.6" fill="#26221f"/>'
-  +'<circle cx="85.5" cy="70.5" r="2.4" fill="#ffffff"/><circle cx="114.5" cy="70.5" r="2.4" fill="#ffffff"/>'
-  +'<circle cx="80.5" cy="79" r="1.2" fill="#ffffff" opacity=".85"/><circle cx="114.5" cy="79" r="1.2" fill="#ffffff" opacity=".85"/>'
-  +'<path d="M72,70 Q82,64 92,70" fill="none" stroke="#26221f" stroke-width="2" opacity="0.18" stroke-linecap="round"/><path d="M108,70 Q118,64 128,70" fill="none" stroke="#26221f" stroke-width="2" opacity="0.18" stroke-linecap="round"/>'
+/* Big glossy kawaii eyes (the sheet's eyes: solid black ovals
+   with a white highlight), wrapped in the blink group. d is
+   the stagger delay. */
+function kEyes(x1,y1,x2,y2,r,d){
+  return '<g class="av-blink" style="animation-delay:'+(d||'-0.4s')+'">'
+  +'<ellipse cx="'+x1+'" cy="'+y1+'" rx="'+r+'" ry="'+(r*1.15).toFixed(1)+'" fill="'+AV_EYE+'"/>'
+  +'<ellipse cx="'+x2+'" cy="'+y2+'" rx="'+r+'" ry="'+(r*1.15).toFixed(1)+'" fill="'+AV_EYE+'"/>'
+  +'<circle cx="'+(x1-r*0.35).toFixed(1)+'" cy="'+(y1-r*0.45).toFixed(1)+'" r="'+(r*0.38).toFixed(1)+'" fill="#ffffff"/>'
+  +'<circle cx="'+(x2-r*0.35).toFixed(1)+'" cy="'+(y2-r*0.45).toFixed(1)+'" r="'+(r*0.38).toFixed(1)+'" fill="#ffffff"/>'
   +'</g>';
 }
-function avSmile(cx,cy,w){
-  return '<path d="M'+(cx-w)+','+cy+' Q'+cx+','+(cy+8)+' '+(cx+w)+','+cy+'" fill="none" stroke="#26221f" stroke-width="2.5" stroke-linecap="round"/>';
+/* Pink blush cheeks, the sheet's signature. */
+function kBlush(x1,y1,x2,y2){
+  return '<ellipse cx="'+x1+'" cy="'+y1+'" rx="7" ry="4.5" fill="'+AV_BLUSH+'" opacity="0.85"/><ellipse cx="'+x2+'" cy="'+y2+'" rx="7" ry="4.5" fill="'+AV_BLUSH+'" opacity="0.85"/>';
 }
-/* One complete character per animal. Each draw(p) returns the whole
-   animal — body, head, ears, tail, face — in its own shape, in the
-   palette's colours. p.uid is this render's gradient suffix; the
-   gradients live in the <defs> avatarLookHTML writes. nat = its
-   own natural main colour. */
-var AVATAR_ANIMALS={
- otter:{nat:'#b08968',natDark:'#8a6a4a',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<g class="av-sway"><path d="M146,184 C166,178 176,166 174,154 C172,146 162,148 156,156 C148,166 144,174 144,184 Z" fill="url(#gD'+u+')"/></g>'
-  +avFur('<path d="M172,150 l6,-3 M175,157 l6,-1 M173,164 l5,2" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="7.5" ry="20" transform="rotate(-18 50 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="150" cy="172" rx="7.5" ry="20" transform="rotate(18 150 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M44,182 l5,4 M48,189 l5,4 M156,182 l-5,4 M152,189 l-5,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<circle cx="56" cy="52" r="7" fill="url(#gB'+u+')"/><circle cx="56" cy="52" r="3.5" fill="'+p.dark+'"/><circle cx="144" cy="52" r="7" fill="url(#gB'+u+')"/><circle cx="144" cy="52" r="3.5" fill="'+p.dark+'"/>'
-  +'<ellipse cx="100" cy="78" rx="49" ry="44" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +avFur('<path d="M54,46 l-3,-5 M58,44 l-1,-6 M146,46 l3,-5 M142,44 l1,-6 M56,96 l-5,4 M58,104 l-5,3 M144,96 l5,4 M142,104 l5,3" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<ellipse cx="100" cy="96" rx="26" ry="12" fill="url(#gBel'+u+')"/>'
-  +avEyes(p)
-  +'<ellipse cx="100" cy="88" rx="6" ry="4.5" fill="'+p.ink+'"/><circle cx="98" cy="86.5" r="1.5" fill="#ffffff" opacity="0.7"/>'+avSmile(100,98,12)
-  +'<path d="M62,86 L79,89 M60,95 L78,94 M64,103 L80,98 M138,86 L121,89 M140,95 L122,94 M136,103 L120,98" fill="none" stroke="rgba(74,44,26,0.5)" stroke-width="1.5" stroke-linecap="round"/>'; }},
- frog:{nat:'#58b368',natDark:'#2f7a3d',bob:'av-hop',draw:function(p){
-  var u=p.uid;
-  return '<ellipse cx="100" cy="178" rx="52" ry="48" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +avSheen(u,72,158,16,20,0.35,-14)
-  +'<ellipse cx="100" cy="188" rx="34" ry="34" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<g class="av-skin"><circle cx="72" cy="160" r="2" fill="'+p.dark+'" opacity="0.3"/><circle cx="86" cy="150" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="118" cy="156" r="2.2" fill="'+p.dark+'" opacity="0.3"/><circle cx="130" cy="168" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="100" cy="168" r="1.8" fill="'+p.dark+'" opacity="0.25"/><circle cx="80" cy="182" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="122" cy="184" r="1.8" fill="'+p.dark+'" opacity="0.25"/><circle cx="92" cy="200" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="110" cy="202" r="1.6" fill="'+p.dark+'" opacity="0.25"/></g>'
-  +'<ellipse cx="52" cy="176" rx="8" ry="20" transform="rotate(-15 52 176)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="148" cy="176" rx="8" ry="20" transform="rotate(15 148 176)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<ellipse cx="66" cy="228" rx="16" ry="9" fill="'+p.dark+'"/><ellipse cx="134" cy="228" rx="16" ry="9" fill="'+p.dark+'"/>'
-  +'<path d="M60,226 l2,4 M66,227 l1,4 M72,227 l0,4 M128,227 l0,4 M134,227 l-1,4 M140,226 l-2,4" fill="none" stroke="'+p.dark3+'" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>'
-  +avCrease(100,130,28,7)
-  +'<ellipse cx="100" cy="132" rx="22" ry="10" fill="'+p.light+'" opacity="0.45"/>'
-  +'<circle cx="100" cy="84" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +avSheen(u,78,60,18,11,0.5,-20)
-  +'<g class="av-skin"><circle cx="70" cy="66" r="2" fill="'+p.dark+'" opacity="0.3"/><circle cx="86" cy="58" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="116" cy="60" r="1.8" fill="'+p.dark+'" opacity="0.3"/><circle cx="130" cy="68" r="1.6" fill="'+p.light+'" opacity="0.5"/><circle cx="100" cy="60" r="1.6" fill="'+p.dark+'" opacity="0.25"/></g>'
-  +'<g class="av-blink" style="animation-delay:'+p.bdelay+'">'
-  +'<circle cx="70" cy="46" r="17" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><circle cx="130" cy="46" r="17" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<circle cx="70" cy="46" r="11.5" fill="#ffffff"/><circle cx="130" cy="46" r="11.5" fill="#ffffff"/>'
-  +'<circle cx="70" cy="46" r="8" fill="#3a7d2c"/><circle cx="130" cy="46" r="8" fill="#3a7d2c"/>'
-  +'<circle cx="70" cy="46" r="8" fill="none" stroke="#24511c" stroke-width="1"/><circle cx="130" cy="46" r="8" fill="none" stroke="#24511c" stroke-width="1"/>'
-  +'<circle cx="70" cy="46" r="5.5" fill="none" stroke="#6db35a" stroke-width="1" opacity="0.7"/><circle cx="130" cy="46" r="5.5" fill="none" stroke="#6db35a" stroke-width="1" opacity="0.7"/>'
-  +'<circle cx="71" cy="48" r="4.5" fill="#26221f"/><circle cx="131" cy="48" r="4.5" fill="#26221f"/>'
-  +'<circle cx="73" cy="41" r="2.8" fill="#ffffff"/><circle cx="133" cy="41" r="2.8" fill="#ffffff"/>'
-  +'<circle cx="68" cy="50" r="1.3" fill="#ffffff" opacity=".85"/><circle cx="128" cy="50" r="1.3" fill="#ffffff" opacity=".85"/>'
-  +'</g>'
-  +'<circle cx="66" cy="92" r="6" fill="'+p.light+'" opacity="0.7"/><circle cx="134" cy="92" r="6" fill="'+p.light+'" opacity="0.7"/>'
-  +'<circle cx="92" cy="86" r="1.8" fill="'+p.dark+'"/><circle cx="108" cy="86" r="1.8" fill="'+p.dark+'"/><path d="M70,96 Q100,114 130,96" fill="none" stroke="'+p.dark+'" stroke-width="3" stroke-linecap="round"/>'; }},
- butterfly:{nat:'#f7a8d8',natDark:'#c96ba0',draw:function(p){
-  var u=p.uid;
-  return '<g class="av-flutter-l">'
-  +'<path d="M90,102 C74,90 54,92 44,106 C38,114 38,122 42,128 C36,134 36,142 42,148 C38,154 40,162 46,166 C58,174 80,170 88,154 C94,142 94,118 90,102 Z" fill="url(#gB'+u+')" stroke="'+p.dark+'" stroke-width="2"/>'
-  +'<path d="M88,128 Q64,116 48,112 M88,130 Q62,132 44,138 M88,134 Q64,148 50,158" fill="none" stroke="'+p.dark+'" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="58" cy="112" r="5" fill="'+p.light+'" opacity="0.8"/><circle cx="58" cy="112" r="5" fill="none" stroke="'+p.dark+'" stroke-width="1" opacity="0.5"/><circle cx="66" cy="140" r="4" fill="'+p.light+'" opacity="0.8"/><circle cx="66" cy="140" r="4" fill="none" stroke="'+p.dark+'" stroke-width="1" opacity="0.5"/>'
-  +'<ellipse cx="58" cy="184" rx="23" ry="29" transform="rotate(-16 58 184)" fill="url(#gB'+u+')" stroke="'+p.dark+'" stroke-width="2"/>'
-  +'<path d="M64,184 Q56,196 52,204" fill="none" stroke="'+p.dark+'" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="58" cy="180" r="3.5" fill="'+p.light+'" opacity="0.8"/>'
-  +'</g><g class="av-flutter-r">'
-  +'<path d="M110,102 C126,90 146,92 156,106 C162,114 162,122 158,128 C164,134 164,142 158,148 C162,154 160,162 154,166 C142,174 120,170 112,154 C106,142 106,118 110,102 Z" fill="url(#gB'+u+')" stroke="'+p.dark+'" stroke-width="2"/>'
-  +'<path d="M112,128 Q136,116 152,112 M112,130 Q138,132 156,138 M112,134 Q136,148 150,158" fill="none" stroke="'+p.dark+'" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="142" cy="112" r="5" fill="'+p.light+'" opacity="0.8"/><circle cx="142" cy="112" r="5" fill="none" stroke="'+p.dark+'" stroke-width="1" opacity="0.5"/><circle cx="134" cy="140" r="4" fill="'+p.light+'" opacity="0.8"/><circle cx="134" cy="140" r="4" fill="none" stroke="'+p.dark+'" stroke-width="1" opacity="0.5"/>'
-  +'<ellipse cx="142" cy="184" rx="23" ry="29" transform="rotate(16 142 184)" fill="url(#gB'+u+')" stroke="'+p.dark+'" stroke-width="2"/>'
-  +'<path d="M136,184 Q144,196 148,204" fill="none" stroke="'+p.dark+'" stroke-width="1.2" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="142" cy="180" r="3.5" fill="'+p.light+'" opacity="0.8"/>'
-  +'</g>'
-  +'<ellipse cx="100" cy="172" rx="14" ry="36" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<ellipse cx="100" cy="172" rx="8" ry="30" fill="url(#gBel'+u+')" opacity="0.6"/>'
-  +'<path d="M88,160 Q100,164 112,160 M88,178 Q100,182 112,178" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.4" stroke-linecap="round"/>'
-  +'<ellipse cx="100" cy="140" rx="12" ry="10" fill="url(#gD'+u+')"/>'
-  +'<ellipse cx="90" cy="210" rx="7" ry="5" fill="'+p.dark+'"/><ellipse cx="110" cy="210" rx="7" ry="5" fill="'+p.dark+'"/>'
-  +'<path d="M88,40 Q78,18 68,8" fill="none" stroke="'+p.dark+'" stroke-width="2.5" stroke-linecap="round"/><path d="M112,40 Q122,18 132,8" fill="none" stroke="'+p.dark+'" stroke-width="2.5" stroke-linecap="round"/><circle cx="68" cy="8" r="4" fill="'+p.dark+'"/><circle cx="132" cy="8" r="4" fill="'+p.dark+'"/>'
-  +'<circle cx="100" cy="76" r="40" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +avSheen(u,78,54,16,10,0.5,-20)
-  +avEyes(p)
-  +'<path d="M74,54 L70,48 M82,52 L80,45 M118,52 L120,45 M126,54 L130,48" fill="none" stroke="#26221f" stroke-width="2" stroke-linecap="round"/>'
-  +'<circle cx="100" cy="84" r="2" fill="'+p.dark+'"/>'+avSmile(100,92,8); }},
- cat:{nat:'#f6b73c',natDark:'#d98a1f',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<g class="av-sway"><path d="M148,196 C170,192 180,172 172,154 C168,144 158,146 158,156 C158,168 150,180 140,186 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/></g>'
-  +avFur('<path d="M170,152 l5,-3 M173,159 l6,-1 M171,166 l5,2" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<path d="M100,118 C132,118 150,144 150,174 C150,206 128,230 100,230 C72,230 50,206 50,174 C50,144 68,118 100,118 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="190" rx="28" ry="34" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="78" cy="222" rx="12" ry="7" fill="'+p.light+'"/><ellipse cx="122" cy="222" rx="12" ry="7" fill="'+p.light+'"/>'
-  +'<path d="M72,222 l2,4 M78,223 l1,4 M84,223 l0,4 M116,223 l0,4 M122,223 l-1,4 M128,222 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<path d="M62,42 L56,10 L86,30 Z" fill="url(#gB'+u+')"/><path d="M63,36 L60,18 L78,29 Z" fill="'+p.light+'"/><path d="M138,42 L144,10 L114,30 Z" fill="url(#gB'+u+')"/><path d="M137,36 L140,18 L122,29 Z" fill="'+p.light+'"/>'
-  +avFur('<path d="M56,12 l-3,-4 M60,10 l-1,-5 M144,12 l3,-4 M140,10 l1,-5 M58,40 l-4,2 M142,40 l4,2" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +'<path d="M88,44 q2,6 0,10 M100,42 q0,6 0,10 M112,44 q-2,6 0,10" fill="none" stroke="'+p.dark+'" stroke-width="2" opacity="0.3" stroke-linecap="round"/>'
-  +avFur('<path d="M58,92 l-5,3 M60,100 l-5,2 M142,92 l5,3 M140,100 l5,2" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +avEyes(p)
-  +'<path d="M94,84 L106,84 L100,90 Z" fill="#e88aa0"/>'+avSmile(100,94,12)
-  +'<path d="M58,88 L76,90 M58,96 L76,94 M142,88 L124,90 M142,96 L124,94" stroke="rgba(0,0,0,0.30)" stroke-width="1.5" stroke-linecap="round"/>'; }},
- dog:{nat:'#c68a4b',natDark:'#8a5a2e',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<path d="M52,170 C40,162 36,148 44,140 C50,134 56,140 54,150 C52,160 56,166 60,170 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="7.5" ry="20" transform="rotate(-18 50 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="150" cy="172" rx="7.5" ry="20" transform="rotate(18 150 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M44,182 l5,4 M48,189 l5,4 M156,182 l-5,4 M152,189 l-5,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<g class="av-earwig"><ellipse cx="56" cy="66" rx="10" ry="24" transform="rotate(14 56 66)" fill="url(#gD'+u+')"/><ellipse cx="144" cy="66" rx="10" ry="24" transform="rotate(-14 144 66)" fill="url(#gD'+u+')"/></g>'
-  +'<path d="M52,56 q3,10 1,18 M60,58 q2,10 0,18 M148,56 q-3,10 -1,18 M140,58 q-2,10 0,18" fill="none" stroke="'+p.dark2+'" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>'
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +'<path d="M94,40 q3,-5 6,-4 M100,38 q0,-6 3,-6 M106,40 q-3,-5 -6,-4" fill="none" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.5" stroke-linecap="round"/>'
-  +'<ellipse cx="100" cy="96" rx="20" ry="13" fill="url(#gBel'+u+')"/>'
-  +avEyes(p)
-  +'<ellipse cx="100" cy="88" rx="7" ry="5" fill="'+p.ink+'"/><circle cx="98" cy="86.5" r="1.4" fill="#ffffff" opacity="0.7"/><path d="M88,94 Q100,102 112,94" fill="none" stroke="'+p.ink+'" stroke-width="2.5" stroke-linecap="round"/><g class="av-tongue"><rect x="92" y="100" width="16" height="14" rx="8" fill="#f08ba0"/><path d="M100,102 L100,112" stroke="#d96a86" stroke-width="1.5" stroke-linecap="round"/></g>'; }},
- rabbit:{nat:'#f2f2f2',natDark:'#cfc9bd',grain:true,draw:function(p){
-  var u=p.uid;
-  var inner=p.nat?'#f6b8c1':p.light;
-  return '<circle cx="42" cy="196" r="12" fill="#ffffff" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/>'
-  +avFur('<path d="M32,188 l-4,-3 M34,196 l-5,0 M36,204 l-4,3 M50,188 l4,-3 M50,196 l5,0 M50,204 l4,3" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.5"/>')
-  +'<ellipse cx="100" cy="174" rx="50" ry="50" fill="url(#gR'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,152,16,20,0.35,-12)
-  +avRim('M60,140 Q66,124 82,118',p.lighter)
-  +avFur('<path d="M66,146 q-4,10 -2,20 M134,146 q4,10 2,20 M78,168 q4,12 2,24 M88,166 q3,12 1,24 M112,166 q-3,12 -1,24 M122,168 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="186" rx="32" ry="34" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="70" cy="228" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="130" cy="228" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M64,228 l2,4 M70,229 l1,4 M76,229 l0,4 M124,229 l0,4 M130,229 l-1,4 M136,228 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,126,28,7)
-  +'<g class="av-earwig"><ellipse cx="76" cy="35" rx="9" ry="32" transform="rotate(-7 76 35)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/><ellipse cx="76" cy="37" rx="4.5" ry="22" transform="rotate(-7 76 37)" fill="'+inner+'"/><ellipse cx="124" cy="35" rx="9" ry="32" transform="rotate(7 124 35)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.08)" stroke-width="1.5"/><ellipse cx="124" cy="37" rx="4.5" ry="22" transform="rotate(7 124 37)" fill="'+inner+'"/></g>'
-  +'<path d="M71,16 q2,8 0,16 M81,16 q-2,8 0,16 M119,16 q2,8 0,16 M129,16 q-2,8 0,16" fill="none" stroke="'+p.fur+'" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="100" cy="84" r="46" fill="url(#gR'+u+')" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,58,18,11,0.5,-20)
-  +avRim('M62,58 Q70,42 86,38',p.lighter)
-  +avFur('<path d="M58,98 l-5,4 M60,106 l-5,3 M142,98 l5,4 M140,106 l5,3" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +avEyes(p)
-  +'<path d="M94,84 L106,84 L100,89 Z" fill="#e88aa0"/><path d="M100,89 Q96,95 92,92 M100,89 Q104,95 108,92" fill="none" stroke="#8a6a4a" stroke-width="2.5" stroke-linecap="round"/><rect x="94" y="96" width="5.5" height="8" rx="2" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="1"/><rect x="100.5" y="96" width="5.5" height="8" rx="2" fill="#ffffff" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>'; }},
- lion:{nat:'#f7c873',natDark:'#d97f2b',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<path d="M148,192 C168,188 178,172 172,158" fill="none" stroke="url(#gB'+u+')" stroke-width="7" stroke-linecap="round"/><circle cx="172" cy="156" r="10" fill="url(#gD'+u+')"/>'
-  +'<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="7.5" ry="20" transform="rotate(-18 50 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="150" cy="172" rx="7.5" ry="20" transform="rotate(18 150 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M44,182 l5,4 M48,189 l5,4 M156,182 l-5,4 M152,189 l-5,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<g class="av-nod">'
-  +'<circle cx="100" cy="78" r="58" fill="url(#gD'+u+')"/><circle cx="100" cy="78" r="52" fill="'+p.dark2+'"/>'
-  +avFur('<path d="M52,32 l-4,-4 M60,26 l-2,-5 M100,20 l0,-6 M140,26 l2,-5 M148,32 l4,-4 M156,60 l5,-2 M156,96 l5,2 M148,124 l4,4 M52,124 l-4,4 M44,96 l-5,2 M44,60 l-5,-2" stroke="'+p.dark3+'" stroke-width="1.8" opacity="0.6"/>')
-  +'<path d="M60,60 q8,10 4,22 M140,60 q-8,10 -4,22 M70,110 q6,-8 14,-6 M130,110 q-6,-8 -14,-6" fill="none" stroke="'+p.dark2+'" stroke-width="1.6" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="64" cy="36" r="8" fill="url(#gB'+u+')"/><circle cx="136" cy="36" r="8" fill="url(#gB'+u+')"/>'
-  +'<circle cx="100" cy="78" r="42" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,78,56,18,11,0.5,-20)
-  +avRim('M64,56 Q72,42 86,38',p.lighter)
-  +avEyes(p)
-  +'<ellipse cx="100" cy="88" rx="7" ry="5" fill="#8a5a2e"/><circle cx="98" cy="86.5" r="1.4" fill="#ffffff" opacity="0.7"/>'+avSmile(100,96,12)
-  +'</g>'; }},
- panda:{nat:'#f5f2ea',natDark:'#26221f',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="10" ry="22" transform="rotate(-18 50 172)" fill="url(#gD'+u+')"/><ellipse cx="150" cy="172" rx="10" ry="22" transform="rotate(18 150 172)" fill="url(#gD'+u+')"/>'
-  +avFur('<path d="M42,160 l-4,3 M44,168 l-4,2 M46,176 l-4,1 M158,160 l4,3 M156,168 l4,2 M154,176 l4,1" stroke="'+shade(p.dark,0.25)+'" stroke-width="1.6" opacity="0.6"/>')
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<g class="av-earwig"><circle cx="60" cy="42" r="11" fill="url(#gD'+u+')"/><circle cx="140" cy="42" r="11" fill="url(#gD'+u+')"/></g>'
-  +avFur('<path d="M52,34 l-4,-3 M56,32 l-2,-5 M60,31 l0,-5 M148,34 l4,-3 M144,32 l2,-5 M140,31 l0,-5" stroke="'+shade(p.dark,0.25)+'" stroke-width="1.6" opacity="0.6"/>')
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +avFur('<path d="M64,60 q4,8 2,16 M136,60 q-4,8 -2,16" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<g class="av-blink" style="animation-delay:'+p.bdelay+'">'
-  +'<ellipse cx="82" cy="74" rx="13.5" ry="17" transform="rotate(-12 82 74)" fill="'+p.dark+'"/><ellipse cx="118" cy="74" rx="13.5" ry="17" transform="rotate(12 118 74)" fill="'+p.dark+'"/>'
-  +avFur('<path d="M70,60 l-3,-4 M74,58 l-1,-5 M78,57 l1,-5 M130,60 l3,-4 M126,58 l1,-5 M122,57 l-1,-5" stroke="'+shade(p.dark,0.25)+'" stroke-width="1.6" opacity="0.6"/>')
-  +'<ellipse cx="82" cy="74" rx="7.5" ry="9" fill="#ffffff"/><ellipse cx="118" cy="74" rx="7.5" ry="9" fill="#ffffff"/><circle cx="82" cy="76" r="5" fill="#7a4a21"/><circle cx="118" cy="76" r="5" fill="#7a4a21"/><circle cx="82" cy="76" r="5" fill="none" stroke="#4a2c14" stroke-width="1"/><circle cx="118" cy="76" r="5" fill="none" stroke="#4a2c14" stroke-width="1"/><circle cx="83" cy="77" r="3" fill="#26221f"/><circle cx="117" cy="77" r="3" fill="#26221f"/><circle cx="84.5" cy="72" r="1.6" fill="#ffffff"/><circle cx="115.5" cy="72" r="1.6" fill="#ffffff"/>'
-  +'</g>'
-  +'<ellipse cx="100" cy="90" rx="6" ry="4.5" fill="#26221f"/><circle cx="98" cy="88.5" r="1.4" fill="#ffffff" opacity="0.7"/>'+avSmile(100,98,10); }},
- fox:{nat:'#e8743c',natDark:'#c25a2e',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<g class="av-sway"><path d="M146,182 C174,172 188,142 178,118 C172,102 156,104 154,120 C152,138 142,158 136,172 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="170" cy="118" rx="11" ry="15" transform="rotate(18 170 118)" fill="'+p.light+'"/></g>'
-  +avFur('<path d="M176,126 l6,-2 M180,136 l6,0 M179,148 l5,2 M174,160 l5,3" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="7.5" ry="20" transform="rotate(-18 50 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="150" cy="172" rx="7.5" ry="20" transform="rotate(18 150 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M44,182 l5,4 M48,189 l5,4 M156,182 l-5,4 M152,189 l-5,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<path d="M60,44 L54,8 L88,30 Z" fill="url(#gB'+u+')"/><path d="M62,36 L59,17 L80,29 Z" fill="'+p.light+'"/><path d="M140,44 L146,8 L112,30 Z" fill="url(#gB'+u+')"/><path d="M138,36 L141,17 L120,29 Z" fill="'+p.light+'"/>'
-  +avFur('<path d="M54,10 l-3,-4 M58,8 l-1,-5 M146,10 l3,-4 M142,8 l1,-5" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +avFur('<path d="M58,84 l-5,3 M60,94 l-5,2 M62,102 l-4,3 M142,84 l5,3 M140,94 l5,2 M138,102 l4,3" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<ellipse cx="100" cy="96" rx="22" ry="13" fill="url(#gBel'+u+')"/>'
-  +avEyes(p)
-  +'<ellipse cx="100" cy="88" rx="6" ry="4.5" fill="'+p.ink+'"/><circle cx="98" cy="86.5" r="1.4" fill="#ffffff" opacity="0.7"/>'+avSmile(100,97,12); }},
- turtle:{nat:'#93cf6b',natDark:'#4e8f4c',draw:function(p){
-  var u=p.uid;
-  return '<ellipse cx="58" cy="228" rx="10" ry="7" fill="'+p.dark+'"/><ellipse cx="84" cy="231" rx="10" ry="7" fill="'+p.dark+'"/><ellipse cx="116" cy="231" rx="10" ry="7" fill="'+p.dark+'"/><ellipse cx="142" cy="228" rx="10" ry="7" fill="'+p.dark+'"/>'
-  +'<path d="M52,229 l1,4 M58,230 l0,4 M64,230 l-1,4 M78,230 l1,4 M84,231 l0,4 M90,231 l-1,4 M110,231 l1,4 M116,231 l0,4 M122,231 l-1,4 M136,230 l1,4 M142,230 l0,4 M148,229 l-1,4" fill="none" stroke="'+p.dark3+'" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>'
-  +'<path d="M100,100 C142,100 160,136 160,176 C160,206 134,228 100,228 C66,228 40,206 40,176 C40,136 58,100 100,100 Z" fill="url(#gD'+u+')" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>'
-  +avSheen(u,70,140,18,14,0.4,-16)
-  +'<g class="av-scute">'
-  +'<path d="M100,106 L118,116 L112,138 L100,146 L88,138 L82,116 Z" fill="'+p.dark2+'" opacity="0.55" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M100,150 L116,158 L110,178 L100,186 L90,178 L84,158 Z" fill="'+p.dark2+'" opacity="0.55" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M100,190 L112,196 L108,210 L100,216 L92,210 L88,196 Z" fill="'+p.dark2+'" opacity="0.45" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M76,118 L88,126 L84,146 L70,142 L66,124 Z" fill="'+p.dark2+'" opacity="0.45" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M124,118 L134,124 L130,142 L116,146 L112,126 Z" fill="'+p.dark2+'" opacity="0.45" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M68,150 L84,156 L80,176 L64,172 L60,158 Z" fill="'+p.dark2+'" opacity="0.45" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'<path d="M132,150 L140,158 L136,172 L120,176 L116,156 Z" fill="'+p.dark2+'" opacity="0.45" stroke="'+p.dark3+'" stroke-width="1.5" stroke-linejoin="round"/>'
-  +'</g>'
-  +'<path d="M52,182 Q100,170 148,182 M48,200 Q100,190 152,200" fill="none" stroke="'+p.dark3+'" stroke-width="1.5" opacity="0.5" stroke-linecap="round"/>'
-  +'<g class="av-nod">'
-  +'<circle cx="100" cy="78" r="34" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +avSheen(u,80,58,13,8,0.5,-20)
-  +'<g class="av-blink" style="animation-delay:'+p.bdelay+'">'
-  +'<ellipse cx="88" cy="74" rx="9" ry="11" fill="#ffffff"/><ellipse cx="112" cy="74" rx="9" ry="11" fill="#ffffff"/>'
-  +'<circle cx="89" cy="76" r="5.5" fill="#6b4226"/><circle cx="111" cy="76" r="5.5" fill="#6b4226"/>'
-  +'<circle cx="89" cy="76" r="5.5" fill="none" stroke="#4a2c14" stroke-width="1"/><circle cx="111" cy="76" r="5.5" fill="none" stroke="#4a2c14" stroke-width="1"/>'
-  +'<circle cx="89" cy="77" r="3" fill="#26221f"/><circle cx="111" cy="77" r="3" fill="#26221f"/>'
-  +'<circle cx="90.5" cy="71" r="1.8" fill="#ffffff"/><circle cx="110" cy="71" r="1.8" fill="#ffffff"/>'
-  +'</g>'
-  +'<circle cx="94" cy="84" r="1.5" fill="'+p.dark+'"/><circle cx="106" cy="84" r="1.5" fill="'+p.dark+'"/><path d="M88,90 Q100,97 112,90" fill="none" stroke="'+p.dark+'" stroke-width="2.5" stroke-linecap="round"/>'
-  +'<circle cx="80" cy="82" r="3.5" fill="'+p.light+'" opacity="0.6"/><circle cx="120" cy="82" r="3.5" fill="'+p.light+'" opacity="0.6"/>'
-  +'</g>'; }},
- pig:{nat:'#f6b8c1',natDark:'#e88aa0',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<path d="M150,172 C162,166 172,170 170,180 C168,188 158,190 156,182 C154,176 160,172 164,176" fill="none" stroke="'+p.dark+'" stroke-width="3" stroke-linecap="round"/>'
-  +'<ellipse cx="100" cy="172" rx="52" ry="50" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,72,150,16,20,0.35,-12)
-  +avRim('M60,140 Q66,124 82,118',p.lighter)
-  +avFur('<path d="M66,146 q-4,10 -2,20 M134,146 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="184" rx="34" ry="34" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="70" cy="228" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="130" cy="228" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M64,228 l2,4 M70,229 l1,4 M76,229 l0,4 M124,229 l0,4 M130,229 l-1,4 M136,228 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,120,28,7)
-  +'<g class="av-flop"><circle cx="62" cy="42" r="10" fill="url(#gB'+u+')"/><circle cx="62" cy="42" r="5" fill="'+p.dark+'"/><circle cx="138" cy="42" r="10" fill="url(#gB'+u+')"/><circle cx="138" cy="42" r="5" fill="'+p.dark+'"/></g>'
-  +'<path d="M58,36 q2,4 1,8 M66,36 q-1,4 -2,8 M134,36 q2,4 1,8 M142,36 q-1,4 -2,8" fill="none" stroke="'+p.fur+'" stroke-width="1.4" opacity="0.4" stroke-linecap="round"/>'
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +avEyes(p)
-  +'<ellipse cx="100" cy="90" rx="16" ry="12" fill="url(#gD'+u+')"/><ellipse cx="94" cy="90" rx="2.5" ry="3.5" fill="'+p.ink+'" opacity="0.55"/><ellipse cx="106" cy="90" rx="2.5" ry="3.5" fill="'+p.ink+'" opacity="0.55"/><circle cx="94" cy="86" r="1.6" fill="#ffffff" opacity="0.6"/>'
-  +'<path d="M90,104 Q100,109 110,104" fill="none" stroke="'+p.dark+'" stroke-width="2.5" stroke-linecap="round"/>'; }},
- monkey:{nat:'#c68a4b',natDark:'#8a5a2e',grain:true,draw:function(p){
-  var u=p.uid;
-  return '<g class="av-sway"><path d="M54,192 C30,188 22,166 32,152 C38,144 48,148 46,158 C44,170 52,178 60,182 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/></g>'
-  +avFur('<path d="M32,154 l-5,-2 M30,161 l-6,0 M32,168 l-5,2" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<path d="M100,116 C134,116 152,144 152,176 C152,208 130,232 100,232 C70,232 48,208 48,176 C48,144 66,116 100,116 Z" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,74,148,16,22,0.35,-12)
-  +avRim('M58,142 Q64,124 80,118',p.lighter)
-  +avFur('<path d="M64,142 q-4,10 -2,20 M136,142 q4,10 2,20 M78,160 q4,12 2,24 M88,158 q3,12 1,24 M112,158 q-3,12 -1,24 M122,160 q-4,12 -2,24" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +'<ellipse cx="100" cy="192" rx="30" ry="36" fill="url(#gBel'+u+')" opacity="0.9"/>'
-  +'<ellipse cx="50" cy="172" rx="7.5" ry="20" transform="rotate(-18 50 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/><ellipse cx="150" cy="172" rx="7.5" ry="20" transform="rotate(18 150 172)" fill="url(#gB'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2"/>'
-  +'<path d="M44,182 l5,4 M48,189 l5,4 M156,182 l-5,4 M152,189 l-5,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +'<ellipse cx="74" cy="230" rx="14" ry="8" fill="'+p.dark+'"/><ellipse cx="126" cy="230" rx="14" ry="8" fill="'+p.dark+'"/>'
-  +'<path d="M68,230 l2,4 M74,231 l1,4 M80,231 l0,4 M120,231 l0,4 M126,231 l-1,4 M132,230 l-2,4" fill="none" stroke="'+p.dark+'" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>'
-  +avCrease(100,118,30,8)
-  +'<circle cx="58" cy="74" r="11" fill="url(#gD'+u+')"/><circle cx="58" cy="74" r="6" fill="'+p.light+'"/><circle cx="142" cy="74" r="11" fill="url(#gD'+u+')"/><circle cx="142" cy="74" r="6" fill="'+p.light+'"/>'
-  +avFur('<path d="M48,68 l-4,-2 M50,76 l-4,0 M152,68 l4,-2 M150,76 l4,0" stroke="'+p.fur+'" stroke-width="1.6" opacity="0.55"/>')
-  +'<circle cx="100" cy="76" r="46" fill="url(#gH'+u+')" stroke="rgba(0,0,0,0.10)" stroke-width="2" filter="url(#fGr'+u+')"/>'
-  +avSheen(u,76,54,20,12,0.5,-20)
-  +avRim('M62,54 Q70,40 86,36',p.lighter)
-  +'<ellipse cx="100" cy="82" rx="34" ry="36" fill="url(#gBel'+u+')"/>'
-  +avFur('<path d="M70,58 q4,8 2,16 M130,58 q-4,8 -2,16" stroke="'+p.fur+'" stroke-width="1.5" opacity="0.3"/>')
-  +avEyes(p)
-  +'<circle cx="94" cy="88" r="2" fill="#8a5a2e"/><circle cx="106" cy="88" r="2" fill="#8a5a2e"/>'+avSmile(100,96,12); }}
-};
-var AVATAR_FACE_EMOJI={'🦦':'otter','🐸':'frog','🦋':'butterfly','🐱':'cat','🐶':'dog','🐰':'rabbit','🦁':'lion','🐼':'panda','🦊':'fox','🐢':'turtle','🐷':'pig','🐵':'monkey'};
-/* TINY accessories — small touches only, drawn last, inside the
-   bob group so they ride the animal. None covers the face or
-   changes the silhouette: the necklace hugs the neck, the hat
-   sits tilted on the top of the head, the flower tucks beside
-   the left ear, the star clips beside the right ear, the bow
-   sits at the neck. */
-var LOOK_ACCS=['','necklace','tinyhat','flower','star','bow'];
-var LOOK_ACC_EMOJI={necklace:'📿',tinyhat:'🎩',flower:'🌸',star:'⭐',bow:'🎀'};
-var LOOK_ACC_LABELS={necklace:'Necklace',tinyhat:'Tiny hat',flower:'Flower',star:'Star',bow:'Little bow'};
-var AVATAR_ACCS={
- necklace:'<path d="M84,122 Q100,136 116,122" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round"/><circle cx="88" cy="127" r="2.6" fill="#ef4444"/><circle cx="94" cy="130" r="2.6" fill="#3b82f6"/><circle cx="100" cy="131" r="3.4" fill="#ef4444"/><circle cx="106" cy="130" r="2.6" fill="#22c55e"/><circle cx="112" cy="127" r="2.6" fill="#ef4444"/>',
- tinyhat:'<g transform="rotate(14 100 24)"><ellipse cx="100" cy="30" rx="17" ry="3.5" fill="#6d28d9"/><path d="M90,29 L90,12 Q90,8 94,8 L106,8 Q110,8 110,12 L110,29 Z" fill="#8b5cf6"/><rect x="90" y="23" width="20" height="4" fill="#ffd166"/></g>',
- flower:'<g><path d="M58,54 L56,63" stroke="#4e8f4c" stroke-width="2" stroke-linecap="round"/><circle cx="56" cy="44" r="4" fill="#ffffff" stroke="#e88aa0" stroke-width="1"/><circle cx="64" cy="48" r="4" fill="#ffffff" stroke="#e88aa0" stroke-width="1"/><circle cx="62" cy="56" r="4" fill="#ffffff" stroke="#e88aa0" stroke-width="1"/><circle cx="54" cy="56" r="4" fill="#ffffff" stroke="#e88aa0" stroke-width="1"/><circle cx="52" cy="48" r="4" fill="#ffffff" stroke="#e88aa0" stroke-width="1"/><circle cx="58" cy="50" r="3.4" fill="#ffd166"/></g>',
- star:'<path d="M142,44 L144.5,50 L151,50.5 L146,55 L147.5,61.5 L142,58 L136.5,61.5 L138,55 L133,50.5 L139.5,50 Z" fill="#ffd166" stroke="#e8a100" stroke-width="1.2" stroke-linejoin="round"/>',
- bow:'<path d="M100,124 L84,116 L84,132 Z" fill="#ef4444"/><path d="M100,124 L116,116 L116,132 Z" fill="#ef4444"/><circle cx="100" cy="124" r="4" fill="#dc2626"/>'};
-/* Gradient ids must be unique per svg on the page (a matrix shows
-   36+ characters at once), so every render takes a fresh number. */
-var avUid=0;
-/* One complete character: soft radial ground shadow, the animal
-   itself (its own body, head, ears, tail and face, 3D-shaded),
-   then one tiny accessory riding along inside the bob group.
-   A look with a stored hair value is NEVER read — a saved hair
-   value is ignored. glow is accepted for call-site compatibility
-   and ignored: the character's Natural colour is its own.
-   w = display width in px (default 190); height follows the
-   200x260 grid. Tolerates a missing look (legacy explorers) and
-   an unknown face (otter). */
-function avatarLookHTML(face, look, glow, w){
-  look=look||{};
-  var acc=look.accessory||'';
-  var key=AVATAR_FACE_EMOJI[face]||'otter';
-  var a=AVATAR_ANIMALS[key];
-  var pal=lookPal(look.color||'', a.nat, a.natDark);
-  var u=++avUid;
-  pal.uid=u;
-  var keys=Object.keys(AVATAR_ANIMALS);
-  var idx=keys.indexOf(key);
-  pal.bdelay=(-(idx*0.9+0.4)).toFixed(2)+'s';
-  var bobDelay=(-(idx*0.55)).toFixed(2)+'s';
-  var wpx=w||190, hpx=Math.round(wpx*260/200);
-  var defs='<defs>'
-   +'<radialGradient id="gB'+u+'" cx="38%" cy="28%" r="78%"><stop offset="0%" stop-color="'+pal.hi+'"/><stop offset="48%" stop-color="'+pal.main+'"/><stop offset="100%" stop-color="'+pal.edge+'"/></radialGradient>'
-   // Rabbit only: the head circle and body ellipse share one
-   // userSpaceOnUse gradient, so the head–body join is seamless.
-   // (The per-shape gB gradient samples a different field on each
-   // shape — the head's dark bottom met the body's light top — and
-   // that shading step was the faint circular edge seen live in
-   // round 3. A shared field has no step at the overlap.)
-   +(key==='rabbit'?'<radialGradient id="gR'+u+'" gradientUnits="userSpaceOnUse" cx="100" cy="55" r="230"><stop offset="0%" stop-color="'+pal.hi+'"/><stop offset="48%" stop-color="'+pal.main+'"/><stop offset="100%" stop-color="'+pal.edge+'"/></radialGradient>':'')
-   +'<radialGradient id="gH'+u+'" cx="40%" cy="26%" r="75%"><stop offset="0%" stop-color="'+pal.lighter+'"/><stop offset="55%" stop-color="'+pal.main+'"/><stop offset="100%" stop-color="'+pal.edge+'"/></radialGradient>'
-   +'<radialGradient id="gBel'+u+'" cx="50%" cy="32%" r="72%"><stop offset="0%" stop-color="'+pal.lighter+'"/><stop offset="100%" stop-color="'+pal.bellyEnd+'"/></radialGradient>'
-   +'<radialGradient id="gD'+u+'" cx="40%" cy="30%" r="78%"><stop offset="0%" stop-color="'+shade(pal.dark,0.28)+'"/><stop offset="55%" stop-color="'+pal.dark+'"/><stop offset="100%" stop-color="'+shade(pal.dark,-0.28)+'"/></radialGradient>'
-   +'<radialGradient id="gSh'+u+'" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(0,0,0,0.22)"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient>'
-   +'<radialGradient id="gGl'+u+'" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="rgba(255,255,255,0.55)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient>'
-   +(a.grain?'<filter id="fGr'+u+'" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0" result="na"/><feComposite in="na" in2="SourceAlpha" operator="in" result="grain"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="grain"/></feMerge></filter>':'')
-   +'</defs>';
-  return '<svg class="av3d" viewBox="0 0 200 260" data-animal="'+key+'" style="width:'+wpx+'px;height:'+hpx+'px;display:block;margin:0 auto" role="img" aria-label="My animal friend, the '+key+'">'
-   +defs
-   +'<ellipse cx="100" cy="246" rx="56" ry="9" fill="url(#gSh'+u+')"/>'
-   +'<g class="'+(a.bob||'av-bob')+'" style="animation-delay:'+bobDelay+'">'
-   +a.draw(pal)
-   +(AVATAR_ACCS[acc]?'<g id="avatar-acc">'+AVATAR_ACCS[acc]+'</g>':'')
-   +'</g></svg>';
+/* A small simple mouth. */
+function kSmile(cx,cy,w){
+  return '<path d="M'+(cx-w)+','+cy+' Q'+cx+','+(cy+6)+' '+(cx+w)+','+cy+'" fill="none" stroke="'+AV_EYE+'" stroke-width="2.5" stroke-linecap="round"/>';
 }
-/* The idle-life CSS (round 3, revised in round 4: the butterfly
-   flutter is now a real flap — a big fold plus a tilt, so it
-   reads in motion — and the head nod is a tilt, not a 2px
-   shift). Same language as Pip's otterFloat / otterBlink /
-   earWig and the frog's frogBlink / frogBreathe: slow, calm,
-   transform and opacity only. The svg carries class="av3d", so
-   these rules only touch avatar characters. Blink and bob
-   delays are staggered per animal (inline style), so a page of
-   animals never moves in lockstep. */
-var AVATAR_3D_CSS=`
-.av3d .av-bob{transform-box:fill-box;transform-origin:50% 100%;animation:avBob 3.6s ease-in-out infinite}
-@keyframes avBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}
-.av3d .av-blink{transform-box:fill-box;transform-origin:center;animation:avBlink 4.6s infinite}
-@keyframes avBlink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}}
-.av3d .av-earwig{transform-box:fill-box;transform-origin:50% 100%;animation:avEarWig 5s ease-in-out infinite}
-@keyframes avEarWig{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-8deg)}94%{transform:rotate(6deg)}}
-.av3d .av-sway{transform-box:fill-box;transform-origin:50% 0;animation:avSway 3.8s ease-in-out infinite}
-@keyframes avSway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
-.av3d .av-flutter-l{transform-box:fill-box;transform-origin:100% 50%;animation:avFlutterL 1.8s ease-in-out infinite}
-.av3d .av-flutter-r{transform-box:fill-box;transform-origin:0% 50%;animation:avFlutterR 1.8s ease-in-out infinite}
-@keyframes avFlutterL{0%,100%{transform:scaleX(1) rotate(0deg)}50%{transform:scaleX(.45) rotate(-14deg)}}
-@keyframes avFlutterR{0%,100%{transform:scaleX(1) rotate(0deg)}50%{transform:scaleX(.45) rotate(14deg)}}
-.av3d .av-hop{transform-box:fill-box;transform-origin:50% 100%;animation:avHop 2.8s ease-in-out infinite}
-@keyframes avHop{0%,78%,100%{transform:translateY(0) scale(1,1)}86%{transform:translateY(-7px) scale(.98,1.04)}92%{transform:translateY(0) scale(1.05,.94)}}
-.av3d .av-nod{transform-box:fill-box;transform-origin:50% 100%;animation:avNod 4.2s ease-in-out infinite}
-@keyframes avNod{0%,84%,100%{transform:rotate(0deg)}88%{transform:rotate(3deg)}92%{transform:rotate(-2deg)}}
-.av3d .av-tongue{transform-box:fill-box;transform-origin:50% 0;animation:avTongue 3.4s ease-in-out infinite}
-@keyframes avTongue{0%,100%{transform:rotate(-2deg) scaleY(1)}50%{transform:rotate(3deg) scaleY(1.1)}}
-.av3d .av-flop{transform-box:fill-box;transform-origin:50% 0;animation:avFlop 4.4s ease-in-out infinite}
-@keyframes avFlop{0%,82%,100%{transform:rotate(0)}88%{transform:rotate(-10deg)}94%{transform:rotate(7deg)}}
-@media (prefers-reduced-motion: reduce){.av3d .av-bob,.av3d .av-blink,.av3d .av-earwig,.av3d .av-sway,.av3d .av-flutter-l,.av3d .av-flutter-r,.av3d .av-hop,.av3d .av-nod,.av3d .av-tongue,.av3d .av-flop{animation:none}}
-`;
+/* A 4-point star path, centred on (cx,cy) — the shared shape
+   for the glitter sparkles, the twinkle stars and the tap-to-play
+   burst. The position is baked into the path (no transform
+   attribute), so a CSS animation on the element itself is free
+   to move it. */
+function kStar4(cx,cy,s){
+  return 'M'+cx+','+(cy-s)+' L'+(cx+s*0.25).toFixed(1)+','+(cy-s*0.25).toFixed(1)+' L'+(cx+s)+','+cy+' L'+(cx+s*0.25).toFixed(1)+','+(cy+s*0.25).toFixed(1)+' L'+cx+','+(cy+s)+' L'+(cx-s*0.25).toFixed(1)+','+(cy+s*0.25).toFixed(1)+' L'+(cx-s)+','+cy+' L'+(cx-s*0.25).toFixed(1)+','+(cy-s*0.25).toFixed(1)+' Z';
+}
+/* A 4-point sparkle, centred on (cx,cy), for the glitter effect. */
+function kSpark(cx,cy,s,fill,delay){
+  return '<path class="av-twinkle" style="animation-delay:'+delay+'" d="'+kStar4(cx,cy,s)+'" fill="'+fill+'"/>';
+}
+/* Background patterns, drawn inside the shape (clipped by
+   bgClip) — white, bold enough to read at the real 120px size.
+   The first version was too faint (dots 0.32, stars 0.4,
+   stripes 0.16, hearts 0.35): at 120px the stars, hearts and
+   stripes were invisible and a child could not tell them from
+   none. The screen's fix round bumped them (dots 0.45, stars
+   0.6, stripes 0.3, hearts 0.55) and made the stars and hearts
+   slightly larger — still white, and the animal still pops,
+   because the pattern only shows in the thin margins around
+   it. The shape is ~190 wide centred on (100,135); anything
+   outside it is clipped away. */
+function bgPatternSVG(pattern){
+  var i,s='';
+  if(pattern==='dots'){
+    var rows=[70,105,140,175,210];
+    for(var r=0;r<rows.length;r++){
+      var off=(r%2)?15:0;
+      for(var x=30+off;x<=180;x+=30){ s+='<circle cx="'+x+'" cy="'+rows[r]+'" r="4" fill="#ffffff" opacity="0.45"/>'; }
+    }
+    return s;
+  }
+  if(pattern==='stars'){
+    var spots=[[45,75],[155,70],[30,140],[170,140],[60,200],[140,200],[100,110]];
+    for(i=0;i<spots.length;i++){ s+='<path d="'+kStar4(spots[i][0],spots[i][1],8)+'" fill="#ffffff" opacity="0.6"/>'; }
+    return s;
+  }
+  if(pattern==='stripes'){
+    for(var x=-10;x<=170;x+=60){ s+='<rect x="'+x+'" y="-60" width="16" height="380" fill="#ffffff" opacity="0.3" transform="rotate(18 100 135)"/>'; }
+    return s;
+  }
+  if(pattern==='hearts'){
+    var hps=[[50,80],[150,75],[35,150],[165,150],[75,205],[125,205],[100,115]];
+    for(i=0;i<hps.length;i++){ s+='<path d="M0,-4 C-3,-8 -9,-8 -9,-3 C-9,2 -4,6 0,9 C4,6 9,2 9,-3 C9,-8 3,-8 0,-4 Z" fill="#ffffff" opacity="0.55" transform="translate('+hps[i][0]+' '+hps[i][1]+') scale(1.3)"/>'; }
+    return s;
+  }
+  return '';
+}
+/* Animated background effects — drawn inside the shape (clipped
+   by bgClip), gentle and slow. Each element carries a staggered
+   negative animation-delay, so the cycle is already spread out
+   on load instead of starting in lockstep. The classes are
+   animated by AVATAR_5_CSS and switched off by the
+   reduced-motion rule, exactly like the bob and blink. */
+function bgTwinkleSVG(){
+  var spots=[[40,75,10],[160,70,9],[28,135,9],[172,135,10],[55,195,9],[145,195,9]];
+  var s='';
+  for(var i=0;i<spots.length;i++){ s+='<path class="av-twinklebg" style="animation-delay:'+(i*0.5)+'s" d="'+kStar4(spots[i][0],spots[i][1],spots[i][2])+'" fill="'+(i%2?'#ffd166':'#ffffff')+'"/>'; }
+  return s;
+}
+function bgBubblesSVG(){
+  var spots=[[45,215,6],[75,225,8],[105,210,5],[130,225,7],[160,215,6],[60,205,5]];
+  var s='';
+  for(var i=0;i<spots.length;i++){ s+='<circle class="av-bub" style="animation-delay:'+(-i*1.2)+'s" cx="'+spots[i][0]+'" cy="'+spots[i][1]+'" r="'+spots[i][2]+'" fill="#ffffff"/>'; }
+  return s;
+}
+function bgPetalsSVG(){
+  /* Soft pink (#f7a8b8 — the blush pink; petals are naturally
+     pink), not white: white petals on pale sky blue were
+     invisible at 120px, and at 0.55 they barely read even at
+     3x zoom. Slightly larger than before, holding at 0.6 while
+     they fall. The spots sit in the left/right margins and the
+     top crescent — the first version put them all in the middle,
+     where they spent most of the fall hidden behind the animal.
+     These stay visible for most of the fall, so the falling
+     motion reads in the stills. */
+  var spots=[[28,60],[172,50],[100,42],[32,135],[168,125],[55,58],[145,62]];
+  var s='';
+  /* Each petal sits in its own positioned <g> and the CSS
+     animates the path inside it — a transform attribute on the
+     path itself would be overridden by the animation. */
+  for(var i=0;i<spots.length;i++){ s+='<g transform="translate('+spots[i][0]+' '+spots[i][1]+')"><path class="av-pet" style="animation-delay:'+(-i*1.15)+'s" d="M0,-9 C5,-3 5,5 0,9 C-5,5 -5,-3 0,-9 Z" fill="#f7a8b8"/></g>'; }
+  return s;
+}
+/* The 25 animals, in sheet order (row by row). The picker
+   shows this list; the first animal (chick) is the fallback
+   for any stored face that is not on the sheet. */
+var LOOK_FACES=['🐤','🐴','🐧','🐻','🐢','🐼','🦁','🐱','🐷','🦊','🐸','🐘','🦒','🐰','🦉','🦝','🐵','🐯','🐊','🐶','🦥','🦆','🦛','🐑','🐨'];
+var AVATAR_FACE_EMOJI={'🐤':'chick','🐴':'horse','🐧':'penguin','🐻':'bear','🐢':'turtle','🐼':'panda','🦁':'lion','🐱':'cat','🐷':'pig','🦊':'fox','🐸':'frog','🐘':'elephant','🦒':'giraffe','🐰':'rabbit','🦉':'owl','🦝':'raccoon','🐵':'monkey','🐯':'tiger','🐊':'crocodile','🐶':'dog','🦥':'sloth','🦆':'duck','🦛':'hippo','🐑':'sheep','🐨':'koala'};
+/* (Accessories were dropped by the parent, 2026-11-08 — a stored
+   e.look.accessory is never read. There is no accessory code
+   left in this file.) */
 
-// The round-4 "Change my name & look" editor (replaces openLookModal
-// in public/index.html). The editor works on a DRAFT copy of the
-// look — picking an animal, a colour, an accessory, a glow or a
-// badge only changes the draft and refreshes the modal preview.
-// Nothing is saved until "Save my look" commits the draft into the
-// live explorer (resolved fresh at that moment) and calls save().
-// Cancel just closes the modal and the draft is thrown away, so the
-// stored look is untouched. The sidebar/topbar characters show the
-// SAVED look and only change on Save, via render().
+/* ------------------------------------------------------------------
+   The 25 animals — flat kawaii, sheet-exact. Each draw() returns
+   the animal's svg, in the 200×260 viewBox. Shared layout: the
+   ground is y≈235, the ground shadow sits at y≈246, the head
+   is around (100, 72–84) and the body around (100, 178). Every
+   main shape: flat fill, thick dark-brown outline (3px), round
+   joins. Eyes are the sheet's big glossy black ovals with a
+   white highlight; blush is two pink ovals. No gradients for
+   shading, no fur, no grain. */
+var AVATAR_ANIMALS={
+ chick:{draw:function(p){
+   return '<ellipse cx="78" cy="228" rx="8" ry="5" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="122" cy="228" rx="8" ry="5" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="46" cy="165" rx="10" ry="18" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-15 46 165)"/>'
+   +'<ellipse cx="154" cy="165" rx="10" ry="18" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(15 154 165)"/>'
+   +'<ellipse cx="100" cy="155" rx="56" ry="68" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M94,90 Q92,82 88,78 M100,88 Q100,79 100,74 M106,90 Q108,82 112,78" fill="none" stroke="#f2b705" stroke-width="2.5" stroke-linecap="round"/>'
+   +kEyes(80,125,120,125,8.5,p.bdelay)
+   +'<path d="M92,136 L108,136 L100,146 Z" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +kBlush(66,142,134,142);
+ }},
+ horse:{draw:function(p){
+   return '<path d="M48,190 Q34,194 36,206 Q38,214 46,212" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linecap="round"/>'
+   +'<ellipse cx="78" cy="216" rx="10" ry="14" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="122" cy="216" rx="10" ry="14" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="78" cy="228" rx="10" ry="5" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="122" cy="228" rx="10" ry="5" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="100" cy="175" rx="50" ry="48" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M58,66 C56,34 78,20 100,20 C124,20 142,36 142,62 L132,62 C132,44 118,32 100,32 C82,32 68,46 68,66 Z" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M58,48 L54,28 L74,38 Z" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +'<path d="M142,48 L146,28 L126,38 Z" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +'<circle cx="100" cy="78" r="42" fill="#eec9a0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M68,66 C70,44 84,34 100,34 C118,34 132,46 132,66 C126,50 114,44 100,44 C86,44 74,50 68,66 Z" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +kEyes(78,70,122,70,8,p.bdelay)
+   +'<ellipse cx="100" cy="94" rx="20" ry="12" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="92" cy="94" rx="1.8" ry="2.5" fill="'+AV_INK+'"/><ellipse cx="108" cy="94" rx="1.8" ry="2.5" fill="'+AV_INK+'"/>'
+   +kBlush(64,84,136,84);
+ }},
+ penguin:{draw:function(p){
+   return '<ellipse cx="74" cy="230" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="230" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="50" cy="175" rx="8" ry="20" fill="#2b2b33" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-15 50 175)"/>'
+   +'<ellipse cx="150" cy="175" rx="8" ry="20" fill="#2b2b33" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(15 150 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="50" ry="52" fill="#2b2b33" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="188" rx="32" ry="38" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="76" r="44" fill="#2b2b33" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="84" rx="30" ry="22" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +kEyes(84,74,116,74,7.5,p.bdelay)
+   +'<path d="M93,84 L107,84 L100,94 Z" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>';
+ }},
+ bear:{draw:function(p){
+   return '<circle cx="58" cy="42" r="12" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="58" cy="42" r="6" fill="#f6b8c1"/>'
+   +'<circle cx="142" cy="42" r="12" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="142" cy="42" r="6" fill="#f6b8c1"/>'
+   +'<ellipse cx="50" cy="175" rx="9" ry="20" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 50 175)"/>'
+   +'<ellipse cx="150" cy="175" rx="9" ry="20" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 150 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="50" ry="50" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="30" ry="34" fill="#e8c39a" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="74" cy="228" rx="13" ry="7" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="13" ry="7" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="46" fill="#c98a4b" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(80,72,120,72,8,p.bdelay)
+   +'<ellipse cx="100" cy="92" rx="18" ry="11" fill="#e8c39a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="100" cy="86" rx="6" ry="4.5" fill="'+AV_EYE+'"/>'
+   +'<path d="M94,96 Q100,101 106,96" fill="none" stroke="'+AV_EYE+'" stroke-width="2.5" stroke-linecap="round"/>'
+   +kBlush(64,86,136,86);
+ }},
+ turtle:{draw:function(p){
+   return '<ellipse cx="58" cy="228" rx="10" ry="7" fill="#7cc46a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="84" cy="231" rx="10" ry="7" fill="#7cc46a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="116" cy="231" rx="10" ry="7" fill="#7cc46a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="142" cy="228" rx="10" ry="7" fill="#7cc46a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M100,100 C142,100 160,136 160,176 C160,206 134,228 100,228 C66,228 40,206 40,176 C40,136 58,100 100,100 Z" fill="#a67c52" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M100,124 L124,140 L112,172 L88,172 L76,140 Z" fill="#8a5f3c" opacity="0.35" stroke="#8a5f3c" stroke-width="2" stroke-linejoin="round"/>'
+   +'<path d="M76,140 L64,172 L88,172 Z M124,140 L136,172 L112,172 Z" fill="#8a5f3c" opacity="0.25" stroke="#8a5f3c" stroke-width="2" stroke-linejoin="round"/>'
+   +'<circle cx="100" cy="72" r="32" fill="#7cc46a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(88,68,112,68,7,p.bdelay)
+   +kSmile(100,82,10)
+   +'<ellipse cx="78" cy="80" rx="5" ry="3.5" fill="'+AV_BLUSH+'" opacity="0.85"/><ellipse cx="122" cy="80" rx="5" ry="3.5" fill="'+AV_BLUSH+'" opacity="0.85"/>';
+ }},
+ panda:{draw:function(p){
+   return '<circle cx="58" cy="42" r="13" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<circle cx="142" cy="42" r="13" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="50" cy="175" rx="10" ry="22" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-15 50 175)"/>'
+   +'<ellipse cx="150" cy="175" rx="10" ry="22" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(15 150 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="50" ry="50" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="74" cy="228" rx="13" ry="7" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="13" ry="7" fill="'+AV_EYE+'" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="46" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="80" cy="74" rx="11" ry="16" fill="'+AV_EYE+'" transform="rotate(-12 80 74)"/>'
+   +'<ellipse cx="120" cy="74" rx="11" ry="16" fill="'+AV_EYE+'" transform="rotate(12 120 74)"/>'
+   +'<g class="av-blink" style="animation-delay:'+(p.bdelay||'-0.4s')+'">'
+   +'<ellipse cx="80" cy="74" rx="5.5" ry="7" fill="#ffffff"/><ellipse cx="120" cy="74" rx="5.5" ry="7" fill="#ffffff"/>'
+   +'<circle cx="80" cy="75" r="3" fill="'+AV_EYE+'"/><circle cx="120" cy="75" r="3" fill="'+AV_EYE+'"/>'
+   +'<circle cx="78.5" cy="72" r="1.2" fill="#ffffff"/><circle cx="118.5" cy="72" r="1.2" fill="#ffffff"/>'
+   +'</g>'
+   +'<ellipse cx="100" cy="90" rx="6" ry="4.5" fill="'+AV_EYE+'"/>'
+   +kSmile(100,98,9)
+   +kBlush(64,88,136,88);
+ }},
+ lion:{draw:function(p){
+   return '<path d="M148,192 C168,188 178,172 172,158" fill="none" stroke="'+AV_INK+'" stroke-width="12" stroke-linecap="round"/>'
+   +'<path d="M148,192 C168,188 178,172 172,158" fill="none" stroke="#f7b95c" stroke-width="7" stroke-linecap="round"/>'
+   +'<circle cx="172" cy="156" r="10" fill="#d97f2b" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="148" cy="178" rx="9" ry="20" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 148 178)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="56" fill="#e08a2e" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<circle cx="64" cy="36" r="8" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5"/><circle cx="64" cy="36" r="4" fill="#f6b8c1"/>'
+   +'<circle cx="136" cy="36" r="8" fill="#f7b95c" stroke="'+AV_INK+'" stroke-width="2.5"/><circle cx="136" cy="36" r="4" fill="#f6b8c1"/>'
+   +'<circle cx="100" cy="78" r="40" fill="#f9c86a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(82,74,118,74,8,p.bdelay)
+   +'<ellipse cx="100" cy="86" rx="7" ry="5" fill="#8a5a2e"/>'
+   +kSmile(100,94,11)
+   +kBlush(66,86,134,86);
+ }},
+ cat:{draw:function(p){
+   return '<path d="M148,190 C170,186 178,168 170,154 C166,146 156,148 158,158 C160,168 152,176 144,180" fill="none" stroke="'+AV_INK+'" stroke-width="12" stroke-linecap="round"/>'
+   +'<path d="M148,190 C170,186 178,168 170,154 C166,146 156,148 158,158 C160,168 152,176 144,180" fill="none" stroke="#b8b8c0" stroke-width="8" stroke-linecap="round"/>'
+   +'<ellipse cx="100" cy="178" rx="46" ry="48" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="78" cy="226" rx="12" ry="7" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="122" cy="226" rx="12" ry="7" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M62,44 L56,10 L88,30 Z" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M63,36 L60,18 L78,29 Z" fill="#f6b8c1"/>'
+   +'<path d="M138,44 L144,10 L112,30 Z" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M137,36 L140,18 L122,29 Z" fill="#f6b8c1"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(82,74,118,74,8,p.bdelay)
+   +'<path d="M94,84 L106,84 L100,90 Z" fill="#e88aa0" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +kSmile(100,94,10)
+   +'<path d="M56,80 L40,76 M56,88 L40,90 M144,80 L160,76 M144,88 L160,90" fill="none" stroke="'+AV_INK+'" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>'
+   +kBlush(66,86,134,86);
+ }},
+
+ pig:{draw:function(p){
+   return '<path d="M150,172 C162,166 172,170 170,180 C168,188 158,190 156,182" fill="none" stroke="#e88aa0" stroke-width="3" stroke-linecap="round"/>'
+   +'<ellipse cx="100" cy="178" rx="50" ry="50" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="32" ry="34" fill="#fadde2" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="74" cy="228" rx="13" ry="7" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="13" ry="7" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="60" cy="52" rx="10" ry="16" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(20 60 52)"/>'
+   +'<ellipse cx="140" cy="52" rx="10" ry="16" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(-20 140 52)"/>'
+   +'<ellipse cx="60" cy="54" rx="5" ry="9" fill="#e88aa0" transform="rotate(20 60 54)"/>'
+   +'<ellipse cx="140" cy="54" rx="5" ry="9" fill="#e88aa0" transform="rotate(-20 140 54)"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#f6b8c1" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(82,70,118,70,8,p.bdelay)
+   +'<ellipse cx="100" cy="90" rx="16" ry="11" fill="#e88aa0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="94" cy="90" rx="2.5" ry="3.5" fill="'+AV_INK+'" opacity="0.6"/><ellipse cx="106" cy="90" rx="2.5" ry="3.5" fill="'+AV_INK+'" opacity="0.6"/>'
+   +kSmile(100,104,9)
+   +kBlush(64,84,136,84);
+ }},
+ fox:{draw:function(p){
+   return '<path d="M146,182 C174,172 188,142 178,118 C172,102 156,104 154,120 C152,138 142,158 136,172 Z" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="170" cy="118" rx="11" ry="15" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(18 170 118)"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="50" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="34" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M60,44 L54,8 L88,30 Z" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M62,36 L59,17 L80,29 Z" fill="#ffffff"/>'
+   +'<path d="M140,44 L146,8 L112,30 Z" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M138,36 L141,17 L120,29 Z" fill="#ffffff"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#f08a3c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="96" rx="22" ry="13" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +kEyes(82,72,118,72,8,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="6" ry="4.5" fill="'+AV_EYE+'"/>'
+   +kSmile(100,96,11)
+   +kBlush(64,84,136,84);
+ }},
+ frog:{draw:function(p){
+   return '<g class="av-hop" style="animation-delay:'+(p.bobDelay||'0s')+'">'
+   +'<ellipse cx="52" cy="176" rx="8" ry="20" fill="#58b368" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-15 52 176)"/>'
+   +'<ellipse cx="148" cy="176" rx="8" ry="20" fill="#58b368" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(15 148 176)"/>'
+   +'<ellipse cx="100" cy="178" rx="52" ry="48" fill="#58b368" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="188" rx="34" ry="34" fill="#d8ec9a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="66" cy="228" rx="16" ry="9" fill="#58b368" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="134" cy="228" rx="16" ry="9" fill="#58b368" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M62,228 L62,233 M134,228 L134,233" fill="none" stroke="#2f7a3d" stroke-width="2" stroke-linecap="round"/>'
+   +'<circle cx="100" cy="84" r="46" fill="#58b368" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<g class="av-blink" style="animation-delay:'+(p.bdelay||'-0.4s')+'">'
+   +'<circle cx="70" cy="46" r="17" fill="#58b368" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<circle cx="130" cy="46" r="17" fill="#58b368" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<circle cx="70" cy="46" r="11.5" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<circle cx="130" cy="46" r="11.5" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<circle cx="70" cy="46" r="5" fill="'+AV_EYE+'"/><circle cx="130" cy="46" r="5" fill="'+AV_EYE+'"/>'
+   +'<circle cx="68" cy="43" r="2" fill="#ffffff"/><circle cx="128" cy="43" r="2" fill="#ffffff"/>'
+   +'</g>'
+   +'<ellipse cx="100" cy="128" rx="22" ry="10" fill="#d8ec9a" opacity="0.6"/>'
+   +'<ellipse cx="92" cy="86" rx="1.8" ry="2.5" fill="#2f7a3d"/><ellipse cx="108" cy="86" rx="1.8" ry="2.5" fill="#2f7a3d"/>'
+   +'<path d="M70,96 Q100,114 130,96" fill="none" stroke="#2f7a3d" stroke-width="3" stroke-linecap="round"/>'
+   +'<ellipse cx="66" cy="92" rx="6" ry="4" fill="#a8d8a0" opacity="0.7"/><ellipse cx="134" cy="92" rx="6" ry="4" fill="#a8d8a0" opacity="0.7"/>'
+   +'</g>';
+ }},
+ elephant:{draw:function(p){
+   return '<path d="M52,180 C40,178 34,168 38,158" fill="none" stroke="'+AV_INK+'" stroke-width="8" stroke-linecap="round"/>'
+   +'<path d="M52,180 C40,178 34,168 38,158" fill="none" stroke="#a8d8e8" stroke-width="5" stroke-linecap="round"/>'
+   +'<circle cx="38" cy="156" r="4" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="100" cy="180" rx="52" ry="48" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="192" rx="32" ry="32" fill="#c8e6f2" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="72" cy="228" rx="12" ry="8" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="128" cy="228" rx="12" ry="8" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="52" cy="72" rx="16" ry="26" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(-12 52 72)"/>'
+   +'<ellipse cx="148" cy="72" rx="16" ry="26" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(12 148 72)"/>'
+   +'<ellipse cx="52" cy="72" rx="9" ry="18" fill="#f6b8c1" transform="rotate(-12 52 72)"/>'
+   +'<ellipse cx="148" cy="72" rx="9" ry="18" fill="#f6b8c1" transform="rotate(12 148 72)"/>'
+   +'<circle cx="100" cy="76" r="44" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<g class="av-sway" style="animation-delay:'+(p.bobDelay||'0s')+'">'
+   +'<path d="M92,86 C90,110 88,130 94,144 C97,152 107,152 109,144 C111,132 106,112 108,88 C104,92 96,92 92,86 Z" fill="#a8d8e8" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +'</g>'
+   +kEyes(80,68,120,68,8,p.bdelay)
+   +kBlush(64,84,136,84);
+ }},
+ giraffe:{draw:function(p){
+   return '<path d="M148,180 C160,178 166,168 164,158" fill="none" stroke="'+AV_INK+'" stroke-width="9" stroke-linecap="round"/>'
+   +'<path d="M148,180 C160,178 166,168 164,158" fill="none" stroke="#f7d774" stroke-width="5" stroke-linecap="round"/>'
+   +'<circle cx="164" cy="156" r="7" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="72" y="198" width="10" height="32" rx="4" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<rect x="92" y="202" width="10" height="28" rx="4" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<rect x="108" y="202" width="10" height="28" rx="4" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<rect x="128" y="198" width="10" height="32" rx="4" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<rect x="72" y="222" width="10" height="9" rx="3" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="92" y="222" width="10" height="9" rx="3" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="108" y="222" width="10" height="9" rx="3" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="128" y="222" width="10" height="9" rx="3" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="100" cy="185" rx="48" ry="45" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="78" cy="172" rx="8" ry="6" fill="#b07a45"/><ellipse cx="118" cy="196" rx="9" ry="7" fill="#b07a45"/><ellipse cx="128" cy="166" rx="6" ry="5" fill="#b07a45"/><ellipse cx="88" cy="200" rx="7" ry="5" fill="#b07a45"/>'
+   +'<path d="M86,80 L86,150 Q86,162 100,162 Q114,162 114,150 L114,80 Z" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="120" rx="6" ry="8" fill="#b07a45"/><ellipse cx="92" cy="146" rx="5" ry="6" fill="#b07a45"/>'
+   +'<ellipse cx="66" cy="52" rx="8" ry="12" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-20 66 52)"/>'
+   +'<ellipse cx="134" cy="52" rx="8" ry="12" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(20 134 52)"/>'
+   +'<g class="av-nod" style="animation-delay:'+(p.bobDelay||'0s')+'">'
+   +'<ellipse cx="100" cy="58" rx="34" ry="30" fill="#f7d774" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M86,34 L82,18 M114,34 L118,18" fill="none" stroke="#8a5a2e" stroke-width="3" stroke-linecap="round"/>'
+   +'<circle cx="82" cy="16" r="5" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<circle cx="118" cy="16" r="5" fill="#8a5a2e" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="100" cy="70" rx="18" ry="11" fill="#e8c39a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="93" cy="70" rx="1.8" ry="2.5" fill="'+AV_INK+'"/><ellipse cx="107" cy="70" rx="1.8" ry="2.5" fill="'+AV_INK+'"/>'
+   +kEyes(84,54,116,54,7.5,p.bdelay)
+   +kBlush(68,66,132,66)
+   +'</g>';
+ }},
+ rabbit:{draw:function(p){
+   return '<circle cx="42" cy="196" r="12" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="100" cy="178" rx="46" ry="48" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#d8e8f8" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="72" cy="228" rx="13" ry="7" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="128" cy="228" rx="13" ry="7" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<g class="av-earwig" style="animation-delay:'+(p.bobDelay||'0s')+'">'
+   +'<ellipse cx="76" cy="35" rx="9" ry="32" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(-7 76 35)"/>'
+   +'<ellipse cx="124" cy="35" rx="9" ry="32" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(7 124 35)"/>'
+   +'<ellipse cx="76" cy="37" rx="4.5" ry="22" fill="#f6b8c1" transform="rotate(-7 76 37)"/>'
+   +'<ellipse cx="124" cy="37" rx="4.5" ry="22" fill="#f6b8c1" transform="rotate(7 124 37)"/>'
+   +'</g>'
+   +'<circle cx="100" cy="84" r="42" fill="#a8d0f0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(82,80,118,80,8,p.bdelay)
+   +'<path d="M94,88 L106,88 L100,93 Z" fill="#e88aa0" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +'<rect x="94" y="95" width="5.5" height="9" rx="2" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<rect x="100.5" y="95" width="5.5" height="9" rx="2" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +kBlush(66,92,134,92);
+ }},
+ owl:{draw:function(p){
+   return '<path d="M64,44 L58,24 L78,36 Z" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M136,44 L142,24 L122,36 Z" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<ellipse cx="52" cy="175" rx="9" ry="22" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 175)"/>'
+   +'<ellipse cx="148" cy="175" rx="9" ry="22" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 148 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="50" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="30" ry="34" fill="#e8c39a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="76" cy="228" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="124" cy="228" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<g class="av-blink" style="animation-delay:'+(p.bdelay||'-0.4s')+'">'
+   +'<circle cx="82" cy="72" r="13" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="118" cy="72" r="13" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="82" cy="73" r="6.5" fill="'+AV_EYE+'"/><circle cx="118" cy="73" r="6.5" fill="'+AV_EYE+'"/>'
+   +'<circle cx="80" cy="70" r="2.5" fill="#ffffff"/><circle cx="116" cy="70" r="2.5" fill="#ffffff"/>'
+   +'</g>'
+   +'<path d="M94,84 L106,84 L100,92 Z" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +kBlush(64,88,136,88);
+ }},
+ raccoon:{draw:function(p){
+   return '<path d="M148,192 C170,188 182,170 176,152 C172,142 160,142 160,152" fill="none" stroke="'+AV_INK+'" stroke-width="19" stroke-linecap="round"/>'
+   +'<path d="M148,192 C170,188 182,170 176,152 C172,142 160,142 160,152" fill="none" stroke="#a9a9b3" stroke-width="14" stroke-linecap="round"/>'
+   +'<path d="M160,188 L172,184 M170,172 L178,166 M174,156 L178,150" fill="none" stroke="#4a4a52" stroke-width="3" stroke-linecap="round"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#d8d8de" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M62,44 L56,10 L88,30 Z" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M63,36 L60,18 L78,29 Z" fill="#f6b8c1"/>'
+   +'<path d="M138,44 L144,10 L112,30 Z" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M137,36 L140,18 L122,29 Z" fill="#f6b8c1"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#a9a9b3" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M62,66 Q100,52 138,66 Q138,82 100,88 Q62,82 62,66 Z" fill="#4a4a52"/>'
+   +kEyes(82,72,118,72,7.5,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="6" ry="4.5" fill="'+AV_EYE+'"/>'
+   +kSmile(100,96,10)
+   +kBlush(64,86,136,86);
+ }},
+
+ monkey:{draw:function(p){
+   return '<path d="M52,190 C36,186 28,172 34,160 C38,152 48,154 48,162" fill="none" stroke="'+AV_INK+'" stroke-width="10" stroke-linecap="round"/>'
+   +'<path d="M52,190 C36,186 28,172 34,160 C38,152 48,154 48,162" fill="none" stroke="#a8763e" stroke-width="6" stroke-linecap="round"/>'
+   +'<ellipse cx="50" cy="175" rx="9" ry="24" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 50 175)"/>'
+   +'<ellipse cx="150" cy="175" rx="9" ry="24" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 150 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#e8c39a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="56" cy="72" r="11" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="56" cy="72" r="6" fill="#e8c39a"/>'
+   +'<circle cx="144" cy="72" r="11" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="144" cy="72" r="6" fill="#e8c39a"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="80" rx="34" ry="32" fill="#e8c39a"/>'
+   +kEyes(82,74,118,74,8,p.bdelay)
+   +'<ellipse cx="94" cy="86" rx="2" ry="2.5" fill="#8a5a2e"/><ellipse cx="106" cy="86" rx="2" ry="2.5" fill="#8a5a2e"/>'
+   +kSmile(100,94,11)
+   +kBlush(66,88,134,88);
+ }},
+ tiger:{draw:function(p){
+   return '<path d="M148,190 C168,186 178,168 170,152" fill="none" stroke="'+AV_INK+'" stroke-width="14" stroke-linecap="round"/>'
+   +'<path d="M148,190 C168,186 178,168 170,152" fill="none" stroke="#f7a83c" stroke-width="10" stroke-linecap="round"/>'
+   +'<path d="M158,184 L168,182 M166,168 L174,164" fill="none" stroke="'+AV_EYE+'" stroke-width="3" stroke-linecap="round"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M56,162 Q60,178 56,194 M144,162 Q140,178 144,194" fill="none" stroke="'+AV_EYE+'" stroke-width="3" stroke-linecap="round"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M62,44 L56,10 L88,30 Z" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M63,36 L60,18 L78,29 Z" fill="#ffffff"/>'
+   +'<path d="M138,44 L144,10 L112,30 Z" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="3" stroke-linejoin="round"/>'
+   +'<path d="M137,36 L140,18 L122,29 Z" fill="#ffffff"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#f7a83c" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M88,44 Q90,50 88,56 M100,42 Q100,48 100,54 M112,44 Q110,50 112,56" fill="none" stroke="'+AV_EYE+'" stroke-width="2.5" stroke-linecap="round"/>'
+   +kEyes(82,74,118,74,8,p.bdelay)
+   +'<ellipse cx="100" cy="86" rx="6" ry="4.5" fill="#e88aa0"/>'
+   +kSmile(100,94,11)
+   +kBlush(66,86,134,86);
+ }},
+ crocodile:{draw:function(p){
+   return '<path d="M148,178 C168,180 184,192 190,208 C176,206 160,198 148,188 Z" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +'<path d="M156,182 L162,168 L168,182 Z M170,189 L176,175 L182,189 Z" fill="#e8c94a" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +'<path d="M110,164 L116,150 L122,164 Z M130,166 L136,152 L142,166 Z M148,174 L154,160 L160,174 Z" fill="#e8c94a" stroke="'+AV_INK+'" stroke-width="2" stroke-linejoin="round"/>'
+   +'<ellipse cx="108" cy="192" rx="58" ry="30" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="115" cy="202" rx="30" ry="18" fill="#d8ec9a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="72" cy="224" rx="12" ry="7" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="134" cy="224" rx="12" ry="7" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="66" cy="162" rx="46" ry="32" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<g class="av-blink" style="animation-delay:'+(p.bdelay||'-0.4s')+'">'
+   +'<circle cx="52" cy="126" r="12" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="92" cy="130" r="12" fill="#6fbf5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="52" cy="126" r="7.5" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<circle cx="92" cy="130" r="7.5" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<circle cx="52" cy="126" r="4" fill="'+AV_EYE+'"/><circle cx="92" cy="130" r="4" fill="'+AV_EYE+'"/>'
+   +'<circle cx="54" cy="123" r="1.5" fill="#ffffff"/><circle cx="94" cy="127" r="1.5" fill="#ffffff"/>'
+   +'</g>'
+   +'<ellipse cx="28" cy="156" rx="2.5" ry="3.5" fill="#2f7a3d"/>'
+   +'<path d="M24,166 Q62,182 108,172" fill="none" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linecap="round"/>'
+   +'<path d="M36,170 L40,170 L38,179 Z M56,174 L60,174 L58,183 Z M76,175 L80,175 L78,184 Z M94,173 L98,173 L96,182 Z" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="1.5" stroke-linejoin="round"/>';
+ }},
+ dog:{draw:function(p){
+   return '<path d="M148,185 C160,180 164,168 158,158" fill="none" stroke="'+AV_INK+'" stroke-width="11" stroke-linecap="round"/>'
+   +'<path d="M148,185 C160,180 164,168 158,158" fill="none" stroke="#f2e3c9" stroke-width="7" stroke-linecap="round"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#f2e3c9" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#f2e3c9" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#f2e3c9" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#f2e3c9" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<g class="av-earwig" style="animation-delay:'+(p.bobDelay||'0s')+'">'
+   +'<ellipse cx="56" cy="68" rx="11" ry="24" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(14 56 68)"/>'
+   +'<ellipse cx="144" cy="68" rx="11" ry="24" fill="#a8763e" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(-14 144 68)"/>'
+   +'</g>'
+   +'<circle cx="100" cy="78" r="44" fill="#f2e3c9" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="82" cy="72" rx="13" ry="15" fill="#a8763e" transform="rotate(-10 82 72)"/>'
+   +kEyes(82,72,118,72,8,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="7" ry="5" fill="'+AV_EYE+'"/>'
+   +kSmile(100,96,11)
+   +kBlush(64,86,136,86);
+ }},
+ sloth:{draw:function(p){
+   return '<ellipse cx="48" cy="185" rx="10" ry="30" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(-8 48 185)"/>'
+   +'<ellipse cx="152" cy="185" rx="10" ry="30" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3" transform="rotate(8 152 185)"/>'
+   +'<path d="M44,212 L42,218 M48,214 L48,220 M52,212 L54,218 M148,212 L146,218 M152,214 L152,220 M156,212 L158,218" fill="none" stroke="#e8e2d4" stroke-width="2" stroke-linecap="round"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#d8c9a8" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#b08a5a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="80" cy="72" rx="12" ry="14" fill="#8a6a4a"/>'
+   +'<ellipse cx="120" cy="72" rx="12" ry="14" fill="#8a6a4a"/>'
+   +'<g class="av-blink" style="animation-delay:'+(p.bdelay||'-0.4s')+'">'
+   +'<ellipse cx="80" cy="72" rx="7" ry="4.5" fill="'+AV_EYE+'"/>'
+   +'<ellipse cx="120" cy="72" rx="7" ry="4.5" fill="'+AV_EYE+'"/>'
+   +'<circle cx="78" cy="70" r="1.2" fill="#ffffff"/><circle cx="118" cy="70" r="1.2" fill="#ffffff"/>'
+   +'</g>'
+   +'<ellipse cx="100" cy="86" rx="5" ry="4" fill="'+AV_INK+'"/>'
+   +kSmile(100,94,9)
+   +kBlush(64,86,136,86);
+ }},
+ duck:{draw:function(p){
+   return '<path d="M48,170 L32,160 L38,176 L32,188 L50,182 Z" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +'<ellipse cx="52" cy="175" rx="10" ry="20" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 175)"/>'
+   +'<ellipse cx="148" cy="175" rx="10" ry="20" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 148 175)"/>'
+   +'<ellipse cx="100" cy="178" rx="50" ry="48" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="76" cy="230" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="124" cy="230" rx="11" ry="6" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="76" r="40" fill="#ffd94a" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M94,50 Q92,42 88,38 M100,48 Q100,39 100,34 M106,50 Q108,42 112,38" fill="none" stroke="#f2b705" stroke-width="2.5" stroke-linecap="round"/>'
+   +kEyes(82,70,118,70,8,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="14" ry="8" fill="#ff9f1c" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<path d="M88,88 Q100,92 112,88" fill="none" stroke="'+AV_INK+'" stroke-width="2" stroke-linecap="round"/>'
+   +kBlush(66,84,134,84);
+ }},
+ hippo:{draw:function(p){
+   return '<ellipse cx="100" cy="182" rx="55" ry="48" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="194" rx="34" ry="30" fill="#d8d8de" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<ellipse cx="68" cy="228" rx="12" ry="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="94" cy="230" rx="12" ry="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="106" cy="230" rx="12" ry="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="132" cy="228" rx="12" ry="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="66" cy="44" r="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/><circle cx="66" cy="44" r="4" fill="#e8b8c0"/>'
+   +'<circle cx="134" cy="44" r="8" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/><circle cx="134" cy="44" r="4" fill="#e8b8c0"/>'
+   +'<ellipse cx="100" cy="82" rx="52" ry="40" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(78,62,122,62,6.5,p.bdelay)
+   +'<ellipse cx="100" cy="96" rx="30" ry="16" fill="#e8b8c0" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="88" cy="94" rx="4" ry="5.5" fill="'+AV_INK+'"/><ellipse cx="112" cy="94" rx="4" ry="5.5" fill="'+AV_INK+'"/>'
+   +kSmile(100,114,10)
+   +kBlush(60,92,140,92);
+ }},
+ sheep:{draw:function(p){
+   return '<rect x="70" y="200" width="9" height="30" rx="4" fill="#8a8a92" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="90" y="202" width="9" height="28" rx="4" fill="#8a8a92" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="110" y="202" width="9" height="28" rx="4" fill="#8a8a92" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="130" y="200" width="9" height="30" rx="4" fill="#8a8a92" stroke="'+AV_INK+'" stroke-width="2"/>'
+   +'<rect x="70" y="224" width="9" height="7" rx="3" fill="#4a4a52" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<rect x="90" y="224" width="9" height="7" rx="3" fill="#4a4a52" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<rect x="110" y="224" width="9" height="7" rx="3" fill="#4a4a52" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<rect x="130" y="224" width="9" height="7" rx="3" fill="#4a4a52" stroke="'+AV_INK+'" stroke-width="1.5"/>'
+   +'<path d="M148,178 A24,24 0 0 1 134,212 A24,24 0 0 1 100,226 A24,24 0 0 1 66,212 A24,24 0 0 1 52,178 A24,24 0 0 1 66,144 A24,24 0 0 1 100,130 A24,24 0 0 1 134,144 A24,24 0 0 1 148,178 Z" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="64" cy="78" rx="8" ry="14" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-25 64 78)"/>'
+   +'<ellipse cx="136" cy="78" rx="8" ry="14" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(25 136 78)"/>'
+   +'<circle cx="100" cy="78" r="34" fill="#b8b8c0" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<path d="M70,62 C70,44 84,34 100,34 C116,34 130,44 130,62 C120,54 112,56 104,60 C96,56 88,56 80,60 C76,58 72,60 70,62 Z" fill="#ffffff" stroke="'+AV_INK+'" stroke-width="2.5" stroke-linejoin="round"/>'
+   +kEyes(84,76,116,76,7,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="5" ry="4" fill="'+AV_INK+'"/>'
+   +kSmile(100,96,8)
+   +kBlush(68,88,132,88);
+ }},
+ koala:{draw:function(p){
+   return '<circle cx="54" cy="44" r="16" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="54" cy="44" r="9" fill="#d8d2ea"/>'
+   +'<circle cx="146" cy="44" r="16" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="3"/><circle cx="146" cy="44" r="9" fill="#d8d2ea"/>'
+   +'<ellipse cx="52" cy="178" rx="9" ry="20" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(-12 52 178)"/>'
+   +'<ellipse cx="148" cy="178" rx="9" ry="20" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="2.5" transform="rotate(12 148 178)"/>'
+   +'<ellipse cx="100" cy="178" rx="48" ry="48" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +'<ellipse cx="100" cy="190" rx="28" ry="32" fill="#d8d2ea" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="74" cy="228" rx="12" ry="7" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<ellipse cx="126" cy="228" rx="12" ry="7" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="2.5"/>'
+   +'<circle cx="100" cy="78" r="44" fill="#b8b0d8" stroke="'+AV_INK+'" stroke-width="3"/>'
+   +kEyes(80,70,120,70,7.5,p.bdelay)
+   +'<ellipse cx="100" cy="88" rx="10" ry="14" fill="'+AV_EYE+'"/>'
+   +'<ellipse cx="96" cy="82" rx="3" ry="5" fill="#ffffff" opacity="0.85"/>'
+   +kSmile(100,106,8)
+   +kBlush(64,86,136,86);
+ }}
+};
+
+var avUid=0;
+/* The avatar renderer. face is the emoji; look is
+   {background:{shape,color,pattern,effect}}; glow is Pip's
+   glow colour (ignored for the animal, kept for call-site
+   compatibility); w is the width in px (default 190).
+   The animal's own colours are always used — a stored colour
+   value is ignored, like stored hair in round 2. A stored
+   accessory value is ignored too (accessories were dropped).
+   A stored face that is not on the sheet (🦦 otter, 🦋
+   butterfly) falls back to the chick, the first animal.
+   A stored background without a pattern falls back to none;
+   an unknown pattern or effect falls back to none / plain.
+   Draw order: background shape → pattern (clipped) → effects
+   (clipped) → ground shadow → animal (jump group around the
+   bob group) → tap-to-play sparkles (hidden until a tap).
+   The svg is the tap target for avatarPlay: every avatar on
+   the page renders through here, so the sidebar avatar, the
+   editor preview and the Grand Door tile all play. */
+function avatarLookHTML(face,look,glow,w){
+  var key=AVATAR_FACE_EMOJI[face]||'chick';
+  var a=AVATAR_ANIMALS[key]||AVATAR_ANIMALS.chick;
+  var lk=look||{};
+  var bg=lk.background||{};
+  var shape=LOOK_BG_SHAPES.indexOf(bg.shape)>=0?bg.shape:'circle';
+  var color=LOOK_BG_COLORS[bg.color]?bg.color:'mint';
+  if(bg.color==='none') color='none';
+  var pattern=LOOK_BG_PATTERNS.indexOf(bg.pattern)>=0?bg.pattern:'';
+  var effect=LOOK_BG_EFFECTS.indexOf(bg.effect)>=0?bg.effect:'plain';
+  var uid='a'+(++avUid);
+  var W=w||190,H=Math.round(W*1.3);
+  var p={uid:uid,bdelay:(-0.4+((avUid*0.7)%4.6)).toFixed(1)+'s',bobDelay:((avUid*0.9)%3.6).toFixed(1)+'s'};
+  var s='<svg class="av5" viewBox="0 0 200 260" data-animal="'+key+'" width="'+W+'" height="'+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="'+key+'" onclick="avatarPlay(this)">';
+  s+='<defs><radialGradient id="gSh'+uid+'"><stop offset="0%" stop-color="rgba(0,0,0,0.20)"/><stop offset="100%" stop-color="rgba(0,0,0,0)"/></radialGradient>'
+  +'<clipPath id="bgClip'+uid+'">'+BG_SHAPE_EL[shape]+'</clipPath>'
+  +(effect==='glow'?'<filter id="bgBlur'+uid+'" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>':'')
+  +'</defs>';
+  if(color!=='none'){
+    if(effect==='glow'){
+      s+='<g filter="url(#bgBlur'+uid+')" opacity="0.45" transform="translate(100 135) scale(1.15) translate(-100 -135)">'+BG_SHAPE_EL[shape].replace('/>', ' fill="'+LOOK_BG_COLORS[color]+'"/>')+'</g>';
+    }
+    s+=bgShapeEl(shape,LOOK_BG_COLORS[color]);
+    if(pattern){
+      s+='<g clip-path="url(#bgClip'+uid+')">'+bgPatternSVG(pattern)+'</g>';
+    }
+    if(effect==='glitter'){
+      s+='<g clip-path="url(#bgClip'+uid+')">'
+      +kSpark(28,80,10,'#ffffff','0s')+kSpark(172,75,9,'#ffd166','0.4s')+kSpark(25,130,9,'#ffd166','0.9s')+kSpark(175,135,10,'#ffffff','0.2s')+kSpark(30,180,9,'#ffffff','0.7s')+kSpark(170,185,9,'#ffd166','1.1s')+kSpark(45,105,8,'#ffffff','0.5s')+kSpark(155,105,8,'#ffd166','1.4s')
+      +'</g>';
+    }
+    if(effect==='shine'){
+      s+='<g clip-path="url(#bgClip'+uid+')">'
+      +'<rect x="55" y="-60" width="70" height="380" fill="#ffffff" opacity="0.40" transform="rotate(18 100 135)"/>'
+      +'<rect x="140" y="-60" width="14" height="380" fill="#ffffff" opacity="0.30" transform="rotate(18 100 135)"/>'
+      +'</g>';
+    }
+    if(effect==='twinkle'){
+      s+='<g clip-path="url(#bgClip'+uid+')">'+bgTwinkleSVG()+'</g>';
+    }
+    if(effect==='bubbles'){
+      s+='<g clip-path="url(#bgClip'+uid+')">'+bgBubblesSVG()+'</g>';
+    }
+    if(effect==='petals'){
+      s+='<g clip-path="url(#bgClip'+uid+')">'+bgPetalsSVG()+'</g>';
+    }
+  }
+  s+='<ellipse cx="100" cy="246" rx="56" ry="9" fill="url(#gSh'+uid+')"/>';
+  s+='<g class="av-jump"><g class="av-bob" style="animation-delay:'+p.bobDelay+'">'+a.draw(p);
+  s+='</g></g>';
+  /* Tap-to-play sparkle burst — hidden (opacity 0) until the svg
+     carries .av-play; the positions are baked into the paths so
+     the burst animation can scale the whole group. */
+  s+='<g class="av-sparkles">'
+  +'<path d="'+kStar4(38,60,9)+'" fill="#ffd166"/>'
+  +'<path d="'+kStar4(162,58,9)+'" fill="#ffffff"/>'
+  +'<path d="'+kStar4(170,140,8)+'" fill="#ffd166"/>'
+  +'<path d="'+kStar4(30,145,8)+'" fill="#ffffff"/>'
+  +'<path d="'+kStar4(100,28,9)+'" fill="#ffd166"/>'
+  +'</g></svg>';
+  return s;
+}
+/* TAP TO PLAY — tapping the animal makes it do a little trick: a
+   happy jump with squash-and-stretch, plus a tiny sparkle burst.
+   The class goes on the svg; the CSS animates the jump group (the
+   animal only — the background and ground shadow stay put) and
+   the sparkles. The idle bob/blink keep running underneath, and
+   the class comes off when the jump ends (animationend, with a
+   timer safety net), so the idle life resumes. Click fires on
+   tap, so this works by touch on a real device too. The frog
+   hops higher and the rabbit wiggles its ears faster (CSS, by
+   data-animal); every other animal does the same happy jump. */
+function avatarPlay(svg){
+  if(!svg||svg.classList.contains('av-play'))return;
+  svg.classList.add('av-play');
+  var cleanup=function(){ svg.classList.remove('av-play'); svg.removeEventListener('animationend',done); };
+  var done=function(e){ if(e.animationName==='av5Play'||e.animationName==='av5PlayHop'){ cleanup(); } };
+  svg.addEventListener('animationend',done);
+  setTimeout(cleanup,900);
+}
+var AVATAR_5_CSS=[
+'.av5{cursor:pointer}',
+'.av5 .av-bob{transform-box:fill-box;transform-origin:50% 100%;animation:av5Bob 3.6s ease-in-out infinite}',
+'.av5 .av-blink{transform-box:fill-box;transform-origin:center;animation:av5Blink 4.6s infinite}',
+'.av5 .av-earwig{transform-box:fill-box;transform-origin:50% 100%;animation:av5EarWig 5s ease-in-out infinite}',
+'.av5 .av-sway{transform-box:fill-box;transform-origin:50% 0;animation:av5Sway 3.8s ease-in-out infinite}',
+'.av5 .av-hop{transform-box:fill-box;transform-origin:50% 100%;animation:av5Hop 2.8s ease-in-out infinite}',
+'.av5 .av-nod{transform-box:fill-box;transform-origin:50% 100%;animation:av5Nod 4.2s ease-in-out infinite}',
+'.av5 .av-twinkle{animation:av5Twinkle 2.2s ease-in-out infinite}',
+/* Tap to play: the jump group wraps the bob group (so the play
+   animation never fights the bob's own inline stagger delay),
+   and the sparkles sit hidden until the svg carries .av-play.
+   The frog hops higher; the rabbit wiggles its ears faster
+   (the !important delay beats the ear group's inline stagger,
+   so the fast wiggle starts at once). */
+'.av5 .av-jump{transform-box:fill-box;transform-origin:50% 100%}',
+'.av5 .av-sparkles{opacity:0;transform-box:fill-box;transform-origin:center;pointer-events:none}',
+'.av5.av-play .av-jump{animation:av5Play .8s cubic-bezier(.34,1.56,.64,1)}',
+'.av5[data-animal="frog"].av-play .av-jump{animation:av5PlayHop .8s cubic-bezier(.34,1.56,.64,1)}',
+'.av5[data-animal="rabbit"].av-play .av-earwig{animation:av5EarWig .8s ease-in-out infinite!important;animation-delay:0s!important}',
+'.av5.av-play .av-sparkles{animation:av5Spark .8s ease-out}',
+/* Animated background effects: slow and gentle, inside the
+   shape. Twinkle stars pulse, bubbles drift up, petals drift
+   down — each element staggered by its inline delay. */
+'.av5 .av-twinklebg{transform-box:fill-box;transform-origin:center;animation:av5TwinkleBg 3s ease-in-out infinite}',
+'.av5 .av-bub{animation:av5Bub 7s linear infinite}',
+'.av5 .av-pet{transform-box:fill-box;transform-origin:center;animation:av5Pet 8s linear infinite}',
+'@keyframes av5Bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3.5px)}}',
+'@keyframes av5Blink{0%,90%,100%{transform:scaleY(1)}93%{transform:scaleY(.08)}}',
+'@keyframes av5EarWig{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-7deg)}75%{transform:rotate(7deg)}}',
+'@keyframes av5Sway{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}',
+'@keyframes av5Hop{0%,55%,100%{transform:translateY(0)}12%{transform:translateY(-8px)}30%{transform:translateY(0)}42%{transform:translateY(-4px)}}',
+'@keyframes av5Nod{0%,100%{transform:rotate(0deg)}30%{transform:rotate(3deg)}65%{transform:rotate(-3deg)}}',
+'@keyframes av5Twinkle{0%,100%{opacity:.25}50%{opacity:1}}',
+'@keyframes av5Play{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-26px) scale(.96,1.06)}55%{transform:translateY(0) scale(1.08,.9)}75%{transform:translateY(-8px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}',
+'@keyframes av5PlayHop{0%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-38px) scale(.96,1.06)}55%{transform:translateY(0) scale(1.08,.9)}75%{transform:translateY(-10px) scale(.98,1.03)}100%{transform:translateY(0) scale(1,1)}}',
+'@keyframes av5Spark{0%{opacity:0;transform:scale(.5)}30%{opacity:1;transform:scale(1.12)}100%{opacity:0;transform:scale(.7)}}',
+'@keyframes av5TwinkleBg{0%,100%{opacity:.15;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}',
+'@keyframes av5Bub{0%{transform:translateY(0);opacity:0}15%{opacity:.5}85%{opacity:.5}100%{transform:translateY(-170px);opacity:0}}',
+'@keyframes av5Pet{0%{transform:translateY(-25px) rotate(0deg);opacity:0}15%{opacity:.6}85%{opacity:.6}100%{transform:translateY(190px) rotate(160deg);opacity:0}}',
+'@media (prefers-reduced-motion: reduce){.av5 .av-bob,.av5 .av-blink,.av5 .av-earwig,.av5 .av-sway,.av5 .av-hop,.av5 .av-nod,.av5 .av-twinkle,.av5 .av-twinklebg,.av5 .av-bub,.av5 .av-pet{animation:none}.av5.av-play .av-jump,.av5.av-play .av-sparkles{animation:none!important}}'
+].join('\n');
+/* end of FULL-BODY LOOK — ROUND 5 */
+
+// The round-5 "Change my name & look" editor (replaces openLookModal
+// in public/index.html). Same structure and draft pattern as round 4
+// — the editor works on a DRAFT copy of the look, and nothing is
+// saved until "Save my look" commits the draft into the live
+// explorer (resolved fresh at that moment) and calls save(). Cancel
+// just closes the modal and the draft is thrown away, so the stored
+// look is untouched. (Round-4 live check: Cancel genuinely reverts.)
+// What changed in round 5:
+//   • 25 animals (LOOK_FACES, from the avatar block) — the otter
+//     and butterfly are gone, they are not on the reference sheet.
+//   • NO colour picker section — animals keep their own colours
+//     from the sheet. A stored colour value is ignored.
+//   • NO accessories — the parent dropped them. A stored
+//     accessory value is ignored, like a stored colour.
+//   • NEW "My background" section: shape (bgShapePick) × colour
+//     (bgColorPick) × pattern (bgPatternPick) × effect
+//     (bgEffectPick). The background is part of the look:
+//     {background:{shape,color,pattern,effect}}. Patterns are
+//     drawn inside the shape; the effects now include three
+//     animated ones (twinkle, bubbles, petals) alongside the
+//     static plain / glitter / glow / shine.
+//   • TAP TO PLAY: the preview (like every avatar) is tappable —
+//     the animal jumps with a sparkle burst. Nothing to wire
+//     here: the svg carries its own onclick.
 function openLookModal(){
   var e=ex();
-  /* DRAFT (round 4 — Cancel must revert): the editor works on a
+  /* DRAFT (round 5 — Cancel must revert): the editor works on a
      draft copy of the look, never on the live explorer. Every pick
      only changes the draft and refreshes the modal preview; nothing
      is saved until "Save my look" commits the draft into the live
@@ -4004,13 +4323,18 @@ function openLookModal(){
      closes the modal and the draft is thrown away, so the stored
      look is untouched. The sidebar/topbar characters show the
      SAVED look and only change on Save, via render(). */
-  var draft={face:e.face, glow:e.glow, badge:e.badge, look:{color:(e.look||{}).color||'', accessory:(e.look||{}).accessory||''}};
+  var draft={face:e.face, glow:e.glow, badge:e.badge, look:{background:{shape:((e.look||{}).background||{}).shape||'circle', color:((e.look||{}).background||{}).color||'mint', pattern:((e.look||{}).background||{}).pattern||'', effect:((e.look||{}).background||{}).effect||'plain'}}};
+  function bgShapeMini(shape){return '<svg viewBox="0 0 200 260" width="26" height="34" aria-hidden="true">'+bgShapeEl(shape,'#ffd6e0')+'</svg>'}
+  var BG_EFF_LABELS={plain:'Plain',glitter:'✨ Glitter',glow:'🌟 Glow',shine:'💫 Shine',twinkle:'⭐ Twinkle',bubbles:'🫧 Bubbles',petals:'🌸 Petals'};
+  var BG_PATTERN_LABELS={'':'None','dots':'Polka dots','stars':'Stars','stripes':'Stripes','hearts':'Hearts'};
   openModal('<h3 style="margin-top:0">Change my name &amp; look 🎨</h3>'
    +'<label class="flabel">Magic name</label><input class="field" id="lkName" value="'+esc(e.name)+'" maxlength="20">'
-   +'<label class="flabel">My animal friend</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['🦦','🐸','🦋','🐱','🐶','🐰','🦁','🐼','🦊','🐢','🐷','🐵'].map(function(a){return '<button class="iconbtn facePick" data-f="'+a+'" style="font-size:1.2rem;'+(e.face===a?'outline:3px solid var(--ink)':'')+'">'+a+'</button>';}).join('')+'</div>'
+   +'<label class="flabel">My animal friend</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_FACES.map(function(a){return '<button class="iconbtn facePick" data-f="'+a+'" style="font-size:1.2rem;'+(e.face===a?'outline:3px solid var(--ink)':'')+'">'+a+'</button>';}).join('')+'</div>'
    +'<label class="flabel">My full-body look</label><div id="lookPreview" class="card" style="padding:12px;margin-bottom:4px">'+avatarLookHTML(e.face,e.look,e.glow)+'</div>'
-   +'<label class="flabel">Animal colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_COLORS.map(function(c){ var cur=(e.look||{}).color||''; return '<button class="iconbtn lookColorPick" data-c="'+c+'" style="background:'+(c||'repeating-linear-gradient(45deg,#ffffff 0 4px,#e8e2d4 4px 8px)')+';'+(cur===c?'outline:3px solid var(--ink)':'')+'" aria-label="Animal colour '+(c||'natural')+'"></button>'; }).join('')+'</div>'
-   +'<label class="flabel">Accessory</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_ACCS.map(function(a){ var cur=(e.look||{}).accessory||''; return '<button class="iconbtn lookAccPick" data-a="'+a+'" style="font-size:1.2rem;'+(cur===a?'outline:3px solid var(--ink)':'')+'" aria-label="'+(a?LOOK_ACC_LABELS[a]:'No accessory')+'">'+(a?LOOK_ACC_EMOJI[a]:'🚫')+'</button>'; }).join('')+'</div>'
+   +'<label class="flabel">My background</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+LOOK_BG_SHAPES.map(function(sh){ var cur=(draft.look.background||{}).shape||'circle'; return '<button class="iconbtn bgShapePick" data-s="'+sh+'" style="width:40px;height:48px;padding:0;display:flex;align-items:center;justify-content:center;'+(cur===sh?'outline:3px solid var(--ink)':'')+'" aria-label="'+sh+' background">'+bgShapeMini(sh)+'</button>'; }).join('')+'</div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+LOOK_BG_COLOR_NAMES.concat(['none']).map(function(c){ var cur=(draft.look.background||{}).color||'mint'; return '<button class="iconbtn bgColorPick" data-c="'+c+'" style="background:'+(c==='none'?'repeating-linear-gradient(45deg,#ffffff 0 4px,#e8e2d4 4px 8px)':LOOK_BG_COLORS[c])+';'+(cur===c?'outline:3px solid var(--ink)':'')+'" aria-label="Background colour '+(c==='none'?'none':c)+'"></button>'; }).join('')+'</div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+LOOK_BG_PATTERNS.map(function(pt){ var cur=(draft.look.background||{}).pattern||''; return '<button class="iconbtn bgPatternPick" data-p="'+pt+'" style="width:auto;font-size:.85rem;font-weight:600;padding:.35rem .6rem;'+(cur===pt?'outline:3px solid var(--ink)':'')+'" aria-label="Background pattern '+BG_PATTERN_LABELS[pt]+'">'+BG_PATTERN_LABELS[pt]+'</button>'; }).join('')+'</div>'
+   +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+LOOK_BG_EFFECTS.map(function(ef){ var cur=(draft.look.background||{}).effect||'plain'; return '<button class="iconbtn bgEffectPick" data-e="'+ef+'" style="width:auto;font-size:.85rem;font-weight:600;padding:.35rem .6rem;'+(cur===ef?'outline:3px solid var(--ink)':'')+'">'+BG_EFF_LABELS[ef]+'</button>'; }).join('')+'</div>'
    +'<label class="flabel">Pip’s glow colour</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+GLOWS.map(function(g){return '<button class="iconbtn glowPick" data-g="'+g+'" style="background:'+g+';'+(e.glow===g?'outline:3px solid var(--ink)':'')+'" aria-label="Glow '+g+'"></button>';}).join('')+'</div>'
    +'<label class="flabel">My badge</label><div style="display:flex;gap:8px;flex-wrap:wrap">'+['⭐','🦦','🌈','🚀','🍓','⚡','🐸','🦋','🌟','💎','🎨','🏆','🌸','🍀','🎵','❤️'].map(function(b){return '<button class="iconbtn badgePick" data-b="'+b+'" style="font-size:1.2rem;'+(e.badge===b?'outline:3px solid var(--amber)':'')+'">'+b+'</button>';}).join('')+'</div>'
    +'<div style="display:flex;gap:10px;margin-top:18px"><button class="btn" id="lkSave">Save my look</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>');
@@ -4026,11 +4350,13 @@ function openLookModal(){
      here: they show the saved look until Save. */
   function refreshLookPreview(){ var pv=document.getElementById('lookPreview'); if(pv)pv.innerHTML=avatarLookHTML(draft.face,draft.look,draft.glow); }
   document.querySelectorAll('.facePick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var f=b.getAttribute('data-f'); if(draft.face!==f){ draft.face=f; refreshLookPreview(); } document.querySelectorAll('.facePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.bgShapePick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var s=b.getAttribute('data-s'); if((draft.look.background||{}).shape!==s){ draft.look.background.shape=s; refreshLookPreview(); } document.querySelectorAll('.bgShapePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.bgColorPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var c=b.getAttribute('data-c'); if((draft.look.background||{}).color!==c){ draft.look.background.color=c; refreshLookPreview(); } document.querySelectorAll('.bgColorPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.bgPatternPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var pt=b.getAttribute('data-p'); if((draft.look.background||{}).pattern!==pt){ draft.look.background.pattern=pt; refreshLookPreview(); } document.querySelectorAll('.bgPatternPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
+  document.querySelectorAll('.bgEffectPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var ef=b.getAttribute('data-e'); if((draft.look.background||{}).effect!==ef){ draft.look.background.effect=ef; refreshLookPreview(); } document.querySelectorAll('.bgEffectPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(draft.glow!==g){ draft.glow=g; refreshLookPreview(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var bd=b.getAttribute('data-b'); if(draft.badge!==bd){ draft.badge=bd; } document.querySelectorAll('.badgePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--amber)':''); }); if(keepEl)keepEl.value=keep; }; });
-  document.querySelectorAll('.lookColorPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var c=b.getAttribute('data-c'); if((draft.look.color||'')!==c){ draft.look.color=c; refreshLookPreview(); } document.querySelectorAll('.lookColorPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
-  document.querySelectorAll('.lookAccPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var a=b.getAttribute('data-a'); if((draft.look.accessory||'')!==a){ draft.look.accessory=a; refreshLookPreview(); } document.querySelectorAll('.lookAccPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
-  document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; live.face=draft.face; live.glow=draft.glow; live.badge=draft.badge; live.look={color:draft.look.color, accessory:draft.look.accessory}; live.lookAt=new Date().toISOString(); var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
+  document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; live.face=draft.face; live.glow=draft.glow; live.badge=draft.badge; live.look={background:{shape:draft.look.background.shape, color:draft.look.background.color, pattern:draft.look.background.pattern, effect:draft.look.background.effect}}; live.lookAt=new Date().toISOString(); var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
 }
 function openModal(html){
   var o=document.getElementById('overlay'); if(!o){ o=document.createElement('div'); o.className='overlay'; o.id='overlay'; document.body.appendChild(o); }
@@ -4050,7 +4376,7 @@ function doorHTML(){
   if(doorMode==='pick'){
     if(DB.explorers.length){
       h+='<p style="font-weight:800">Who is exploring today? Tap your name, then tap your 3 secret pictures in order.</p>'
-       +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face">'+e.face+'</span>'+esc(e.name)+' '+(e.badge||'⭐')+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
+       +'<div class="explorerrow">'+DB.explorers.map(function(e){ return '<button class="explorerchip" data-ex="'+e.id+'"><span class="face" style="line-height:0">'+avatarLookHTML(e.face,e.look,e.glow,56)+'</span>'+esc(e.name)+' '+(e.badge||'⭐')+'<span class="small muted">⭐ '+e.stars+'</span></button>'; }).join('')+'</div>'
        +'<div id="doorCodeArea"></div>'
        +'<button class="btn ghost" id="doorNew">➕ I’m new — create my explorer</button>'
        +'<button class="btn ghost" id="doorLink" style="margin-left:8px">🔗 Link this device with a family code</button>';
@@ -5748,7 +6074,7 @@ function raceTrackHTML(e){
   var cp=raceChildPos(gState.score), rp=raceRivalPos(playElapsedSecs());
   return '<div class="racetrack"><div style="display:flex;justify-content:space-between;font-weight:900"><span>⏱ <span id="raceSecs">'+left+'s</span> left — beat Turbo!</span><span>🏁 Finish first!</span></div>'
    +'<div class="racebar"><div class="racebarfill" id="raceBarFill" style="width:'+(left*10)+'%"></div></div>'
-   +'<div class="racelane"><span class="racelab">You</span><span class="racer" style="left:'+(cp*9)+'%">'+(e&&e.face?e.face:'🦦')+'</span><span class="raceflag">🏁</span></div>'
+   +'<div class="racelane"><span class="racelab">You</span><span class="racer" style="left:'+(cp*9)+'%">'+(e&&e.face?e.face:'🐤')+'</span><span class="raceflag">🏁</span></div>'
    +'<div class="racelane"><span class="racelab">Turbo 🐢</span><span class="racer" id="raceRival" style="left:'+(rp*9)+'%">🐢</span><span class="raceflag">🏁</span></div></div>';
 }
 function raceTick(){
@@ -7479,7 +7805,7 @@ function pipHelp(text){
    {m:[['parent','pin'],['change','pin'],['change','my','pin'],['forgot','pin'],['reset','pin']], a:'Only a grown-up can change the parent PIN! 🌙 1. Open the Grown-ups page (Grand Door → “🌙 Grown-ups” → type the old PIN). 2. Find “Parent PIN” and tap “Change PIN”. 3. Type the new 4-digit PIN and save it. Make sure a grown-up remembers it — it is the key to the Grown-ups page!'},
    {m:[['grown','up'],['grownup'],['parent','page']], a:'The Grown-ups page is where grown-ups look after the app! 🌙 1. At the Grand Door, tap “🌙 Grown-ups” — no picture code needed. 2. Type the 4-digit parent PIN. That is where your grown-up sees your stars, your quests and your screen time, and where they can change the PIN, the picture code and the play limit.'},
    {m:[['add','friend'],['friend','code'],['friend','request'],['make','friend']], a:'Adding a friend is easy! 🦦 1. Ask your friend (or their grown-up) for their friend code — it is 6 letters. 2. Tap Friends in the menu, then “Add a friend”. 3. Type their code and tap “Send request”. 4. Their grown-up has to say yes first — then your friend shows up on your Friends page! Your friend code is in your profile menu — tap your avatar at the top, it is right under your name, and tap it to copy.'},
-   {m:[['change','avatar'],['change','my','avatar'],['my','avatar'],['change','my','look'],['my','animal','friend']], a:'Changing your look is fun! 🦦 1. Tap your avatar at the top to open your menu. 2. Tap “Change my name & look”. 3. Pick your animal friend, pick a body colour and pick an accessory — watch the preview change! 4. Tap “Save my look”. Your avatar at the top left changes to your new look right away! 🎨'},
+   {m:[['change','avatar'],['change','my','avatar'],['my','avatar'],['change','my','look'],['my','animal','friend']], a:'Changing your look is fun! 🐤 1. Tap your avatar at the top to open your menu. 2. Tap “Change my name & look”. 3. Pick your animal friend, pick a background — shape, colour, pattern and effect — watch the preview change! Tap your animal and it jumps for joy! 🎉 4. Tap “Save my look”. Your avatar at the top left changes to your new look right away! 🎨'},
    {m:[['add','explorer'],['add','another','explorer'],['add','child'],['new','explorer'],['add','kid']], a:'To add another explorer, like a brother or sister! 🦦 1. Tap your avatar at the top to open your menu. 2. Tap “➕ Add another explorer”. 3. At the Grand Door, pick a magic name, pick 3 secret pictures for the picture code, and pick your primary level. Each explorer gets their own page and their own stars!'},
    {m:[['link','device'],['new','device'],['another','device']], a:'To play on another device with the same progress! 🔗 1. On the new device, open this app to the Grand Door. 2. Tap “Link this device with a family code”. 3. Type your 6-letter family code (a grown-up can find it on the Grown-ups page, under “Family sync”). 4. Tap “Link this device” — your progress comes down and stays in sync!'},
    {m:[['golden','bookmark'],['use','bookmark'],['my','bookmark'],['save','answer'],['save','pip'],['unbookmark'],['remove','bookmark']], a:'The Golden Bookmark saves your favourite Pip answers! 🔖 1. First, unlock it in the Treasure Realm — it costs 40 stars (a grown-up can help). 2. In any Ask Pip chat, tap “🔖 Save” under an answer you like. 3. Find all your saved answers on the Ask Pip list page, under “🔖 Golden Bookmark — saved answers”. 4. To remove one, tap “✓ Saved” again on the answer, or tap the ✕ next to it in the list!'},
