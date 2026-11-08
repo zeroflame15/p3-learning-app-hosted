@@ -107,10 +107,10 @@ test('existing glow/badge/name behaviour is unchanged', () => {
 
 test('the chosen animal flows everywhere e.face is already used', () => {
   const render = fnBody('function render(){');
-  assert.ok(render.includes("'+ex().face+'"), 'sidebar brand disc must show the chosen animal');
+  assert.ok(render.includes('avatarLookHTML(ex().face,ex().look,ex().glow,130)'), 'sidebar brand must show the chosen animal as its full-body character, big');
   const door = fnBody('function doorHTML(){');
   assert.ok(door.includes("<span class=\"face\">'+e.face+'</span>"), 'Grand Door explorer chips must show the chosen animal');
   // Default for existing explorers stays their current face.
-  const creator = fnBody('function newExplorer(name, code){');
+  const creator = fnBody('function newExplorer(name, code, level){');
   assert.ok(creator.includes("face:'🦦'"), 'new explorers still default to the otter');
 });
