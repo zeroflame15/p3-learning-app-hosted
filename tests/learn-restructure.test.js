@@ -80,6 +80,7 @@ function pipSVG() { return '<svg>Pip</svg>'; }
 function pageHero(art, emo, title, sub, stat) { return '<section class="pagehero">' + title + '|' + sub + '|' + (stat || '') + '</section>'; }
 function learnPlanBannerHTML() { return '<!--PLAN-BANNER-->'; }
 function hclEntryHTML() { return '<!--HCL-ENTRY-->'; }
+function spellTestsEntryHTML() { return '<!--SPELL-TESTS-->'; }
 function learnBoardHTML() { return '<!--QUEST-BOARD-->'; }
 function studyPlanFor() { return { subs: [] }; }
 function fmtPlaySecs(s) { return s + 's'; }
