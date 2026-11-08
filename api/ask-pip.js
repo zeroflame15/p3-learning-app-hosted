@@ -54,6 +54,44 @@ function cleanReply(text) {
   return out.trim();
 }
 
+// Explain mode must hint first — but the model keeps stating the
+// answer anyway (seen live four times), even when the answer is
+// withheld from the prompt. So the server enforces it: after the
+// model replies, check whether the reply states the answer; if it
+// does, swap in a deterministic hint that never states it. The
+// check is deliberately eager — a false positive only swaps in a
+// safe hint, while a missed blurt shows the child the answer.
+function explainStatesAnswer(reply, answer) {
+  const text = String(reply || '');
+  if (!text) return false;
+  // (1) An explicit answer-giving phrase ("the correct choice is
+  // ...", "the answer is ...", "is the correct answer").
+  if (/the\s+(correct\s+)?(answer|choice|sentence|option)\s+(is|:)/i.test(text)) return true;
+  if (/is\s+the\s+(correct\s+)?(answer|choice|sentence|option)/i.test(text)) return true;
+  // (2) The reply opens with the answer itself (after a greeting
+  // like "Hello there!").
+  const ans = String(answer || '').trim();
+  if (!ans) return false;
+  const stripped = text.replace(/^(hello|hi|hey)\b[^!?.]*[!?.]\s*/i, '').trim();
+  const lower = stripped.toLowerCase();
+  const a = ans.toLowerCase();
+  if (lower.startsWith(a)) {
+    const next = lower[a.length];
+    if (next === undefined || !/[a-z0-9]/.test(next)) return true;
+  }
+  return false;
+}
+
+// Deterministic hint for explain mode: used when Pip's live reply
+// states the answer instead of hinting. Never states the answer —
+// it only offers the clue (when there is one) and a first step.
+function explainHint(clue) {
+  const parts = ['Let’s think about this one together! 🦦'];
+  if (clue) parts.push('Here is a clue: ' + clue);
+  parts.push('Try the first step, then tell me what you get — I am right here!');
+  return parts.join(' ');
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
   const key = process.env.MODEL_API_KEY;
@@ -82,6 +120,7 @@ module.exports = async (req, res) => {
   // handing it to her made her blurt it out even when told not
   // to, so she hints from the question, the choices and the clue.
   const explain = body?.mode === 'explain' && body?.explain && typeof body.explain === 'object' ? body.explain : null;
+  const explainAnswer = explain && typeof explain.answer === 'string' ? explain.answer.slice(0, 200) : '';
   const explainClue = explain && typeof explain.clue === 'string' ? explain.clue.slice(0, 300) : '';
   const explainTopic = explain && typeof explain.topic === 'string' ? explain.topic.slice(0, 60) : 'their question';
   const system = explain
@@ -132,8 +171,15 @@ module.exports = async (req, res) => {
     const data = await r.json();
     const raw = data?.choices?.[0]?.message?.content?.trim();
     if (!raw) return json(res, 502, { error: 'empty_reply', live: false });
-    const reply = cleanReply(raw).slice(0, 1200);
+    let reply = cleanReply(raw).slice(0, 1200);
     if (!reply) return json(res, 502, { error: 'empty_reply', live: false });
+    // Explain mode must hint first. If Pip's live reply states the
+    // answer anyway, swap in the deterministic hint instead.
+    let hintEnforced = false;
+    if (explain && explainStatesAnswer(reply, explainAnswer)) {
+      reply = explainHint(explainClue);
+      hintEnforced = true;
+    }
     const trace = traceId();
     return json(res, 200, {
       reply, live: true,
@@ -141,10 +187,16 @@ module.exports = async (req, res) => {
       skillId: null, skillName: null,
       skillVersion: 'skills-v1',
       signature: `pip:ask-kix:simple:${trace}`, traceId: trace,
-      hintFirst: false, lessonsApplied: 0,
+      hintFirst: hintEnforced, lessonsApplied: 0,
+      hintEnforced,
     });
   } catch (e) {
     console.error('model api fetch failed', e);
     return json(res, 502, { error: 'model_api_unreachable', live: false });
   }
 };
+
+// Exported for tests: the hint-first enforcement check and the
+// deterministic hint.
+module.exports.explainStatesAnswer = explainStatesAnswer;
+module.exports.explainHint = explainHint;
