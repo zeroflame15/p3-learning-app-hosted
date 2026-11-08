@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Avatar revamp — design proof</title>
+<style>
+  body{font-family:'Trebuchet MS','Comic Sans MS',system-ui,sans-serif;background:#fdf8ec;color:#2a2a2a;margin:0;padding:24px}
+  h1{font-size:1.5rem;margin:0 0 4px}
+  h2{font-size:1.1rem;margin:28px 0 10px;border-bottom:2px solid #e8e2d4;padding-bottom:6px}
+  p{margin:4px 0 0;color:#666;max-width:900px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .cell{background:#fff;border:2px solid #e8e2d4;border-radius:16px;padding:10px 6px 8px;text-align:center;width:190px}
+  .cell .cap{font-size:.85rem;font-weight:700;margin-top:2px}
+  .cell .sub{font-size:.75rem;color:#888}
+  .closeups{display:flex;gap:16px;flex-wrap:wrap}
+  .closeup{background:#fff;border:2px solid #e8e2d4;border-radius:16px;padding:12px;text-align:center}
+  .closeup svg{width:340px;height:442px}
+</style>
+</head>
+<body>
+<h1>🐾 Avatar revamp — design proof</h1>
+<p>One SVG character on a single 200&times;260 grid. Eyes are fixed at (82,72) and (118,72) for every animal; hair stays above the eyes; the head overlaps the torso by 10px so there is never a gap.</p>
+
+<h2>1 · All 12 animals (natural body, no hair, no accessory)</h2>
+<div class="row" id="row-animals"></div>
+
+<h2>2 · One animal, all 7 body colours (otter)</h2>
+<div class="row" id="row-colours"></div>
+
+<h2>3 · One animal, all 5 hair styles (fox)</h2>
+<div class="row" id="row-hairs"></div>
+
+<h2>4 · One animal, all 5 accessories (cat)</h2>
+<div class="row" id="row-accs"></div>
+
+<h2>5 · Tricky combos (must still look good)</h2>
+<div class="row" id="row-tricky"></div>
+
+<h2>6 · Close-ups — the money shots</h2>
+<div class="closeups" id="row-closeups"></div>
+
+<h2>7 · Fix 1 — Frog vs turtle: which is which? (no labels on the cards — name them at a glance)</h2>
+<div class="row" id="row-frogturtle"></div>
+
+<h2>8 · Fix 2 — Otter face alone (must read as an otter, not a bear)</h2>
+<div class="closeups" id="row-otterface"></div>
+
+<h2>9 · Fix 3 — Long hair: fox and rabbit (must read as hair, not ears or earmuffs)</h2>
+<div class="row" id="row-longhair"></div>
+
+<script src="new-avatar-code.js"></script>
+<script>
+function cell(html, cap, sub){
+  return '<div class="cell">'+html+'<div class="cap">'+cap+'</div>'+(sub?'<div class="sub">'+sub+'</div>':'')+'</div>';
+}
+var ANIMALS=[['🦦','Otter'],['🐸','Frog'],['🦋','Butterfly'],['🐱','Cat'],['🐶','Dog'],['🐰','Rabbit'],['🦁','Lion'],['🐼','Panda'],['🦊','Fox'],['🐢','Turtle'],['🐷','Pig'],['🐵','Monkey']];
+document.getElementById('row-animals').innerHTML=ANIMALS.map(function(a){
+  return cell(avatarLookHTML(a[0],{color:'',hair:'',accessory:''},'#ffb020'), a[1], 'natural · glow');
+}).join('');
+var COLOURS=[['','Natural'],['#ff8fa3','Pink'],['#ffb020','Amber'],['#2dd4bf','Teal'],['#7db4ff','Blue'],['#c084fc','Purple'],['#8b5e3c','Brown']];
+document.getElementById('row-colours').innerHTML=COLOURS.map(function(c){
+  return cell(avatarLookHTML('🦦',{color:c[0],hair:'',accessory:''},'#ffb020'), 'Otter', c[1]);
+}).join('');
+document.getElementById('row-hairs').innerHTML=['','spiky','curly','long','bun'].map(function(h){
+  return cell(avatarLookHTML('🦊',{color:'#ff8fa3',hair:h,accessory:''},'#ffb020'), 'Fox', h||'no hair');
+}).join('');
+document.getElementById('row-accs').innerHTML=['','necklace','hat','glasses','bowtie'].map(function(a){
+  return cell(avatarLookHTML('🐱',{color:'#7db4ff',hair:'',accessory:a},'#ffb020'), 'Cat', a||'no accessory');
+}).join('');
+var TRICKY=[
+ ['🦁',{color:'#c084fc',hair:'curly',accessory:'hat'},'Lion · curly + hat'],
+ ['🐰',{color:'#2dd4bf',hair:'long',accessory:'hat'},'Rabbit · long + hat'],
+ ['🦋',{color:'#ff8fa3',hair:'spiky',accessory:'glasses'},'Butterfly · spiky + glasses'],
+ ['🐸',{color:'#8b5e3c',hair:'bun',accessory:'bowtie'},'Frog · bun + bowtie'],
+ ['🐼',{color:'',hair:'curly',accessory:'glasses'},'Panda · curly + glasses'],
+ ['🐵',{color:'#ffb020',hair:'spiky',accessory:'necklace'},'Monkey · spiky + necklace'],
+];
+document.getElementById('row-tricky').innerHTML=TRICKY.map(function(t){
+  return cell(avatarLookHTML(t[0],t[1],'#ffb020'), t[2], '');
+}).join('');
+var CLOSE=[
+ ['🦦',{color:'#ff8fa3',hair:'curly',accessory:'necklace'},'Otter · pink + curly + necklace'],
+ ['🐼',{color:'#7db4ff',hair:'bun',accessory:'glasses'},'Panda · blue + bun + glasses'],
+ ['🐰',{color:'#2dd4bf',hair:'long',accessory:'bowtie'},'Rabbit · teal + long + bowtie'],
+];
+document.getElementById('row-closeups').innerHTML=CLOSE.map(function(t){
+  return '<div class="closeup">'+avatarLookHTML(t[0],t[1],'#ffb020')+'<div class="cap">'+t[2]+'</div></div>';
+}).join('');
+// Fix 1: frog and turtle side by side, deliberately NO captions — the
+// test is whether a child can name them correctly at a glance.
+document.getElementById('row-frogturtle').innerHTML=['🐸','🐢'].map(function(e){
+  return '<div class="cell">'+avatarLookHTML(e,{color:'',hair:'',accessory:''},'#ffb020')+'</div>';
+}).join('');
+// Fix 2: the otter, large, no hair and no accessory — the face alone
+// must say "otter", not "bear". (Pip is the app's signature animal.)
+document.getElementById('row-otterface').innerHTML='<div class="closeup">'+avatarLookHTML('🦦',{color:'',hair:'',accessory:''},'#ffb020')+'<div class="cap">Otter · face alone</div></div>';
+// Fix 3: the bob on the fox and on the rabbit (plus rabbit + hat, the
+// old four-ears case) — it must read as hair, tucked behind the ears.
+document.getElementById('row-longhair').innerHTML=[
+ ['🦊',{color:'#ff8fa3',hair:'long',accessory:''},'Fox · long'],
+ ['🐰',{color:'#2dd4bf',hair:'long',accessory:''},'Rabbit · long'],
+ ['🐰',{color:'#2dd4bf',hair:'long',accessory:'hat'},'Rabbit · long + hat'],
+].map(function(t){
+  return cell(avatarLookHTML(t[0],t[1],'#ffb020'), t[2], '');
+}).join('');
+</script>
+</body>
+</html>
