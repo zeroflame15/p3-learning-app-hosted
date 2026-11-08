@@ -8110,9 +8110,9 @@ async function askPipLive(text, history, name, opts){
     try{ ctrl=new AbortController(); timer=setTimeout(function(){ try{ctrl.abort();}catch(e){} },20000); }catch(e){ ctrl=null; }
     var work=(async function(){
       try{
-        var opts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10),mode:(opts&&opts.mode)||'',explain:(opts&&opts.explain)||null})};
-        if(ctrl)opts.signal=ctrl.signal;
-        var r=await fetch('/api/ask-pip',opts);
+        var reqOpts={method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:text,history:history||[],name:name||'',fixFlag:false,skillId:sk?sk.id:'',flags:(DB.flags||[]).slice(0,10),mode:(opts&&opts.mode)||'',explain:(opts&&opts.explain)||null})};
+        if(ctrl)reqOpts.signal=ctrl.signal;
+        var r=await fetch('/api/ask-pip',reqOpts);
         if(!r.ok)return null;
         var j=await r.json();
         return (j&&j.reply)?{reply:j.reply, agentName:j.agentName||'', agentId:j.agent||'', skillName:j.skillName||(sk?sk.name:''), skillId:j.skillId||(sk?sk.id:''), signature:j.signature||'', traceId:j.traceId||'', hintFirst:!!j.hintFirst}:null;
