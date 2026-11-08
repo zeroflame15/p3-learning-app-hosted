@@ -321,21 +321,18 @@ test('newAskQuestionThread: a new thread carrying the question', () => {
   assert.deepEqual(th.qctx, { src: 'quest', label: 'Story Words', q: 'She is as busy as a ___.' }, 'qctx marks the question for later');
 });
 
-test('pipExplainFallback: guides without blurting the answer', () => {
+test('pipExplainFallback: tight answer first, then explains', () => {
   const e = engine();
   const ctx = { src: 'game', label: 'Maths Race', question: '7 × 8 = ?', options: ['56', '48', '63', '54'], answer: '56', clue: '7 groups of 8.' };
   const fb = e.pipExplainFallback(ctx);
+  assert.ok(fb.includes('The answer is 56.'), 'the fallback states the tight answer first');
+  assert.ok(fb.indexOf('The answer is 56.') < fb.indexOf('The question is:'), 'the answer comes before the explanation');
   assert.ok(fb.includes('7 × 8 = ?'), 'the fallback restates the question');
   assert.ok(fb.includes('7 groups of 8.'), 'the fallback uses the clue');
-  assert.ok(fb.includes('Try the first step'), 'the fallback gives a first step, not the answer');
-  assert.ok(fb.includes('Try the first step.'), 'the fallback includes Pip\'s skill method');
-  // The choices legitimately list the answer as one option; the
-  // fallback must never STATE it as the answer.
-  assert.ok(!fb.includes('The answer is'), 'the fallback never states the answer');
-  assert.ok(!/is 56[.!]/.test(fb), 'the fallback never concludes with the answer');
+  assert.ok(fb.includes('Pip’s method:'), 'the fallback includes Pip\'s skill method');
   const bare = e.pipExplainFallback({ question: 'What is 7 + 8?', answer: '15' });
   assert.ok(bare.includes('What is 7 + 8?'), 'a bare question still gets a fallback');
-  assert.ok(!bare.includes('15'), 'a bare fallback (no choices) never blurts the answer');
+  assert.ok(bare.includes('The answer is 15.'), 'a bare fallback states the answer too');
 });
 
 test('bankSecsLeft: remaining seconds, clamped', () => {
@@ -382,7 +379,7 @@ test('the Ask Pip button is on question screens, not on Memory/Parking (source-l
   assert.ok(ret.includes('raceLeft') && ret.includes('escLeft'), 'returning restores the banked countdowns');
 });
 
-test('api/ask-pip.js explain mode: Pip explains, hint first, answer only as a reference', async () => {
+test('api/ask-pip.js explain mode: Pip gives a tight answer first, then explains', async () => {
   process.env.MODEL_API_KEY = 'test-key';
   delete require.cache[require.resolve('../api/ask-pip')];
   const ask = require('../api/ask-pip');
@@ -392,7 +389,7 @@ test('api/ask-pip.js explain mode: Pip explains, hint first, answer only as a re
     seen.push(JSON.parse(opts.body));
     return {
       ok: true,
-      json: async () => ({ choices: [{ message: { content: 'Let us think! 7 groups of 8 — count in eights: 8, 16, 24, 32, 40, 48, 56. What do you get?' } }] }),
+      json: async () => ({ choices: [{ message: { content: 'The answer is 56. 7 groups of 8 — count in eights: 8, 16, 24, 32, 40, 48, 56.' } }] }),
     };
   };
   function mockRes() {
@@ -410,19 +407,20 @@ test('api/ask-pip.js explain mode: Pip explains, hint first, answer only as a re
     assert.match(res.body.reply, /56/, 'the reply guides to the answer');
     assert.equal(seen.length, 1, 'one model call');
     const sys = seen[0].messages[0].content;
-    assert.match(sys, /explain what the question is asking/i, 'the prompt asks Pip to explain the question');
-    assert.match(sys, /FIRST sentence must be a hint/i, 'the prompt leads with the hint-first rule');
-    assert.match(sys, /REFERENCE ONLY/i, 'the answer lives in a reference-only block');
-    assert.ok(sys.indexOf('FIRST sentence') < sys.indexOf('REFERENCE ONLY'), 'the hint-first rule comes before the answer reference');
-    assert.match(sys, /56/, 'the correct answer is in the prompt as a reference');
+    assert.match(sys, /start your reply with the answer/i, 'the prompt leads with the tight answer first');
+    assert.match(sys, /Then explain what the question is asking/i, 'the prompt asks Pip to explain after the answer');
+    assert.ok(sys.indexOf('start your reply with the answer') < sys.indexOf('Then explain'), 'the answer comes before the explanation');
+    assert.match(sys, /The correct answer is 56/, 'the correct answer is in the prompt');
     assert.match(sys, /7 groups of 8/, 'the clue is in the prompt');
     assert.match(sys, /under 90 words/i, 'the explain prompt keeps the length rule');
+    assert.ok(!/FIRST sentence must be a hint/i.test(sys), 'no hint-first rule');
+    assert.ok(!/REFERENCE ONLY/i.test(sys), 'no reference-only block');
     // Normal mode is unchanged: no explain instruction.
     const res2 = mockRes();
     await ask({ method: 'POST', body: { question: 'What is 7 x 8?', name: 'Jiyuna' } }, res2);
     assert.equal(res2.statusCode, 200, 'normal mode still answers');
     const sys2 = seen[1].messages[0].content;
-    assert.ok(!/Do NOT say the answer first/i.test(sys2), 'normal mode has no explain instruction');
+    assert.ok(!/start your reply with the answer/i.test(sys2), 'normal mode has no explain instruction');
     assert.ok(!/explain what the question is asking/i.test(sys2), 'normal mode is not an explanation');
   } finally {
     global.fetch = origFetch;
