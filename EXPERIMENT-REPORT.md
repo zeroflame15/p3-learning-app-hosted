@@ -267,3 +267,36 @@ Fix: starting a boost now passes the drill it replaces (a
 finished boost for the same topic) as exclusions to the live
 fetch, so the retake set cannot repeat it; the bank fallback is
 unaffected. Tests 529/529 green (525 + 4 new).
+
+## 12. Update 2026-11-08 — results copy, crossword cursor, flag date, friend-code error
+
+Four small fixes from live verification, done in one batch on Bryan's
+"fix whatever is needed, no need to wait" (2026-11-08 11:49):
+
+- Results copy: a first quest/boost scoring 0/5 said "a boost
+  replay, so no extra stars this time. You already earned them
+  today!" — wrong, nothing was earned. Cause: the results screen
+  inferred "replay" from starsEarned === 0, which is also true for
+  a first 0/5. Fix: finishRound records firstToday on cur, and the
+  results screen shows the replay line only when firstToday is
+  false; a first 0/5 gets encouragement instead. Stars are
+  unchanged (still once per quest/boost per day).
+- Crossword cursor: after a Reveal (and after picking a word, a
+  check, or a wrong answer) the input was focused with the cursor
+  at the start, so the next typed letter landed in front and spelled
+  the wrong word. Fix: one focusXw() helper used at all six focus
+  sites, moving the cursor to the end of what is already typed.
+- Flag date: the parent page showed the flag's UTC date
+  (r.at.slice(0,10)), a day early for an evening flag in Singapore.
+  Fix: new dateKey(iso) helper (local date, same convention as
+  todayKey) used for the flag date.
+- Friend-code error: a failed send's error stayed on the Friends
+  page and was still showing while the next send was in flight, so
+  a good code looked wrong. Fix: a new send clears the error first
+  (showErr('') before the request).
+
+The Story Words replay-at-Q5 quirk reported 2026-11-07 was already
+fixed in deployed code (startQuestFlow discards a stale original-run
+record and starts from Question 1); it was never re-verified live,
+so this batch's live check covers it too. Tests 533/533 green
+(529 + 4 new).
