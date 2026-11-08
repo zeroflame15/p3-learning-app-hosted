@@ -3286,6 +3286,38 @@ function postToServer(key){
     }).catch(function(){});
   }catch(e){}
 }
+/* Save confirmation (2026-11-09): the timetable Save used to toast
+   "saved" the moment the local write finished, even when the upload
+   was later lost (a stale tab's auto-pull could revert it on the
+   server). Now the toast waits until the server is actually holding
+   the new plan (checked by familyPlanRev + the whole plan content),
+   retrying the upload once if the first check misses. A device that
+   is not linked, or a server that is not configured, is local-only:
+   the local save IS the save there, so it confirms at once. */
+function confirmPlanSaved(expectedRev, expectedPlan, done){
+  var key=syncKey();
+  if(!key||typeof fetch==='undefined'){ done(true); return; }
+  var attempts=0;
+  function check(){
+    attempts++;
+    fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){ return r.json(); }).then(function(j){
+      var d=j&&j.data;
+      var ok=false;
+      if(!j||!j.configured){ ok=true; }
+      else if(d){
+        var rev=(d.familyPlanRev||0);
+        ok=(rev===expectedRev)&&(JSON.stringify(d.familyPlan||null)===JSON.stringify(expectedPlan||null));
+      }
+      if(ok){ done(true); return; }
+      if(attempts<2){ syncToServer(); setTimeout(check,1500); return; }
+      done(false);
+    }).catch(function(){
+      if(attempts<2){ syncToServer(); setTimeout(check,1500); return; }
+      done(false);
+    });
+  }
+  setTimeout(check,1200);
+}
 /* Pull-then-upload: before uploading, GET the server record and
    union-merge it into the local DB (mergeFamilyDB — never
    last-write-wins), so an upload can never overwrite newer progress
@@ -3316,6 +3348,12 @@ function uploadAfterPull(){
       try{
         if(j&&j.configured&&j.data&&j.data.explorers){
           var before=JSON.stringify(DB);
+          /* Converge from the store first (2026-11-09): a stale GET
+             must not clobber a newer plan another tab just saved to
+             localStorage. The before-snapshot is taken first, so
+             adopting a newer plan from the store counts as a change
+             and the merged result is uploaded. */
+          mergeStoredIntoDB();
           if(!DB.explorers||!DB.explorers.length){ DB=JSON.parse(JSON.stringify(j.data)); ensureSyncCode(); }
           else { DB=mergeFamilyDB(DB, j.data); ensureSyncCode(); }
           DB.updatedAt=j.updatedAt||DB.updatedAt||null;
@@ -3695,7 +3733,15 @@ function syncFromServer(opts){
   return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
     syncPulling=false; drainPendingUpload();
     if(!j||!j.configured||!j.data||!j.data.explorers)return false;
-    var server=j.data, localEmpty=!DB.explorers||!DB.explorers.length;
+    var server=j.data;
+    /* Converge from the store first (2026-11-09): a stale GET must
+       not clobber a newer plan another tab just saved to
+       localStorage. The before-snapshot is taken first, so adopting
+       a newer plan from the store counts as a change and the merged
+       result is uploaded to the server. */
+    var before=JSON.stringify(DB);
+    mergeStoredIntoDB();
+    var localEmpty=!DB.explorers||!DB.explorers.length;
     /* Upload the merged result with a direct POST (postToServer),
        NOT syncToServer(): syncToServer pulls first, and calling it
        here would start another pull from inside a pull. */
@@ -3704,7 +3750,6 @@ function syncFromServer(opts){
        because an open device's per-minute screen-time save keeps
        bumping its local timestamp. The merge keeps the richer side
        of every field, so nothing either device did is lost. */
-    var before=JSON.stringify(DB);
     DB=mergeFamilyDB(DB, server); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null;
     var changed=JSON.stringify(DB)!==before;
     if(changed){ saveLocal(); postToServer(key); }
@@ -9399,11 +9444,12 @@ function familyScheduleHTML(){
    +'<div id="fsSchedEditor"'+(fsSchedOpen?'':' style="display:none"')+'>'+editor+'</div></div>';
 }
 /* Rest-day switch (2026-11-09): ticking "Rest day — no study" for a
-   day switches that day's subject checkboxes and study-time field
-   off (and clears any ticked subjects); unticking switches them
-   back on. Called from the editor's change handler and once per day
-   after the editor renders, so the form can never show a rest day
-   with subjects ticked. */
+   day DISABLES that day's subject checkboxes and study-time field
+   (greyed out, un-tickable) but does NOT clear them, so unticking
+   restores the previously ticked subjects. Called from the editor's
+   change handler and once per day after the editor renders. A rest
+   day still SAVES with no subjects (readFamilyPlanFromForm forces
+   subs=[]); only the form keeps the ticks, via the draft. */
 function syncRestDay(dow){
   var restEl=document.querySelector('[data-fsrest="'+dow+'"]');
   var rest=restEl?restEl.checked:false;
@@ -9411,7 +9457,6 @@ function syncRestDay(dow){
     var cb=document.querySelector('[data-fssub="'+dow+':'+s+'"]');
     if(!cb)return;
     cb.disabled=rest;
-    if(rest)cb.checked=false;
   });
   var timeEl=document.querySelector('[data-fsstime="'+dow+'"]');
   if(timeEl)timeEl.disabled=rest;
@@ -9419,24 +9464,26 @@ function syncRestDay(dow){
 /* Read the timetable editor (one row per day) into a familyPlan
    object. The label is derived, and a day with no subjects that is
    not a rest day is a review day (all topics). */
-function readFamilyPlanFromForm(){
+function readFamilyPlanFromForm(forDraft){
   var plan={};
   for(var dow=0;dow<7;dow++){
     var restEl=document.querySelector('[data-fsrest="'+dow+'"]');
     var rest=restEl?restEl.checked:false;
-    /* A rest day has no subjects and no study time, even if a stale
-       tick somehow remains in the form — the day's activity lives
-       in the Note instead. */
+    /* A rest day SAVES with no subjects and no study time, even if a
+       tick somehow remains in the form — the day's activity lives in
+       the Note instead. But a DRAFT (forDraft) keeps the ticked
+       subjects and the study time, so unticking "Rest day" restores
+       them instead of wiping them. */
     var subs=[];
-    if(!rest)['eng','math','sci','chi'].forEach(function(s){
+    ['eng','math','sci','chi'].forEach(function(s){
       var cb=document.querySelector('[data-fssub="'+dow+':'+s+'"]');
       if(cb&&cb.checked)subs.push(s);
     });
     var timeEl=document.querySelector('[data-fsstime="'+dow+'"]');
     var noteEl=document.querySelector('[data-fsnote="'+dow+'"]');
-    var day={label:'', subs:subs, study:rest?'':(timeEl?timeEl.value.trim():''), note:noteEl?noteEl.value.trim():'', rest:rest, review:false, light:false};
+    var day={label:'', subs:(rest&&!forDraft)?[]:subs, study:(rest&&!forDraft)?'':(timeEl?timeEl.value.trim():''), note:noteEl?noteEl.value.trim():'', rest:rest, review:false, light:false};
     day.label=planDayLabel(day);
-    if(!rest&&!subs.length)day.review=true;
+    if(!rest&&!day.subs.length)day.review=true;
     plan[dow]=day;
   }
   return plan;
@@ -9597,12 +9644,18 @@ function bindParent(){
   }; });
   var fsSave=document.getElementById('fsPlanSave');
   if(fsSave)fsSave.onclick=function(){
-    DB.familyPlan=readFamilyPlanFromForm();
+    var plan=readFamilyPlanFromForm();
+    DB.familyPlan=plan;
     DB.familyPlanUpdatedAt=new Date().toISOString();
     DB.familyPlanRev=(DB.familyPlanRev||0)+1;
+    var rev=DB.familyPlanRev;
     fsPlanDraft=null;
     fsSchedOpen=false;
-    save(); toast('Timetable saved — the app now uses your family’s schedule.'); render();
+    save(); render();
+    confirmPlanSaved(rev, plan, function(ok){
+      if(ok)toast('Timetable saved — the app now uses your family’s schedule.');
+      else toast('Couldn’t confirm the timetable saved to the server — it’s saved on this device. Try saving again.');
+    });
   };
   var fsReset=document.getElementById('fsPlanReset');
   if(fsReset)fsReset.onclick=function(){
@@ -9610,9 +9663,14 @@ function bindParent(){
     DB.familyPlan=null;
     DB.familyPlanUpdatedAt=new Date().toISOString();
     DB.familyPlanRev=(DB.familyPlanRev||0)+1;
+    var rev=DB.familyPlanRev;
     fsPlanDraft=null;
     fsSchedOpen=false;
-    save(); toast('Timetable reset to the default.'); render();
+    save(); render();
+    confirmPlanSaved(rev, null, function(ok){
+      if(ok)toast('Timetable reset to the default.');
+      else toast('Couldn’t confirm the reset saved to the server — it’s reset on this device. Try again.');
+    });
   };
 /* Schedule drafts: capture every keystroke / toggle into the
      draft variables, so a re-render restores the in-progress form
@@ -9630,12 +9688,12 @@ function bindParent(){
       el.addEventListener('input',captureEvDraft);
       el.addEventListener('change',captureEvDraft);
     });
-    function capturePlanDraft(){ fsPlanDraft=readFamilyPlanFromForm(); }
+    function capturePlanDraft(){ fsPlanDraft=readFamilyPlanFromForm(true); }
     /* Rest-day switch (registered FIRST, so it runs before the
-       generic capture below): ticking rest clears + disables that
-       day's subjects and study time, then the draft is captured
-       from the synced form — it can never hold subjects on a
-       rest day. */
+       generic capture below): ticking rest disables that day's
+       subjects and study time without clearing them, then the draft
+       is captured from the synced form — the ticks are kept in the
+       draft, so unticking restores them. */
     document.querySelectorAll('[data-fsrest]').forEach(function(el){
       el.addEventListener('change',function(){
         var dow=+el.getAttribute('data-fsrest');
