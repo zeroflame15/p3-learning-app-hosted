@@ -119,6 +119,7 @@ function makeTab() {
     clearInterval: () => {},
     ex: null, save: () => {}, toast: () => {},
     sndPop: () => {}, sndCorrect: () => {}, sndFanfare: () => {},
+    shuffle: (a) => a.slice(), // facts cycle in page order in tests (the real shuffle lives in the page),
     awardBadge: () => {}, confettiStars: () => {},
   };
   const ctx = vm.createContext(sandbox);
@@ -138,7 +139,9 @@ function makeTab() {
   vm.runInContext(varText('careMsg'), ctx);
   vm.runInContext(varText('CARE_FX'), ctx);
   vm.runInContext(varText('careFx'), ctx);
-  vm.runInContext(varText('FROG_LINES'), ctx);
+  vm.runInContext(varText('FROG_FACTS'), ctx);
+  vm.runInContext(varText('frogFactState'), ctx);
+  vm.runInContext(fnText('function nextFrogFact(){'), ctx);
   vm.runInContext(varText('critterView'), ctx);
   vm.runInContext(varText('selCritter'), ctx);
   vm.runInContext(fnText('function bindCritter(){'), ctx);
@@ -199,7 +202,7 @@ test('a tap still says hello after the drag rework', () => {
   tab.wrap().fire('pointerdown', { clientX: 500, clientY: 324, pointerId: 1 });
   tab.doc.fire('pointerup', {});
   assert.equal(tab.elements.frogBubble.style.display, 'block', 'a press without dragging shows the speech bubble');
-  assert.ok(tab.elements.frogBubble.textContent.indexOf('💬') === 0, 'the bubble holds a hello line');
+  assert.ok(tab.elements.frogBubble.textContent.indexOf('💬') === 0, 'the bubble holds a frog fact');
   assert.equal(tab.run('careFx && careFx.a'), 'play', 'the tap replays the happy reaction');
   assert.equal(tab.dragging(), false, 'the tap ends the drag state');
 });
