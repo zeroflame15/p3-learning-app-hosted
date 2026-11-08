@@ -3573,12 +3573,20 @@ function liveGenExperimentHTML(sel){
    that function and the next function declaration. */
 var boostFetchState={status:'idle', reason:null, topicId:null};
 var boostFetchPromise=null;
-function fetchBoostLiveQuestions(topicId, level, modelOn){
+function fetchBoostLiveQuestions(topicId, level, modelOn, avoid){
   var t=topicById(topicId);
   if(!t||t.sub!=='math'||!modelOn||typeof modelOn.q!=='string')return Promise.resolve(null);
   if(boostFetchState.status==='pending'&&boostFetchState.topicId===topicId)return boostFetchPromise;
   var e=ex(); if(!e)return Promise.resolve(null);
   var day=todayKey();
+  /* Exclusions (2026-11-08): the bank stems PLUS the last drill's
+     questions, so a retake can never repeat the drill it follows.
+     The generator reuses a tightly-modelled prompt, and without
+     these the validator has nothing to reject a repeat against —
+     live verification 2026-11-08 found 3 of 5 retake questions
+     repeated verbatim. Both sides normalise stems, so raw stems
+     are fine here. */
+  var _xStems=liveGenBankStems(t, level).concat((avoid||[]).map(function(aq){ return (aq&&typeof aq.q==='string')?aq.q:aq; }).filter(function(s){ return typeof s==='string'&&s.length>0; }));
   boostFetchState={status:'pending', reason:null, topicId:topicId};
   function hardTimeout(ms){ return new Promise(function(res){ setTimeout(function(){ res(null); }, ms); }); }
   boostFetchPromise=(function(){
@@ -3587,7 +3595,7 @@ function fetchBoostLiveQuestions(topicId, level, modelOn){
     var work=(async function(){
       try{
         var examples=poolQuestions(t, level).slice(0,2);
-        var opts={method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({topicId:topicId, level:level, count:LIVE_GEN_COUNT, day:day, bankStems:liveGenBankStems(t, level), examples:examples, modelOn:{q:modelOn.q, o:modelOn.o, a:modelOn.a, c:modelOn.c||''}})};
+        var opts={method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({topicId:topicId, level:level, count:LIVE_GEN_COUNT, day:day, bankStems:_xStems, examples:examples, modelOn:{q:modelOn.q, o:modelOn.o, a:modelOn.a, c:modelOn.c||''}})};
         if(ctrl)opts.signal=ctrl.signal;
         var r=await fetch('/api/generate-questions', opts);
         if(!r.ok){
@@ -3598,7 +3606,7 @@ function fetchBoostLiveQuestions(topicId, level, modelOn){
         }
         var j=await r.json();
         if(!j||!j.live||!Array.isArray(j.questions))return null;
-        if(!validateLiveGenClient(j.questions, liveGenBankStems(t, level)).ok){ boostFetchState={status:'failed', reason:'client-validation-failed'}; return null; }
+        if(!validateLiveGenClient(j.questions, _xStems).ok){ boostFetchState={status:'failed', reason:'client-validation-failed'}; return null; }
         boostFetchState={status:'ok', reason:null, topicId:topicId};
         return j.questions;
       }catch(err){ return null; }
@@ -3898,6 +3906,12 @@ function startBoostFlow(topicId){
      e.progress is untouched, so the quest still resumes), it never
      writes progress, and it never touches completed / completedDay /
      learnBest. */
+  /* The drill this replaces — a finished boost for the same topic,
+     when this start is a retake: its questions ride along as
+     exclusions to the live fetch below, so the retake cannot
+     repeat them. Anything else (a quest, another topic, no run
+     yet) passes nothing. */
+  var _prevBoost=(cur&&cur.phase==='boost'&&cur.topicId===topicId)?cur.boostList:null;
   cur={topicId:topicId, phase:'boost', idx:0, score:0, wrong:[], picked:null, answered:false, boostList:list, boostSource:'bank', tipSeen:false, answerSecs:0, startedAt:null};
   /* Maths only: while she reads Pip's explanation on the tip screen,
      ask Pip to make 5 fresh questions modelled on the exact one she
@@ -3905,13 +3919,14 @@ function startBoostFlow(topicId){
      taps Start — and passes the same validator as the quest flow —
      it replaces the bank list; ANY failure (or a slow fetch) just
      keeps the bank list, silently. No cache: every drill fetches
-     fresh, so a retake never repeats the last set. */
+     fresh, and a retake fetch excludes the last drill's questions,
+     so the retake really is 5 fresh ones. */
   if(t.sub==='math'){
     var _tipQ=null; ['quest','fresh','retry'].forEach(function(k){ bankFor(t,k,levelNum(e)).forEach(function(qq){ if(_rec.missed&&qq.q===_rec.missed.q)_tipQ=qq; }); });
     var _model=_tipQ?{q:_tipQ.q,o:_tipQ.o,a:_tipQ.a,c:_tipQ.c||''}:(_rec.missed?{q:_rec.missed.q,a:_rec.missed.a}:null);
     if(_model){
       var _myCur=cur;
-      fetchBoostLiveQuestions(topicId, levelNum(e), _model).then(function(live){
+      fetchBoostLiveQuestions(topicId, levelNum(e), _model, _prevBoost).then(function(live){
         if(live&&live.length===LIVE_GEN_COUNT&&cur===_myCur&&cur.phase==='boost'&&!cur.tipSeen){ cur.boostList=live; cur.boostSource='live'; }
       });
     }
