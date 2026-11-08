@@ -46,6 +46,10 @@ module.exports = async (req, res) => {
     if (!row) return json(res, 404, { error: 'family_not_found' });
     const data = row.data || {};
     data.parentPin = newPin;
+    // Stamp the change: the merge takes the later parentPinUpdatedAt,
+    // so the admin reset propagates to every linked device instead of
+    // a stale local PIN winning it back.
+    data.parentPinUpdatedAt = new Date().toISOString();
     await saveFamily(code, data);
     return json(res, 200, Object.assign({ ok: true }, summariseFamily(code, data)));
   } catch (e) {
