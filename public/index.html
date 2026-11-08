@@ -639,6 +639,12 @@ function stopVibe(silent){
   vibeId=null;
   if(!silent)renderTop();
 }
+/* Auto-play background music on entry (Bryan 2026-11-09): whenever
+   an explorer gains access through the Grand Door, the Background
+   Music starts (looping), unless it is already playing. The child
+   can stop it anytime from the Vibe page; it starts again on the
+   next entry. */
+function autoVibe(){ if(vibeId!=='bg-music')startVibe('bg-music'); }
 /* Pip read-aloud: warmest available voice, sentence by sentence.
    iPhone Chrome was silent — three iOS quirks, all fixed here:
    1. getVoices() can stay empty and voiceschanged may never fire,
@@ -3402,7 +3408,7 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp'],['jokes','😂','Jokes',''],['friends','👥','Friends','icons/nav-friends.webp']];
+var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['jokes','😂','Jokes',''],['friends','👥','Friends','icons/nav-friends.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
 /* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
    replacing the flat emoji in the nav, game cards and quest cards.
    ic() renders the image, and falls back to the emoji if the file
@@ -4438,7 +4444,7 @@ function bindDoor(){
       if(doorCode.length!==3){ toast('Pick exactly 3 pictures for your code!'); return; }
       var e=newExplorer(name, doorCode.slice(), doorLevel);
       DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; doorLevel='P3'; save();
-      sndEntrance(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
+      sndEntrance(); autoVibe(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
     };
   } else {
     document.querySelectorAll('[data-ex]').forEach(function(b){ b.onclick=function(){ doorSel=b.getAttribute('data-ex'); doorCode=[]; showDoorCode(); }; });
@@ -4456,7 +4462,7 @@ function showDoorCode(){
     sndMystery(); doorCode.push(b.getAttribute('data-lpic'));
     renderBubbles(document.getElementById('loginBubbles'), doorCode);
     if(doorCode.length===3){
-      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; sndEntrance(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
+      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; sndEntrance(); autoVibe(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
       else { sndWrong(); toast('Hmm, those pictures don’t match. Try again!'); doorCode=[]; setTimeout(showDoorCode,600); }
     }
   }; });
