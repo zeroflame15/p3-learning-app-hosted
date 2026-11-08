@@ -285,6 +285,7 @@ test('api/ask-pip.js explain mode: Pip hints first, and the answer is not in the
     await ask({ method: 'POST', body: { question: 'Pip, can you help me with this question? “7 × 8 = ?” The choices are: 56, 48, 63, 54.', name: 'Jiyuna', mode: 'explain', explain: { topic: 'Maths Race', answer: '56', clue: '7 groups of 8.' } } }, res);
     assert.equal(res.statusCode, 200, 'explain mode answers');
     assert.equal(res.body.live, true, 'explain mode is live');
+    assert.equal(res.body.hintEnforced, false, 'a hint reply passes through unswapped');
     const sys = seen[0].messages[0].content;
     assert.match(sys, /FIRST sentence must be a hint/i, 'the prompt leads with the hint-first rule');
     assert.match(sys, /NEVER start your reply with the answer/i, 'the prompt forbids leading with the answer');

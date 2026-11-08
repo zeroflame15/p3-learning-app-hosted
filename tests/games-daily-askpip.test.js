@@ -408,6 +408,7 @@ test('api/ask-pip.js explain mode: Pip hints first, and the answer is not in the
     assert.equal(res.statusCode, 200, 'explain mode answers');
     assert.equal(res.body.live, true, 'explain mode is live');
     assert.match(res.body.reply, /56/, 'the reply guides to the answer');
+    assert.equal(res.body.hintEnforced, false, 'a hint reply passes through unswapped');
     assert.equal(seen.length, 1, 'one model call');
     const sys = seen[0].messages[0].content;
     assert.match(sys, /FIRST sentence must be a hint/i, 'the prompt leads with the hint-first rule');
@@ -428,4 +429,58 @@ test('api/ask-pip.js explain mode: Pip hints first, and the answer is not in the
     global.fetch = origFetch;
     delete process.env.MODEL_API_KEY;
   }
+});
+
+/* ---------------- Hint-first enforcement: a blurt is swapped for a hint ---------------- */
+
+test('api/ask-pip.js explain mode: a reply that states the answer is swapped for a hint', async () => {
+  process.env.MODEL_API_KEY = 'test-key';
+  delete require.cache[require.resolve('../api/ask-pip')];
+  const ask = require('../api/ask-pip');
+  const origFetch = global.fetch;
+  // The model blurts the answer even though the prompt says hint-first
+  // (the exact live failure: "The correct choice is bee!").
+  global.fetch = async () => ({
+    ok: true,
+    json: async () => ({ choices: [{ message: { content: 'Hello there! That is a fun English simile. The correct choice is bee! We say busy as a bee when someone is working hard.' } }] }),
+  });
+  function mockRes() {
+    const res = { statusCode: 0, body: null };
+    res.status = (c) => { res.statusCode = c; return res; };
+    res.setHeader = () => res;
+    res.json = (o) => { res.body = o; return res; };
+    return res;
+  }
+  try {
+    const res = mockRes();
+    await ask({ method: 'POST', body: { question: 'Pip, can you help me with this question? “She is as busy as a ___.” The choices are: fish, bee, cat, dog.', name: 'Jiyuna', mode: 'explain', explain: { topic: 'Story Words', answer: 'bee', clue: 'Think of an animal that works hard.' } } }, res);
+    assert.equal(res.statusCode, 200, 'explain mode answers');
+    assert.equal(res.body.live, true, 'explain mode is live');
+    assert.equal(res.body.hintEnforced, true, 'the blurt was caught and swapped');
+    assert.equal(res.body.hintFirst, true, 'the replacement is a hint');
+    assert.ok(!res.body.reply.includes('bee'), 'the replacement never states the answer');
+    assert.ok(res.body.reply.includes('Think of an animal that works hard.'), 'the replacement uses the clue');
+    assert.ok(res.body.reply.includes('Try the first step'), 'the replacement gives a first step');
+  } finally {
+    global.fetch = origFetch;
+    delete process.env.MODEL_API_KEY;
+  }
+});
+
+test('explainStatesAnswer: catches answer-giving phrasings, ignores real hints', () => {
+  const ask = require('../api/ask-pip');
+  const f = ask.explainStatesAnswer;
+  // Observed blurts.
+  assert.equal(f('Hello there! That is a fun English simile. The correct choice is bee!', 'bee'), true, 'correct choice is');
+  assert.equal(f('Hello VerifyPip3! The correct answer is Your.', 'Your'), true, 'correct answer is');
+  assert.equal(f('The answer is 56.', '56'), true, 'the answer is');
+  assert.equal(f("The correct sentence is 'The bird sang a sweet song.'", 'The bird sang a sweet song.'), true, 'correct sentence is');
+  // A reply that opens with the answer.
+  assert.equal(f('Bee! We say busy as a bee when someone works hard.', 'bee'), true, 'opens with the answer');
+  assert.equal(f('56. Count in eights to get there.', '56'), true, 'opens with the number');
+  // Real hints pass through.
+  assert.equal(f('Let us think! 7 groups of 8 — count in eights. What do you get?', '56'), false, 'a counting hint');
+  assert.equal(f('Think about which animal works hard all day and makes honey. What do you think?', 'bee'), false, 'a guiding question');
+  assert.equal(f('Hello! Which word shows that something belongs to someone?', 'Your'), false, 'a hint about Your');
+  assert.equal(f('The word you need is a verb. What does the baby do?', 'cries'), false, 'a hint that names the kind of word');
 });
