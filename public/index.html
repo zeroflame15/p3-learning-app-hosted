@@ -7128,7 +7128,46 @@ async function askPipLive(text, history, name){
     return await Promise.race([work, hardTimeout(25000)]);
   }catch(e){ return null; }
 }
+/* Ask Pip app help (2026-11-08, Bryan): Pip can explain how to use
+   the app. Checked in doSend before the live call, so a how-to
+   question is answered instantly from this verified map — no API
+   call, always correct. Every step was checked against the real
+   menu names, button labels and flows in this file. Matching is by
+   whole-word sets, never a bare keyword, so a school question that
+   happens to say "star" still goes live. Pattern words are
+   normalised the same way as question words (plurals, does/this),
+   so both sides always compare equal. The avatar answer never
+   mentions hair, so it stays true for the current UI and the
+   round-2 redesign alike. */
+function pipHelp(text){
+  if(!text) return null;
+  function norm(x){ return (x.length>2&&x.slice(-1)==='s'&&x.slice(-2)!=='ss')?x.slice(0,-1):x; }
+  var w={};
+  String(text).toLowerCase().replace(/['\u2019]/g,'').replace(/[^a-z0-9]+/g,' ').split(' ').forEach(function(x){ if(x) w[norm(x)]=1; });
+  function has(a){ for(var i=0;i<a.length;i++){ if(!w[norm(a[i])]) return false; } return true; }
+  var T=[
+   {m:[['family','code'],['sync','code'],['family','sync']], a:'Your family code is 6 letters, and it lives on the Grown-ups page! 🦦 1. At the Grand Door, tap “🌙 Grown-ups”. 2. Type your grown-up’s 4-digit PIN. 3. Look for “Family sync” — your code is written there in big letters, and there is a “Copy code” button. Keep it in the family — anyone with the code can see your progress!'},
+   {m:[['picture','code'],['reset','picture'],['change','picture','code'],['forgot','picture']], a:'Forgot your picture code, or want a new one? A grown-up can reset it! 🔑 1. Open the Grown-ups page (Grand Door → “🌙 Grown-ups” → PIN). 2. Find your name in the explorer list and tap “Reset picture code”. 3. Tap 3 pictures in order — that is your new code! Remember the order.'},
+   {m:[['parent','pin'],['change','pin'],['change','my','pin'],['forgot','pin'],['reset','pin']], a:'Only a grown-up can change the parent PIN! 🌙 1. Open the Grown-ups page (Grand Door → “🌙 Grown-ups” → type the old PIN). 2. Find “Parent PIN” and tap “Change PIN”. 3. Type the new 4-digit PIN and save it. Make sure a grown-up remembers it — it is the key to the Grown-ups page!'},
+   {m:[['grown','up'],['grownup'],['parent','page']], a:'The Grown-ups page is where grown-ups look after the app! 🌙 1. At the Grand Door, tap “🌙 Grown-ups” — no picture code needed. 2. Type the 4-digit parent PIN. That is where your grown-up sees your stars, your quests and your screen time, and where they can change the PIN, the picture code and the play limit.'},
+   {m:[['add','friend'],['friend','code'],['friend','request'],['make','friend']], a:'Adding a friend is easy! 🦦 1. Ask your friend (or their grown-up) for their friend code — it is 6 letters. 2. Tap Friends in the menu, then “Add a friend”. 3. Type their code and tap “Send request”. 4. Their grown-up has to say yes first — then your friend shows up on your Friends page! Your friend code is in your profile menu — tap your avatar at the top, it is right under your name, and tap it to copy.'},
+   {m:[['change','avatar'],['change','my','avatar'],['my','avatar'],['change','my','look'],['my','animal','friend']], a:'Changing your look is fun! 🦦 1. Tap your avatar at the top to open your menu. 2. Tap “Change my name & look”. 3. Pick your animal friend, pick a body colour and pick an accessory — watch the preview change! 4. Tap “Save my look”. Your avatar at the top left changes to your new look right away! 🎨'},
+   {m:[['add','explorer'],['add','another','explorer'],['add','child'],['new','explorer'],['add','kid']], a:'To add another explorer, like a brother or sister! 🦦 1. Tap your avatar at the top to open your menu. 2. Tap “➕ Add another explorer”. 3. At the Grand Door, pick a magic name, pick 3 secret pictures for the picture code, and pick your primary level. Each explorer gets their own page and their own stars!'},
+   {m:[['link','device'],['new','device'],['another','device']], a:'To play on another device with the same progress! 🔗 1. On the new device, open this app to the Grand Door. 2. Tap “Link this device with a family code”. 3. Type your 6-letter family code (a grown-up can find it on the Grown-ups page, under “Family sync”). 4. Tap “Link this device” — your progress comes down and stays in sync!'},
+   {m:[['golden','bookmark'],['use','bookmark'],['my','bookmark'],['save','answer'],['save','pip'],['unbookmark'],['remove','bookmark']], a:'The Golden Bookmark saves your favourite Pip answers! 🔖 1. First, unlock it in the Treasure Realm — it costs 40 stars (a grown-up can help). 2. In any Ask Pip chat, tap “🔖 Save” under an answer you like. 3. Find all your saved answers on the Ask Pip list page, under “🔖 Golden Bookmark — saved answers”. 4. To remove one, tap “✓ Saved” again on the answer, or tap the ✕ next to it in the list!'},
+   {m:[['delete','chat'],['delete','my','chat'],['remove','chat'],['clear','chat'],['clear','all','chat']], a:'To delete just one chat with Pip (not all of them)! 🗑 1. In Ask Pip, tap “← All chats” to see your chat list. 2. Tap the 🗑 button next to the chat you want to delete. 3. Tap OK to confirm. That one chat is gone from all your linked devices — your other chats and your saved Golden Bookmark answers stay!'},
+   {m:[['play','limit'],['play','time'],['play','minute'],['play','today'],['how','long','can','i','play']], a:'Play has a daily time limit so there is time for learning too! ⏱ The limit is 20 minutes a day. On the Play page you can see “Play today: X / 20 min” and how many minutes are left. When the time is up, the games lock until tomorrow — a game you already started can still finish! A grown-up can change the limit on the Grown-ups page, under “Play limit”.'},
+   {m:[['primary','level'],['my','level'],['change','level'],['what','level','am','i']], a:'Your primary level makes every quest, question and game fit you just right! 🎒 To change it, a grown-up opens the Grown-ups page (Grand Door → “🌙 Grown-ups” → PIN), finds “Primary level”, and taps your level — P1, P2, P3, P4, P5 or P6. You can also pick it when a new explorer is made at the Grand Door!'},
+   {m:[['my','star'],['how','many','star','do','i','have'],['star','do','i','have'],['my','progress'],['check','my','progress'],['how','am','i','doing']], a:'You can see your stars and progress in two places! ⭐ 1. Tap Learn — at the top it says how many quests you finished and how many stars you have. 2. A grown-up can open the Grown-ups page to see your stars, quests finished, minutes today and badges. You earn stars by finishing quests and games, and by caring for your frog!'},
+   {m:[['how','do','i','use'],['how','to','use'],['how','does','this','app','work'],['what','can','you','do'],['what','can','i','do'],['help','me','use'],['use','this','app']], a:'I can help you use this app! 🦦 Ask me things like: “How do I add a friend?”, “How do I change my avatar?”, “Where is my family code?”, “How do I link a new device?”, “What is the play limit?” — or ask me about frogs, magnets, fractions and Chinese words too!'}
+  ];
+  for(var i=0;i<T.length;i++){ var t=T[i]; for(var j=0;j<t.m.length;j++){ if(has(t.m[j])) return t.a; } }
+  return null;
+}
 function pipReply(text){
+  /* Offline fallback too: a how-to question gets its verified
+     answer even when the live call failed or there is no network. */
+  var hp=pipHelp(text); if(hp) return hp;
   var s=text.toLowerCase();
   if(s.indexOf('frog')>=0||s.indexOf('tadpole')>=0)return 'Great frog question! 🐸 A frog starts as an egg in water, hatches into a tadpole with gills and a tail, grows legs to become a froglet, and finally a frog that breathes with lungs. My otter cousins cheer them on from the pond bank!';
   if(s.indexOf('butterfly')>=0||s.indexOf('caterpillar')>=0||s.indexOf('chrysalis')>=0)return 'Butterfly magic! 🦋 A butterfly starts as a tiny egg on a leaf, hatches into a hungry caterpillar, wraps itself in a chrysalis, and pops out with beautiful wings! This big change is called metamorphosis.';
@@ -7215,6 +7254,12 @@ function bindAsk(){
     th.msgs.push({who:'kid', text:v});
     if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
     var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
+    /* App help first: a how-to-use-the-app question is answered
+       instantly from the verified map — no live call, no thinking
+       bubble, always correct. pipHelp returns null for everything
+       else, so school questions still go live exactly as before. */
+    var help=pipHelp(v);
+    if(help){ th.msgs.push({who:'pip', text:help, live:false}); save(); render(); var logH=document.getElementById('chatlog'); if(logH)logH.scrollTop=logH.scrollHeight; return; }
     /* The thinking bubble is UI state only (asking[threadId]): it is
        rendered, never stored in the thread, never saved, never
        synced. The old code stored it as a message, so a sync merge
