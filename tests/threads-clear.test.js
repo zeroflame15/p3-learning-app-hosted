@@ -134,5 +134,5 @@ test('askPipLive aborts a hung model call so the fallback can show', () => {
   const b = fnBody('async function askPipLive(');
   assert.ok(b.includes('AbortController'), 'askPipLive must use an AbortController');
   assert.ok(b.includes('20000'), 'askPipLive must time out after 20s');
-  assert.ok(b.includes('opts.signal=ctrl.signal'), 'abort signal must reach the fetch');
+  assert.ok(b.includes('reqOpts.signal=ctrl.signal'), 'abort signal must reach the fetch');
 });

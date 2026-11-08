@@ -484,3 +484,34 @@ test('explainStatesAnswer: catches answer-giving phrasings, ignores real hints',
   assert.equal(f('Hello! Which word shows that something belongs to someone?', 'Your'), false, 'a hint about Your');
   assert.equal(f('The word you need is a verb. What does the baby do?', 'cries'), false, 'a hint that names the kind of word');
 });
+
+test('askPipLive: mode + explain actually reach the request body (no shadowed opts)', async () => {
+  // Regression: the fetch-options variable inside askPipLive was
+  // named `opts`, shadowing askPipLive's own `opts` parameter, so
+  // mode:'explain' and the explain object were silently dropped and
+  // every Ask Pip question ran as a normal chat (the server never
+  // saw explain mode, so the hint-first prompt and the enforcement
+  // never applied). The variable is now reqOpts.
+  const src = 'async ' + grab('askPipLive');
+  const stubs = 'function skillForQuestionClient(q){ return null; }\nvar DB={flags:[]};\n';
+  let captured = null;
+  const origFetch = global.fetch;
+  global.fetch = async (url, opts) => {
+    captured = JSON.parse(opts.body);
+    return { ok: true, json: async () => ({ reply: 'ok' }) };
+  };
+  try {
+    const askPipLive = eval(stubs + src + '\n;askPipLive');
+    const res = await askPipLive('q?', [], 'Jiyuna', { mode: 'explain', explain: { topic: 'Story Words', answer: 'bee', clue: 'c' } });
+    assert.ok(captured, 'a request was sent');
+    assert.equal(captured.mode, 'explain', 'explain mode reaches the server');
+    assert.deepEqual(captured.explain, { topic: 'Story Words', answer: 'bee', clue: 'c' }, 'the explain object reaches the server intact');
+    assert.ok(res && res.reply === 'ok', 'the reply comes back');
+    captured = null;
+    await askPipLive('What is 7 x 8?', [], 'Jiyuna');
+    assert.equal(captured.mode, '', 'normal chat sends no mode');
+    assert.equal(captured.explain, null, 'normal chat sends no explain object');
+  } finally {
+    global.fetch = origFetch;
+  }
+});
