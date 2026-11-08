@@ -2462,6 +2462,10 @@ function newExplorer(name, code, level){
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
 function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
 function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* A stored ISO timestamp (UTC) as a local YYYY-MM-DD date — slicing
+   the ISO string shows the UTC date, which is a day early for an
+   evening flag in Singapore (seen live 2026-11-07). */
+function dateKey(iso){ var d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 /* One state rule for every quest and quiz (Learn quests and Play
    games alike):
      not-started     — nothing attempted yet: "Start quest" / "Play"
@@ -3970,7 +3974,7 @@ function quizDoneHTML(t){
     var _bCleared=!_bRec.at||!!(_bRec.clearedAt&&_bRec.clearedAt>=_bRec.at);
     var _bEarned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
     var _isMath=t.sub==='math';
-    var _bStars=_bEarned>0?('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' and earned ⭐ '+_bEarned+' stars!'):('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' — a boost replay, so no extra stars this time. You already earned them today!');
+    var _bStars=_bEarned>0?('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' and earned ⭐ '+_bEarned+' stars!'):(cur.firstToday===false?('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' — a boost replay, so no extra stars this time. You already earned them today!'):('You scored '+cur.score+' / '+questListFor(t,cur,levelNum(e)).length+' — no stars this time, but you kept going! Pip has fresh questions ready when you are.'));
     return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+(_bCleared?'Boost complete — that tricky bit feels stronger now! Pip took it off the boost list. 🎉':(_isMath?'Boost complete — still a little wobbly, and that’s okay. Pip will keep it on the boost list — try again now, Pip has 5 fresh ones ready! 💪':'Boost complete — still a little wobbly, and that’s okay. Pip will keep it on the boost list and we’ll try again tomorrow. 💪'))+'</div><div class="trophy">🌱</div><h2 style="margin:4px 0">Pip’s Boost complete!</h2><div class="starsRow">'+[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('')+'</div><p style="font-weight:900;font-size:1.1rem">'+_bStars+'</p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+(!_bCleared&&_isMath?'<button class="btn teal" id="boostRetry">🔁 Try again — 5 fresh ones</button>':'')+'</div></div>';
   }
   if(cur.phase==='retry'){
@@ -3981,7 +3985,7 @@ function quizDoneHTML(t){
   var starsHtml=[1,2,3,4,5].map(function(i){ return i<=cur.score?'⭐':'☆'; }).join('');
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
   var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
-  var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' and earned ⭐ '+earned+' stars!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — a replay, so no extra stars this time. You already earned them today!';
+  var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' and earned ⭐ '+earned+' stars!':(cur.firstToday===false?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — a replay, so no extra stars this time. You already earned them today!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — no stars this time, but finishing the whole quest takes courage! Have another go — the stars will come.');
   return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
 }
 function bindQuiz(){
@@ -4035,8 +4039,11 @@ function finishRound(t){
     e.completedDay[cur.topicId]=todayKey();
     if(firstToday)earnStars(e,cur.score);
     /* The results screen must say so honestly: a replay earns no
-       extra stars, and "earned ⭐ 5 stars!" on a replay is a lie. */
-    cur.starsEarned=firstToday?cur.score:0;
+       extra stars, and "earned ⭐ 5 stars!" on a replay is a lie.
+       But a 0-star FIRST run is not a replay — firstToday (recorded
+       on cur just above) tells the results screen which it is, so
+       a first 0/5 gets encouragement instead of "already earned". */
+    cur.starsEarned=firstToday?cur.score:0; cur.firstToday=firstToday;
     e.lastTopic=cur.topicId;
     cur.newBest=recordLearnBest(e, cur.topicId);
     delete e.progress[cur.topicId];
@@ -4080,7 +4087,7 @@ function finishRound(t){
     var _bl=questListFor(t,cur,levelNum(e)).length;
     var _firstBoost=_bb.starDay!==todayKey();
     if(_firstBoost){ earnStars(e,cur.score); _bb.starDay=todayKey(); }
-    cur.starsEarned=_firstBoost?cur.score:0;
+    cur.starsEarned=_firstBoost?cur.score:0; cur.firstToday=_firstBoost;
     _bb.lastBoost={score:cur.score,day:todayKey(),source:cur.boostSource||'bank'};
     if(_bb.triesDay===todayKey()){ _bb.tries=(_bb.tries||0)+1; } else { _bb.triesDay=todayKey(); _bb.tries=1; }
     if(cur.score>=Math.min(4,_bl)){ _bb.clearedAt=new Date().toISOString(); }
@@ -4514,6 +4521,10 @@ function sendFriendRequest(){
   if(!friendCodeValid(to)){ showErr('That code does not look right — it should be 6 letters, like ABC2DE.'); toast('That code does not look right — it should be 6 letters, like ABC2DE.'); return; }
   var own=ensureFriendCode(e);
   if(to===own){ showErr('That is your own friend code — ask your friend for theirs!'); toast('That is your own friend code — ask your friend for theirs!'); return; }
+  /* A new send starts clean: the last attempt's error must not sit
+     on the page while this one is in flight (seen live 2026-11-07 —
+     a good code looked wrong because the old error was still up). */
+  showErr('');
   friendsApi('request',{fromCode:own,fromName:e.name||'Explorer',toCode:to}).then(function(j){
     if(j&&j.ok){ showErr(''); toast('Friend request sent — their grown-up needs to accept it first.'); if(inp)inp.value=''; return; }
     if(j&&j.error==='unknown_friend_code'){ showErr('No explorer has that code — check it and try again.'); toast('No explorer has that code — check it and try again.'); return; }
@@ -5665,6 +5676,11 @@ function bindGame(){
         xwCheckTimer=setTimeout(function(){ checkWord(); },500);
       } else if(xwCheckTimer){ clearTimeout(xwCheckTimer); xwCheckTimer=null; }
     }
+    /* Focusing the crossword input must also put the cursor at the
+       END of what is already typed: a bare focus() leaves it at the
+       start, so the next letter lands in front and spells the wrong
+       word — seen live 2026-11-07 after a Reveal. */
+    function focusXw(){ var ni=document.getElementById('xwInput'); if(ni){ ni.focus(); try{ ni.setSelectionRange(ni.value.length,ni.value.length); }catch(_e){} } }
     function checkWord(){
       if(xwCheckTimer){ clearTimeout(xwCheckTimer); xwCheckTimer=null; }
       if(!gState||gState.id!=='crossword'||route!=='game')return;
@@ -5680,7 +5696,7 @@ function bindGame(){
         var nx=xwNextUnsolved(gState.sel,gState.filled);
         if(nx>=0){ gState.sel=nx; gState.selCell=null; }
         render();
-        var ni=document.getElementById('xwInput'); if(ni)ni.focus();
+        focusXw();
         return;
       }
       /* Wrong: the word flashes red, then its typed letters clear
@@ -5698,24 +5714,24 @@ function bindGame(){
           if((gState.letters[c.x+','+c.y]||'')!==want)delete gState.letters[c.x+','+c.y];
         });
         gState.wrong=null; saveGameProgress(); render();
-        var ni2=document.getElementById('xwInput'); if(ni2)ni2.focus();
+        focusXw();
       },900);
     }
     document.querySelectorAll('[data-xw]').forEach(function(cell){ cell.onclick=function(){
       var x=parseInt(cell.getAttribute('data-x'),10), y=parseInt(cell.getAttribute('data-y'),10);
       var r=xwSelectCell(x,y,gState.sel,gState.selCell);
       gState.sel=r.sel; gState.selCell=r.selCell; sndPop(); render();
-      var ni=document.getElementById('xwInput'); if(ni)ni.focus();
+      focusXw();
     }; });
     document.querySelectorAll('[data-clue]').forEach(function(b){ b.onclick=function(){
       var wi=parseInt(b.getAttribute('data-clue'),10);
       gState.sel=wi; var wd=XWORDS[wi]; gState.selCell={x:wd.x,y:wd.y}; sndPop(); render();
-      var ni=document.getElementById('xwInput'); if(ni)ni.focus();
+      focusXw();
     }; });
     if(input){
       input.oninput=function(){ syncFromInput(); };
       input.onkeydown=function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); checkWord(); } };
-      input.focus();
+      focusXw();
     }
     if(checkBtn)checkBtn.onclick=function(){ checkWord(); };
     var rv=document.getElementById('xwReveal'); if(rv)rv.onclick=function(){
@@ -5733,7 +5749,7 @@ function bindGame(){
       }
       if(!did)return;
       spendStars(live,2); sndTick(1); saveGameProgress(); render();
-      var ni3=document.getElementById('xwInput'); if(ni3)ni3.focus();
+      focusXw();
     };
     return;
   }
@@ -6568,7 +6584,7 @@ function parentHTML(){
    +(tPlan.rest?' It is dance & art day — Pip will not set any extra study.':'');
   var doneList=Object.keys(sel.completed).map(function(id){ var t=topicById(id); return t.icon+' '+t.name+' ('+sel.completed[id]+'/5)'; });
   var boostSection='<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🌱 Needs a boost — '+esc(sel.name)+'</h3>'
-   +(boostRecs.length?boostRecs.map(function(x){ var r=x.r||{}; var trend=(r.lastScore!=null&&r.flagScore!=null)?(r.lastScore>r.flagScore?'Getting better 🌱':(r.lastScore===r.flagScore?'About the same — steady':'Still finding it tricky')):'—'; var acc=(r.prevScore!=null&&r.lastScore!=null)?('Last two quests: '+r.prevScore+'/5 then '+r.lastScore+'/5'):('Flagged before boost records began — the next quest will fill in the scores.'); var miss=(r.missed&&r.missed.q)?('Last trip-up: “'+esc(r.missed.q)+'” — the answer is “'+esc(r.missed.a)+'”.'):'No missed example saved yet — one will appear after the next quest.'; var when=r.at?('Flagged '+esc(r.at.slice(0,10))):'Flagged earlier'; var lb=(r.lastBoost&&r.lastBoost.day)?(' · Last boost: '+r.lastBoost.score+'/5 on '+esc(r.lastBoost.day)+(r.lastBoost.source==='live'?' · ✨ Pip-made questions':' · 📚 bank questions')):'';
+   +(boostRecs.length?boostRecs.map(function(x){ var r=x.r||{}; var trend=(r.lastScore!=null&&r.flagScore!=null)?(r.lastScore>r.flagScore?'Getting better 🌱':(r.lastScore===r.flagScore?'About the same — steady':'Still finding it tricky')):'—'; var acc=(r.prevScore!=null&&r.lastScore!=null)?('Last two quests: '+r.prevScore+'/5 then '+r.lastScore+'/5'):('Flagged before boost records began — the next quest will fill in the scores.'); var miss=(r.missed&&r.missed.q)?('Last trip-up: “'+esc(r.missed.q)+'” — the answer is “'+esc(r.missed.a)+'”.'):'No missed example saved yet — one will appear after the next quest.'; var when=r.at?('Flagged '+esc(dateKey(r.at))):'Flagged earlier'; var lb=(r.lastBoost&&r.lastBoost.day)?(' · Last boost: '+r.lastBoost.score+'/5 on '+esc(r.lastBoost.day)+(r.lastBoost.source==='live'?' · ✨ Pip-made questions':' · 📚 bank questions')):'';
      return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(x.t.name)+'</b> · '+acc+'<br><span style="font-weight:700">'+miss+'</span><br><span class="small muted" style="font-weight:700">'+when+' · Trend: '+trend+lb+'</span><br><button class="btn ghost" data-boost-dismiss="'+x.t.id+'" style="margin-top:6px">Dismiss this flag</button></div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
    +'<p class="small muted" style="font-weight:700">A topic flags only after two stuck quests in a row (under 3/5 each) — one wobbly day never flags. Pip starts a 5-question boost for her automatically; a boost score of 4/5 or better clears the flag. Maths boosts can be retaken the same day until they clear (fresh questions each time); other subjects get one boost a day. Dismissing only hides it for you — if she gets stuck twice again, Pip flags it fresh.</p></div>';
   return '<h2 style="margin:0;font-size:1.55rem">🌙 Grown-ups — summary &amp; dashboard</h2><p class="muted" style="font-weight:700;margin:5px 0 14px">The evening summary and the full dashboard in one place — quests, screen time, Pip’s plan for tomorrow, and explorer controls. Everything here is from the linked family, refreshed from the server when you open this page.</p>'
