@@ -239,3 +239,19 @@ pay with $10", answer $3 = 10−7) was rejected. It now tries the
 reverse for `-` and `/` too. Seed pin updated: 33 of 44 bank stems
 recompute, 11 known failures (7 word-numbers, 5 estimation /
 multiples / factors by design). Tests 490/490 green.
+
+## 10. Update 2026-11-08 — Maths boost (live questions modelled on the miss)
+
+When a Maths topic flags (two quest runs in a row under 3/5), the
+boost drill now asks for live-generated questions MODELLED ON THE
+EXACT MISSED QUESTION — same skill, easier first — instead of only
+the 5 bank cousins a day. `/api/generate-questions` takes an
+optional `modelOn` (boost mode allows all four Maths topics; the
+quest flow stays math-ntuc-only). Every generated set must pass
+the recompute validator, and any failure falls back silently to
+the bank cousins, so the child never sees an error. The drill can
+be retaken the same day until she scores 4/5 and clears the flag;
+stars still only count on the first drill per topic per day.
+English, Science and Chinese boosts stay bank-only. The parent
+card shows whether the last boost used Pip-made or bank
+questions. Tests 525/525 green (490 existing + 35 new).
