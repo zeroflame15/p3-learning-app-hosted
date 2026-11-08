@@ -2643,8 +2643,8 @@ function daysToMonday(){ var d=new Date(); var add=(8-d.getDay())%7; return add=
    INTEGRATED PLAN — school schedule + Primary 4 study timetable
    + this app, as one system. The timetable decides each day's
    Today's quest subjects; the school schedule lives in the
-   planner and shapes Pip's nudges; the HCL spelling routine
-   (Tue learn → Wed test → Fri redo missed → Sun recap) runs in
+   planner and shapes Pip's nudges; spelling tests (added by the
+   family, with a test date and a Pip-planned routine) live in
    Learn. All of it is computed from the calendar, so it rolls
    forward by itself week after week.
    ============================================================ */
@@ -2665,6 +2665,77 @@ function familyEventFor(d){
   return null;
 }
 function schoolEventFor(d){ return familyEventFor(d)||SCHOOL_EVENTS[mdKey(d)]||null; }
+/* MOE school holidays (primary schools) + Singapore public
+   holidays (2026-2027). The Home "My week" strip marks each
+   calendar day that falls in one of these, so a family sees at
+   a glance when there is no school. Dates are the MOE term-break
+   ranges and the gazetted public holidays (MOM), observed
+   Mondays included; single-day MOE holidays (Youth Day,
+   Teachers' Day, Children's Day, off-in-lieu) are listed by
+   date. A day can be both — the strip shows both badges.
+   Helpers return the holiday NAME (a string) or null. */
+var MOE_SCHOOL_HOLIDAYS=[
+ {from:'2026-03-14',to:'2026-03-22',name:'March holidays'},
+ {from:'2026-05-30',to:'2026-06-28',name:'June holidays'},
+ {from:'2026-09-05',to:'2026-09-13',name:'September holidays'},
+ {from:'2026-11-21',to:'2026-12-31',name:'Year-end holidays'},
+ {from:'2027-03-13',to:'2027-03-21',name:'March holidays'},
+ {from:'2027-05-29',to:'2027-06-27',name:'June holidays'},
+ {from:'2027-09-04',to:'2027-09-12',name:'September holidays'},
+ {from:'2027-11-20',to:'2027-12-31',name:'Year-end holidays'}
+];
+var MOE_SCHOOL_HOLIDAY_DAYS={
+ '2026-07-06':'Youth Day (school holiday)',
+ '2026-09-04':"Teachers' Day",
+ '2026-10-02':"Children's Day",
+ '2027-02-09':'Off in lieu',
+ '2027-05-03':'Off in lieu',
+ '2027-07-05':'Youth Day (school holiday)',
+ '2027-08-10':'Day after National Day',
+ '2027-09-03':"Teachers' Day",
+ '2027-10-08':"Children's Day"
+};
+var SG_PUBLIC_HOLIDAYS={
+ '2026-01-01':"New Year's Day",
+ '2026-02-17':'Chinese New Year',
+ '2026-02-18':'Chinese New Year',
+ '2026-03-21':'Hari Raya Puasa',
+ '2026-04-03':'Good Friday',
+ '2026-05-01':'Labour Day',
+ '2026-05-27':'Hari Raya Haji',
+ '2026-05-31':'Vesak Day',
+ '2026-06-01':'Vesak Day (observed)',
+ '2026-08-09':'National Day',
+ '2026-08-10':'National Day (observed)',
+ '2026-11-08':'Deepavali',
+ '2026-11-09':'Deepavali (observed)',
+ '2026-12-25':'Christmas Day',
+ '2027-01-01':"New Year's Day",
+ '2027-02-06':'Chinese New Year',
+ '2027-02-07':'Chinese New Year',
+ '2027-02-08':'Chinese New Year (observed)',
+ '2027-03-10':'Hari Raya Puasa',
+ '2027-03-26':'Good Friday',
+ '2027-05-01':'Labour Day',
+ '2027-05-17':'Hari Raya Haji',
+ '2027-05-20':'Vesak Day',
+ '2027-08-09':'National Day',
+ '2027-10-28':'Deepavali',
+ '2027-12-25':'Christmas Day'
+};
+/* Returns the school-holiday name for a YYYY-MM-DD key, or null.
+   ISO date keys sort lexicographically, so a range check is a
+   plain string comparison. */
+function isSchoolHoliday(dateKey){
+  if(!dateKey)return null;
+  for(var i=0;i<MOE_SCHOOL_HOLIDAYS.length;i++){ var h=MOE_SCHOOL_HOLIDAYS[i]; if(dateKey>=h.from&&dateKey<=h.to)return h.name; }
+  return MOE_SCHOOL_HOLIDAY_DAYS[dateKey]||null;
+}
+/* Returns the public-holiday name for a YYYY-MM-DD key, or null. */
+function isPublicHoliday(dateKey){
+  if(!dateKey)return null;
+  return SG_PUBLIC_HOLIDAYS[dateKey]||null;
+}
 var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function fmtDate(d){ return DOWS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]; }
@@ -2681,12 +2752,12 @@ function nextSchoolEvents(n){
   out.sort(function(a,b){ return a.date-b.date; }); return out.slice(0,n||5);
 }
 var STUDY_PLAN={
- 0:{label:'Sunday review',subs:[],review:true,study:'30–45 min gentle review',note:'Recap the week in Learn and redo any missed 听写 words.'},
+ 0:{label:'Sunday review',subs:[],review:true,study:'30–45 min gentle review',note:'Recap the week in Learn and redo any missed spelling words.'},
  1:{label:'English + Maths',subs:['eng','math'],study:'Study 3:00–4:30pm',note:'School ends ~2pm, then lunch and a shower before study time.'},
- 2:{label:'Science + Chinese',subs:['sci','chi'],study:'Study 3:00–4:30pm',note:'Chinese day — start learning this week’s 听写 list in Learn.'},
- 3:{label:'Light study, then Higher Chinese',subs:['chi'],light:true,study:'Light study 3:00–4:00pm · Higher Chinese 5:00–7:00pm',note:'Keep it light before HCL class — and do the quick 听写 self-test first.'},
+ 2:{label:'Science + Chinese',subs:['sci','chi'],study:'Study 3:00–4:30pm',note:'Chinese day — start learning this week’s spelling list in Learn.'},
+ 3:{label:'Light study, then Higher Chinese',subs:['chi'],light:true,study:'Light study 3:00–4:00pm · Higher Chinese 5:00–7:00pm',note:'Keep it light before HCL class — and do the quick spelling self-test first.'},
  4:{label:'Maths + Science',subs:['math','sci'],study:'Study 3:00–4:30pm',note:'School ends ~2pm, then lunch and a shower before study time.'},
- 5:{label:'English + Chinese + weekly review',subs:['eng','chi'],study:'Study 3:00–4:30pm',note:'Redo any missed 听写 words, then a quick review of the whole week.'},
+ 5:{label:'English + Chinese + weekly review',subs:['eng','chi'],study:'Study 3:00–4:30pm',note:'Redo any missed spelling words, then a quick review of the whole week.'},
  6:{label:'Dance & art day',subs:[],rest:true,study:'Dance 12:00–1:00pm · Art 1:30–3:00pm',note:'No extra study after dance and art — play a game or visit your critter instead!'}};
 /* A family's own timetable (set in the Grown-ups page) wins for its
    day; otherwise the built-in timetable. A custom day without a
@@ -2707,15 +2778,6 @@ function planTopics(plan){
   if(plan.rest)return [];
   if(plan.review||!plan.subs.length)return TOPICS.slice();
   return TOPICS.filter(function(t){ return plan.subs.indexOf(t.sub)>=0; });
-}
-var HCL_WORDS=[{w:'听写',p:'tīng xiě',m:'spelling — listen & write'},{w:'老师',p:'lǎo shī',m:'teacher'},{w:'学校',p:'xué xiào',m:'school'},{w:'书包',p:'shū bāo',m:'school bag'},{w:'读书',p:'dú shū',m:'to read books'},{w:'作业',p:'zuò yè',m:'homework'},{w:'同学',p:'tóng xué',m:'classmate'},{w:'认真',p:'rèn zhēn',m:'serious & earnest'}];
-function hclStepFor(dow, e){
-  var missed=(e&&e.hclMissed&&e.hclMissed.length)?HCL_WORDS.filter(function(x){ return e.hclMissed.indexOf(x.w)>=0; }):[];
-  if(dow===2)return {key:'learn',title:'Tuesday — learn the list',text:'Listen to each word, say it out loud 3 times, then write it once. Slow and neat wins!',words:HCL_WORDS,test:false};
-  if(dow===3)return {key:'test',title:'Wednesday — quick self-test before HCL class (5–7pm)',text:'A fast check before class: hear each word, say it, write it. Tap “Missed it” honestly — Pip keeps those words safe for Friday.',words:HCL_WORDS,test:true};
-  if(dow===5)return {key:'redo',title:'Friday — redo the missed words',text:missed.length?'These are the words marked missed earlier this week. Crack these and the week is yours!':'No missed words saved this week — do a quick victory lap through the whole list!',words:missed.length?missed:HCL_WORDS,test:true};
-  if(dow===0)return {key:'recap',title:'Sunday — spelling recap',text:missed.length?'One gentle recap of the missed words, then the spelling week is done.':'Full-list recap — say each word out loud like a spelling champion.',words:missed.length?missed:HCL_WORDS,test:true};
-  return {key:'next',title:'Spelling routine: Tue learn → Wed test → Fri redo → Sun recap',text:'Today is a listening day: tap any word to hear it and say it out loud. The next step in the routine is coming up this week.',words:HCL_WORDS,test:false};
 }
 /* ---------- My spelling tests (2026-11-09) ----------
    A per-explorer list of upcoming English / Chinese spelling tests,
@@ -2753,10 +2815,93 @@ function spellStepFor(t, today){
     if((t.days||[]).indexOf(dow)<0)return {key:'skip', title:'No practice today', text:'No practice today — next practice is '+nextPracticeDay(t.days, dow)+'.'};
   }
   if(!done)return {key:'learn', title:'Learn the list', text:'Listen to each word, say it out loud 3 times, then write it once. Slow and neat wins!'};
-  if(dl===1&&missed)return {key:'redo', title:'Redo the missed words', text:'These are the words marked missed. Crack these and the test is yours!'};
+  if(dl===1)return {key:'redo', title:'Redo the missed words', text:missed?'These are the words marked missed. Crack these and the test is yours!':'No missed words yet — a final full-list check before test day.'};
   return {key:'practise', title:'Practise — self-test', text:'A fast self-test: hear each word, say it, write it. Tap “Missed it” honestly — Pip keeps those words safe.'};
 }
-var hclTest=null;
+/* ---------- Spelling plan (2026-11-09) ----------
+   Pip's day-by-day plan for one spelling test, derived from the test
+   date and today so the "Recommended" routine can be followed, not
+   just felt. Recommended: every day from today to the test is a
+   practice day — Learn on the first practice day, Practise on the
+   middle days, Redo the missed words the day before the test, Recap
+   on test day. Compressed when the test is close: test tomorrow →
+   Learn today, Recap tomorrow; test today → Recap only. "My own
+   days": only the ticked weekdays are practice days (test day always
+   recaps). Each entry: {date, key, isTest, done}. The day-before
+   entry is always Redo — spellStepFor agrees (the day before the
+   test is a redo, with a full-list check when nothing was missed). */
+function spellPlanFor(t, today){
+  var tk=today||todayKey();
+  var dl=daysUntil(t.testDate, tk);
+  if(dl<0)return [];
+  var done=(t.practised||[]).length>0;
+  var practised=t.practised||[];
+  var custom=t.routine==='custom'&&(t.days||[]).length>0;
+  var d0=parseDateKey(tk);
+  var out=[];
+  for(var i=0;i<=dl;i++){
+    var d=new Date(d0.getFullYear(),d0.getMonth(),d0.getDate()+i);
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    var isTest=i===dl;
+    if(!isTest&&custom&&(t.days||[]).indexOf(d.getDay())<0)continue;
+    var step;
+    if(isTest)step='recap';
+    else if(out.length===0&&!done)step='learn';
+    else if(dl-i===1)step='redo';
+    else step='practise';
+    out.push({date:key, key:step, isTest:isTest, done:practised.indexOf(key)>=0});
+  }
+  return out;
+}
+/* One compact, followable line for a spelling plan: "Pip's plan:
+   Learn Mon 10 Nov · Practise Tue 11 Nov · Redo Wed 12 Nov ·
+   Test Thu 13 Nov", with a ✓ on days already practised. Long plans
+   (more than 7 days) collapse the middle: Learn · Practise · … ·
+   Redo · Test. With highlight, today (or the next practice day)
+   gets a gold pill, so the practice view shows where you are. */
+function spellPlanLine(t, today, highlight){
+  var plan=spellPlanFor(t, today);
+  if(!plan.length)return '';
+  var tk=today||todayKey();
+  var label=t.routine==='custom'?'Your days:':'Pip’s plan:';
+  var items=plan;
+  if(plan.length>7)items=[plan[0],plan[1],null,plan[plan.length-2],plan[plan.length-1]];
+  var todayIdx=-1;
+  items.forEach(function(en,i){ if(en&&en.date===tk)todayIdx=i; });
+  if(todayIdx<0)for(var i=0;i<items.length;i++){ if(items[i]&&items[i].date>tk){ todayIdx=i; break; } }
+  var parts=items.map(function(en,i){
+    if(!en)return '…';
+    var word=en.isTest?'Test':(en.key==='learn'?'Learn':en.key==='redo'?'Redo':'Practise');
+    var txt=(en.done?'✓ ':'')+word+' '+fmtDateStr(en.date);
+    if(highlight&&i===todayIdx)return '<b style="background:var(--gold);border-radius:8px;padding:1px 6px">'+esc(txt)+'</b>';
+    return esc(txt);
+  });
+  return '<p class="small" style="font-weight:700;margin:6px 0 0">'+esc(label)+' '+parts.join(' · ')+'</p>';
+}
+/* Home nudge for the next spelling test: one line when a test is due
+   within 3 days and today is a practice day for it — otherwise
+   nothing, so Home stays quiet. */
+function spellHomeNudgeHTML(e){
+  if(!e.spellingTests)return '';
+  var tk=todayKey();
+  var up=e.spellingTests.filter(function(t){ var dl=daysUntil(t.testDate, tk); return dl>=0&&dl<=3; })
+    .sort(function(a,b){ return a.testDate<b.testDate?-1:(a.testDate>b.testDate?1:0); })[0];
+  if(!up)return '';
+  var step=spellStepFor(up, tk);
+  if(step.key==='skip'||step.key==='past')return '';
+  return '<div class="feedback ok" style="margin-top:12px">✏️ <b>Spelling test — '+(up.lang==='chi'?'Chinese':'English')+' '+esc(fmtDateStr(up.testDate))+'.</b> Today: '+esc(step.title)+' — open Learn → My spelling tests to practise.</div>';
+}
+/* One line for the Grown-ups evening summary: the next upcoming
+   spelling test and today's step for it. */
+function spellParentLine(e){
+  var tests=(e.spellingTests||[]).filter(function(t){ return daysUntil(t.testDate)>=0; })
+    .sort(function(a,b){ return a.testDate<b.testDate?-1:(a.testDate>b.testDate?1:0); });
+  if(!tests.length)return '✏️ Spelling tests: none set yet — add one from Learn → My spelling tests.';
+  var t=tests[0];
+  var step=spellStepFor(t);
+  return '✏️ Spelling tests: '+(t.lang==='chi'?'Chinese':'English')+' test '+fmtDateStr(t.testDate)+' — today: '+step.title+'. Missed words: '+((t.missed&&t.missed.length)?t.missed.join('、'):'none')+'.';
+}
+
 /* Planner strings that used to name Jiyuna's classes even for a
    family with its own timetable (2026-11-09). With no custom plan
    these return Jiyuna's exact wording; with a custom family plan
@@ -2816,7 +2961,8 @@ function planSectionHTML(e, plan, ev){
   var monday=new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); monday.setHours(0,0,0,0);
   var weekCells='';
   for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); var p=studyPlanFor(d.getDay()); var wev=schoolEventFor(d); var isToday=d.toDateString()===new Date().toDateString();
-    weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?restDayStripText(p):p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+'</div>';
+    var dk=dateKeyOf(d), sh=isSchoolHoliday(dk), ph=isPublicHoliday(dk);
+    weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?restDayStripText(p):p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+(sh?'<div class="small" style="font-weight:800;color:var(--teal);margin-top:3px">🏖️ '+esc(sh)+'</div>':'')+(ph?'<div class="small" style="font-weight:800;color:var(--coral);margin-top:3px">🎉 '+esc(ph)+'</div>':'')+'</div>';
   }
   var moodBtns=[['😀','Great'],['🙂','Okay'],['😐','Meh'],['😟','Wobbly']].map(function(m){ return '<button type="button" class="themechip" data-mood="'+m[1]+'" aria-pressed="'+(mood===m[1])+'" style="background:'+(mood===m[1]?'var(--gold)':'var(--panel2)')+';color:'+(mood===m[1]?'#2a2753':'var(--ink)')+';border:2px solid var(--line)">'+m[0]+' '+m[1]+'</button>'; }).join('');
   return '<section class="card" style="margin-top:20px"><div class="themeslabel" style="color:var(--ink-soft)">📅 My week — one plan for school, study & play</div>'
@@ -2826,6 +2972,7 @@ function planSectionHTML(e, plan, ev){
    +(ev?'<div class="feedback '+(ev.kind==='closure'?'ok':'no')+'" style="margin-top:12px">'+ev.e+' <b>'+esc(ev.name)+'</b> — '+esc(ev.note)+'</div>':'')
    +(!ev&&tEv&&tEv.kind==='due'?'<div class="feedback no" style="margin-top:12px">💻 <b>Tomorrow: '+esc(tEv.name)+'.</b> Pip’s nudge: do a short revision game today — not a full quiz — so tomorrow feels easy.</div>':'')
    +(plan.rest?'<div class="feedback ok" style="margin-top:12px">🌴 <b>No extra study today.</b> '+esc(restDayText(plan))+' If you feel like it, play a game in Play or say hello to your critter — that is all Pip asks!</div>':'')
+   +spellHomeNudgeHTML(e)
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'+weekCells+'</div>'
    +'<div style="margin-top:16px;border-top:2px dashed var(--line);padding-top:12px"><b>🌈 How are you feeling today?</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+moodBtns+'</div>'+(mood?'<p class="small" style="font-weight:800;margin:8px 0 0">Pip noted: feeling '+esc(mood)+' today. '+(mood==='Wobbly'?'A breathing break in Vibe might help — and tell a grown-up too. 💛':'Lovely — Pip will remember for the evening summary.')+'</p>':'<p class="small muted" style="font-weight:700;margin:8px 0 0">Tap one — Pip shares it in the grown-ups’ evening summary.</p>')+'</div>'
    +'</section>';
@@ -2848,37 +2995,6 @@ function learnPlanBannerHTML(e){
    +(plan.rest?'<p style="font-weight:800;margin:8px 0 0">'+esc(restDayBannerText(plan))+'</p>':'')
    +'</div>';
 }
-function hclCardHTML(e){
-  if(!e.hclMissed)e.hclMissed=[];
-  var step=hclStepFor(new Date().getDay(), e);
-  var head='<div class="card" style="margin-bottom:16px"><button class="btn ghost" id="hclBack" style="margin-bottom:10px">← Back to Learn</button><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>';
-  if(hclTest){
-    if(hclTest.idx>=hclTest.words.length){
-      return head+'<div class="feedback ok" style="margin-top:12px">🎉 Self-test finished! '+(e.hclMissed.length?'Words to redo on Friday / Sunday: <b>'+esc(e.hclMissed.join('、'))+'</b>':'No missed words — perfect list!')+'</div><button class="btn" id="hclDone" style="margin-top:6px">Done ✔</button></div>';
-    }
-    var w=hclTest.words[hclTest.idx];
-    return head+'<div style="text-align:center;margin-top:14px"><div style="font-size:2.6rem;font-weight:900;font-family:\'Fredoka\'">'+esc(w.w)+'</div><div class="muted" style="font-weight:800">'+esc(w.p)+' · '+esc(w.m)+'</div>'
-     +'<p style="font-weight:700">Word '+(hclTest.idx+1)+' of '+hclTest.words.length+' — listen, say it out loud, write it down, then be honest:</p>'
-     +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn teal" data-hcllisten="'+esc(w.w)+'">🔊 Listen & say it</button><button class="btn" id="hclGot">✔ I got it</button><button class="btn coral" id="hclMiss">Missed it</button></div></div></div>';
-  }
-  return head+'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'
-   + step.words.map(function(w){ return '<span class="chip" style="padding:7px 10px">'+esc(w.w)+' <span class="small muted">'+esc(w.p)+'</span> <button type="button" class="delbtn" data-hcllisten="'+esc(w.w)+'" aria-label="Listen to '+esc(w.w)+'">🔊</button></span>'; }).join('')
-   +'</div>'
-   +(e.hclMissed.length?'<p class="small" style="font-weight:800;margin:10px 0 0">📌 Missed words saved for Friday & Sunday: '+esc(e.hclMissed.join('、'))+'</p>':'')
-   +(step.test?'<div style="margin-top:12px"><button class="btn" id="hclStart">▶ Start the self-test</button></div>':'<p class="small muted" style="font-weight:700;margin:10px 0 0">Routine: <b style="color:var(--ink)">Tue</b> learn · <b style="color:var(--ink)">Wed</b> quick test before HCL · <b style="color:var(--ink)">Fri</b> redo missed · <b style="color:var(--ink)">Sun</b> recap.</p>')
-   +'</div>';
-}
-/* Spelling entry card on the Learn page: the routine itself lives
-   on its own sub-view (route 'spelling'), so its Back button has a
-   real page to return to. */
-function hclEntryHTML(e){
-  if(!e.hclMissed)e.hclMissed=[];
-  var step=hclStepFor(new Date().getDay(), e);
-  return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">✏️ 听写 Spelling routine — Higher Chinese</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>'
-   +(e.hclMissed.length?'<p class="small" style="font-weight:800;margin:10px 0 0">📌 Missed words saved for Friday & Sunday: '+esc(e.hclMissed.join('、'))+'</p>':'')
-   +'<div style="margin-top:12px"><button class="btn" id="hclOpen">Open spelling routine →</button></div></div>';
-}
-function spellingHTML(){ var e=ex(); return hclCardHTML(e); }
 /* My spelling tests — entry card on the Learn page. Tests sort with
    upcoming first (earliest test date), then past ones. */
 function spellTestsEntryHTML(e){
@@ -2892,7 +3008,7 @@ function spellTestsEntryHTML(e){
   var rows=tests.map(function(t){
     var step=spellStepFor(t);
     var lang=t.lang==='chi'?'🀄 Chinese':'📖 English';
-    return '<div class="plannerow"><span style="font-size:1.3rem">'+(t.lang==='chi'?'🀄':'📖')+'</span><span class="ptext">'+lang+' · '+esc(fmtDateStr(t.testDate))+'<span class="small muted" style="display:block;font-weight:700">'+t.words.length+' words · '+esc(step.title)+(t.missed&&t.missed.length?' · 📌 '+t.missed.length+' missed':'')+'</span></span><button type="button" class="btn" data-spellopen="'+t.id+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Practise →</button><button type="button" class="btn coral" data-spelldel="'+t.id+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Delete</button></div>';
+    return '<div class="plannerow"><span style="font-size:1.3rem">'+(t.lang==='chi'?'🀄':'📖')+'</span><span class="ptext">'+lang+' · '+esc(fmtDateStr(t.testDate))+'<span class="small muted" style="display:block;font-weight:700">'+t.words.length+' words · '+esc(step.title)+(t.missed&&t.missed.length?' · 📌 '+t.missed.length+' missed':'')+'</span></span><button type="button" class="btn" data-spellopen="'+t.id+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Practise →</button><button type="button" class="btn coral" data-spelldel="'+t.id+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Delete</button></div>'+spellPlanLine(t);
   }).join('');
   return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">✏️ My spelling tests</h3>'
    +'<p class="muted" style="font-weight:700;margin:0 0 10px">Your own English or Chinese spelling lists, with a test date — Pip plans the practice days, or you pick your own.</p>'
@@ -2927,9 +3043,8 @@ function openSpellAddModal(){
     save(); closeModal(); render(); toast('Spelling test added — '+words.length+' words for '+fmtDateStr(date)+'!');
   };
 }
-/* Spelling-test practice view (route 'spelltest'): reuses the HCL
-   self-test pattern — hear a word, say it, write it, then tap
-   “I got it” or “Missed it” honestly. */
+/* Spelling-test practice view (route 'spelltest'): hear a word,
+   say it, write it, then tap “I got it” or “Missed it” honestly. */
 function spellTestHTML(){
   var e=ex();
   var head='<div class="card" style="margin-bottom:16px"><button class="btn ghost" id="spBack" style="margin-bottom:10px">← Back to Learn</button>';
@@ -2939,7 +3054,7 @@ function spellTestHTML(){
   if(!t)return head+'<p style="font-weight:700">That spelling test is gone — it may have been deleted on another device.</p></div>';
   var step=spellStepFor(t);
   var lang=t.lang==='chi'?'🀄 Chinese':'📖 English';
-  head+='<h3 style="margin-top:0">✏️ '+lang+' spelling — '+esc(fmtDateStr(t.testDate))+'</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>';
+  head+='<h3 style="margin-top:0">✏️ '+lang+' spelling — '+esc(fmtDateStr(t.testDate))+'</h3><p style="font-weight:800;margin:0">'+esc(step.title)+'</p><p class="muted" style="font-weight:700;margin:6px 0 0">'+esc(step.text)+'</p>'+spellPlanLine(t, null, true);
   if(spellTest&&spellTest.testId===t.id){
     if(spellTest.idx>=spellTest.words.length){
       return head+'<div class="feedback ok" style="margin-top:12px">🎉 Practice finished! '+((t.missed&&t.missed.length)?'Words to redo: <b>'+esc(t.missed.join('、'))+'</b>':'No missed words — perfect list!')+'</div><button class="btn" id="spDone" style="margin-top:6px">Done ✔</button></div>';
@@ -3004,7 +3119,7 @@ var t=spellLiveTest();
   if(st)st.onclick=function(){
     var lt=spellLiveTest(); if(!lt)return;
     var step=spellStepFor(lt);
-    var words=(step.key==='redo'?(lt.missed||[]).slice():lt.words.slice());
+    var words=(step.key==='redo'&&lt.missed&&lt.missed.length?lt.missed.slice():lt.words.slice());
     spellTest={testId:lt.id, words:words, idx:0}; sndPop(); render();
   };
   var dn=document.getElementById('spDone'); if(dn)dn.onclick=function(){ spellTest=null; render(); };
@@ -3048,7 +3163,7 @@ var GLOWS=['#ffb020','#2dd4bf','#fb7185','#7db4ff','#4ade80','#facc15','#c084fc'
    (voice / image / SAM / vision / web search / files) have no
    key yet. No location tracking, no camera — ever.
    ============================================================ */
-var SKILL_PACK = {"version":"skills-v1","skills":[{"id":"vocab-story","topicId":"eng-story","subject":"English","name":"Story Words","method":"Read the whole sentence, then pick the word that fits what happened.","keywords":["story","word","vocabulary","hungry","tired","friendly","adjective"]},{"id":"tenses","topicId":"eng-tense","subject":"English","name":"Tenses Trek","method":"Find the time word first (yesterday / every day / tomorrow / now), then pick the verb for that time.","keywords":["tense","yesterday","tomorrow","verb","past","present","future","went","brushes","goes"]},{"id":"story-next","topicId":"eng-story2","subject":"English","name":"Finish the Story","method":"Pick the next sentence that is kind, sensible and keeps the story going.","keywords":["tell me a story","story","next","author","ending","sentence"]},{"id":"punctuation","topicId":"eng-punct","subject":"English","name":"Punctuation Pond","method":"Every sentence starts with a capital letter and ends with the right mark: full stop for telling, ? for asking, ! for strong feeling.","keywords":["punctuation","capital","full stop","question mark","comma","sentence","sentence is correct"]},{"id":"add-subtract","topicId":"math-mrt","subject":"Maths","name":"MRT Numbers — Add & Subtract","method":"Make a round number first, then add the rest. For subtraction, count up from the smaller number.","keywords":["add","plus","subtract","minus","mrt","train","stations","change","total"]},{"id":"money-change","topicId":"math-hawker","subject":"Maths","name":"Hawker Change","method":"Add the dollars first, then the cents. 50 cents + 50 cents = $1.","keywords":["money","change","hawker","chicken rice","dollar","cents","price","cost","$","total"]},{"id":"times-tables","topicId":"math-ntuc","subject":"Maths","name":"Times Tables","method":"Count in groups, and learn the famous tricky ones by heart: 7 × 8 = 56, 6 × 7 = 42.","keywords":["times","multiply","multiplication","table","7 x 8","7 × 8","groups","bags"]},{"id":"fractions","topicId":"math-frac","subject":"Maths","name":"Fractions Feast","method":"Bottom number = how many equal pieces. Top number = how many you have. Fewer pieces = bigger pieces.","keywords":["fraction","half","quarter","pizza","slice","share"]},{"id":"life-cycle-frog","topicId":"sci-frog","subject":"Science","name":"Frog Life Cycle","method":"Egg → tadpole → froglet → frog. Each stage lives differently.","keywords":["frog","tadpole","froglet","egg","amphibian","hop"]},{"id":"life-cycle-butterfly","topicId":null,"subject":"Science","name":"Butterfly Life Cycle","method":"Egg → caterpillar (larva) → chrysalis (pupa) → butterfly. This is metamorphosis — a big change of body.","keywords":["butterfly","caterpillar","chrysalis","pupa","metamorphosis","larva","cocoon","moth"]},{"id":"magnets","topicId":"sci-magnet","subject":"Science","name":"Magnet Lab","method":"Test with a real magnet. Magnets attract iron and steel only. Same poles repel, opposite poles attract.","keywords":["magnet","attract","repel","pole","iron","steel","paperclip"]},{"id":"plants","topicId":"sci-plants","subject":"Science","name":"Garden & Plants","method":"Plants make food with sunlight, water and air. Roots drink, leaves cook.","keywords":["plant","photosynthesis","leaf","root","seed","flower","sunlight","bee"]},{"id":"chinese-listening","topicId":"chi-listen","subject":"Chinese","name":"听一听 Listening","method":"Listen first, say it out loud, then pick. Your ears teach your brain.","keywords":["chinese","华文","listen","听","妈妈","mama","baba","pinyin","苹果"]},{"id":"chinese-family","topicId":"chi-family","subject":"Chinese","name":"家庭 Family Words","method":"Learn family words in pairs: big brother 哥哥, little brother 弟弟, big sister 姐姐, little sister 妹妹.","keywords":["family","哥哥","弟弟","姐姐","妹妹","奶奶","爷爷","家庭","mama","baba","mother","father","brother","sister"]},{"id":"chinese-school","topicId":"chi-school","subject":"Chinese","name":"学校 School Day","method":"School words + the weekly 听写 routine: Tue learn, Wed test, Fri redo missed, Sun recap.","keywords":["school","学校","老师","听写","spelling","书包","读书","同学"]},{"id":"spelling-lscwc","topicId":null,"subject":"English","name":"Spelling — Look, Say, Cover, Write, Check","method":"Look–Say–Cover–Write–Check, one word at a time. Never copy while looking.","keywords":["spelling","spell","lscwc","look say cover","write","word"]},{"id":"check-work","topicId":null,"subject":"English","name":"Check Your Work","method":"Finish, then check: read the question twice, underline the key words, and check backwards.","keywords":["score","well","exam","test","check","study","revise","practice","practise"]}],"agents":[{"id":"kix-tutor","name":"Kix Tutor","feature":"Question player","model":"muse-spark-1.3","status":"live","keywords":["math","plus","minus","times","fraction","money","mrt","add","subtract","multiply","english","tense","verb","punctuation","sentence","story","word","past","future","went","yesterday","science","frog","tadpole","magnet","plant","leaf","root","seed","sky","sun","moon","earth","rain","water","air","chinese","华文","妈妈","mama","baba","听写","拼音","pinyin","老师","spell","spelling","listen","hear","听"],"modelNote":""},{"id":"ask-kix","name":"Ask Kix","feature":"Ask Kix","model":"muse-spark-vision","status":"live","keywords":["what is","what are","why is","why do","how do","tell me","explain","what does","who is","where is"],"modelNote":"Video model: Muse Spark – vision. Vision input not wired yet; text answers run on Muse Spark 1.3."},{"id":"vibe-zone-maker","name":"Vibe Zone maker","feature":"Vibe Zone","model":"muse-spark-1.3","status":"live","keywords":["vibe","music","calm","relax","calm sounds","jungle birds","play some music","soothing","sleepy"],"modelNote":""},{"id":"talk-to-kix","name":"Talk to Kix","feature":"Talk to Kix","model":"muse-voice-transcribe","status":"placeholder","keywords":["voice","speak","talk to","read aloud","transcribe","hear me","say it","voice chat"],"modelNote":""},{"id":"sidekick-studio","name":"Sidekick Studio","feature":"Sidekick Studio","model":"muse-image-sam-3.1","status":"placeholder","keywords":["sidekick","change my look","change pip","draw","picture","image","show me a picture","avatar","make a picture"],"modelNote":""},{"id":"critter-keeper","name":"Critter Keeper","feature":"Critter Lab","model":"muse-spark-1.3","status":"live","keywords":["critter lab","feed my tadpole","feed my frog","my critter","raise a frog","my tadpole","critter care","pet"],"modelNote":""},{"id":"memory-keeper","name":"Memory Keeper","feature":"Kix’s Notebook","model":"muse-spark-1.3","status":"live","keywords":["notebook","flashcard","remember this","my notes","memory","revise my words"],"modelNote":""},{"id":"screen-time-guardian","name":"Screen-time guardian","feature":"Breaks and balance","model":"code-rules","status":"live","keywords":["screen time","too much screen","take a break","break time","time limit","screen-time"],"modelNote":""},{"id":"tonight","name":"Tonight","feature":"Tonight","model":"muse-spark-1.3","status":"live","keywords":["tonight","evening summary","what did i learn today","what did she learn","parent summary","progress report","how is she doing"],"modelNote":""},{"id":"guardian-brief","name":"Guardian Brief","feature":"Location","model":"muse-spark-1.3","status":"live","keywords":["guardian brief","where is my child","where am i","location","is she home","pick up"],"modelNote":""},{"id":"home-reader","name":"Home Reader","feature":"Sentry","model":"muse-spark-vision","status":"placeholder","keywords":["home reader","sentry","look at my work","check my homework","photo of my work","my drawing"],"modelNote":"Video model: Muse Spark – vision. No camera, no picture sent."},{"id":"whos-who","name":"Who’s who","feature":"Sentry","model":"sam-3.1","status":"placeholder","keywords":["who is in the photo","who’s who","whos who","who is that","who is in this picture"],"modelNote":""},{"id":"outing-scout","name":"Outing Scout","feature":"Do something together","model":"muse-spark-web-search","status":"placeholder","keywords":["outing","do something together","where should we go","find a place","places to go","weekend outing","find somewhere"],"modelNote":""},{"id":"outing-planner","name":"Outing Planner","feature":"Do something together","model":"muse-spark-1.3","status":"live","keywords":["plan our outing","plan tomorrow","plan the weekend","timetable","schedule","homework plan","plan a trip"],"modelNote":""},{"id":"past-paper-scout","name":"Past-paper scout","feature":"New exam papers","model":"code-rules","status":"live","keywords":["past paper","exam paper","new exam","practice paper","test paper"],"modelNote":""},{"id":"content-curator","name":"Content Curator","feature":"New exam papers","model":"muse-spark-files","status":"placeholder","keywords":["curate","new questions","content curator","make new questions","from the exam paper"],"modelNote":""},{"id":"skill-editor","name":"Skill Editor","feature":"Skill packs","model":"muse-spark-1.3","status":"live","keywords":["skill pack","skill editor","the method","which method","skill for"],"modelNote":""},{"id":"reviewer","name":"Reviewer","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["wrong","mistake","flag","incorrect","that answer is wrong","you are wrong","review this"],"modelNote":""},{"id":"judge","name":"Judge","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["judge","should this ship","is the fix good","judge this fix"],"modelNote":""}]};
+var SKILL_PACK = {"version":"skills-v1","skills":[{"id":"vocab-story","topicId":"eng-story","subject":"English","name":"Story Words","method":"Read the whole sentence, then pick the word that fits what happened.","keywords":["story","word","vocabulary","hungry","tired","friendly","adjective"]},{"id":"tenses","topicId":"eng-tense","subject":"English","name":"Tenses Trek","method":"Find the time word first (yesterday / every day / tomorrow / now), then pick the verb for that time.","keywords":["tense","yesterday","tomorrow","verb","past","present","future","went","brushes","goes"]},{"id":"story-next","topicId":"eng-story2","subject":"English","name":"Finish the Story","method":"Pick the next sentence that is kind, sensible and keeps the story going.","keywords":["tell me a story","story","next","author","ending","sentence"]},{"id":"punctuation","topicId":"eng-punct","subject":"English","name":"Punctuation Pond","method":"Every sentence starts with a capital letter and ends with the right mark: full stop for telling, ? for asking, ! for strong feeling.","keywords":["punctuation","capital","full stop","question mark","comma","sentence","sentence is correct"]},{"id":"add-subtract","topicId":"math-mrt","subject":"Maths","name":"MRT Numbers — Add & Subtract","method":"Make a round number first, then add the rest. For subtraction, count up from the smaller number.","keywords":["add","plus","subtract","minus","mrt","train","stations","change","total"]},{"id":"money-change","topicId":"math-hawker","subject":"Maths","name":"Hawker Change","method":"Add the dollars first, then the cents. 50 cents + 50 cents = $1.","keywords":["money","change","hawker","chicken rice","dollar","cents","price","cost","$","total"]},{"id":"times-tables","topicId":"math-ntuc","subject":"Maths","name":"Times Tables","method":"Count in groups, and learn the famous tricky ones by heart: 7 × 8 = 56, 6 × 7 = 42.","keywords":["times","multiply","multiplication","table","7 x 8","7 × 8","groups","bags"]},{"id":"fractions","topicId":"math-frac","subject":"Maths","name":"Fractions Feast","method":"Bottom number = how many equal pieces. Top number = how many you have. Fewer pieces = bigger pieces.","keywords":["fraction","half","quarter","pizza","slice","share"]},{"id":"life-cycle-frog","topicId":"sci-frog","subject":"Science","name":"Frog Life Cycle","method":"Egg → tadpole → froglet → frog. Each stage lives differently.","keywords":["frog","tadpole","froglet","egg","amphibian","hop"]},{"id":"life-cycle-butterfly","topicId":null,"subject":"Science","name":"Butterfly Life Cycle","method":"Egg → caterpillar (larva) → chrysalis (pupa) → butterfly. This is metamorphosis — a big change of body.","keywords":["butterfly","caterpillar","chrysalis","pupa","metamorphosis","larva","cocoon","moth"]},{"id":"magnets","topicId":"sci-magnet","subject":"Science","name":"Magnet Lab","method":"Test with a real magnet. Magnets attract iron and steel only. Same poles repel, opposite poles attract.","keywords":["magnet","attract","repel","pole","iron","steel","paperclip"]},{"id":"plants","topicId":"sci-plants","subject":"Science","name":"Garden & Plants","method":"Plants make food with sunlight, water and air. Roots drink, leaves cook.","keywords":["plant","photosynthesis","leaf","root","seed","flower","sunlight","bee"]},{"id":"chinese-listening","topicId":"chi-listen","subject":"Chinese","name":"听一听 Listening","method":"Listen first, say it out loud, then pick. Your ears teach your brain.","keywords":["chinese","华文","listen","听","妈妈","mama","baba","pinyin","苹果"]},{"id":"chinese-family","topicId":"chi-family","subject":"Chinese","name":"家庭 Family Words","method":"Learn family words in pairs: big brother 哥哥, little brother 弟弟, big sister 姐姐, little sister 妹妹.","keywords":["family","哥哥","弟弟","姐姐","妹妹","奶奶","爷爷","家庭","mama","baba","mother","father","brother","sister"]},{"id":"chinese-school","topicId":"chi-school","subject":"Chinese","name":"学校 School Day","method":"School words. Spelling lists live in Learn under My spelling tests, where Pip plans the practice days.","keywords":["school","学校","老师","听写","spelling","书包","读书","同学"]},{"id":"spelling-lscwc","topicId":null,"subject":"English","name":"Spelling — Look, Say, Cover, Write, Check","method":"Look–Say–Cover–Write–Check, one word at a time. Never copy while looking.","keywords":["spelling","spell","lscwc","look say cover","write","word"]},{"id":"check-work","topicId":null,"subject":"English","name":"Check Your Work","method":"Finish, then check: read the question twice, underline the key words, and check backwards.","keywords":["score","well","exam","test","check","study","revise","practice","practise"]}],"agents":[{"id":"kix-tutor","name":"Kix Tutor","feature":"Question player","model":"muse-spark-1.3","status":"live","keywords":["math","plus","minus","times","fraction","money","mrt","add","subtract","multiply","english","tense","verb","punctuation","sentence","story","word","past","future","went","yesterday","science","frog","tadpole","magnet","plant","leaf","root","seed","sky","sun","moon","earth","rain","water","air","chinese","华文","妈妈","mama","baba","听写","拼音","pinyin","老师","spell","spelling","listen","hear","听"],"modelNote":""},{"id":"ask-kix","name":"Ask Kix","feature":"Ask Kix","model":"muse-spark-vision","status":"live","keywords":["what is","what are","why is","why do","how do","tell me","explain","what does","who is","where is"],"modelNote":"Video model: Muse Spark – vision. Vision input not wired yet; text answers run on Muse Spark 1.3."},{"id":"vibe-zone-maker","name":"Vibe Zone maker","feature":"Vibe Zone","model":"muse-spark-1.3","status":"live","keywords":["vibe","music","calm","relax","calm sounds","jungle birds","play some music","soothing","sleepy"],"modelNote":""},{"id":"talk-to-kix","name":"Talk to Kix","feature":"Talk to Kix","model":"muse-voice-transcribe","status":"placeholder","keywords":["voice","speak","talk to","read aloud","transcribe","hear me","say it","voice chat"],"modelNote":""},{"id":"sidekick-studio","name":"Sidekick Studio","feature":"Sidekick Studio","model":"muse-image-sam-3.1","status":"placeholder","keywords":["sidekick","change my look","change pip","draw","picture","image","show me a picture","avatar","make a picture"],"modelNote":""},{"id":"critter-keeper","name":"Critter Keeper","feature":"Critter Lab","model":"muse-spark-1.3","status":"live","keywords":["critter lab","feed my tadpole","feed my frog","my critter","raise a frog","my tadpole","critter care","pet"],"modelNote":""},{"id":"memory-keeper","name":"Memory Keeper","feature":"Kix’s Notebook","model":"muse-spark-1.3","status":"live","keywords":["notebook","flashcard","remember this","my notes","memory","revise my words"],"modelNote":""},{"id":"screen-time-guardian","name":"Screen-time guardian","feature":"Breaks and balance","model":"code-rules","status":"live","keywords":["screen time","too much screen","take a break","break time","time limit","screen-time"],"modelNote":""},{"id":"tonight","name":"Tonight","feature":"Tonight","model":"muse-spark-1.3","status":"live","keywords":["tonight","evening summary","what did i learn today","what did she learn","parent summary","progress report","how is she doing"],"modelNote":""},{"id":"guardian-brief","name":"Guardian Brief","feature":"Location","model":"muse-spark-1.3","status":"live","keywords":["guardian brief","where is my child","where am i","location","is she home","pick up"],"modelNote":""},{"id":"home-reader","name":"Home Reader","feature":"Sentry","model":"muse-spark-vision","status":"placeholder","keywords":["home reader","sentry","look at my work","check my homework","photo of my work","my drawing"],"modelNote":"Video model: Muse Spark – vision. No camera, no picture sent."},{"id":"whos-who","name":"Who’s who","feature":"Sentry","model":"sam-3.1","status":"placeholder","keywords":["who is in the photo","who’s who","whos who","who is that","who is in this picture"],"modelNote":""},{"id":"outing-scout","name":"Outing Scout","feature":"Do something together","model":"muse-spark-web-search","status":"placeholder","keywords":["outing","do something together","where should we go","find a place","places to go","weekend outing","find somewhere"],"modelNote":""},{"id":"outing-planner","name":"Outing Planner","feature":"Do something together","model":"muse-spark-1.3","status":"live","keywords":["plan our outing","plan tomorrow","plan the weekend","timetable","schedule","homework plan","plan a trip"],"modelNote":""},{"id":"past-paper-scout","name":"Past-paper scout","feature":"New exam papers","model":"code-rules","status":"live","keywords":["past paper","exam paper","new exam","practice paper","test paper"],"modelNote":""},{"id":"content-curator","name":"Content Curator","feature":"New exam papers","model":"muse-spark-files","status":"placeholder","keywords":["curate","new questions","content curator","make new questions","from the exam paper"],"modelNote":""},{"id":"skill-editor","name":"Skill Editor","feature":"Skill packs","model":"muse-spark-1.3","status":"live","keywords":["skill pack","skill editor","the method","which method","skill for"],"modelNote":""},{"id":"reviewer","name":"Reviewer","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["wrong","mistake","flag","incorrect","that answer is wrong","you are wrong","review this"],"modelNote":""},{"id":"judge","name":"Judge","feature":"Feedback loop","model":"muse-spark-open","status":"ready","keywords":["judge","should this ship","is the fix good","judge this fix"],"modelNote":""}]};
 function skillForQuestionClient(text){
   var q=String(text||'').toLowerCase();
   if(/\d\s*[x\u00d7*]\s*\d/.test(q))return SKILL_PACK.skills.find(function(x){return x.id==='times-tables';});
@@ -3317,7 +3432,6 @@ function mergeExplorer(a,b){
   e.completed=unionObjMax(a.completed,b.completed);
   e.completedDay=unionObjLatest(a.completedDay,b.completedDay);
   e.playDoneDay=unionObjLatest(a.playDoneDay,b.playDoneDay);
-  e.hclMissed=unionArr(a.hclMissed,b.hclMissed);
   e.favAnswers=unionArr(a.favAnswers,b.favAnswers);
   /* A removed bookmark must stay removed: without a tombstone the
      union above would resurrect it from any other device's copy
@@ -3623,9 +3737,13 @@ function linkDevice(rawCode){
    on the next upload (seen live 2026-11-07: new explorers vanished
    after a delayed reload and never appeared in the other tab).
    Before writing, merge whatever is already stored into the
-   in-memory DB — explorers only (parent PIN and the daily limit stay
-   the local tab's own values; the server merge is the authority for
-   those). The merge is a union, so it can only add, never remove. */
+   in-memory DB — explorers (union) plus the family schedule,
+   converged with the same newer-wins rules as the
+   server merge, so a stale tab adopts a newer timetable instead of
+   wiping it from the store (seen live 2026-11-09). The parent PIN and
+   the daily limit stay the local tab's own values; the server merge is
+   the authority for those. The merge is a union, so it can only add,
+   never remove. */
 function mergeStoredIntoDB(){
   if(!DB)return false;
   var raw=null;
@@ -3633,14 +3751,70 @@ function mergeStoredIntoDB(){
   if(!raw)return false;
   var stored=null;
   try{ stored=JSON.parse(raw); }catch(e){ return false; }
-  if(!stored||!stored.explorers||!stored.explorers.length)return false;
-  var before=JSON.stringify(DB.explorers);
-  var byId={}; DB.explorers.forEach(function(e){ byId[e.id]=e; });
-  stored.explorers.forEach(function(se){
-    if(byId[se.id]){ var i=DB.explorers.indexOf(byId[se.id]); DB.explorers[i]=mergeExplorer(se,byId[se.id]); }
-    else DB.explorers.push(JSON.parse(JSON.stringify(se)));
-  });
-  return JSON.stringify(DB.explorers)!==before;
+  if(!stored)return false;
+  var changed=false;
+  /* Family schedule (2026-11-09): the stored copy is what
+     another tab just saved. mergeStoredIntoDB used to merge explorers
+     only, so a stale tab's routine save() (the 60s screen-time tick,
+     or any tap) wrote its OLD timetable straight over the store —
+     wiping a newer timetable another tab had just saved before it
+     ever reached the server, so the next reload showed the old plan
+     again (seen live 2026-11-09: a VERIFY timetable saved in-session
+     reverted to the old TEST timetable after a reload). Converge the
+     schedule from the store with the same newer-wins
+     rules as mergeFamilyDB (familyPlanRev first, then
+     familyPlanUpdatedAt),
+     so a stale tab adopts the newer plan instead of clobbering it.
+     Only when the stored copy is the same family (matching syncCode):
+     a stored copy from another family must never bleed its schedule
+     or PIN in. A stored "no plan" never deletes a plan this tab
+     holds on a tie — a deliberate reset is a save that bumps the
+     revision, so it arrives through the revision comparison. */
+  if(!DB.syncCode||!stored.syncCode||DB.syncCode===stored.syncCode){
+    var _spRevD=(DB.familyPlanRev||0), _spRevS=(stored.familyPlanRev||0);
+    var _spAtD=Date.parse(DB.familyPlanUpdatedAt||'')||0, _spAtS=Date.parse(stored.familyPlanUpdatedAt||'')||0;
+    var _spStoredWins=_spRevS>_spRevD||(_spRevS===_spRevD&&_spAtS>_spAtD);
+    var _spDbWins=_spRevD>_spRevS||(_spRevD===_spRevS&&(_spAtD>_spAtS||(_spAtD===_spAtS&&_spAtD>0)));
+    if(_spStoredWins){
+      DB.familyPlan=stored.familyPlan?JSON.parse(JSON.stringify(stored.familyPlan)):null;
+      DB.familyPlanUpdatedAt=stored.familyPlanUpdatedAt||null;
+      DB.familyPlanRev=_spRevS;
+      changed=true;
+    }else if(!DB.familyPlan&&stored.familyPlan&&!_spDbWins){
+      /* This tab has no plan but the store does (it loaded before the
+         plan was set): adopt it. */
+      DB.familyPlan=JSON.parse(JSON.stringify(stored.familyPlan));
+      DB.familyPlanUpdatedAt=stored.familyPlanUpdatedAt||null;
+      DB.familyPlanRev=_spRevS;
+      changed=true;
+    }
+    /* School events: union by id, with the deleted-events tombstone
+       (exactly like the server merge), so an event added in another
+       tab is never lost and a deleted event never comes back. */
+    var _del=unionArr(DB.deletedFamilyEvents||[],stored.deletedFamilyEvents||[]);
+    var _fe={};
+    (DB.familyEvents||[]).forEach(function(ev){ _fe[ev.id]=JSON.parse(JSON.stringify(ev)); });
+    (stored.familyEvents||[]).forEach(function(ev){ if(!_fe[ev.id])_fe[ev.id]=JSON.parse(JSON.stringify(ev)); });
+    var _newEvents=Object.keys(_fe).map(function(k){ return _fe[k]; }).filter(function(ev){ return _del.indexOf(ev.id)<0; });
+    var _evIds=function(a){ return (a||[]).map(function(ev){ return ev.id; }).sort().join(','); };
+    if(_evIds(_newEvents)!==_evIds(DB.familyEvents)||_del.length!==(DB.deletedFamilyEvents||[]).length){
+      DB.familyEvents=_newEvents; DB.deletedFamilyEvents=_del; changed=true;
+    }
+    /* The parent PIN and the daily limit stay the local tab's own
+       values here — the server merge is the authority for those (see
+       the sync-live test). Only the schedule is converged from the
+       store, because that is the field a stale tab's save was wiping. */
+  }
+  if(stored.explorers&&stored.explorers.length){
+    var before=JSON.stringify(DB.explorers);
+    var byId={}; DB.explorers.forEach(function(e){ byId[e.id]=e; });
+    stored.explorers.forEach(function(se){
+      if(byId[se.id]){ var i=DB.explorers.indexOf(byId[se.id]); DB.explorers[i]=mergeExplorer(se,byId[se.id]); }
+      else DB.explorers.push(JSON.parse(JSON.stringify(se)));
+    });
+    if(JSON.stringify(DB.explorers)!==before)changed=true;
+  }
+  return changed;
 }
 function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); saveLocal(); syncToServer(); }
 function load(){
@@ -3685,8 +3859,8 @@ function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
     playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
-    threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, hclMissed:[], mood:{}, stuckCount:{}, boost:{},
-    flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}], flags:[], created:Date.now() };
+    threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
+    flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
 function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
@@ -3798,7 +3972,6 @@ function render(){
   var c=document.getElementById('content');
   if(route==='home')c.innerHTML=homeHTML(),bindHome();
   else if(route==='learn')c.innerHTML=learnHTML(),bindLearn();
-  else if(route==='spelling')c.innerHTML=spellingHTML(),bindSpelling();
   else if(route==='spelltest')c.innerHTML=spellTestHTML(),bindSpellTest();
   else if(route==='play')c.innerHTML=playHTML(),bindPlay();
   else if(route==='trivia')c.innerHTML=triviaHTML(),bindTrivia();
@@ -5312,7 +5485,6 @@ function learnHTML(){
   }
   return pageHero('icons/nav-learn.webp','📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars+' · 🎒 P'+lvl)
    + learnPlanBannerHTML(e)
-   + hclEntryHTML(e)
    + spellTestsEntryHTML(e)
    + '<div class="grid c2">'
    + MYKX_SUBJECTS.map(function(sj){
@@ -5374,10 +5546,6 @@ function bindLearn(){
   document.querySelectorAll('[data-learn-back]').forEach(function(b){ b.onclick=function(){ learnView.subject=null; learnView.openTopic=null; sndPop(); render(); }; });
   document.querySelectorAll('[data-learn-topic]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-learn-topic'); learnView.openTopic=(learnView.openTopic===id?null:id); sndPop(); render(); }; });
   document.querySelectorAll('[data-learn-start]').forEach(function(b){ b.onclick=function(){ var s=mykxSubject(b.getAttribute('data-learn-start')); var q=s?mykxSessionFirst(ex(),s,levelNum(ex())):null; if(q)startQuestFlow(q); }; });
-  /* The spelling routine is its own sub-view now (route 'spelling'):
-     Learn shows an entry card, and the Back button inside the
-     routine has a real page to return from. */
-  var ho=document.getElementById('hclOpen'); if(ho)ho.onclick=function(){ go('spelling'); };
   var sa=document.getElementById('spAddBtn'); if(sa)sa.onclick=function(){ sndPop(); openSpellAddModal(); };
   document.querySelectorAll('[data-spellopen]').forEach(function(b){ b.onclick=function(){ spellOpenId=b.getAttribute('data-spellopen'); spellTest=null; sndPop(); go('spelltest'); }; });
   document.querySelectorAll('[data-spelldel]').forEach(function(b){ b.onclick=function(){ deleteSpellTest(b.getAttribute('data-spelldel')); }; });
@@ -5389,16 +5557,6 @@ function bindLearn(){
   var frSend=document.getElementById('frSend');
   if(frSend)frSend.onclick=function(){ sendFriendRequest(); };
 }
-function bindSpelling(){
-  var e=ex(); if(!e.hclMissed)e.hclMissed=[];
-  document.querySelectorAll('[data-hcllisten]').forEach(function(b){ b.onclick=function(){ speakPip(b.getAttribute('data-hcllisten')); toast('Listen… now say it out loud like Pip!'); }; });
-  var hs=document.getElementById('hclStart'); if(hs)hs.onclick=function(){ var step=hclStepFor(new Date().getDay(), e); hclTest={words:step.words, idx:0}; sndPop(); render(); };
-  var hd=document.getElementById('hclDone'); if(hd)hd.onclick=function(){ hclTest=null; render(); };
-  var hb=document.getElementById('hclBack'); if(hb)hb.onclick=function(){ hclTest=null; go('learn'); };
-  var hg=document.getElementById('hclGot'); if(hg)hg.onclick=function(){ var w=hclTest.words[hclTest.idx]; e.hclMissed=e.hclMissed.filter(function(x){return x!==w.w;}); hclTest.idx++; sndCorrect(); save(); render(); };
-  var hm=document.getElementById('hclMiss'); if(hm)hm.onclick=function(){ var w=hclTest.words[hclTest.idx]; if(e.hclMissed.indexOf(w.w)<0)e.hclMissed.push(w.w); hclTest.idx++; sndWrong(); save(); toast('Saved for Friday & Sunday redo 💪'); render(); };
-}
-
 /* ---------- Daily fresh-set engine ----------
    poolQuestions: the questions a daily fresh set may draw from —
    the topic's quest questions plus its fresh bank. Warm-up and
@@ -9099,7 +9257,7 @@ var fcFlip={};
 function createHTML(){
   var e=ex();
   if(!e.flashcards)e.flashcards=[];
-  if(!e.planner)e.planner=[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false},{t:'Practise this week’s 听写 words',d:false}];
+  if(!e.planner)e.planner=[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}];
   var planDone=e.planner.filter(function(p){return p.d;}).length;
   var cards=e.flashcards.length
    ? e.flashcards.map(function(f,i){
@@ -9196,13 +9354,13 @@ function familyScheduleHTML(){
   [1,2,3,4,5,6,0].forEach(function(dow){
     var day=(fsPlanDraft&&fsPlanDraft[dow])||studyPlanFor(dow);
     var subs=['eng','math','sci','chi'].map(function(s){
-      return '<label style="display:inline-flex;gap:4px;align-items:center;font-weight:800;margin:2px 8px 2px 0"><input type="checkbox" data-fssub="'+dow+':'+s+'"'+((day.subs||[]).indexOf(s)>=0?' checked':'')+'> '+SUBJECTS[s]+'</label>';
+      return '<label style="display:inline-flex;gap:4px;align-items:center;font-weight:800;margin:2px 8px 2px 0;'+(day.rest?'opacity:.45':'')+'"><input type="checkbox" data-fssub="'+dow+':'+s+'"'+((!day.rest&&(day.subs||[]).indexOf(s)>=0)?' checked':'')+(day.rest?' disabled':'')+'> '+SUBJECTS[s]+'</label>';
     }).join('');
     planRows+='<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b>'+DOWS[dow]+'</b> <span class="small muted" style="font-weight:700">('+esc(day.label)+')</span><br>'
      +'<label style="display:inline-flex;gap:4px;align-items:center;font-weight:800;margin:6px 8px 2px 0"><input type="checkbox" data-fsrest="'+dow+'"'+(day.rest?' checked':'')+'> Rest day — no study</label><br>'
      +'<span style="font-weight:700">Subjects: </span>'+subs+'<br>'
-     +'<label class="flabel" style="margin-top:6px">Study time / description</label><input class="field" data-fsstime="'+dow+'" value="'+esc(day.study||'')+'" placeholder="e.g. 3:00–4:30pm">'
-     +'<label class="flabel">Note / enrichment</label><input class="field" data-fsnote="'+dow+'" value="'+esc(day.note||'')+'" placeholder="e.g. Higher Chinese 5:00–7:00pm">'
+     +'<label class="flabel" style="margin-top:6px">Study time</label><input class="field" data-fsstime="'+dow+'" value="'+esc(day.study||'')+'" placeholder="e.g. 3:00–4:30pm"'+(day.rest?' disabled':'')+'>'
+     +'<label class="flabel">Note — classes, reminders &amp; enrichment</label><input class="field" data-fsnote="'+dow+'" value="'+esc(day.note||'')+'" placeholder="e.g. Higher Chinese 5:00–7:00pm — on a rest day, the day’s activity goes here, e.g. Dance 12:00–1:00pm · Art 1:30–3:00pm">'
      +'</div>';
   });
   var usingCustom=!!(DB.familyPlan);
@@ -9210,7 +9368,7 @@ function familyScheduleHTML(){
    +(evRows||'<p style="font-weight:700">No custom school events yet.</p>')
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px"><div><label class="flabel">Date</label><input class="field" id="fsEvDate" type="date" style="width:170px" value="'+esc(fsEvDraft?fsEvDraft.date:'')+'"></div><div style="flex:1;min-width:180px"><label class="flabel">Event name</label><input class="field" id="fsEvName" placeholder="e.g. Sports Day — school closed" value="'+esc(fsEvDraft?fsEvDraft.name:'')+'"></div><div><label class="flabel">Kind</label><select class="field" id="fsEvKind" style="width:150px"><option value="closure"'+(evKind==='closure'?' selected':'')+'>School closed</option><option value="due"'+(evKind==='due'?' selected':'')+'>Due date</option><option value="event"'+(evKind==='event'?' selected':'')+'>School event</option></select></div><div style="flex:1;min-width:180px"><label class="flabel">Note (optional)</label><input class="field" id="fsEvNote" placeholder="e.g. No school today." value="'+esc(fsEvDraft?fsEvDraft.note:'')+'"></div><button class="btn" id="fsEvAdd">Add event</button></div>'
    +'<h4 style="margin:18px 0 6px">Weekly study timetable</h4>'
-   +'<p class="small muted" style="font-weight:700;margin:0 0 6px">Tick the subjects for each day, or mark it a rest day. The day’s label is worked out from what you tick.</p>'
+   +'<p class="small muted" style="font-weight:700;margin:0 0 6px">Tick the subjects for each day, set its study time, and add a note for classes or reminders. Mark a day a rest day and its subjects and study time switch off — put the day’s activity (e.g. Dance &amp; art) in the Note instead. The day’s label is worked out from what you tick.</p>'
    +planRows
    +'<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="fsPlanSave">Save timetable</button><button class="btn ghost" id="fsPlanReset">Reset to the default timetable</button></div>';
   return '<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🗓️ Our school &amp; study schedule</h3>'
@@ -9218,6 +9376,24 @@ function familyScheduleHTML(){
    +familyScheduleSummaryHTML()
    +'<div style="margin:10px 0 0"><button class="btn ghost" id="fsSchedToggle">'+(fsSchedOpen?'▴ Hide editor':'✏️ Change schedule')+'</button></div>'
    +'<div id="fsSchedEditor"'+(fsSchedOpen?'':' style="display:none"')+'>'+editor+'</div></div>';
+}
+/* Rest-day switch (2026-11-09): ticking "Rest day — no study" for a
+   day switches that day's subject checkboxes and study-time field
+   off (and clears any ticked subjects); unticking switches them
+   back on. Called from the editor's change handler and once per day
+   after the editor renders, so the form can never show a rest day
+   with subjects ticked. */
+function syncRestDay(dow){
+  var restEl=document.querySelector('[data-fsrest="'+dow+'"]');
+  var rest=restEl?restEl.checked:false;
+  ['eng','math','sci','chi'].forEach(function(s){
+    var cb=document.querySelector('[data-fssub="'+dow+':'+s+'"]');
+    if(!cb)return;
+    cb.disabled=rest;
+    if(rest)cb.checked=false;
+  });
+  var timeEl=document.querySelector('[data-fsstime="'+dow+'"]');
+  if(timeEl)timeEl.disabled=rest;
 }
 /* Read the timetable editor (one row per day) into a familyPlan
    object. The label is derived, and a day with no subjects that is
@@ -9227,14 +9403,17 @@ function readFamilyPlanFromForm(){
   for(var dow=0;dow<7;dow++){
     var restEl=document.querySelector('[data-fsrest="'+dow+'"]');
     var rest=restEl?restEl.checked:false;
+    /* A rest day has no subjects and no study time, even if a stale
+       tick somehow remains in the form — the day's activity lives
+       in the Note instead. */
     var subs=[];
-    ['eng','math','sci','chi'].forEach(function(s){
+    if(!rest)['eng','math','sci','chi'].forEach(function(s){
       var cb=document.querySelector('[data-fssub="'+dow+':'+s+'"]');
       if(cb&&cb.checked)subs.push(s);
     });
     var timeEl=document.querySelector('[data-fsstime="'+dow+'"]');
     var noteEl=document.querySelector('[data-fsnote="'+dow+'"]');
-    var day={label:'', subs:subs, study:timeEl?timeEl.value.trim():'', note:noteEl?noteEl.value.trim():'', rest:rest, review:false, light:false};
+    var day={label:'', subs:subs, study:rest?'':(timeEl?timeEl.value.trim():''), note:noteEl?noteEl.value.trim():'', rest:rest, review:false, light:false};
     day.label=planDayLabel(day);
     if(!rest&&!subs.length)day.review=true;
     plan[dow]=day;
@@ -9291,7 +9470,7 @@ function parentHTML(){
    +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
    +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
-   +'<p style="font-weight:700">✏️ HCL spelling: '+esc(hclStepFor(new Date().getDay(), sel).title)+'. Missed words kept for the Fri/Sun redo: <b>'+((sel.hclMissed&&sel.hclMissed.length)?esc(sel.hclMissed.join('、')):'none right now')+'</b></p>'
+   +'<p style="font-weight:700">'+esc(spellParentLine(sel))+'</p>'
    +(doneList.length?'<p class="small" style="font-weight:700">Quests finished: '+doneList.map(esc).join(' · ')+'</p>':'<p class="small muted">No quests finished yet.</p>')
    +'<p style="font-weight:700">🌅 Daily refresh: a quest or game finished today greys out as completed, but can be replayed any time — a fresh set of questions (or fresh rounds) arrives tomorrow morning, so every day brings something new. All '+TOPICS.length+' topics have a fresh bank, so coverage stays even across English, Maths, Science and Chinese. Quests and games still in progress were left exactly as they were, ready to resume.</p>'
    +'<h4>👀 Worth a look</h4>'+(stuckNames.length?stuckNames.map(function(n){ return '<div class="feedback no" style="font-weight:700">“'+esc(n)+'” needed a few tries. What may help: a short game first, then the quest together — keep it light and early in the day.</div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
@@ -9431,10 +9610,23 @@ function bindParent(){
       el.addEventListener('change',captureEvDraft);
     });
     function capturePlanDraft(){ fsPlanDraft=readFamilyPlanFromForm(); }
+    /* Rest-day switch (registered FIRST, so it runs before the
+       generic capture below): ticking rest clears + disables that
+       day's subjects and study time, then the draft is captured
+       from the synced form — it can never hold subjects on a
+       rest day. */
+    document.querySelectorAll('[data-fsrest]').forEach(function(el){
+      el.addEventListener('change',function(){
+        var dow=+el.getAttribute('data-fsrest');
+        syncRestDay(dow);
+        capturePlanDraft();
+      });
+    });
     document.querySelectorAll('[data-fsrest],[data-fssub],[data-fsstime],[data-fsnote]').forEach(function(el){
       el.addEventListener('input',capturePlanDraft);
       el.addEventListener('change',capturePlanDraft);
     });
+    for(var dow=0;dow<7;dow++)syncRestDay(dow);
   })();
   /* Friends (leaderboard-only): fill the Friend requests card for
      the selected explorer. A friend joins the child's leaderboard
