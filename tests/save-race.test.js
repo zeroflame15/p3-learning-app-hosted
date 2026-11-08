@@ -214,7 +214,7 @@ test('stale-GET auto-pull must not revert a timetable save (repro3)', async () =
 test('confirmPlanSaved exists and verifies the server holds the plan', () => {
   const code = fnText('function confirmPlanSaved(');
   assert.ok(code.includes('familyPlanRev'), 'checks the rev');
-  assert.ok(code.includes('JSON.stringify(d.familyPlan'), 'checks the whole plan content');
+  assert.ok(code.includes('plansEqual(d.familyPlan'), 'checks the whole plan content');
   assert.ok(code.includes('syncToServer()'), 'retries the upload on a miss');
 });
 
