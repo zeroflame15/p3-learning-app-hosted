@@ -3178,7 +3178,7 @@ function learnHTML(){
        +(studyPlanFor(new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
        +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
        +(t.sub==='chi'?'<p class="small muted" style="margin:10px 0 0">🔊 This quest has a Listen button — hear it, then say it out loud!</p>':'')
-       +(t.id===LIVE_GEN_TOPIC?'<p class="small muted" style="margin:10px 0 0">✨ Fresh from Pip — this quest tries live-made questions (experiment).</p>':'')
+       +(t.id===LIVE_GEN_TOPIC?'<p class="small muted" style="margin:10px 0 0">📚 Pip’s shelf — questions from Pip’s bank.</p>':'')
        +(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')
        +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
        +(bB?(_canBoost?'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — 5 quick questions with Pip</span></p><button class="btn teal" data-boost="'+t.id+'" style="margin-top:8px">🌱 Start my boost</button>':'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — done for today, fresh questions tomorrow</span></p>'):'')
