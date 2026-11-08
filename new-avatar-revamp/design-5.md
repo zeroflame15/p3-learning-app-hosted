@@ -340,3 +340,74 @@ bigger stars/hearts, and the animated-effects test pins the pink
 petals (seven, counted against a plain render, since the chick's
 own blush is the same pink), their bigger size, their margin
 spots, and the 0.6 hold in the `av5Pet` keyframes.
+
+## Crocodile fix round 2 (live verification FAIL → fixed, 2026-11-08)
+
+Round 5 went live and the live verification passed everything
+except the crocodile. The verifier's words, zoomed in on the real
+app: the crocodile is compact/chibi, not LONG and HORIZONTAL. It
+has a large round dome head on top of a short round-oval body,
+with eyes on top of the head, a wide toothy grin, yellow
+triangular back spikes and a small pointed tail to the right —
+but the snout is just the rounded front of that big round head,
+with no long snout projecting forward, and the head dominates
+while the body is short. The code confirmed it: the head was an
+ellipse cx=66 cy=162 rx=46 ry=32 (92 wide × 64 tall) and the
+body cx=108 cy=192 rx=58 ry=30 (116 × 60) — the head roughly as
+big as the body, and the "snout" just the round left edge of the
+head. The first redraw had only stacked a wide flat snout on a
+round body; this round replaces the whole animal.
+
+The fix — one unified body+snout silhouette, no separate head
+ball at all:
+
+- **One path for body + snout** (`M14,170 C30,160 50,156 70,156
+  C95,156 120,160 142,166 C164,172 176,182 178,196 C178,208
+  168,218 150,220 C120,224 90,222 72,216 C58,210 40,200 28,190
+  C20,184 14,178 14,170 Z`) — a long low horizontal animal,
+  164 wide × 68 tall as a silhouette (2.4:1), clearly wider than
+  it is tall. The snout is a distinct long, narrow,
+  forward-projecting jaw: its top edge is nearly flat (y≈156–160)
+  and it tapers to a blunt rounded tip at x=14, so the head is
+  mostly snout and the top of the head is low and flat, not a
+  dome. There is no seam where the snout meets the body because
+  there is no joint — it is one shape.
+- **Eyes on top of the snout base** — two bumps at (66,146) and
+  (94,148), r=11, white sclera + black pupil + highlight, in the
+  `av-blink` group as before, so they still blink. They sit on
+  the flattened snout top instead of on a big round ball.
+- **Kept** — the same green `#6fbf5a`, the same thick dark-brown
+  outlines, the toothy grin (a long mouth line `M22,178 Q55,190
+  100,180` with four white triangle teeth hanging below it), the
+  yellow back spikes (four along the body top, one on the tail),
+  the tail to the side (tip at x=193), the short legs below, and
+  the pale `#d8ec9a` belly. Added, matching the sheet: two small
+  nostrils near the snout tip and one pink blush cheek below the
+  rear eye (the sheet's cheek smudge, in the set's blush pink).
+- The spikes are drawn before the silhouette so their bases are
+  covered and only the tips poke out; the tail spike is drawn
+  before the tail for the same reason. The animal still fits the
+  200×260 grid and sits naturally in the all-25 grid — a long
+  low animal on the ground line, lower than its neighbours, as a
+  horizontal animal should be.
+
+Re-proofed in section 9 (`proof-5-croc.png`: alone on mint
+circle, heart/pink/glitter, star/sky/bubbles) and the all-25
+grid — read back and checked: the snout projects forward as a
+distinct long shape at a glance, the body is long and low, the
+teeth, nostrils, blush, spikes and tail all read, and nothing
+pokes outside the silhouette.
+
+Tests: all four crocodile recognition markers were updated to
+the new geometry (tooth `M26,180 L31,180 L29,188 Z`; long flat
+snout + horizontal body `M14,170 C30,160 50,156 70,156`; tail
+`M164,182 C178,180 190,188 193,200`; spikes `M110,172 L116,150
+L122,172 Z`). Verified on a /tmp copy of the live project with
+the new crocodile swapped in: **584/584 green** (the live
+project itself also tests 584/584, so nothing regressed). The
+apply script is unchanged; the double-apply guard still refuses
+("already applied: av5 class exists"). Note: a round-4 base for
+the classic baseline-580 → apply → 584 check was not reachable
+this round — `git ls-remote` to the repo failed with a TLS
+error and timed out — so the check was run against the live
+project instead (584 before, 584 after the swap).
