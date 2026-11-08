@@ -258,9 +258,9 @@ test('mergeExplorer carries the run-identity rule (source-level)', () => {
   assert.ok(merge.includes('at:Math.max(x.at||0,y.at||0)'), 'the same-run merge carries at');
 });
 
-/* ---------------- The explain prompt: tight answer first, then explain ---------------- */
+/* ---------------- The explain prompt: hint first, answer withheld ---------------- */
 
-test('api/ask-pip.js explain mode: the tight answer comes first, then the explanation', async () => {
+test('api/ask-pip.js explain mode: Pip hints first, and the answer is not in the prompt', async () => {
   process.env.MODEL_API_KEY = 'test-key';
   delete require.cache[require.resolve('../api/ask-pip')];
   const ask = require('../api/ask-pip');
@@ -270,7 +270,7 @@ test('api/ask-pip.js explain mode: the tight answer comes first, then the explan
     seen.push(JSON.parse(opts.body));
     return {
       ok: true,
-      json: async () => ({ choices: [{ message: { content: 'The answer is 56. 7 groups of 8 — count in eights: 8, 16, 24, 32, 40, 48, 56.' } }] }),
+      json: async () => ({ choices: [{ message: { content: 'Let us think! 7 groups of 8 — count in eights: 8, 16, 24, 32, 40, 48, 56. What do you get?' } }] }),
     };
   };
   function mockRes() {
@@ -286,21 +286,20 @@ test('api/ask-pip.js explain mode: the tight answer comes first, then the explan
     assert.equal(res.statusCode, 200, 'explain mode answers');
     assert.equal(res.body.live, true, 'explain mode is live');
     const sys = seen[0].messages[0].content;
-    assert.match(sys, /start your reply with the answer/i, 'the prompt leads with the tight answer first');
-    assert.match(sys, /Then explain what the question is asking/i, 'the prompt asks Pip to explain after the answer');
-    assert.ok(sys.indexOf('start your reply with the answer') < sys.indexOf('Then explain'), 'the answer comes before the explanation');
-    assert.match(sys, /The correct answer is 56/, 'the correct answer is in the prompt');
+    assert.match(sys, /FIRST sentence must be a hint/i, 'the prompt leads with the hint-first rule');
+    assert.match(sys, /NEVER start your reply with the answer/i, 'the prompt forbids leading with the answer');
+    assert.ok(!/REFERENCE ONLY/i.test(sys), 'no reference-only block');
+    assert.ok(!/The correct answer is/i.test(sys), 'the correct answer is not in the prompt');
+    assert.ok(!sys.includes('56'), 'the answer itself is not in the system prompt');
     assert.match(sys, /7 groups of 8/, 'the clue is still in the prompt');
     assert.match(sys, /under 90 words/i, 'the explain prompt keeps the length rule');
-    assert.ok(!/FIRST sentence must be a hint/i.test(sys), 'no hint-first rule');
-    assert.ok(!/REFERENCE ONLY/i.test(sys), 'no reference-only block');
     // Normal mode is unchanged: no explain instruction.
     const res2 = mockRes();
     await ask({ method: 'POST', body: { question: 'What is 7 x 8?', name: 'Jiyuna' } }, res2);
     assert.equal(res2.statusCode, 200, 'normal mode still answers');
     const sys2 = seen[1].messages[0].content;
-    assert.ok(!/start your reply with the answer/i.test(sys2), 'normal mode has no answer-first rule');
-    assert.ok(!/Then explain what the question is asking/i.test(sys2), 'normal mode has no explain instruction');
+    assert.ok(!/FIRST sentence must be a hint/i.test(sys2), 'normal mode has no hint-first rule');
+    assert.ok(!/The correct answer is/i.test(sys2), 'normal mode has no answer reference');
   } finally {
     global.fetch = origFetch;
     delete process.env.MODEL_API_KEY;
