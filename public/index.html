@@ -5131,8 +5131,8 @@ function questListFor(t, c, level){
      * Exit Parking: 18 fixed levels in order, each played once —
        no repeats are possible, so nothing changes.
    Feature 2 — Ask Pip from a question: see askPipAbout() below. The
-   child opens a NEW Ask Pip thread with the question, Pip explains
-   it there (hint first, never the answer first), and "Back to my
+   child opens a NEW Ask Pip thread with the question, Pip gives a
+   tight answer first and then explains it there, and "Back to my
    question" returns them to the exact question with the answer-only
    timer paused while they were away.
    The rules that must match lib/rules.js live there too
@@ -5298,13 +5298,15 @@ function newAskQuestionThread(ctx){
    help and the question is never lost. */
 function pipExplainFallback(ctx){
   var q=(ctx&&ctx.question)||'this question';
-  var parts=['Let’s think about this one together! 🦦'];
+  var parts=[];
+  if(ctx&&ctx.answer)parts.push('The answer is '+ctx.answer+'.');
+  parts.push('Let’s think about this one together! 🦦');
   parts.push('The question is: “'+q+'”');
   if(ctx&&ctx.options&&ctx.options.length)parts.push('Your choices are: '+ctx.options.join(', ')+'.');
   if(ctx&&ctx.clue)parts.push('Here is a clue: '+ctx.clue);
   var sk=skillForQuestionClient(q);
   if(sk)parts.push('Pip’s method: '+sk.method);
-  parts.push('Try the first step, then tell me what you get — I am right here!');
+  parts.push('That is how you get there — nice work!');
   return parts.join(' ');
 }
 /* Send one question-explanation to Pip in a thread. Mirrors
