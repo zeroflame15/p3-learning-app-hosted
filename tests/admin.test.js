@@ -59,6 +59,14 @@ function familyRows() {
         explorers: [{ id: 'e4', name: 'River', level: 'P5' }],
       },
     },
+    {
+      // "Remote" is 6 letters, so the client sends it as a code —
+      // the code-then-name fallback must still find this family.
+      code: 'GM4N9E', data: {
+        parentPin: '4444', syncCode: 'GM4N9E',
+        explorers: [{ id: 'e5', name: 'Remote', level: 'P3' }],
+      },
+    },
   ];
 }
 
@@ -150,6 +158,37 @@ test('admin-find: code lookup with no match -> empty families', async () => {
     await find(mockReq('POST', { password: 'master-123', code: 'ZZZ9ZZ' }), res);
     assert.equal(res.statusCode, 200);
     assert.deepEqual(res.body.families, []);
+  } finally { global.fetch = origFetch; clearEnv(); }
+});
+
+test('admin-find: a 6-letter name that looks like a code falls back to name search', async () => {
+  setEnv();
+  process.env.ADMIN_PASSWORD = 'master-123';
+  const find = loadHandler('admin-find');
+  const origFetch = global.fetch;
+  global.fetch = supabaseMock({ rows: familyRows() });
+  try {
+    // "Remote" is 6 letters, so the admin page sends it as code
+    // REMOTE. No family has that code, so the server must fall back
+    // to a name search and find the family whose explorer is Remote.
+    let res = mockRes();
+    await find(mockReq('POST', { password: 'master-123', code: 'REMOTE' }), res);
+    assert.equal(res.statusCode, 200);
+    assert.equal(res.body.families.length, 1, 'Remote found via the name fallback');
+    assert.equal(res.body.families[0].code, 'GM4N9E');
+    assert.deepEqual(res.body.families[0].explorers, [{ name: 'Remote', level: 'P3' }]);
+    assert.ok(!JSON.stringify(res.body).includes('4444'), 'no PIN in the fallback reply');
+    // The same name sent as a name query finds it too.
+    res = mockRes();
+    await find(mockReq('POST', { password: 'master-123', name: 'remote' }), res);
+    assert.equal(res.body.families.length, 1);
+    assert.equal(res.body.families[0].code, 'GM4N9E');
+    // A real code still wins: it returns the code family, not a
+    // name match.
+    res = mockRes();
+    await find(mockReq('POST', { password: 'master-123', code: 'ABC2DE' }), res);
+    assert.equal(res.body.families.length, 1);
+    assert.equal(res.body.families[0].code, 'ABC2DE');
   } finally { global.fetch = origFetch; clearEnv(); }
 });
 
