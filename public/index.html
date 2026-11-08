@@ -2878,18 +2878,40 @@ function spellPlanLine(t, today, highlight){
   });
   return '<p class="small" style="font-weight:700;margin:6px 0 0">'+esc(label)+' '+parts.join(' · ')+'</p>';
 }
-/* Home nudge for the next spelling test: one line when a test is due
-   within 3 days and today is a practice day for it — otherwise
-   nothing, so Home stays quiet. */
-function spellHomeNudgeHTML(e){
-  if(!e.spellingTests)return '';
-  var tk=todayKey();
-  var up=e.spellingTests.filter(function(t){ var dl=daysUntil(t.testDate, tk); return dl>=0&&dl<=3; })
-    .sort(function(a,b){ return a.testDate<b.testDate?-1:(a.testDate>b.testDate?1:0); })[0];
-  if(!up)return '';
-  var step=spellStepFor(up, tk);
-  if(step.key==='skip'||step.key==='past')return '';
-  return '<div class="feedback ok" style="margin-top:12px">✏️ <b>Spelling test — '+(up.lang==='chi'?'Chinese':'English')+' '+esc(fmtDateStr(up.testDate))+'.</b> Today: '+esc(step.title)+' — open Learn → My spelling tests to practise.</div>';
+/* Steps due on one calendar day, across all of the explorer's
+   spelling tests (2026-11-09): Home > My week shows the routine, so
+   each day cell names the spelling practice due that day. Each entry:
+   {test, step, isTest, done}. The plan is derived from today, so a
+   day before today has nothing due; a test whose date has passed has
+   no plan. Recommended uses the derived Learn/Practise/Redo/Test
+   days; "My own days" only lands on its ticked weekdays (the test
+   day always recaps). The old one-line Home nudge is gone: the cells
+   now show the same fact (which test, today's step) for all 7 days,
+   so the nudge was pure duplication. */
+function spellStepsForDay(e, dateKey, today){
+  var out=[];
+  if(!e||!e.spellingTests)return out;
+  var tk=today||todayKey();
+  e.spellingTests.forEach(function(t){
+    if(daysUntil(t.testDate, tk)<0)return;
+    spellPlanFor(t, tk).forEach(function(en){
+      if(en.date===dateKey)out.push({test:t, step:en.key, isTest:en.isTest, done:en.done});
+    });
+  });
+  return out;
+}
+/* The spelling lines for one My week day cell: one small line per
+   test due that day ("Spelling: Learn — Chinese, test Fri 13 Nov"),
+   '' when nothing is due. */
+function spellDayLinesHTML(e, dateKey, today){
+  var steps=spellStepsForDay(e, dateKey, today);
+  if(!steps.length)return '';
+  return steps.map(function(s){
+    var t=s.test;
+    var word=s.isTest?'Test':(s.step==='learn'?'Learn':s.step==='redo'?'Redo':'Practise');
+    var txt=(s.done?'✓ ':'')+word+' — '+(t.lang==='chi'?'Chinese':'English')+', test '+fmtDateStr(t.testDate);
+    return '<div class="small" style="font-weight:800;color:var(--ink-soft);margin-top:3px">✏️ Spelling: '+esc(txt)+'</div>';
+  }).join('');
 }
 /* One line for the Grown-ups evening summary: the next upcoming
    spelling test and today's step for it. */
@@ -2961,8 +2983,8 @@ function planSectionHTML(e, plan, ev){
   var monday=new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); monday.setHours(0,0,0,0);
   var weekCells='';
   for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); var p=studyPlanFor(d.getDay()); var wev=schoolEventFor(d); var isToday=d.toDateString()===new Date().toDateString();
-    var dk=dateKeyOf(d), sh=isSchoolHoliday(dk), ph=isPublicHoliday(dk);
-    weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?restDayStripText(p):p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+(sh?'<div class="small" style="font-weight:800;color:var(--teal);margin-top:3px">🏖️ '+esc(sh)+'</div>':'')+(ph?'<div class="small" style="font-weight:800;color:var(--coral);margin-top:3px">🎉 '+esc(ph)+'</div>':'')+'</div>';
+    var dk=dateKeyOf(d), sh=isSchoolHoliday(dk), ph=isPublicHoliday(dk), sp=spellDayLinesHTML(e, dk);
+    weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?restDayStripText(p):p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+(sh?'<div class="small" style="font-weight:800;color:var(--teal);margin-top:3px">🏖️ '+esc(sh)+'</div>':'')+(ph?'<div class="small" style="font-weight:800;color:var(--coral);margin-top:3px">🎉 '+esc(ph)+'</div>':'')+sp+'</div>';
   }
   var moodBtns=[['😀','Great'],['🙂','Okay'],['😐','Meh'],['😟','Wobbly']].map(function(m){ return '<button type="button" class="themechip" data-mood="'+m[1]+'" aria-pressed="'+(mood===m[1])+'" style="background:'+(mood===m[1]?'var(--gold)':'var(--panel2)')+';color:'+(mood===m[1]?'#2a2753':'var(--ink)')+';border:2px solid var(--line)">'+m[0]+' '+m[1]+'</button>'; }).join('');
   return '<section class="card" style="margin-top:20px"><div class="themeslabel" style="color:var(--ink-soft)">📅 My week — one plan for school, study & play</div>'
@@ -2972,7 +2994,6 @@ function planSectionHTML(e, plan, ev){
    +(ev?'<div class="feedback '+(ev.kind==='closure'?'ok':'no')+'" style="margin-top:12px">'+ev.e+' <b>'+esc(ev.name)+'</b> — '+esc(ev.note)+'</div>':'')
    +(!ev&&tEv&&tEv.kind==='due'?'<div class="feedback no" style="margin-top:12px">💻 <b>Tomorrow: '+esc(tEv.name)+'.</b> Pip’s nudge: do a short revision game today — not a full quiz — so tomorrow feels easy.</div>':'')
    +(plan.rest?'<div class="feedback ok" style="margin-top:12px">🌴 <b>No extra study today.</b> '+esc(restDayText(plan))+' If you feel like it, play a game in Play or say hello to your critter — that is all Pip asks!</div>':'')
-   +spellHomeNudgeHTML(e)
    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">'+weekCells+'</div>'
    +'<div style="margin-top:16px;border-top:2px dashed var(--line);padding-top:12px"><b>🌈 How are you feeling today?</b><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'+moodBtns+'</div>'+(mood?'<p class="small" style="font-weight:800;margin:8px 0 0">Pip noted: feeling '+esc(mood)+' today. '+(mood==='Wobbly'?'A breathing break in Vibe might help — and tell a grown-up too. 💛':'Lovely — Pip will remember for the evening summary.')+'</p>':'<p class="small muted" style="font-weight:700;margin:8px 0 0">Tap one — Pip shares it in the grown-ups’ evening summary.</p>')+'</div>'
    +'</section>';
