@@ -1,12 +1,13 @@
 // Dress-up + frog facts (requested 2026-11-08):
 //  1. "Change my name & look" grows a full-body avatar builder —
-//     ROUND 2 (the parent's corrected brief, his own reference
-//     picture): each animal is a COMPLETE full-body character in
-//     its own shape (body IS the animal); the colour picker
-//     recolours the WHOLE animal; NO hair at all; accessories are
-//     tiny touches only (necklace, tiny hat, flower, star, bow).
-//     Stored as e.look={color,accessory} and merged later-wins
-//     like face/glow/badge. A stored hair value is ignored.
+//     ROUND 3 (3D, Pip-style, 2026-11-08): the round-2 complete
+//     characters are rebuilt as 3D-looking plush animals — one
+//     light source top-left, radial-gradient bodies, a white
+//     sheen, a crease under the chin, glossy eyes — plus idle
+//     life (bobbing, blinking, one signature motion per animal).
+//     Same data model (e.look={color,accessory}), same geometry,
+//     same 5 tiny accessories, NO hair. A stored hair value is
+//     ignored.
 //  2. The explorer's avatar shows BIG in the top-left corner:
 //     the full-body character itself in the sidebar (130px) and
 //     in the mobile topbar (43px), refreshed on every save.
@@ -126,19 +127,41 @@ test('the look modal renders a full-body preview and two picker rows — colour 
   assert.deepEqual(accs, ['', 'necklace', 'tinyhat', 'flower', 'star', 'bow'], 'five tiny accessories plus none');
 });
 
-test('avatarLookHTML: a complete full-body character per animal, whole-animal colour, tiny accessories, no hair', () => {
+test('avatarLookHTML: a 3D-shaded full-body character per animal, whole-animal colour, tiny accessories, no hair', () => {
   const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face, look, glow, w){');
   const render = (face, look, glow) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look) + ',' + JSON.stringify(glow || '#ffb020') + ')');
-  // Whole-animal colour: pink is the face AND the body, not a blob.
+  // 3D structure: one svg, class av3d, a defs block with the six
+  // gradients, and the body/head filled by gradient, not flat colour.
   const pinkFox = render('🦊', { color: '#ff8fa3', accessory: '' });
   assert.ok(pinkFox.includes('data-animal="fox"'), 'the animal is drawn, not pasted: the fox renders');
-  assert.ok(pinkFox.includes('<svg viewBox="0 0 200 260"'), 'the whole character is one SVG on the shared grid');
-  const pinkFills = (pinkFox.match(/fill="#ff8fa3"/g) || []).length;
-  assert.ok(pinkFills >= 6, 'pink is the face, body, ears, arms and tail — got ' + pinkFills + ' pink fills');
+  assert.ok(pinkFox.includes('<svg class="av3d" viewBox="0 0 200 260"'), 'the whole character is one 3D svg on the shared grid');
+  assert.ok(pinkFox.includes('<defs>'), 'the gradients live in a defs block');
+  for (const g of ['gB', 'gH', 'gBel', 'gD', 'gSh', 'gGl']) {
+    assert.ok(pinkFox.includes('id="' + g), 'the ' + g + ' gradient is defined');
+  }
+  assert.ok(pinkFox.includes('fill="url(#gB'), 'the body is filled by the body gradient');
+  assert.ok(pinkFox.includes('fill="url(#gH'), 'the head is filled by the head gradient');
+  assert.ok(pinkFox.includes('fill="url(#gSh'), 'the ground shadow is a radial gradient, not a flat ellipse');
+  // Whole-animal colour now lives in the gradients: pink is the
+  // mid-stop of the body and head gradients, never a flat fill.
+  const pinkStops = (pinkFox.match(/stop-color="#ff8fa3"/g) || []).length;
+  assert.equal(pinkStops, 2, 'pink is the body and head gradient mid-stop — got ' + pinkStops);
+  assert.ok(!pinkFox.includes('fill="#ff8fa3"'), 'no flat pink fill anywhere: the colour is shaded, not stickered');
   const naturalFox = render('🦊', { color: '', accessory: '' }, '#2dd4bf');
-  assert.ok(naturalFox.includes('fill="#e8743c"'), 'Natural fox wears its own orange');
+  const natStops = (naturalFox.match(/stop-color="#e8743c"/g) || []).length;
+  assert.equal(natStops, 2, 'Natural fox wears its own orange in the gradients — got ' + natStops);
+  assert.ok(naturalFox.includes('stop-color="#c25a2e"'), 'the fox tail keeps its own dark accent gradient');
   assert.ok(!naturalFox.includes('fill="#2dd4bf"'), 'Natural ignores the glow — the animal keeps its own colour');
+  // The dark edge is always a shade of the main colour, never the
+  // dark accent — so a pale animal never goes black at the edges.
+  // (The panda's dark accent IS black — its patches, ears and arms
+  // use it in the gD gradient — but its BODY gradient must not.)
+  const panda = render('🐼', { color: '', accessory: '' });
+  const pandaGB = panda.match(/<radialGradient id="gB\d+"[^]*?<\/radialGradient>/)[0];
+  assert.ok(pandaGB.includes('stop-color="#aca9a4"'), 'the panda body edge is a soft grey shade of its own white, not black');
+  assert.ok(!pandaGB.includes('stop-color="#26221f"'), 'the panda body gradient never goes black');
+  assert.ok(panda.includes('stop-color="#26221f"'), 'the panda dark accent (patches, ears, arms) is still black in its own gradient');
   // No hair: a stored hair value changes nothing and renders nothing.
   const withHair = render('🦦', { color: '', accessory: '', hair: 'long' });
   const noHair = render('🦦', { color: '', accessory: '' });
@@ -149,6 +172,12 @@ test('avatarLookHTML: a complete full-body character per animal, whole-animal co
   assert.ok(!render('🦦', { accessory: 'hat' }).includes('id="avatar-acc"'), 'an unknown accessory renders as no accessory');
   assert.ok(render('👽', {}).includes('data-animal="otter"'), 'an unknown face falls back to the otter');
   assert.ok(render('🦦', null).includes('<svg'), 'a legacy explorer without a look still renders');
+  // Gradient ids are unique per render, so two characters on one
+  // page never share a gradient. (Both renders must happen in ONE
+  // eval: each eval re-declares avUid at 0, as the consts slice
+  // carries it — in the app it is one module-level counter.)
+  const two = eval(consts + '\n' + fn + '\n;[avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020"),avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020")]');
+  assert.notEqual(two[0].match(/id="gB(\d+)"/)[1], two[1].match(/id="gB(\d+)"/)[1], 'each render gets its own gradient ids');
   // Every animal is itself at a glance — its own recognition marker.
   const markers = [
     ['🦦', 'rgba(74,44,26,0.5)', 'the otter has whiskers'],
@@ -161,7 +190,7 @@ test('avatarLookHTML: a complete full-body character per animal, whole-animal co
     ['🦁', 'r="58"', 'the lion has a mane ring'],
     ['🐼', 'rx="12" ry="15"', 'the panda has eye patches'],
     ['🦊', 'rotate(18 170 118)', 'the fox has a big bushy tail with a pale tip'],
-    ['🐢', 'fill="#4e8f4c"', 'the turtle shell is its own dark green'],
+    ['🐢', 'stop-color="#4e8f4c"', 'the turtle shell is its own dark green gradient'],
     ['🐢', 'M100,104 L100,126', 'the turtle shell has segment lines'],
     ['🐷', 'rx="16" ry="12"', 'the pig has a snout'],
     ['🐵', 'cy="82" rx="34" ry="36"', 'the monkey has a light face patch'],
@@ -181,6 +210,12 @@ test('avatarLookHTML: a complete full-body character per animal, whole-animal co
   assert.ok(turtle.includes('M100,100'), 'the shell dome starts under the head');
   const frog = render('🐸', { color: '', accessory: '' });
   assert.ok(frog.includes('cy="178" rx="52" ry="48"'), 'the frog body touches the head');
+  // The chin crease: a soft dark ellipse under the head, so the
+  // head sits INTO the body on the animals that have the junction.
+  assert.ok(render('🦦', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the otter has a crease under the chin');
+  assert.ok(render('🐰', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the rabbit has a crease under the chin');
+  assert.ok(!render('🦋', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the butterfly has no head-body junction, so no crease');
+  assert.ok(!render('🐢', { color: '', accessory: '' }).includes('fill="#000000" opacity="0.10"'), 'the turtle head sits in the shell, so no crease');
   // Tiny accessories: small touches, never covering the face.
   const necklace = render('🦦', { color: '', accessory: 'necklace' });
   assert.ok(necklace.includes('id="avatar-acc"'), 'the necklace renders as a group on top');
@@ -200,6 +235,57 @@ test('avatarLookHTML: a complete full-body character per animal, whole-animal co
   assert.ok(big.includes('width:190px;height:247px'), 'the modal preview defaults to 190px wide');
   assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020",43)').includes('width:43px;height:56px'), 'the mobile topbar character is 43px wide');
   assert.ok(eval(consts + '\n' + fn + '\n;avatarLookHTML("🦦",{color:"",accessory:""},"#ffb020",130)').includes('width:130px;height:169px'), 'the sidebar character is 130px wide');
+});
+
+test('idle life: every animal bobs and blinks, each with its own signature motion', () => {
+  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
+  const render = (face) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',{color:"",accessory:""},"#ffb020")');
+  const sig = {
+    '🦦': 'av-sway', '🐸': 'av-hop', '🦋': 'av-flutter-l', '🐱': 'av-sway',
+    '🐶': 'av-earwig', '🐰': 'av-earwig', '🦁': 'av-nod', '🐼': 'av-earwig',
+    '🦊': 'av-sway', '🐢': 'av-nod', '🐷': 'av-flop', '🐵': 'av-sway',
+  };
+  for (const [face, motion] of Object.entries(sig)) {
+    const s = render(face);
+    assert.ok(s.includes('class="av-blink"'), face + ' blinks');
+    assert.ok(s.includes('av-bob') || s.includes('av-hop'), face + ' bobs (or hops)');
+    assert.ok(s.includes(motion), face + ' has its signature motion ' + motion);
+    assert.ok(s.includes('animation-delay:'), face + ' staggers its motion so a page of animals never moves in lockstep');
+  }
+  // The dog's tongue wags and the frog's eyes are green, like the
+  // live frog's.
+  assert.ok(render('🐶').includes('av-tongue'), 'the dog tongue wags');
+  assert.ok(render('🐸').includes('fill="#3a7d2c"'), 'the frog keeps its green iris');
+  // The CSS itself is in the page's <style>, next to Pip's own
+  // animation rules — not only in the AVATAR_3D_CSS variable.
+  for (const k of ['@keyframes avBob', '@keyframes avBlink', '@keyframes avHop', '@keyframes avFlutter', '@keyframes avEarWig', '@keyframes avNod', '@keyframes avFlop', '@keyframes avSway', '@keyframes avTongue']) {
+    assert.ok(html.includes(k), 'the page style contains ' + k);
+  }
+  assert.ok(html.includes('.av3d .av-bob'), 'the bob rule is scoped to avatar svgs');
+  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av3d .av-bob'), 'the reduced-motion rule switches the avatar motion off');
+  assert.ok(html.includes('var AVATAR_3D_CSS='), 'the CSS also lives in the AVATAR_3D_CSS variable (single source for the preview)');
+});
+
+test('all 504 combinations render a 3D character', () => {
+  const consts = html.slice(html.indexOf('var LOOK_COLORS='), html.indexOf('function avatarLookHTML('));
+  const fn = fnText('function avatarLookHTML(face, look, glow, w){');
+  const faces = ['🦦', '🐸', '🦋', '🐱', '🐶', '🐰', '🦁', '🐼', '🦊', '🐢', '🐷', '🐵'];
+  assert.equal(faces.length, 12, '12 animals');
+  const colors = eval(grabVar('LOOK_COLORS') + '\n;LOOK_COLORS');
+  const accs = eval(grabVar('LOOK_ACCS') + '\n;LOOK_ACCS');
+  let n = 0;
+  for (const f of faces) {
+    for (const c of colors) {
+      for (const a of accs) {
+        const s = eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(f) + ',{color:' + JSON.stringify(c) + ',accessory:' + JSON.stringify(a) + '},"#ffb020")');
+        assert.ok(s.includes('class="av3d"'), 'every combination renders a 3D svg: ' + f + ' ' + c + ' ' + a);
+        assert.ok(s.includes('<defs>'), 'every combination has its gradients: ' + f + ' ' + c + ' ' + a);
+        n++;
+      }
+    }
+  }
+  assert.equal(n, 504, '12 animals x 7 colours x 6 accessories');
 });
 
 test('look taps follow the face/glow/badge pattern: live explorer, lookAt, typed name kept, preview refreshed in place', () => {
