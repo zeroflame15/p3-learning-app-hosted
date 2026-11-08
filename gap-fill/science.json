@@ -1,0 +1,411 @@
+{
+  "newTopics": [
+    {
+      "id": "sci-classification", "img": "", "sub": "sci", "subName": "Science",
+      "icon": "🔬", "name": "Sorting Scientists",
+      "blurb": "Grouping living things the scientific way.",
+      "quest": [
+        {"q": "A fern is a plant that does not make flowers. Which group does it belong to?", "o": ["Non-flowering plants", "Flowering plants", "Fungi", "Bacteria"], "a": 0, "c": "Ferns do not make flowers, so they are non-flowering plants.", "j": "Ferns are shy — no flowers, just fronds!", "sub": "plant_fungi_groups"},
+        {"q": "Which of these is a fungus?", "o": ["Mushroom", "Moss", "Fern", "Rose"], "a": 0, "c": "A mushroom is a fungus. It cannot make its own food like a plant.", "j": "Mushrooms pop up after rain — like little umbrellas!", "sub": "fungi_bacteria"},
+        {"q": "A dolphin is a mammal because it…", "o": ["gives birth to live young and feeds its babies milk", "lays eggs in water", "has scales and fins", "has feathers and wings"], "a": 0, "c": "Mammals give birth to live young and feed their babies milk.", "j": "Dolphins are mammals that love the sea!", "sub": "animal_groups"},
+        {"q": "Which of these is an insect?", "o": ["Butterfly", "Spider", "Snail", "Worm"], "a": 0, "c": "A butterfly has six legs and three body parts, so it is an insect.", "j": "Butterflies taste with their feet — fancy!", "sub": "insect_or_not"},
+        {"q": "Mei sorts animals into two groups: 'Has wings' and 'Does not have wings'. A bat goes into…", "o": ["Has wings", "Does not have wings", "Lives in water", "Has scales"], "a": 0, "c": "Bats have wings, so they go in the 'Has wings' group.", "j": "Bats are the only mammals that can fly!", "sub": "chart_heading"}
+      ],
+      "warm": [
+        {"q": "A rose makes flowers. It is a…", "o": ["flowering plant", "non-flowering plant", "fungus", "bacterium"], "a": 0, "c": "", "j": "", "sub": "plant_fungi_groups"},
+        {"q": "Mould on old bread is a…", "o": ["fungus", "plant", "animal", "mineral"], "a": 0, "c": "", "j": "", "sub": "fungi_bacteria"},
+        {"q": "A goldfish breathes with…", "o": ["gills", "lungs", "skin", "feathers"], "a": 0, "c": "", "j": "", "sub": "animal_groups"},
+        {"q": "How many legs does an insect have?", "o": ["Six", "Four", "Eight", "Ten"], "a": 0, "c": "", "j": "", "sub": "insect_or_not"},
+        {"q": "A chart groups animals by 'Can fly' and 'Cannot fly'. Where does a penguin go?", "o": ["Cannot fly", "Can fly", "Lives in water", "Has feathers"], "a": 0, "c": "", "j": "", "sub": "chart_heading"},
+        {"q": "Which of these is a non-flowering plant?", "o": ["Moss", "Sunflower", "Apple tree", "Hibiscus"], "a": 0, "c": "", "j": "", "sub": "plant_fungi_groups"},
+        {"q": "Bacteria are so small that you need a ___ to see them.", "o": ["microscope", "telescope", "binoculars", "sunglasses"], "a": 0, "c": "", "j": "", "sub": "fungi_bacteria"},
+        {"q": "Birds are different from other animals because they have…", "o": ["feathers", "scales", "fur", "fins"], "a": 0, "c": "", "j": "", "sub": "animal_groups"}
+      ],
+      "fresh": [
+        {"q": "Which of these plants makes flowers?", "o": ["Hibiscus", "Fern", "Moss", "Mushroom"], "a": 0, "c": "Hibiscus makes flowers. Ferns and mosses do not, and a mushroom is not a plant.", "j": "Hibiscus flowers are big and bright!", "sub": "plant_fungi_groups"},
+        {"q": "Ferns make new plants using…", "o": ["spores", "seeds", "flowers", "fruits"], "a": 0, "c": "Ferns do not make seeds. They make tiny spores.", "j": "Spores are so tiny they float away on the wind!", "sub": "plant_fungi_groups"},
+        {"q": "Why is a mushroom NOT a plant?", "o": ["It cannot make its own food", "It grows in soil", "It has a stem", "It is brown"], "a": 0, "c": "Plants make their own food using sunlight. Mushrooms cannot, so they are fungi.", "j": "Mushrooms feed on dead leaves — nature's recyclers!", "sub": "fungi_bacteria"},
+        {"q": "Which of these can bacteria do?", "o": ["Help make yoghurt", "Make food from sunlight", "Grow flowers", "Swim like fish"], "a": 0, "c": "Some bacteria are useful — they help turn milk into yoghurt.", "j": "Tiny bacteria, big job in your yoghurt!", "sub": "fungi_bacteria"},
+        {"q": "Which animal is a reptile?", "o": ["Crocodile", "Frog", "Bat", "Penguin"], "a": 0, "c": "A crocodile has scales and lays eggs on land, so it is a reptile.", "j": "Crocodiles have been around since dinosaur days!", "sub": "animal_groups"},
+        {"q": "Which group do whales belong to?", "o": ["Mammals", "Fish", "Reptiles", "Amphibians"], "a": 0, "c": "Whales give birth to live young and feed them milk, so they are mammals.", "j": "Whales are mammals that never leave the water!", "sub": "animal_groups"},
+        {"q": "A spider has eight legs and two body parts. Is it an insect?", "o": ["No, it is not an insect", "Yes, it is an insect", "Yes, it is a mammal", "No, it is a plant"], "a": 0, "c": "Insects have six legs and three body parts. A spider has eight legs, so it is not an insect.", "j": "Spiders are arachnids — eight-legged wonders!", "sub": "insect_or_not"},
+        {"q": "Which of these has three body parts and six legs?", "o": ["Ant", "Snail", "Crab", "Spider"], "a": 0, "c": "An ant has a head, a thorax and an abdomen, and six legs. It is an insect.", "j": "Ants can lift things 50 times their own weight!", "sub": "insect_or_not"},
+        {"q": "Tom groups sea animals by 'Has fins' and 'Has no fins'. A shark goes into…", "o": ["Has fins", "Has no fins", "Can fly", "Lives on land"], "a": 0, "c": "Sharks have fins, so they belong in the 'Has fins' group.", "j": "Sharks have been swimming for millions of years!", "sub": "chart_heading"},
+        {"q": "Which headings best sort a bat, a bird and a fish?", "o": ["Has fur / Has feathers / Has scales", "Can fly / Cannot fly", "Big / Small", "Lives in water / Lives on land"], "a": 0, "c": "Fur, feathers and scales are body coverings that put each animal in its own group.", "j": "Fur, feathers, scales — each animal wears its own coat!", "sub": "chart_heading"}
+      ],
+      "retry": [
+        {"q": "Mosses do not make flowers. They are…", "o": ["non-flowering plants", "flowering plants", "fungi", "animals"], "a": 0, "c": "Mosses are plants that do not make flowers.", "j": "Moss is soft like a green carpet!", "sub": "plant_fungi_groups"},
+        {"q": "Yeast is used to make bread rise. Yeast is a…", "o": ["fungus", "plant", "animal", "bacterium"], "a": 0, "c": "Yeast is a tiny fungus. It helps bread rise.", "j": "Yeast makes bread fluffy — thank a fungus!", "sub": "fungi_bacteria"},
+        {"q": "Frogs are amphibians because they…", "o": ["live in water and on land", "have feathers", "give birth to live young", "have scales"], "a": 0, "c": "Amphibians live in water when young and on land as adults.", "j": "Frogs start in water and hop onto land!", "sub": "animal_groups"},
+        {"q": "Which of these is NOT an insect?", "o": ["Earthworm", "Bee", "Grasshopper", "Ladybird"], "a": 0, "c": "An earthworm has no legs and no wings. It is not an insect.", "j": "Worms wriggle — no legs needed!", "sub": "insect_or_not"},
+        {"q": "A chart has the headings 'Lives in water' and 'Lives on land'. A frog goes in…", "o": ["Both groups — it lives in water and on land", "Only 'Lives in water'", "Only 'Lives on land'", "Neither group"], "a": 0, "c": "Frogs live in water and on land, so they fit both groups.", "j": "Frogs are double agents of the pond!", "sub": "chart_heading"},
+        {"q": "Which of these animals is a mammal?", "o": ["Dog", "Eagle", "Snake", "Goldfish"], "a": 0, "c": "A dog has fur and feeds its babies milk, so it is a mammal.", "j": "Dogs are mammals — and the best friends!", "sub": "animal_groups"}
+      ],
+      "p4quest": [
+        {"q": "A plant makes spores but never makes flowers or seeds. Which group is it in?", "o": ["Non-flowering plants", "Flowering plants", "Fungi", "Bacteria"], "a": 0, "c": "Plants that make spores instead of seeds are non-flowering plants, like ferns.", "j": "Spores are the fern's secret seeds!", "sub": "plant_fungi_groups"},
+        {"q": "A scientist finds a living thing that feeds on dead wood and has no chlorophyll. What is it most likely to be?", "o": ["A fungus", "A flowering plant", "A moss", "An alga"], "a": 0, "c": "Fungi feed on dead matter and have no chlorophyll, so they cannot make food like plants.", "j": "Fungi are nature's clean-up crew!", "sub": "fungi_bacteria"},
+        {"q": "An animal has fur, gives birth to live young, and lives in the sea. Which group is it in?", "o": ["Mammals", "Fish", "Reptiles", "Amphibians"], "a": 0, "c": "Fur and live young mean mammal — even in the sea, like a dolphin.", "j": "Sea mammals are mammals that said goodbye to land!", "sub": "animal_groups"},
+        {"q": "An animal has six legs, two wings and three body parts. What is it?", "o": ["An insect", "A spider", "A worm", "A snail"], "a": 0, "c": "Six legs and three body parts tell you it is an insect.", "j": "Six legs, three parts — insect all the way!", "sub": "insect_or_not"},
+        {"q": "A chart sorts animals using two questions: 'Does it have feathers?' then 'Can it fly?' Where does an ostrich go?", "o": ["Has feathers, cannot fly", "Has feathers, can fly", "Has scales, cannot fly", "Has fur, cannot fly"], "a": 0, "c": "An ostrich has feathers but cannot fly, so it goes in 'Has feathers' then 'Cannot fly'.", "j": "Ostriches are birds that prefer running!", "sub": "chart_heading"}
+      ],
+      "p4warm": [
+        {"q": "Which of these is a flowering plant?", "o": ["Mango tree", "Fern", "Moss", "Mushroom"], "a": 0, "c": "", "j": "", "sub": "plant_fungi_groups"},
+        {"q": "Which of these is caused by bacteria?", "o": ["Milk turning sour", "A seed sprouting", "A flower opening", "A leaf falling"], "a": 0, "c": "", "j": "", "sub": "fungi_bacteria"},
+        {"q": "Which animal is a bird?", "o": ["Owl", "Bat", "Butterfly", "Bee"], "a": 0, "c": "", "j": "", "sub": "animal_groups"},
+        {"q": "An animal has six legs and wings. What is it?", "o": ["An insect", "A spider", "A snail", "A worm"], "a": 0, "c": "", "j": "", "sub": "insect_or_not"},
+        {"q": "To sort animals into mammals and non-mammals, the best heading is…", "o": ["Feeds babies milk / Does not feed babies milk", "Big / Small", "Fast / Slow", "Brown / Black"], "a": 0, "c": "", "j": "", "sub": "chart_heading"},
+        {"q": "A conifer makes cones with seeds but no flowers. It is a…", "o": ["non-flowering plant", "flowering plant", "fungus", "animal"], "a": 0, "c": "", "j": "", "sub": "plant_fungi_groups"},
+        {"q": "Mould grows on old bread because it feeds on…", "o": ["dead matter", "sunlight", "water only", "air only"], "a": 0, "c": "", "j": "", "sub": "fungi_bacteria"},
+        {"q": "Reptiles are different from amphibians because reptiles…", "o": ["lay eggs on land with shells", "live in water all their lives", "have moist skin", "breathe through gills"], "a": 0, "c": "", "j": "", "sub": "animal_groups"}
+      ],
+      "p4fresh": [
+        {"q": "Which two plants belong to the same group?", "o": ["Fern and moss", "Rose and fern", "Mushroom and moss", "Fern and mushroom"], "a": 0, "c": "Ferns and mosses are both non-flowering plants.", "j": "Ferns and mosses — the no-flower club!", "sub": "plant_fungi_groups"},
+        {"q": "A plant has flowers and makes seeds inside fruits. Which group is it in?", "o": ["Flowering plants", "Non-flowering plants", "Fungi", "Bacteria"], "a": 0, "c": "Flowers and seeds in fruits mean it is a flowering plant.", "j": "Flowers are how plants show off!", "sub": "plant_fungi_groups"},
+        {"q": "Why are fungi grouped apart from plants?", "o": ["They cannot make their own food", "They grow in soil", "They have stems", "They are small"], "a": 0, "c": "Plants make food with chlorophyll. Fungi cannot, so they are a different group.", "j": "Fungi march to their own beat!", "sub": "fungi_bacteria"},
+        {"q": "Which of these is a helpful bacterium?", "o": ["The one that makes yoghurt", "The one that causes flu", "The one that rots teeth", "The one that makes food go bad"], "a": 0, "c": "Not all bacteria are harmful — some help make yoghurt.", "j": "Good bacteria help make your breakfast!", "sub": "fungi_bacteria"},
+        {"q": "A platypus lays eggs but feeds its babies milk. Which group is it in?", "o": ["Mammals", "Birds", "Reptiles", "Fish"], "a": 0, "c": "Feeding babies milk makes it a mammal, even though it lays eggs.", "j": "The platypus breaks all the rules!", "sub": "animal_groups"},
+        {"q": "Which animal is an amphibian?", "o": ["Toad", "Lizard", "Crab", "Starfish"], "a": 0, "c": "A toad lives in water when young and on land as an adult.", "j": "Toads hop between two worlds!", "sub": "animal_groups"},
+        {"q": "A centipede has one pair of legs on each body segment — many more than six legs. Is it an insect?", "o": ["No, it has too many legs", "Yes, it is an insect", "Yes, it is a spider", "No, it is a fish"], "a": 0, "c": "Insects have exactly six legs. A centipede has many more, so it is not an insect.", "j": "Centipedes have legs to spare!", "sub": "insect_or_not"},
+        {"q": "A ladybird has six legs and a hard shell over its wings. What is it?", "o": ["An insect", "A spider", "A snail", "A crab"], "a": 0, "c": "A ladybird has six legs and three body parts.", "j": "Ladybirds are spotty little insects!", "sub": "insect_or_not"},
+        {"q": "A scientist sorts animals by 'Has a backbone' and 'Has no backbone'. A worm goes in…", "o": ["Has no backbone", "Has a backbone", "Has wings", "Has feathers"], "a": 0, "c": "A worm has no backbone, so it goes in the 'Has no backbone' group.", "j": "Worms are spineless — literally!", "sub": "chart_heading"},
+        {"q": "Mei sorts animals with two headings: 'Has legs' and 'Has no legs'. A snake goes in…", "o": ["Has no legs", "Has legs", "Can fly", "Has feathers"], "a": 0, "c": "Snakes have no legs, so they go in the 'Has no legs' group.", "j": "Snakes slither — no legs needed!", "sub": "chart_heading"}
+      ],
+      "p4retry": [
+        {"q": "Which of these does NOT make flowers?", "o": ["Fern", "Rose", "Sunflower", "Apple tree"], "a": 0, "c": "Ferns make spores, not flowers.", "j": "Ferns keep it simple — no flowers needed!", "sub": "plant_fungi_groups"},
+        {"q": "A mushroom grows on a dead tree trunk. What does this tell you about mushrooms?", "o": ["They feed on dead matter", "They make food from sunlight", "They are flowering plants", "They need flowers to grow"], "a": 0, "c": "Mushrooms feed on dead matter, so they are fungi, not plants.", "j": "Dead wood is a mushroom's dinner!", "sub": "fungi_bacteria"},
+        {"q": "Which of these is a fish?", "o": ["Shark", "Whale", "Dolphin", "Seal"], "a": 0, "c": "A shark has gills and fins and lives in water, so it is a fish. Whales, dolphins and seals are mammals.", "j": "Sharks are fish — whales are not!", "sub": "animal_groups"},
+        {"q": "An animal has eight legs and spins webs. What is it?", "o": ["A spider", "An insect", "A butterfly", "A beetle"], "a": 0, "c": "Eight legs and webs mean spider — and spiders are not insects.", "j": "Spiders are web-weaving wonders!", "sub": "insect_or_not"},
+        {"q": "A chart groups animals by 'Lays eggs' and 'Gives birth to live young'. A chicken goes in…", "o": ["Lays eggs", "Gives birth to live young", "Has fur", "Lives in water"], "a": 0, "c": "Chickens lay eggs, so they go in the 'Lays eggs' group.", "j": "Chickens lay eggs — no surprises there!", "sub": "chart_heading"},
+        {"q": "A tortoise has a shell and lays eggs on land. Which group is it in?", "o": ["Reptiles", "Amphibians", "Mammals", "Birds"], "a": 0, "c": "A tortoise has scales and lays eggs on land, so it is a reptile.", "j": "Tortoises carry their homes on their backs!", "sub": "animal_groups"}
+      ]
+    },
+    {
+      "id": "sci-materials", "img": "", "sub": "sci", "subName": "Science",
+      "icon": "🧪", "name": "Material Matters",
+      "blurb": "What things are made of — and why it matters.",
+      "quest": [
+        {"q": "Which of these is a material?", "o": ["Wood", "Water", "Air", "Light"], "a": 0, "c": "Wood is a material used to make things. Water and air are not materials for building.", "j": "Wood comes from trees — nature's building blocks!", "sub": "material_types"},
+        {"q": "Which material is strong enough to hold up a heavy bookshelf?", "o": ["Metal", "Paper", "Tissue", "Cotton wool"], "a": 0, "c": "Metal is strong and does not break easily under heavy things.", "j": "Metal shelves hold a whole library!", "sub": "strength"},
+        {"q": "Which material is best for making a raincoat?", "o": ["Plastic", "Paper", "Cotton wool", "Tissue paper"], "a": 0, "c": "Plastic is waterproof, so rain cannot soak through it.", "j": "Plastic raincoats keep you dry as a duck!", "sub": "waterproof"},
+        {"q": "Which of these will float on water?", "o": ["A plastic bottle", "A metal key", "A stone", "A glass marble"], "a": 0, "c": "A plastic bottle is light and full of air, so it floats.", "j": "Plastic bottles bob like little boats!", "sub": "float_sink"},
+        {"q": "Ali wants to test which cloth soaks up the most water. What must he keep the same?", "o": ["The size of each cloth and the amount of water", "The colour of each cloth only", "The shape of the container only", "Nothing — he can change everything"], "a": 0, "c": "In a fair test, you change only one thing — the type of cloth. Everything else stays the same.", "j": "Fair tests are science's golden rule!", "sub": "fair_test"}
+      ],
+      "warm": [
+        {"q": "Which material bends easily without breaking?", "o": ["Rubber", "Glass", "Ceramic", "Wood"], "a": 0, "c": "", "j": "", "sub": "flexibility"},
+        {"q": "Which material soaks up water best?", "o": ["Towel cloth", "Plastic bag", "Glass", "Metal tray"], "a": 0, "c": "", "j": "", "sub": "absorbency"},
+        {"q": "Which material can you see through clearly?", "o": ["Clear glass", "Wood", "Cardboard", "Brick"], "a": 0, "c": "", "j": "", "sub": "transparency"},
+        {"q": "A window must let light in. Which material is best?", "o": ["Glass", "Wood", "Metal", "Cloth"], "a": 0, "c": "", "j": "", "sub": "property_to_use"},
+        {"q": "A spoon can be made of metal, wood or plastic. These are all…", "o": ["materials", "animals", "plants", "liquids"], "a": 0, "c": "", "j": "", "sub": "material_types"},
+        {"q": "Which of these is the strongest?", "o": ["Steel rod", "Paper straw", "Plastic bag", "Rubber band"], "a": 0, "c": "", "j": "", "sub": "strength"},
+        {"q": "An umbrella keeps you dry because it is made of a ___ material.", "o": ["waterproof", "absorbent", "transparent", "flexible"], "a": 0, "c": "", "j": "", "sub": "waterproof"},
+        {"q": "A stone sinks in water because it is…", "o": ["heavy for its size", "full of air", "made of wood", "very light"], "a": 0, "c": "", "j": "", "sub": "float_sink"}
+      ],
+      "fresh": [
+        {"q": "Which of these is NOT a material?", "o": ["Sunlight", "Metal", "Glass", "Fabric"], "a": 0, "c": "Sunlight is not a material. Metal, glass and fabric are materials used to make things.", "j": "You can't build a chair out of sunlight!", "sub": "material_types"},
+        {"q": "A chair can be made of wood, metal or plastic. What do we call wood, metal and plastic?", "o": ["Materials", "Tools", "Machines", "Liquids"], "a": 0, "c": "Things we use to make objects are called materials.", "j": "Materials are the ingredients of everything!", "sub": "material_types"},
+        {"q": "Why are bridges made of steel and not paper?", "o": ["Steel is strong and paper is weak", "Steel is colourful", "Paper is waterproof", "Steel is light"], "a": 0, "c": "Steel is strong enough to hold heavy loads. Paper would tear.", "j": "Paper bridges would be a soggy disaster!", "sub": "strength"},
+        {"q": "A fishing rod must bend without breaking. Which property does it need?", "o": ["Flexibility", "Transparency", "Absorbency", "Hardness"], "a": 0, "c": "A fishing rod must bend, so it needs to be flexible.", "j": "Bendy rods catch big fish!", "sub": "flexibility"},
+        {"q": "Which pair of materials is waterproof?", "o": ["Plastic and rubber", "Paper and cloth", "Wood and paper", "Cotton and tissue"], "a": 0, "c": "Plastic and rubber do not let water through.", "j": "Rubber ducks love the rain!", "sub": "waterproof"},
+        {"q": "A towel dries your hands because it is…", "o": ["absorbent", "waterproof", "transparent", "strong"], "a": 0, "c": "An absorbent towel soaks up water from your hands.", "j": "Towels drink up water like thirsty sponges!", "sub": "absorbency"},
+        {"q": "Which material is opaque — you cannot see through it at all?", "o": ["Wood", "Clear glass", "Clean water", "Plastic wrap"], "a": 0, "c": "Wood does not let light through, so it is opaque.", "j": "Wood keeps secrets — no peeking through!", "sub": "transparency"},
+        {"q": "A wooden boat floats, but a metal boat can float too. What helps the metal boat float?", "o": ["Its shape traps air inside", "The metal is light", "The water pushes it up only", "Metal floats by itself"], "a": 0, "c": "A metal boat's shape traps air, making it light enough for its size to float.", "j": "Big ships float — clever shapes beat heavy metal!", "sub": "float_sink"},
+        {"q": "A farmer needs a bucket that will not break when dropped and will not let water out. Which material is best?", "o": ["Strong plastic", "Paper", "Glass", "Cloth"], "a": 0, "c": "Strong plastic is tough and waterproof, so it is best for a bucket.", "j": "Plastic buckets are farm heroes!", "sub": "property_to_use"},
+        {"q": "Mei tests which paper towel is most absorbent. She pours the same amount of water on each towel and waits one minute. Why does she wait the same time for each?", "o": ["So the test is fair", "So the towels dry out", "So the water gets cold", "So the towels change colour"], "a": 0, "c": "Keeping the time the same makes the test fair — only the towel type changes.", "j": "Same time, same water — fair and square!", "sub": "fair_test"}
+      ],
+      "retry": [
+        {"q": "Which material would you use to mop up spilt juice?", "o": ["Sponge", "Plastic sheet", "Glass", "Metal tray"], "a": 0, "c": "A sponge is absorbent, so it soaks up the juice.", "j": "Sponges are the clean-up champions!", "sub": "absorbency"},
+        {"q": "Frosted glass lets some light through but you cannot see clearly through it. It is…", "o": ["translucent", "transparent", "opaque", "waterproof"], "a": 0, "c": "Translucent materials let some light through but you cannot see clearly.", "j": "Frosted glass is shy — it hides the view!", "sub": "transparency"},
+        {"q": "A swimsuit must dry quickly and stretch when you move. Which two properties does it need?", "o": ["Waterproof and flexible", "Transparent and strong", "Absorbent and opaque", "Heavy and stiff"], "a": 0, "c": "A swimsuit must keep water out and stretch, so it needs to be waterproof and flexible.", "j": "Swimsuits stretch and splash — perfect pair!", "sub": "property_to_use"},
+        {"q": "In a fair test about which material is strongest, what should you change?", "o": ["Only the material", "The material and the weight", "The weight and the time", "Everything at once"], "a": 0, "c": "Change only one thing — the material. Keep the weight and the way you test the same.", "j": "One change at a time — that's the fair-test way!", "sub": "fair_test"},
+        {"q": "Which of these can bend without breaking?", "o": ["A rubber hose", "A glass window", "A ceramic plate", "A brick"], "a": 0, "c": "Rubber is flexible, so it bends without breaking.", "j": "Rubber hoses bend like gymnasts!", "sub": "flexibility"},
+        {"q": "A shopping bag must carry heavy groceries without tearing. Which material is best?", "o": ["Thick plastic", "Thin paper", "Tissue", "Cotton wool"], "a": 0, "c": "Thick plastic is strong enough to carry heavy things.", "j": "Strong bags save the groceries!", "sub": "strength"}
+      ],
+      "p4quest": [
+        {"q": "Which of these is a synthetic material — one made by people, not found in nature?", "o": ["Plastic", "Wood", "Cotton", "Wool"], "a": 0, "c": "Plastic is made by people from oil. Wood, cotton and wool come from nature.", "j": "Plastic is people-made — clever chemistry!", "sub": "material_types"},
+        {"q": "A shelf must hold 20 heavy books without bending. Which material and why?", "o": ["Metal, because it is strong", "Paper, because it is light", "Rubber, because it is flexible", "Cloth, because it is soft"], "a": 0, "c": "A shelf needs strength to hold heavy books without bending, so metal is best.", "j": "Metal shelves never sag under homework!", "sub": "strength"},
+        {"q": "A tent must keep rain out and be light to carry. Which material is the best choice?", "o": ["Waterproof nylon fabric", "Cotton cloth", "Paper", "Cardboard"], "a": 0, "c": "Waterproof nylon keeps rain out and is light, so it is best for a tent.", "j": "Tents laugh at rainstorms!", "sub": "waterproof"},
+        {"q": "An iron nail sinks but a big iron ship floats. What is the most important reason?", "o": ["The ship's shape traps air, making it light for its size", "Iron ships are made of lighter iron", "The sea pushes ships up more", "Ships have engines"], "a": 0, "c": "The ship is hollow and full of air, so it is light for its size and floats.", "j": "Hollow ships float — solid nails sink!", "sub": "float_sink"},
+        {"q": "Two pupils test which material is most waterproof. One pours 50 ml of water, the other pours 100 ml. Why is this test unfair?", "o": ["They used different amounts of water", "They used different materials", "They tested on different days", "They used different cups"], "a": 0, "c": "A fair test keeps everything the same except the material. Different amounts of water make it unfair.", "j": "Same water, same test — or it's not fair!", "sub": "fair_test"}
+      ],
+      "p4warm": [
+        {"q": "Which material is both flexible and waterproof?", "o": ["Rubber", "Glass", "Paper", "Wood"], "a": 0, "c": "", "j": "", "sub": "flexibility"},
+        {"q": "A nappy must soak up liquid quickly. Which property matters most?", "o": ["Absorbency", "Transparency", "Strength", "Flexibility"], "a": 0, "c": "", "j": "", "sub": "absorbency"},
+        {"q": "Which pair is transparent?", "o": ["Clear glass and clean water", "Wood and brick", "Cloth and paper", "Metal and stone"], "a": 0, "c": "", "j": "", "sub": "transparency"},
+        {"q": "A cooking pot must not melt over fire. Which property matters most?", "o": ["It must not melt easily in heat", "It must be transparent", "It must float", "It must soak up water"], "a": 0, "c": "", "j": "", "sub": "property_to_use"},
+        {"q": "Ceramics are made from clay that is baked hard. They are…", "o": ["man-made materials", "living things", "liquids", "gases"], "a": 0, "c": "", "j": "", "sub": "material_types"},
+        {"q": "Which of these is the strongest material for a bridge?", "o": ["Steel", "Rubber", "Paper", "Cloth"], "a": 0, "c": "", "j": "", "sub": "strength"},
+        {"q": "Which of these will get wet through in the rain?", "o": ["Cotton shirt", "Plastic raincoat", "Rubber boots", "Umbrella"], "a": 0, "c": "", "j": "", "sub": "waterproof"},
+        {"q": "A life jacket helps you float because it is made of a material that is…", "o": ["light and full of air", "heavy and strong", "made of metal", "very thin"], "a": 0, "c": "", "j": "", "sub": "float_sink"}
+      ],
+      "p4fresh": [
+        {"q": "Which list shows only materials?", "o": ["Wood, glass, metal", "Wood, water, light", "Air, water, wood", "Light, sound, metal"], "a": 0, "c": "Wood, glass and metal are all materials. Air, water, light and sound are not.", "j": "Materials are the stuff things are made of!", "sub": "material_types"},
+        {"q": "Leather comes from animal skin. It is a…", "o": ["natural material", "man-made material", "liquid", "gas"], "a": 0, "c": "Leather comes from animals, so it is a natural material.", "j": "Leather jackets come from nature!", "sub": "material_types"},
+        {"q": "A rope for climbing must be strong AND flexible. Which material is best?", "o": ["Nylon rope", "Glass rod", "Ceramic tile", "Paper string"], "a": 0, "c": "Nylon rope is strong and bends without breaking.", "j": "Climbing ropes are strong and bendy!", "sub": "strength"},
+        {"q": "A straw must bend without breaking. Which material is best?", "o": ["Flexible plastic", "Glass", "Ceramic", "Wood"], "a": 0, "c": "Flexible plastic bends without breaking.", "j": "Bendy straws are the best straws!", "sub": "flexibility"},
+        {"q": "Which of these is waterproof?", "o": ["Waxed paper", "Tissue paper", "Cotton wool", "Newspaper"], "a": 0, "c": "Waxed paper has a wax layer that stops water soaking through.", "j": "Wax says 'no' to water!", "sub": "waterproof"},
+        {"q": "Which two materials are both absorbent?", "o": ["Sponge and towel cloth", "Plastic and glass", "Metal and stone", "Rubber and plastic"], "a": 0, "c": "Sponges and towel cloth both soak up water.", "j": "Sponges and towels — the thirsty pair!", "sub": "absorbency"},
+        {"q": "Which material is best for a fish tank?", "o": ["Clear glass", "Wood", "Cardboard", "Metal"], "a": 0, "c": "Clear glass is transparent, so you can see the fish, and waterproof, so the water stays in.", "j": "Glass tanks let you watch the fish!", "sub": "transparency"},
+        {"q": "Which of these will sink in water?", "o": ["A glass marble", "A cork", "A plastic bottle cap", "A leaf"], "a": 0, "c": "A glass marble is heavy for its size, so it sinks. Cork, plastic caps and leaves float.", "j": "Marbles dive straight to the bottom!", "sub": "float_sink"},
+        {"q": "A lunchbox must keep food dry and not break if dropped. Which two properties does it need?", "o": ["Waterproof and strong", "Transparent and absorbent", "Flexible and absorbent", "Light and see-through"], "a": 0, "c": "A lunchbox must keep water out and survive drops, so it needs to be waterproof and strong.", "j": "Lunchboxes are tough little guardians!", "sub": "property_to_use"},
+        {"q": "Sara tests three materials to see which is strongest. She hangs the same weight on each until it breaks. What is she changing, and what is she keeping the same?", "o": ["Changing the material; keeping the weight the same", "Changing the weight; keeping the material the same", "Changing both", "Changing nothing"], "a": 0, "c": "She changes only the material. The weight stays the same, so the test is fair.", "j": "Same weight, different material — fair test!", "sub": "fair_test"}
+      ],
+      "p4retry": [
+        {"q": "A paper towel soaks up more water than a plastic bag. What does this tell you?", "o": ["Paper towel is more absorbent than plastic", "Plastic is more absorbent than paper", "Both are waterproof", "Both are transparent"], "a": 0, "c": "Soaking up more water means the paper towel is more absorbent.", "j": "Paper towels win the soak-up race!", "sub": "absorbency"},
+        {"q": "Why can't you use a wooden board as a window?", "o": ["Wood is opaque and lets no light through", "Wood is too strong", "Wood is waterproof", "Wood is flexible"], "a": 0, "c": "Windows must let light through. Wood is opaque, so it blocks the light.", "j": "Wooden windows would make dark rooms!", "sub": "transparency"},
+        {"q": "A kite must be light and strong. Which material is best?", "o": ["Light, strong fabric", "Glass", "Brick", "Metal sheet"], "a": 0, "c": "A kite must be light to fly and strong to hold its shape.", "j": "Kites dance on the wind!", "sub": "property_to_use"},
+        {"q": "Ben tests which cloth dries fastest. He puts one cloth in the sun and one in the shade. What is wrong with his test?", "o": ["He changed two things — the cloth and the place", "He used cloth", "He tested in the daytime", "He used water"], "a": 0, "c": "He changed the cloth AND the place, so he cannot tell which one made the difference.", "j": "One change at a time, Ben!", "sub": "fair_test"},
+        {"q": "Which of these is flexible?", "o": ["A rubber band", "A brick", "A glass bottle", "A ceramic mug"], "a": 0, "c": "A rubber band bends and stretches without breaking.", "j": "Rubber bands are stretchy stars!", "sub": "flexibility"},
+        {"q": "Which material would you choose for a helmet?", "o": ["Strong plastic", "Paper", "Cloth", "Tissue"], "a": 0, "c": "A helmet must be strong to protect your head.", "j": "Helmets keep brave heads safe!", "sub": "strength"}
+      ]
+    }
+  ],
+  "topUps": [
+    {"topicId": "sci-plants", "kind": "quest", "level": 3, "questions": [
+      {"q": "Which of these is a living thing?", "o": ["A puppy", "A stone", "A cup", "A cloud"], "a": 0, "c": "A puppy can move, grow and eat, so it is a living thing.", "j": "Puppies are definitely alive — and very lively!", "sub": "characteristics"},
+      {"q": "A plant is a living thing because it can…", "o": ["grow and make food", "move from place to place", "talk to people", "sleep all day"], "a": 0, "c": "Plants grow and make their own food, so they are living things.", "j": "Plants grow quietly — but they grow!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Which of these shows that something is living?", "o": ["It grows bigger over time", "It is colourful", "It is heavy", "It is cold"], "a": 0, "c": "Growing is a sign of life. Colour, weight and coldness are not.", "j": "Growing is life's way of saying hello!", "sub": "characteristics"},
+      {"q": "A robot moves and makes sounds. Is it a living thing?", "o": ["No, it cannot grow or reproduce", "Yes, because it moves", "Yes, because it makes sounds", "No, because it is small"], "a": 0, "c": "Moving is not enough. Living things grow, reproduce and need food and air.", "j": "Robots move, but they don't grow — not alive!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 3, "questions": [
+      {"q": "Which of these is NOT a living thing?", "o": ["A bicycle", "A fish", "A tree", "A bird"], "a": 0, "c": "A bicycle cannot grow, eat or reproduce, so it is not living.", "j": "Bicycles go fast, but they aren't alive!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 4, "questions": [
+      {"q": "A fire moves, gives off heat and grows bigger. Is it a living thing?", "o": ["No, it does not grow, eat or reproduce", "Yes, because it moves and grows", "Yes, because it gives off heat", "No, because it is hot"], "a": 0, "c": "Fire does not eat, reproduce or respond like a living thing. It is not alive.", "j": "Fire dances, but it isn't alive!", "sub": "characteristics"},
+      {"q": "Which two things prove that a seed is alive?", "o": ["It can grow into a plant and needs water and air", "It is small and brown", "It is hard and round", "It comes from a plant"], "a": 0, "c": "A seed can grow and needs water and air, so it is alive.", "j": "Seeds sleep until it's time to grow!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 4, "questions": [
+      {"q": "A fallen leaf on the ground is brown and dry. Is it still a living thing?", "o": ["No, it is dead and cannot grow", "Yes, it is still a leaf", "Yes, because it was green", "No, because it is brown"], "a": 0, "c": "A fallen leaf cannot grow or make food any more, so it is no longer living.", "j": "Fallen leaves have finished their leafy lives!", "sub": "characteristics"},
+      {"q": "Which of these can respond to changes around it?", "o": ["A sunflower turning to face the sun", "A stone rolling downhill", "A cup falling off a table", "A shadow moving across a wall"], "a": 0, "c": "Responding to light is a sign of life. Rolling, falling and shadows are not.", "j": "Sunflowers follow the sun — clever plants!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 4, "questions": [
+      {"q": "A car moves, uses fuel and makes noise. Why is it not a living thing?", "o": ["It cannot grow or reproduce", "It is too big", "It is made of metal", "It moves too fast"], "a": 0, "c": "Living things grow and reproduce. A car cannot do either.", "j": "Cars zoom, but they never grow up!", "sub": "characteristics"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 3, "questions": [
+      {"q": "Which of these is a non-living thing?", "o": ["A rock", "A rabbit", "A rose", "A fish"], "a": 0, "c": "A rock cannot move by itself, grow or eat, so it is non-living.", "j": "Rocks just sit there — very non-living!", "sub": "lnl_identify"},
+      {"q": "Air and water are non-living, but living things need them to…", "o": ["stay alive", "grow taller only", "make sounds", "change colour"], "a": 0, "c": "Living things need air and water to stay alive.", "j": "Air and water are life's helpers!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Which group has only living things?", "o": ["Dog, tree, fish", "Dog, rock, fish", "Tree, stone, bird", "Fish, cloud, rose"], "a": 0, "c": "Dogs, trees and fish are all living. Rocks, stones and clouds are not.", "j": "Dogs, trees, fish — all alive!", "sub": "lnl_identify"},
+      {"q": "A boy puts a stone and a snail in a box. The next day, the snail has moved but the stone has not. What does this show?", "o": ["The snail is living and the stone is not", "The stone is living", "Both are living", "Both are non-living"], "a": 0, "c": "Moving by itself is a sign of life. The snail moved, the stone did not.", "j": "Snails move — stones stay put!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 3, "questions": [
+      {"q": "Which of these is alive?", "o": ["A mushroom", "A plastic bag", "A spoon", "A book"], "a": 0, "c": "A mushroom is a fungus, and fungi are living things.", "j": "Mushrooms are alive — quietly growing!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 4, "questions": [
+      {"q": "A scientist finds a tiny thing in pond water that moves and eats. What can she say about it?", "o": ["It is a living thing", "It is a stone", "It is a cloud", "It is a shadow"], "a": 0, "c": "Moving and eating are signs of life, so it is a living thing.", "j": "Tiny pond creatures are alive and busy!", "sub": "lnl_identify"},
+      {"q": "Which of these is non-living but was once part of a living thing?", "o": ["A wooden chair", "A puppy", "A rose", "A goldfish"], "a": 0, "c": "Wood comes from a tree, which was living, but the chair itself is not alive.", "j": "Wooden chairs were trees once!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Water is not alive, yet fish need it. Which sentence is correct?", "o": ["Water is non-living, but living things need it", "Water is a living thing", "Fish do not need water", "Only plants need water"], "a": 0, "c": "Water is non-living, but fish need it to live.", "j": "Water isn't alive — but life needs it!", "sub": "lnl_identify"},
+      {"q": "A seed is small and hard and does not move. How do you know it is alive?", "o": ["It can grow into a plant when given water and warmth", "It is brown", "It is round", "It comes from a tree"], "a": 0, "c": "A seed grows into a plant, which shows it is alive.", "j": "Seeds are sleeping plants!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 4, "questions": [
+      {"q": "Which pair shows one living and one non-living thing?", "o": ["Butterfly and kite", "Butterfly and bee", "Kite and stone", "Bee and butterfly"], "a": 0, "c": "A butterfly is living, a kite is not. The other pairs are both living or both non-living.", "j": "Butterflies fly — kites fly too, but only one is alive!", "sub": "lnl_identify"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 3, "questions": [
+      {"q": "What do ALL living things need to stay alive?", "o": ["Air, food and water", "Sunlight, soil and rain", "Toys, books and games", "Shoes, clothes and hats"], "a": 0, "c": "All living things need air, food and water.", "j": "Air, food, water — life's big three!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A fish is taken out of water. What will happen?", "o": ["It cannot breathe and will die", "It will grow legs", "It will fly away", "It will turn into a frog"], "a": 0, "c": "Fish need water to breathe, so a fish out of water cannot live.", "j": "Fish need water like we need air!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 3, "questions": [
+      {"q": "Plants need sunlight, air, water and ___ to grow well.", "o": ["nutrients from the soil", "toys", "music", "shoes"], "a": 0, "c": "Plants need nutrients from the soil as well as sunlight, air and water.", "j": "Soil food helps plants grow big and strong!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 4, "questions": [
+      {"q": "A plant in a dark cupboard has water and air, but no sunlight. What will happen?", "o": ["It will turn yellow and die", "It will grow faster", "It will make more flowers", "It will turn into a tree"], "a": 0, "c": "Plants need sunlight to make food. Without it, the plant cannot live.", "j": "No sun, no food — poor plant!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Animals need food for energy and to grow. What do plants use to make their food?", "o": ["Sunlight, water and air", "Meat and fish", "Milk and bread", "Soil and stones"], "a": 0, "c": "Plants make food using sunlight, water and air.", "j": "Plants cook their own food with sunlight!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 4, "questions": [
+      {"q": "Why do living things in a desert need water most of all?", "o": ["Without water they cannot live", "Water makes them colourful", "Water helps them fly", "Water makes them bigger"], "a": 0, "c": "All living things need water to stay alive.", "j": "Desert life is thirsty work!", "sub": "needs"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 3, "questions": [
+      {"q": "Why does a flower need bees to visit it?", "o": ["To carry pollen so seeds can form", "To eat the petals", "To make the flower smell nice", "To keep the flower warm"], "a": 0, "c": "Bees carry pollen between flowers, and that helps seeds form.", "j": "Bees are flower messengers!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 3, "questions": [
+      {"q": "What comes first in a plant's life cycle?", "o": ["A seed", "A flower", "A fruit", "A seedling"], "a": 0, "c": "A plant's life cycle starts with a seed.", "j": "Every big tree starts as a tiny seed!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 3, "questions": [
+      {"q": "What is the job of a flower's nectar?", "o": ["To attract insects that carry pollen", "To make the flower smell nice for people", "To keep the flower warm", "To make seeds"], "a": 0, "c": "Nectar attracts insects, and the insects carry pollen.", "j": "Nectar is a sweet invitation for bees!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 4, "questions": [
+      {"q": "A farmer removes all the flowers from his plants. What will happen?", "o": ["The plants will make no fruits or seeds", "The plants will grow taller", "The plants will make more leaves", "Nothing will change"], "a": 0, "c": "Flowers make seeds and fruits. Without flowers, there will be no fruits or seeds.", "j": "No flowers, no fruits — oh no!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Why must a seed fall far from its parent plant to grow well?", "o": ["So it does not fight the parent for sunlight, water and space", "So it can fly", "So animals can eat it", "So it stays dry"], "a": 0, "c": "Young plants need their own sunlight, water and space to grow.", "j": "Seeds need their own room to grow!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 4, "questions": [
+      {"q": "A plant's life cycle goes seed → seedling → adult plant → flower → fruit → seed. Why does it go in a circle?", "o": ["Because the seeds grow into new plants and the cycle starts again", "Because plants like circles", "Because the sun moves in a circle", "Because flowers are round"], "a": 0, "c": "The seeds from the fruit grow into new plants, so the cycle repeats.", "j": "Life cycles go round and round!", "sub": "plant_cycle_reasoning"}
+    ]},
+    {"topicId": "sci-plants", "kind": "quest", "level": 3, "questions": [
+      {"q": "To test if seeds need water to grow, what should you do?", "o": ["Give water to one set of seeds and none to the other", "Give water to all the seeds", "Give no water to any seeds", "Water the seeds at night only"], "a": 0, "c": "Change only the water. Give one set water and the other none, and keep everything else the same.", "j": "Water or no water — the seeds will tell you!", "sub": "needs_experiment"},
+      {"q": "Ali puts one plant in sunlight and one in a dark cupboard. What is he testing?", "o": ["Whether plants need sunlight", "Whether plants need water", "Whether plants need soil", "Whether plants need air"], "a": 0, "c": "He changed only the light, so he is testing if plants need sunlight.", "j": "Sunlight or darkness — the plants will show you!", "sub": "needs_experiment"}
+    ]},
+    {"topicId": "sci-plants", "kind": "fresh", "level": 3, "questions": [
+      {"q": "In a fair test about seeds and water, what must stay the same?", "o": ["The light, warmth and type of seeds", "The amount of water", "The number of seeds that grow", "The colour of the pots"], "a": 0, "c": "Keep light, warmth and seed type the same. Only the water changes.", "j": "Same seeds, same light — only water changes!", "sub": "needs_experiment"},
+      {"q": "Mei wants to find out if plants need air. What should she change?", "o": ["The air around the plant", "The colour of the pot", "The size of the leaves", "The time of day"], "a": 0, "c": "To test air, change only the air around the plant.", "j": "Air is invisible, but plants need it!", "sub": "needs_experiment"}
+    ]},
+    {"topicId": "sci-plants", "kind": "retry", "level": 3, "questions": [
+      {"q": "Why do we test only one thing at a time in an experiment?", "o": ["So we know what caused the change", "So the test is faster", "So the plants grow bigger", "So we use less water"], "a": 0, "c": "If you change two things, you cannot tell which one caused the change.", "j": "One change at a time — science detectives know!", "sub": "needs_experiment"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 3, "questions": [
+      {"q": "The graph shows a frog's egg stage lasts 7 days, the tadpole stage lasts 42 days and the froglet stage lasts 14 days. How many days does it take from egg to adult frog?", "o": ["63 days", "49 days", "56 days", "70 days"], "a": 0, "c": "7 + 42 + 14 = 63 days.", "j": "63 days from egg to hopping frog!", "sub": "duration_graph"},
+      {"q": "The graph shows a butterfly's egg lasts 5 days, the caterpillar lasts 20 days and the pupa lasts 10 days. How long is the whole life cycle?", "o": ["35 days", "25 days", "30 days", "40 days"], "a": 0, "c": "5 + 20 + 10 = 35 days.", "j": "35 days from egg to butterfly!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 3, "questions": [
+      {"q": "The graph shows the tadpole stage lasts 42 days and the froglet stage lasts 14 days. How many more days is the tadpole stage?", "o": ["28 days", "14 days", "42 days", "56 days"], "a": 0, "c": "42 − 14 = 28 days longer.", "j": "Tadpoles take their time — 28 extra days!", "sub": "duration_graph"},
+      {"q": "A bar chart shows how long each stage of a mosquito's life lasts: egg 2 days, larva 7 days, pupa 2 days. How many days until the adult mosquito appears?", "o": ["11 days", "9 days", "7 days", "13 days"], "a": 0, "c": "2 + 7 + 2 = 11 days.", "j": "11 days and out comes a mosquito!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 3, "questions": [
+      {"q": "The graph shows a chicken's egg stage lasts 21 days. How many weeks is that?", "o": ["3 weeks", "2 weeks", "4 weeks", "1 week"], "a": 0, "c": "21 days ÷ 7 days = 3 weeks.", "j": "Three weeks of waiting for a chick!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 4, "questions": [
+      {"q": "A graph shows a frog's life cycle: egg 7 days, tadpole 42 days, froglet 14 days. A butterfly's life cycle: egg 5 days, caterpillar 20 days, pupa 10 days. Which life cycle is longer, and by how many days?", "o": ["The frog's, by 28 days", "The butterfly's, by 28 days", "The frog's, by 14 days", "They are the same"], "a": 0, "c": "Frog: 63 days. Butterfly: 35 days. 63 − 35 = 28 days longer.", "j": "Frogs take their time — 28 days more!", "sub": "duration_graph"},
+      {"q": "The graph shows a mosquito's larva stage lasts 7 days. If the eggs hatch on Monday, on which day does the pupa stage start?", "o": ["The next Monday", "Wednesday", "Friday", "Sunday"], "a": 0, "c": "7 days after Monday is the next Monday.", "j": "A week of wriggling, then pupating!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 4, "questions": [
+      {"q": "A bar chart shows: tadpole 42 days, froglet 14 days. What fraction of the time from tadpole to adult is spent as a tadpole?", "o": ["42 out of 56 days", "14 out of 56 days", "42 out of 14 days", "14 out of 42 days"], "a": 0, "c": "Tadpole to adult is 42 + 14 = 56 days. The tadpole stage is 42 of those days.", "j": "Tadpoles hog most of the timeline!", "sub": "duration_graph"},
+      {"q": "The graph shows a hen's egg hatches after 21 days and a duck's egg after 28 days. How many days longer does the duck's egg take?", "o": ["7 days", "14 days", "21 days", "28 days"], "a": 0, "c": "28 − 21 = 7 days longer.", "j": "Ducklings take a week longer to hatch!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 4, "questions": [
+      {"q": "A scientist records that a tadpole grows legs after 42 days. If the eggs were laid on 1 March, on about which date does the tadpole grow legs?", "o": ["12 April", "15 March", "1 April", "30 March"], "a": 0, "c": "42 days after 1 March is about 12 April.", "j": "Six weeks of swimming, then legs!", "sub": "duration_graph"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 3, "questions": [
+      {"q": "Which animal has three stages in its life cycle?", "o": ["Chicken", "Frog", "Butterfly", "Mosquito"], "a": 0, "c": "A chicken has three stages: egg, chick, hen. Frogs, butterflies and mosquitoes have four.", "j": "Chickens keep it simple — three stages!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 3, "questions": [
+      {"q": "What are the three stages of a grasshopper's life cycle?", "o": ["Egg, nymph, adult", "Egg, tadpole, frog", "Egg, caterpillar, pupa", "Egg, larva, pupa"], "a": 0, "c": "A grasshopper goes egg → nymph → adult.", "j": "Nymphs look like mini grasshoppers!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 3, "questions": [
+      {"q": "A chick looks like a small hen. What does this tell you?", "o": ["The chick is the young of the hen and they look alike", "The chick is a different animal", "The chick will become a frog", "The chick has four stages"], "a": 0, "c": "The young of a chicken looks like its adult, so they are the same kind of animal.", "j": "Chicks are mini hens!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 4, "questions": [
+      {"q": "A grasshopper nymph looks like a small adult but has no wings. What happens as it grows?", "o": ["It grows wings and becomes an adult", "It grows a tail", "It becomes a tadpole", "It lays eggs at once"], "a": 0, "c": "The nymph grows bigger and grows wings, then becomes an adult grasshopper.", "j": "Nymphs grow up — wings included!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Which two animals both have three stages in their life cycles?", "o": ["Chicken and grasshopper", "Frog and butterfly", "Mosquito and frog", "Butterfly and chicken"], "a": 0, "c": "Chickens and grasshoppers both have three stages.", "j": "Three stages, two animals — neat!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 4, "questions": [
+      {"q": "Why does a grasshopper's life cycle have fewer stages than a frog's?", "o": ["The nymph already looks like the adult, so it does not need a tadpole stage", "Grasshoppers grow faster", "Frogs are bigger", "Grasshoppers live in water"], "a": 0, "c": "A frog changes shape completely, but a nymph already looks like an adult grasshopper.", "j": "No big makeover needed for grasshoppers!", "sub": "three_stage"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 3, "questions": [
+      {"q": "In a life cycle diagram, an arrow points from the egg to the tadpole. What does the arrow show?", "o": ["The egg grows into a tadpole", "The egg eats the tadpole", "The tadpole lays the egg", "The egg swims away"], "a": 0, "c": "Arrows in a life cycle show what grows into what.", "j": "Follow the arrows — they tell the story!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A diagram shows: egg → caterpillar → pupa → butterfly. What comes after the pupa?", "o": ["A butterfly", "An egg", "A caterpillar", "A tadpole"], "a": 0, "c": "The arrow after the pupa points to the butterfly.", "j": "Out of the pupa comes a butterfly!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 3, "questions": [
+      {"q": "In a frog's life cycle diagram, the adult frog points back to the egg. What does this mean?", "o": ["The adult lays eggs and the cycle starts again", "The frog eats its eggs", "The frog turns back into an egg", "The eggs hatch at once"], "a": 0, "c": "The cycle repeats — adults lay eggs and new frogs grow.", "j": "Round and round the froggy cycle goes!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 4, "questions": [
+      {"q": "A diagram shows a butterfly's life cycle with the pupa stage missing. Which stage is missing between the caterpillar and the butterfly?", "o": ["The pupa", "The egg", "The larva", "The adult"], "a": 0, "c": "A butterfly's cycle is egg → caterpillar → pupa → butterfly.", "j": "Don't skip the pupa — it's the magic stage!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 4, "questions": [
+      {"q": "In a mosquito's life cycle diagram, the larva lives in water but the adult flies in the air. What does the diagram tell you?", "o": ["The mosquito lives in water and in air at different stages", "The mosquito lives only in water", "The mosquito lives only in air", "The larva can fly"], "a": 0, "c": "Different stages live in different places.", "j": "Water baby, air adult — two homes!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 4, "questions": [
+      {"q": "A life cycle diagram of a plant shows a seed growing into a seedling. If the seedling is removed, what happens to the cycle?", "o": ["The cycle stops — no adult plant, no new seeds", "The cycle goes faster", "The seed grows again", "Nothing changes"], "a": 0, "c": "Without a seedling, there is no adult plant and no new seeds, so the cycle stops.", "j": "No seedling, no cycle — every stage matters!", "sub": "cycle_diagram"}
+    ]},
+    {"topicId": "sci-frog", "kind": "quest", "level": 3, "questions": [
+      {"q": "Where do mosquitoes lay their eggs?", "o": ["In still water", "On dry land", "On tree leaves", "In the air"], "a": 0, "c": "Mosquitoes lay their eggs in still water.", "j": "Still water is a mosquito nursery!", "sub": "mosquito_control"},
+      {"q": "How can we stop mosquitoes from breeding at home?", "o": ["Remove still water from pots and trays", "Leave water standing for a week", "Keep windows open all day", "Water the plants more"], "a": 0, "c": "Without still water, mosquitoes have nowhere to lay eggs.", "j": "No still water, no baby mosquitoes!", "sub": "mosquito_control"}
+    ]},
+    {"topicId": "sci-frog", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A mosquito larva lives in water and is called a…", "o": ["wriggler", "tadpole", "caterpillar", "nymph"], "a": 0, "c": "Mosquito larvae are called wrigglers because they wriggle in the water.", "j": "Wrigglers wriggle — that's their name!", "sub": "mosquito_control"},
+      {"q": "What are the four stages of a mosquito's life cycle?", "o": ["Egg, larva, pupa, adult", "Egg, tadpole, froglet, adult", "Egg, chick, hen, adult", "Egg, nymph, adult, egg"], "a": 0, "c": "A mosquito goes egg → larva → pupa → adult.", "j": "Four stages to a buzzy mosquito!", "sub": "mosquito_control"}
+    ]},
+    {"topicId": "sci-frog", "kind": "retry", "level": 3, "questions": [
+      {"q": "Why should we cover water containers at home?", "o": ["So mosquitoes cannot lay eggs in them", "So the water stays cold", "So the water looks clean", "So fish can live in them"], "a": 0, "c": "Covered water keeps mosquitoes out, so they cannot lay eggs.", "j": "Lids keep mosquitoes out!", "sub": "mosquito_control"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "A steel spoon is attracted to a magnet. Is the spoon a magnet?", "o": ["No, it is a magnetic material, not a magnet", "Yes, it is a magnet", "No, it is made of wood", "Yes, it is an electromagnet"], "a": 0, "c": "The spoon is magnetic — it is attracted to a magnet — but it is not a magnet itself.", "j": "Magnetic is not the same as being a magnet!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Which of these is a magnet?", "o": ["A bar magnet", "A steel nail", "An iron key", "A paperclip"], "a": 0, "c": "A bar magnet is a magnet. A nail, key and paperclip are magnetic materials.", "j": "Bar magnets are the real magnets!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "Which of these is magnetic but NOT a magnet?", "o": ["A steel paperclip", "A bar magnet", "A horseshoe magnet", "A compass needle"], "a": 0, "c": "A paperclip is attracted to magnets, but it is not a magnet itself.", "j": "Paperclips stick — but they aren't magnets!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 4, "questions": [
+      {"q": "A magnet attracts a paperclip, but the paperclip does not attract a pin. What does this show?", "o": ["The paperclip is magnetic but not a magnet", "The paperclip is a magnet", "The pin is a magnet", "Magnets do not attract paperclips"], "a": 0, "c": "Only magnets attract other things. The paperclip is magnetic, not a magnet.", "j": "Only real magnets do the attracting!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Which of these is a magnet and which is a magnetic material? A fridge magnet and a steel spoon.", "o": ["The fridge magnet is a magnet; the spoon is a magnetic material", "Both are magnets", "Both are magnetic materials", "The spoon is a magnet; the fridge magnet is not"], "a": 0, "c": "The fridge magnet attracts things. The spoon is attracted, but is not a magnet.", "j": "Magnets attract — materials get attracted!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 4, "questions": [
+      {"q": "Mei says a steel nail is a magnet because a magnet picks it up. Is she right?", "o": ["No, the nail is magnetic, not a magnet", "Yes, she is right", "No, the nail is made of wood", "Yes, all steel things are magnets"], "a": 0, "c": "Being picked up shows the nail is magnetic. A magnet is the thing that does the picking up.", "j": "Picked up is not the same as picking up!", "sub": "magnet_vs_magnetic"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "How can you test which magnet is stronger?", "o": ["Count how many paperclips each magnet can pick up", "See which magnet is bigger", "See which magnet is heavier", "See which magnet is shinier"], "a": 0, "c": "The magnet that picks up more paperclips is stronger.", "j": "More paperclips, stronger magnet!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A magnet picks up 10 paperclips. Another picks up 5. Which is stronger?", "o": ["The one that picks up 10", "The one that picks up 5", "They are the same", "You cannot tell"], "a": 0, "c": "More paperclips means a stronger pull.", "j": "Ten beats five — stronger magnet wins!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "To test magnet strength fairly, what must you use for both magnets?", "o": ["The same kind of paperclips", "Different paperclips", "Bigger paperclips for one", "Smaller paperclips for one"], "a": 0, "c": "Use the same paperclips so the test is fair.", "j": "Same clips, fair test!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 4, "questions": [
+      {"q": "Mei tests two magnets. She uses big paperclips for one and small pins for the other. Is this a fair test?", "o": ["No, she changed the objects too", "Yes, it is fair", "No, she used magnets", "Yes, pins and clips are the same"], "a": 0, "c": "She changed the objects as well as the magnet, so the test is not fair.", "j": "Fair tests change one thing only!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Which is the best way to compare the strength of two magnets?", "o": ["Pick up the same paperclips with each magnet and count them", "Drop both magnets and see which breaks", "Weigh both magnets", "Look at the colours"], "a": 0, "c": "Counting the same paperclips each magnet picks up is a fair test.", "j": "Count the clips — the numbers don't lie!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 4, "questions": [
+      {"q": "A magnet picks up 12 pins. After it is dropped many times, it picks up only 6 pins. What happened?", "o": ["It became weaker", "It became stronger", "It became bigger", "It became a different magnet"], "a": 0, "c": "Dropping a magnet many times can make it weaker.", "j": "Dropped magnets lose their superpower!", "sub": "strength_test"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "Which of these can be made into a magnet?", "o": ["A steel nail", "A wooden stick", "A plastic ruler", "A copper coin"], "a": 0, "c": "Steel is magnetic, so a steel nail can be made into a magnet.", "j": "Steel nails can become magnets!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Can a copper coin be made into a magnet?", "o": ["No, copper is not magnetic", "Yes, easily", "No, copper is too small", "Yes, with water"], "a": 0, "c": "Copper is not magnetic, so it cannot be made into a magnet.", "j": "Copper coins say no to magnets!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "Which of these cannot be made into a magnet?", "o": ["A wooden spoon", "An iron nail", "A steel paperclip", "A nickel coin"], "a": 0, "c": "Wood is not magnetic, so a wooden spoon cannot become a magnet.", "j": "Wooden spoons will never be magnets!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 4, "questions": [
+      {"q": "Why can a steel nail be made into a magnet but a wooden stick cannot?", "o": ["Steel is magnetic and wood is not", "Steel is heavier", "Wood is longer", "Steel is shinier"], "a": 0, "c": "Only magnetic materials can be made into magnets.", "j": "Magnetic in, magnetic out!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Which pair of objects can BOTH be made into magnets?", "o": ["Iron nail and steel paperclip", "Wooden ruler and plastic pen", "Copper coin and glass marble", "Rubber band and paperclip"], "a": 0, "c": "Iron and steel are both magnetic, so both can be made into magnets.", "j": "Iron and steel — the magnetic pair!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 4, "questions": [
+      {"q": "A pupil tries to make a magnet from a plastic ruler by stroking it with a magnet. What will happen?", "o": ["Nothing — plastic is not magnetic", "The ruler becomes a strong magnet", "The ruler becomes an electromagnet", "The ruler breaks"], "a": 0, "c": "Plastic is not magnetic, so stroking it does nothing.", "j": "Plastic rulers just don't do magnets!", "sub": "makeable_materials"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "Two magnets are put together and they push apart. What do you know about the poles that are touching?", "o": ["They are the same — both north or both south", "They are different — one north, one south", "They are not poles at all", "They are broken"], "a": 0, "c": "Like poles push apart, so the touching poles must be the same.", "j": "Same poles say 'go away'!", "sub": "pole_puzzle"},
+      {"q": "A magnet's north pole is near another magnet's pole and they pull together. What is the other pole?", "o": ["South", "North", "East", "West"], "a": 0, "c": "Opposite poles pull together, so the other pole must be south.", "j": "North loves south — opposites attract!", "sub": "pole_puzzle"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Magnet A has its north pole facing magnet B. They push apart. What is the pole of B that faces A?", "o": ["North", "South", "East", "West"], "a": 0, "c": "They push apart, so the poles are the same — B's pole must be north too.", "j": "North meets north — push!", "sub": "pole_puzzle"},
+      {"q": "You have two magnets. One end of the first magnet attracts one end of the second magnet. What can you say?", "o": ["The two ends are opposite poles", "The two ends are the same pole", "The magnets are broken", "The magnets are not real"], "a": 0, "c": "Attraction means opposite poles.", "j": "Opposites attract — magnet rule number one!", "sub": "pole_puzzle"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "A pupil labels the poles of a magnet wrongly. How can she check which end is really north?", "o": ["See which end points north when the magnet hangs freely", "Paint the magnet red", "Drop the magnet", "Put the magnet in water"], "a": 0, "c": "A freely hanging magnet turns so its north pole points north.", "j": "A hanging magnet is a compass in disguise!", "sub": "pole_puzzle"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "Ali strokes a nail with a bar magnet 20 times in the same direction. What happens to the nail?", "o": ["It becomes a temporary magnet", "It becomes a permanent magnet", "It melts", "It breaks"], "a": 0, "c": "Stroking a steel nail in one direction makes it a temporary magnet.", "j": "Stroke, stroke — now the nail is a magnet!", "sub": "stroke_method"},
+      {"q": "What must you do to make a steel nail into a temporary magnet?", "o": ["Stroke it with a magnet in one direction many times", "Hit it with a hammer", "Put it in water", "Paint it red"], "a": 0, "c": "Stroking in one direction lines up the tiny magnets inside the nail.", "j": "One direction, many times — that's the trick!", "sub": "stroke_method"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A nail stroked with a magnet can pick up paperclips. What kind of magnet is it?", "o": ["A temporary magnet", "A permanent magnet", "An electromagnet", "A compass"], "a": 0, "c": "The nail is a temporary magnet — it will lose its magnetism over time.", "j": "Temporary magnets don't last forever!", "sub": "stroke_method"},
+      {"q": "What happens if you stroke a nail in different directions each time?", "o": ["It will not become a magnet", "It becomes a stronger magnet", "It becomes an electromagnet", "It turns into iron"], "a": 0, "c": "Stroking in different directions does not line up the tiny magnets inside.", "j": "Same direction every time — no zig-zagging!", "sub": "stroke_method"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "Why is a stroked nail called a temporary magnet?", "o": ["It loses its magnetism after some time", "It is very strong", "It lasts forever", "It can never pick up paperclips"], "a": 0, "c": "A temporary magnet loses its magnetism over time.", "j": "Temporary means 'not forever'!", "sub": "stroke_method"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "quest", "level": 3, "questions": [
+      {"q": "Mei wraps wire around a nail and connects it to a battery. What has she made?", "o": ["An electromagnet", "A compass", "A permanent magnet", "A light bulb"], "a": 0, "c": "Wire around iron plus a battery makes an electromagnet.", "j": "Wire plus battery — magnet magic!", "sub": "electrical_method"},
+      {"q": "How do you switch off an electromagnet?", "o": ["Disconnect the battery", "Drop it in water", "Paint it blue", "Hit it with a hammer"], "a": 0, "c": "An electromagnet only works while the battery is connected.", "j": "No battery, no magnet — off!", "sub": "electrical_method"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Mei wants to make an electromagnet. Which set of things does she need?", "o": ["Wire, an iron nail and a battery", "Wood, water and paper", "A magnet and a ruler", "Glass and plastic"], "a": 0, "c": "An electromagnet needs wire coiled around iron and a battery.", "j": "Three things make an electromagnet!", "sub": "electrical_method"},
+      {"q": "An electromagnet can pick up pins when the battery is connected. What happens when the battery is taken away?", "o": ["It drops the pins", "It picks up more pins", "It becomes stronger", "It turns into a compass"], "a": 0, "c": "Without the battery, the electromagnet stops working and drops the pins.", "j": "Battery off, pins drop!", "sub": "electrical_method"}
+    ]},
+    {"topicId": "sci-magnet", "kind": "retry", "level": 3, "questions": [
+      {"q": "Ali's electromagnet is too weak to pick up pins. What should he do?", "o": ["Wrap more coils of wire around the nail", "Use less wire", "Take away the battery", "Use a plastic nail"], "a": 0, "c": "More coils of wire make the electromagnet stronger.", "j": "More coils, more power!", "sub": "electrical_method"}
+    ]}
+  ]
+}

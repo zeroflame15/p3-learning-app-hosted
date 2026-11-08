@@ -1,0 +1,257 @@
+{
+  "newTopics": [],
+  "topUps": [
+    {"topicId": "math-mrt", "kind": "quest", "level": 3, "questions": [
+      {"q": "7□4 + 135 = 859. What is the missing digit?", "o": ["1", "2", "3", "4"], "a": 1, "c": "859 − 135 = 724, so the missing digit is 2.", "j": "The missing digit was hiding in the tens place!", "sub": "missing_digit"},
+      {"q": "Mei has 47 stickers. Jun has 18 fewer stickers than Mei. How many stickers does Jun have?", "o": ["29", "31", "35", "65"], "a": 0, "c": "Fewer means subtract: 47 − 18 = 29.", "j": "Fewer is not less fun!", "sub": "fewer_more_than"},
+      {"q": "A bag has 96 fruits. 38 are apples and the rest are oranges. How many oranges are there?", "o": ["58", "48", "68", "134"], "a": 0, "c": "Whole minus one part gives the other part: 96 − 38 = 58.", "j": "Orange you glad we worked it out?", "sub": "part_whole_model"},
+      {"q": "The sum of two numbers is 48 and their difference is 8. What is the bigger number?", "o": ["20", "28", "24", "40"], "a": 1, "c": "Add the difference to the sum, then halve it: (48 + 8) ÷ 2 = 28.", "j": "Big number, big win!", "sub": "sum_difference_model"},
+      {"q": "After giving away 35 stickers, Mei has 47 left. How many stickers did Mei have at first?", "o": ["12", "82", "72", "92"], "a": 1, "c": "Work backwards: 47 + 35 = 82.", "j": "Backwards is forwards in disguise!", "sub": "working_backwards"},
+      {"q": "43 + □ = 78. What is the missing number?", "o": ["35", "33", "45", "25"], "a": 0, "c": "78 − 43 = 35.", "j": "The missing number was 35 all along!", "sub": "missing_number"},
+      {"q": "A shop has 145 red pens and 132 blue pens. It sells 96 pens. How many pens are left?", "o": ["181", "171", "191", "277"], "a": 0, "c": "145 + 132 = 277, then 277 − 96 = 181.", "j": "Two steps, one answer!", "sub": "two_step"},
+      {"q": "What is 4,586 + 2,397?", "o": ["6983", "6883", "7083", "5983"], "a": 0, "c": "4,586 + 2,397 = 6,983.", "j": "Big numbers, bigger brain!", "sub": "algorithm_4digit"},
+      {"q": "In 5,318, what does the digit 5 stand for?", "o": ["5000", "500", "50", "5"], "a": 0, "c": "The 5 is in the thousands place, so it stands for 5,000.", "j": "Thousands are the big bosses!", "sub": "place_value"},
+      {"q": "Which number is 'six thousand, four hundred and twenty-one'?", "o": ["6421", "6241", "6412", "6021"], "a": 0, "c": "Six thousand, four hundred and twenty-one is 6,421.", "j": "Words to numbers — translated!", "sub": "numerals_words"},
+      {"q": "Which is the greatest number?", "o": ["4812", "4821", "4208", "4182"], "a": 1, "c": "Compare the hundreds: 8 hundreds beats 2 hundreds, so 4,821 is greatest.", "j": "Greatest of them all!", "sub": "compare_order"},
+      {"q": "What comes next? 1,250, 1,500, 1,750, ___", "o": ["1950", "2000", "2050", "1800"], "a": 1, "c": "Each number is 250 more: 1,750 + 250 = 2,000.", "j": "Pattern spotted!", "sub": "number_patterns"},
+      {"q": "In 4,372, which digit has the value 70?", "o": ["4", "3", "7", "2"], "a": 2, "c": "The 7 is in the tens place, so its value is 70.", "j": "Seventy, hiding in plain sight!", "sub": "digit_value"}
+    ]},
+    {"topicId": "math-mrt", "kind": "warm", "level": 3, "questions": [
+      {"q": "6□8 + 214 = 872. What is the missing digit?", "o": ["4", "5", "6", "7"], "a": 1, "c": "", "j": "", "sub": "missing_digit"},
+      {"q": "A red train has 56 seats. A blue train has 23 more seats than the red train. How many seats does the blue train have?", "o": ["33", "79", "69", "89"], "a": 1, "c": "", "j": "", "sub": "fewer_more_than"},
+      {"q": "There are 75 children in a hall. 29 are boys. How many are girls?", "o": ["46", "44", "56", "104"], "a": 0, "c": "", "j": "", "sub": "part_whole_model"},
+      {"q": "The sum of two numbers is 26 and their difference is 4. What is the smaller number?", "o": ["11", "13", "15", "9"], "a": 0, "c": "", "j": "", "sub": "sum_difference_model"},
+      {"q": "After spending 26 dollars, Tom has 48 dollars left. How much did Tom have at first?", "o": ["22", "74", "64", "84"], "a": 1, "c": "", "j": "", "sub": "working_backwards"},
+      {"q": "□ − 24 = 51. What is the missing number?", "o": ["27", "75", "65", "85"], "a": 1, "c": "", "j": "", "sub": "missing_number"},
+      {"q": "There are 58 boys and 47 girls at a camp. 35 children go home. How many children are left?", "o": ["70", "60", "80", "105"], "a": 0, "c": "", "j": "", "sub": "two_step"},
+      {"q": "What is 7,245 − 3,168?", "o": ["4077", "4177", "3977", "4087"], "a": 0, "c": "", "j": "", "sub": "algorithm_4digit"},
+      {"q": "In 4,726, what does the digit 7 stand for?", "o": ["7000", "700", "70", "7"], "a": 1, "c": "", "j": "", "sub": "place_value"},
+      {"q": "Which numeral is 'two thousand, eight hundred and sixteen'?", "o": ["2816", "2861", "2186", "2086"], "a": 0, "c": "", "j": "", "sub": "numerals_words"},
+      {"q": "Which is the smallest number?", "o": ["7315", "7351", "7135", "7316"], "a": 2, "c": "", "j": "", "sub": "compare_order"},
+      {"q": "What comes next? 320, 340, 360, ___", "o": ["370", "380", "390", "400"], "a": 1, "c": "", "j": "", "sub": "number_patterns"},
+      {"q": "In 8,516, which digit has the value 500?", "o": ["8", "5", "1", "6"], "a": 1, "c": "", "j": "", "sub": "digit_value"}
+    ]},
+    {"topicId": "math-mrt", "kind": "fresh", "level": 3, "questions": [
+      {"q": "9□1 − 346 = 575. What is the missing digit?", "o": ["1", "2", "3", "4"], "a": 1, "c": "575 + 346 = 921, so the missing digit is 2.", "j": "One little digit, one big difference!", "sub": "missing_digit"},
+      {"q": "3□7 + 486 = 843. What is the missing digit?", "o": ["3", "4", "5", "6"], "a": 2, "c": "843 − 486 = 357, so the missing digit is 5.", "j": "Found it — hiding between the 3 and the 7!", "sub": "missing_digit"},
+      {"q": "There are 84 adults and 29 fewer children at the station. How many children are there?", "o": ["55", "53", "65", "113"], "a": 0, "c": "84 − 29 = 55 children.", "j": "Fewer children, still a busy station!", "sub": "fewer_more_than"},
+      {"q": "Box A has 135 marbles. Box B has 27 more marbles than Box A. How many marbles are in Box B?", "o": ["108", "162", "152", "172"], "a": 1, "c": "More means add: 135 + 27 = 162.", "j": "Box B is the lucky box!", "sub": "fewer_more_than"},
+      {"q": "A shop sold 148 tickets in the morning and some in the afternoon. 213 tickets were sold in all. How many were sold in the afternoon?", "o": ["65", "55", "75", "361"], "a": 0, "c": "213 − 148 = 65 tickets.", "j": "Afternoon tickets for the win!", "sub": "part_whole_model"},
+      {"q": "Lily has 57 red beads and 46 blue beads. How many beads does she have in all?", "o": ["103", "93", "113", "11"], "a": 0, "c": "Part + part = whole: 57 + 46 = 103.", "j": "Beads, beads, everywhere!", "sub": "part_whole_model"},
+      {"q": "Ali and Ben have 72 stickers in all. Ali has 12 more than Ben. How many stickers does Ali have?", "o": ["30", "42", "36", "60"], "a": 1, "c": "(72 + 12) ÷ 2 = 42 stickers.", "j": "Ali takes the bigger share!", "sub": "sum_difference_model"},
+      {"q": "Two numbers add up to 54. One is 10 more than the other. What is the smaller number?", "o": ["22", "32", "27", "44"], "a": 0, "c": "(54 − 10) ÷ 2 = 22.", "j": "Small number, big brain!", "sub": "sum_difference_model"},
+      {"q": "A bus had some passengers. After 19 got off, 53 remained. How many passengers were on the bus at first?", "o": ["34", "72", "62", "82"], "a": 1, "c": "53 + 19 = 72 passengers.", "j": "The bus was fuller than it looked!", "sub": "working_backwards"},
+      {"q": "Sara baked some cookies. She gave 28 to her friends and had 36 left. How many cookies did Sara bake?", "o": ["8", "64", "54", "74"], "a": 1, "c": "36 + 28 = 64 cookies.", "j": "Fresh cookies, clever maths!", "sub": "working_backwards"},
+      {"q": "96 − □ = 38. What is the missing number?", "o": ["58", "48", "68", "134"], "a": 0, "c": "96 − 38 = 58.", "j": "Missing number found!", "sub": "missing_number"},
+      {"q": "Mei buys 3 bags with 24 marbles in each bag. She gives away 19 marbles. How many marbles does she have left?", "o": ["53", "43", "63", "72"], "a": 0, "c": "3 × 24 = 72, then 72 − 19 = 53.", "j": "Marbles: counted, given, done!", "sub": "two_step"},
+      {"q": "What is 3,729 + 4,865?", "o": ["8594", "8494", "8694", "7594"], "a": 0, "c": "3,729 + 4,865 = 8,594.", "j": "Adding thousands like a pro!", "sub": "algorithm_4digit"},
+      {"q": "What is 8,402 − 5,376?", "o": ["3026", "3126", "2926", "3036"], "a": 0, "c": "8,402 − 5,376 = 3,026.", "j": "Subtraction superstar!", "sub": "algorithm_4digit"},
+      {"q": "In 9,084, what does the digit 8 stand for?", "o": ["8000", "800", "80", "8"], "a": 2, "c": "The 8 is in the tens place, so it stands for 80.", "j": "Tens are tiny but mighty!", "sub": "place_value"},
+      {"q": "In 2,649, what does the digit 6 stand for?", "o": ["6000", "600", "60", "6"], "a": 1, "c": "The 6 is in the hundreds place, so it stands for 600.", "j": "Hundreds hold the middle ground!", "sub": "place_value"},
+      {"q": "Which numeral is 'five thousand and thirty-nine'?", "o": ["5390", "5039", "5009", "5309"], "a": 1, "c": "'Five thousand and thirty-nine' is 5,039.", "j": "The zero is doing quiet work!", "sub": "numerals_words"},
+      {"q": "Which numeral is 'nine thousand, one hundred and seven'?", "o": ["9170", "9107", "9007", "9177"], "a": 1, "c": "'Nine thousand, one hundred and seven' is 9,107.", "j": "Words to numbers — nailed it!", "sub": "numerals_words"},
+      {"q": "Which number is greater than 5,034 but smaller than 5,340?", "o": ["5304", "5034", "5340", "5043"], "a": 0, "c": "5,304 is between 5,034 and 5,340.", "j": "Right in the middle!", "sub": "compare_order"},
+      {"q": "Which number is greater than 6,298 but smaller than 6,320?", "o": ["6290", "6301", "6315", "6280"], "a": 1, "c": "6,301 is between 6,298 and 6,320.", "j": "Right in the middle!", "sub": "compare_order"},
+      {"q": "What is the missing number? 4,800, 4,600, ___, 4,200", "o": ["4400", "4300", "4500", "4200"], "a": 0, "c": "Each number is 200 less: 4,600 − 200 = 4,400.", "j": "Counting down in style!", "sub": "number_patterns"},
+      {"q": "What comes next? 105, 115, 125, ___", "o": ["130", "135", "140", "145"], "a": 1, "c": "Each number is 10 more: 125 + 10 = 135.", "j": "Ten more, ten more!", "sub": "number_patterns"},
+      {"q": "In 6,049, which digit has the value 40?", "o": ["6", "0", "4", "9"], "a": 2, "c": "The 4 is in the tens place, so its value is 40.", "j": "Forty found!", "sub": "digit_value"},
+      {"q": "In 3,780, which digit has the value 3,000?", "o": ["3", "7", "8", "0"], "a": 0, "c": "The 3 is in the thousands place, so its value is 3,000.", "j": "Three thousand, front and centre!", "sub": "digit_value"}
+    ]},
+    {"topicId": "math-mrt", "kind": "retry", "level": 3, "questions": [
+      {"q": "8□2 − 457 = 375. What is the missing digit?", "o": ["1", "2", "3", "4"], "a": 2, "c": "375 + 457 = 832, so the missing digit is 3.", "j": "Digits love hide-and-seek!", "sub": "missing_digit"},
+      {"q": "Sam read 62 pages. Lin read 14 fewer pages than Sam. How many pages did Lin read?", "o": ["48", "46", "58", "76"], "a": 0, "c": "62 − 14 = 48 pages.", "j": "Every page counts!", "sub": "fewer_more_than"},
+      {"q": "A tank has 240 litres of water. 135 litres are used. How many litres are left?", "o": ["105", "115", "95", "375"], "a": 0, "c": "240 − 135 = 105 litres.", "j": "Still plenty of water left!", "sub": "part_whole_model"},
+      {"q": "The sum of two numbers is 90 and their difference is 10. What is the bigger number?", "o": ["40", "45", "50", "55"], "a": 2, "c": "(90 + 10) ÷ 2 = 50.", "j": "Fifty — a nice round winner!", "sub": "sum_difference_model"},
+      {"q": "After eating 17 grapes, there are 29 grapes left in the box. How many grapes were in the box at first?", "o": ["12", "46", "36", "56"], "a": 1, "c": "29 + 17 = 46 grapes.", "j": "Grape detective work!", "sub": "working_backwards"},
+      {"q": "What is 6,153 + 2,948?", "o": ["9101", "9001", "9201", "8101"], "a": 0, "c": "6,153 + 2,948 = 9,101.", "j": "Over nine thousand!", "sub": "algorithm_4digit"},
+      {"q": "In 7,305, what does the digit 3 stand for?", "o": ["3000", "300", "30", "3"], "a": 1, "c": "The 3 is in the hundreds place, so it stands for 300.", "j": "Place value pro!", "sub": "place_value"},
+      {"q": "Which numeral is 'four thousand, six hundred and fifty'?", "o": ["4650", "4605", "4065", "4560"], "a": 0, "c": "'Four thousand, six hundred and fifty' is 4,650.", "j": "Fifty, not five — sharp eyes!", "sub": "numerals_words"},
+      {"q": "Which of these numbers is the greatest?", "o": ["2904", "2094", "2940", "2409"], "a": 2, "c": "2,940 is greatest.", "j": "Biggest number wins!", "sub": "compare_order"},
+      {"q": "What is the missing number? 950, 900, 850, ___", "o": ["800", "750", "900", "700"], "a": 0, "c": "Each number is 50 less: 850 − 50 = 800.", "j": "Down, down, down the pattern!", "sub": "number_patterns"},
+      {"q": "In 9,214, which digit has the value 200?", "o": ["9", "2", "1", "4"], "a": 1, "c": "The 2 is in the hundreds place, so its value is 200.", "j": "Two hundred, right there!", "sub": "digit_value"}
+    ]},
+    {"topicId": "math-mrt", "kind": "quest", "level": 4, "questions": [
+      {"q": "5,□46 + 2,318 = 8,054. What is the missing digit?", "o": ["6", "7", "8", "9"], "a": 1, "c": "8,054 − 2,318 = 5,736, so the missing digit is 7.", "j": "Four-digit hide-and-seek!", "sub": "missing_digit"},
+      {"q": "A red train carries 1,248 passengers a day. A blue train carries 376 fewer passengers a day. How many passengers does the blue train carry?", "o": ["872", "862", "882", "1624"], "a": 0, "c": "1,248 − 376 = 872.", "j": "Blue train, slightly quieter!", "sub": "fewer_more_than"},
+      {"q": "A factory made 5,642 toys in March and some in April. It made 9,318 toys in all. How many toys did it make in April?", "o": ["3676", "3576", "3776", "14960"], "a": 0, "c": "9,318 − 5,642 = 3,676.", "j": "April was a toy-making machine!", "sub": "part_whole_model"},
+      {"q": "The sum of two numbers is 1,250 and their difference is 150. What is the bigger number?", "o": ["550", "700", "625", "1100"], "a": 1, "c": "(1,250 + 150) ÷ 2 = 700.", "j": "Seven hundred — a big winner!", "sub": "sum_difference_model"},
+      {"q": "After spending 1,250 dollars and then saving 860 dollars, Ravi has 2,470 dollars left. How much did he have at first?", "o": ["2860", "2760", "2960", "1610"], "a": 0, "c": "Work backwards: 2,470 − 860 + 1,250 = 2,860.", "j": "Backwards maths, forwards brain!", "sub": "working_backwards"},
+      {"q": "2,468 + □ = 5,130. What is the missing number?", "o": ["2662", "2562", "2762", "3662"], "a": 0, "c": "5,130 − 2,468 = 2,662.", "j": "Found the missing piece!", "sub": "missing_number"},
+      {"q": "A hall has 24 rows of 36 chairs. 148 chairs are taken. How many chairs are empty?", "o": ["716", "706", "726", "864"], "a": 0, "c": "24 × 36 = 864, then 864 − 148 = 716.", "j": "Two steps, plenty of seats!", "sub": "two_step"}
+    ]},
+    {"topicId": "math-mrt", "kind": "warm", "level": 4, "questions": [
+      {"q": "8,□46 − 3,157 = 5,089. What is the missing digit?", "o": ["1", "2", "3", "4"], "a": 1, "c": "", "j": "", "sub": "missing_digit"},
+      {"q": "Mei has 1,035 stickers. Jun has 428 more stickers than Mei. How many stickers does Jun have?", "o": ["607", "1463", "1363", "1563"], "a": 1, "c": "", "j": "", "sub": "fewer_more_than"},
+      {"q": "There are 4,275 people at a fair. 1,938 are adults. How many are children?", "o": ["2337", "2237", "2437", "6213"], "a": 0, "c": "", "j": "", "sub": "part_whole_model"},
+      {"q": "The sum of two numbers is 860 and their difference is 40. What is the smaller number?", "o": ["410", "430", "450", "390"], "a": 0, "c": "", "j": "", "sub": "sum_difference_model"},
+      {"q": "A shop had some toys. It sold 480 toys and then received 350 more. Now it has 1,920 toys. How many toys did it have at first?", "o": ["2050", "1950", "2150", "1570"], "a": 0, "c": "", "j": "", "sub": "working_backwards"},
+      {"q": "□ − 1,735 = 2,480. What is the missing number?", "o": ["745", "4215", "4115", "4315"], "a": 1, "c": "", "j": "", "sub": "missing_number"},
+      {"q": "Mei buys 8 packs of 125 stickers. She gives away 460 stickers. How many stickers are left?", "o": ["540", "530", "550", "1000"], "a": 0, "c": "", "j": "", "sub": "two_step"}
+    ]},
+    {"topicId": "math-mrt", "kind": "fresh", "level": 4, "questions": [
+      {"q": "3,□84 + 4,957 = 8,821. What is the missing digit?", "o": ["5", "6", "7", "8"], "a": 1, "c": "8,821 − 4,957 = 3,864, so the missing digit is 6.", "j": "Six is the missing piece!", "sub": "missing_digit"},
+      {"q": "9,□27 − 5,438 = 3,589. What is the missing digit?", "o": ["0", "1", "2", "9"], "a": 0, "c": "3,589 + 5,438 = 9,027, so the missing digit is 0.", "j": "Zero — the sneakiest digit!", "sub": "missing_digit"},
+      {"q": "School A has 2,460 pupils. School B has 587 fewer pupils than School A. How many pupils are in School B?", "o": ["1873", "1773", "1973", "3047"], "a": 0, "c": "2,460 − 587 = 1,873.", "j": "Smaller school, same big learning!", "sub": "fewer_more_than"},
+      {"q": "A shop sold 1,875 tickets in June and 349 more tickets in July. How many tickets did it sell in July?", "o": ["1526", "2224", "2124", "2324"], "a": 1, "c": "1,875 + 349 = 2,224.", "j": "July was the busy month!", "sub": "fewer_more_than"},
+      {"q": "A tank holds 6,400 litres. After some water is used, 2,875 litres are left. How much water was used?", "o": ["3525", "3425", "3625", "9275"], "a": 0, "c": "6,400 − 2,875 = 3,525 litres.", "j": "That's a lot of splashing!", "sub": "part_whole_model"},
+      {"q": "Dan has 2,460 stamps and 1,837 coins. How many items does he have in all?", "o": ["4297", "4197", "4397", "623"], "a": 0, "c": "2,460 + 1,837 = 4,297.", "j": "A collector's dream!", "sub": "part_whole_model"},
+      {"q": "Two classes have 1,480 pupils in all. One class has 120 more pupils than the other. How many pupils are in the bigger class?", "o": ["680", "800", "740", "860"], "a": 1, "c": "(1,480 + 120) ÷ 2 = 800.", "j": "The bigger class wins!", "sub": "sum_difference_model"},
+      {"q": "The sum of two numbers is 2,400 and their difference is 400. What is the smaller number?", "o": ["1000", "1200", "1400", "800"], "a": 0, "c": "(2,400 − 400) ÷ 2 = 1,000.", "j": "A thousand — nice and round!", "sub": "sum_difference_model"},
+      {"q": "After giving away 625 stickers and buying 340 more, Mei has 1,150 stickers. How many did she have at first?", "o": ["1435", "1335", "1535", "810"], "a": 0, "c": "1,150 − 340 + 625 = 1,435.", "j": "Sticker maths, solved backwards!", "sub": "working_backwards"},
+      {"q": "A tank had some water. 1,480 litres were used and then 960 litres were added. Now it has 3,240 litres. How much water was in the tank at first?", "o": ["3760", "3660", "3860", "2280"], "a": 0, "c": "3,240 − 960 + 1,480 = 3,760 litres.", "j": "Water you waiting for? Solved!", "sub": "working_backwards"},
+      {"q": "7,205 − □ = 3,968. What is the missing number?", "o": ["3237", "3137", "3337", "4237"], "a": 0, "c": "7,205 − 3,968 = 3,237.", "j": "Missing number, found!", "sub": "missing_number"},
+      {"q": "A baker makes 15 trays of 48 buns. He sells 596 buns. How many buns are left?", "o": ["124", "114", "134", "720"], "a": 0, "c": "15 × 48 = 720, then 720 − 596 = 124.", "j": "Fresh buns, fresh maths!", "sub": "two_step"}
+    ]},
+    {"topicId": "math-mrt", "kind": "retry", "level": 4, "questions": [
+      {"q": "6,□19 + 1,876 = 8,095. What is the missing digit?", "o": ["1", "2", "3", "4"], "a": 1, "c": "8,095 − 1,876 = 6,219, so the missing digit is 2.", "j": "Two good!", "sub": "missing_digit"},
+      {"q": "A library has 3,150 books. A second library has 968 fewer books. How many books are in the second library?", "o": ["2182", "2082", "2282", "4118"], "a": 0, "c": "3,150 − 968 = 2,182.", "j": "Still a lot of stories!", "sub": "fewer_more_than"},
+      {"q": "A school has 1,856 pupils in the morning session and 2,409 in the afternoon session. How many pupils are there in all?", "o": ["4265", "4165", "4365", "553"], "a": 0, "c": "1,856 + 2,409 = 4,265.", "j": "A very full school!", "sub": "part_whole_model"},
+      {"q": "Ali and Ben have 3,600 points in all. Ali has 240 more points than Ben. How many points does Ben have?", "o": ["1680", "1800", "1920", "1560"], "a": 0, "c": "(3,600 − 240) ÷ 2 = 1,680.", "j": "Ben still did great!", "sub": "sum_difference_model"},
+      {"q": "After eating 240 grapes and buying 180 more, there are 760 grapes left. How many grapes were there at first?", "o": ["820", "720", "920", "580"], "a": 0, "c": "760 − 180 + 240 = 820.", "j": "Grape expectations, met!", "sub": "working_backwards"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "quest", "level": 3, "questions": [
+      {"q": "23 apples are shared equally among 4 friends. Each friend gets 5 apples. How many apples are left over?", "o": ["2", "3", "4", "5"], "a": 1, "c": "4 × 5 = 20, and 23 − 20 = 3 left over.", "j": "Three lucky leftover apples!", "sub": "division_remainder"},
+      {"q": "A small basket has 8 oranges. A big basket has 3 times as many oranges. How many oranges are in the big basket?", "o": ["11", "24", "16", "32"], "a": 1, "c": "3 times as many means 8 × 3 = 24.", "j": "The big basket is triple the fun!", "sub": "comparison_model_times"},
+      {"q": "A shop sells 96 apples and oranges in all. There are 16 more apples than oranges. How many apples are there?", "o": ["40", "56", "48", "64"], "a": 1, "c": "(96 + 16) ÷ 2 = 56 apples.", "j": "Apples take the lead!", "sub": "comparison_model_extra"},
+      {"q": "A fruit stall had 86 oranges in the morning. It sold 29 in the morning and 17 in the afternoon. How many oranges are left?", "o": ["40", "30", "50", "57"], "a": 0, "c": "86 − 29 = 57, then 57 − 17 = 40.", "j": "Oranges: selling fast!", "sub": "before_after"},
+      {"q": "A big box has twice as many apples as a small box. Together they have 36 apples. How many apples are in the big box?", "o": ["12", "24", "18", "36"], "a": 1, "c": "The small box has 36 ÷ 3 = 12, so the big box has 12 × 2 = 24.", "j": "Big box, double apples!", "sub": "simultaneous_compare"},
+      {"q": "What is 7 × 8?", "o": ["54", "56", "48", "64"], "a": 1, "c": "7 × 8 = 56.", "j": "Seven times eight — fifty-six!", "sub": "tables_6_9"},
+      {"q": "What is 247 × 3?", "o": ["741", "731", "751", "721"], "a": 0, "c": "247 × 3 = 741.", "j": "Three times the fun!", "sub": "multiply_3d_by_1d"},
+      {"q": "What is 672 ÷ 4?", "o": ["158", "168", "178", "148"], "a": 1, "c": "672 ÷ 4 = 168.", "j": "Dividing like a pro!", "sub": "divide_3d_by_1d"},
+      {"q": "A shop packs 6 oranges into each bag. It has 84 oranges and sells 5 bags. How many oranges are left?", "o": ["54", "44", "64", "30"], "a": 0, "c": "5 bags hold 5 × 6 = 30 oranges. 84 − 30 = 54 left.", "j": "Oranges: packed and sold!", "sub": "two_step_mul_div"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "warm", "level": 3, "questions": [
+      {"q": "17 sweets are shared equally among 5 children. Each child gets 3 sweets. How many sweets are left over?", "o": ["1", "2", "3", "5"], "a": 1, "c": "", "j": "", "sub": "division_remainder"},
+      {"q": "Tom has 6 marbles. Sam has 4 times as many marbles as Tom. How many marbles does Sam have?", "o": ["10", "24", "20", "30"], "a": 1, "c": "", "j": "", "sub": "comparison_model_times"},
+      {"q": "There are 58 red and blue pens in all. There are 10 more red pens than blue pens. How many red pens are there?", "o": ["24", "34", "29", "44"], "a": 1, "c": "", "j": "", "sub": "comparison_model_extra"},
+      {"q": "A box had 54 biscuits. 18 were eaten. How many biscuits are left?", "o": ["36", "26", "46", "72"], "a": 0, "c": "", "j": "", "sub": "before_after"},
+      {"q": "Ali has 3 times as many stickers as Ben. Together they have 48 stickers. How many stickers does Ben have?", "o": ["12", "36", "16", "24"], "a": 0, "c": "", "j": "", "sub": "simultaneous_compare"},
+      {"q": "What is 6 × 9?", "o": ["45", "54", "63", "56"], "a": 1, "c": "", "j": "", "sub": "tables_6_9"},
+      {"q": "What is 132 × 4?", "o": ["428", "528", "518", "538"], "a": 1, "c": "", "j": "", "sub": "multiply_3d_by_1d"},
+      {"q": "What is 486 ÷ 3?", "o": ["152", "162", "172", "142"], "a": 1, "c": "", "j": "", "sub": "divide_3d_by_1d"},
+      {"q": "There are 7 shelves with 9 tins each. 28 tins are sold. How many tins are left?", "o": ["35", "25", "45", "63"], "a": 0, "c": "", "j": "", "sub": "two_step_mul_div"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A shop packs 47 eggs into trays of 6. How many eggs are left over after filling as many trays as possible?", "o": ["4", "5", "6", "7"], "a": 1, "c": "6 × 7 = 42, and 47 − 42 = 5 eggs left over.", "j": "Five eggs didn't fit the tray!", "sub": "division_remainder"},
+      {"q": "29 oranges are packed into bags of 4. How many oranges are left over?", "o": ["1", "2", "3", "4"], "a": 0, "c": "4 × 7 = 28, and 29 − 28 = 1 orange left over.", "j": "One lonely orange!", "sub": "division_remainder"},
+      {"q": "One pack has 12 biscuits. Another pack has 5 times as many biscuits. How many biscuits are in the other pack?", "o": ["17", "60", "50", "70"], "a": 1, "c": "12 × 5 = 60 biscuits.", "j": "Five times the biscuits!", "sub": "comparison_model_times"},
+      {"q": "A red box has 9 pens. A blue box has 7 times as many pens. How many pens are in the blue box?", "o": ["16", "63", "56", "70"], "a": 1, "c": "9 × 7 = 63 pens.", "j": "Blue box for the win!", "sub": "comparison_model_times"},
+      {"q": "A basket has 74 mangoes and pears in all. There are 22 more mangoes than pears. How many mangoes are there?", "o": ["26", "48", "37", "52"], "a": 1, "c": "(74 + 22) ÷ 2 = 48 mangoes.", "j": "Mangoes win the basket!", "sub": "comparison_model_extra"},
+      {"q": "Tom and Sam have 120 stickers in all. Tom has 24 more stickers than Sam. How many stickers does Sam have?", "o": ["48", "60", "72", "96"], "a": 0, "c": "(120 − 24) ÷ 2 = 48 stickers.", "j": "Sam still has plenty!", "sub": "comparison_model_extra"},
+      {"q": "There were 73 children at a party. 25 left after lunch and 18 more left later. How many children stayed?", "o": ["30", "20", "40", "48"], "a": 0, "c": "73 − 25 = 48, then 48 − 18 = 30.", "j": "Thirty party stars stayed!", "sub": "before_after"},
+      {"q": "A tank had 95 litres of water. 38 litres were used in the morning and 24 litres in the evening. How many litres are left?", "o": ["33", "23", "43", "57"], "a": 0, "c": "95 − 38 = 57, then 57 − 24 = 33.", "j": "Water: used wisely!", "sub": "before_after"},
+      {"q": "A red bag has 4 times as many marbles as a blue bag. Together they have 75 marbles. How many marbles are in the blue bag?", "o": ["15", "60", "30", "45"], "a": 0, "c": "75 ÷ 5 = 15 marbles in the blue bag.", "j": "Blue bag, fifteen marbles!", "sub": "simultaneous_compare"},
+      {"q": "Mei has twice as many books as her brother. Together they have 51 books. How many books does Mei have?", "o": ["17", "34", "25", "51"], "a": 1, "c": "51 ÷ 3 = 17, so Mei has 17 × 2 = 34 books.", "j": "Mei the bookworm!", "sub": "simultaneous_compare"},
+      {"q": "What is 9 × 7?", "o": ["56", "63", "72", "54"], "a": 1, "c": "9 × 7 = 63.", "j": "Nine sevens are sixty-three!", "sub": "tables_6_9"},
+      {"q": "What is 356 × 2?", "o": ["702", "712", "722", "612"], "a": 1, "c": "356 × 2 = 712.", "j": "Double trouble — in a good way!", "sub": "multiply_3d_by_1d"},
+      {"q": "What is 418 × 3?", "o": ["1254", "1244", "1264", "1154"], "a": 0, "c": "418 × 3 = 1,254.", "j": "Over a thousand!", "sub": "multiply_3d_by_1d"},
+      {"q": "What is 945 ÷ 5?", "o": ["179", "189", "199", "169"], "a": 1, "c": "945 ÷ 5 = 189.", "j": "Five goes in nicely!", "sub": "divide_3d_by_1d"},
+      {"q": "What is 728 ÷ 8?", "o": ["81", "91", "101", "71"], "a": 1, "c": "728 ÷ 8 = 91.", "j": "Ninety-one, exactly!", "sub": "divide_3d_by_1d"},
+      {"q": "A baker makes 8 trays of 12 buns. He packs them equally into 4 boxes. How many buns are in each box?", "o": ["24", "20", "28", "32"], "a": 0, "c": "8 × 12 = 96 buns. 96 ÷ 4 = 24 in each box.", "j": "Buns, boxed up nicely!", "sub": "two_step_mul_div"},
+      {"q": "Mei buys 5 packs of 24 stickers. She shares them equally among 6 friends. How many stickers does each friend get?", "o": ["20", "24", "18", "30"], "a": 0, "c": "5 × 24 = 120. 120 ÷ 6 = 20 stickers each.", "j": "Sharing is caring — and maths!", "sub": "two_step_mul_div"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "retry", "level": 3, "questions": [
+      {"q": "A baker packs 39 buns into boxes of 5. How many buns are left over?", "o": ["2", "3", "4", "5"], "a": 2, "c": "5 × 7 = 35, and 39 − 35 = 4 buns left over.", "j": "Four buns for the baker!", "sub": "division_remainder"},
+      {"q": "Mei reads 7 pages a day. Her brother reads 6 times as many pages a day. How many pages does her brother read a day?", "o": ["13", "42", "36", "48"], "a": 1, "c": "7 × 6 = 42 pages.", "j": "A reading machine!", "sub": "comparison_model_times"},
+      {"q": "A shop has 88 cups and plates in all. There are 12 more cups than plates. How many plates are there?", "o": ["38", "44", "50", "32"], "a": 0, "c": "(88 − 12) ÷ 2 = 38 plates.", "j": "Plates: counted!", "sub": "comparison_model_extra"},
+      {"q": "A shop had 120 masks. It sold 45 on Monday and 28 on Tuesday. How many masks are left?", "o": ["47", "37", "57", "75"], "a": 0, "c": "120 − 45 = 75, then 75 − 28 = 47.", "j": "Masks: almost sold out!", "sub": "before_after"},
+      {"q": "A shop sells twice as many red pens as blue pens. It sells 66 pens in all. How many blue pens does it sell?", "o": ["22", "44", "33", "66"], "a": 0, "c": "66 ÷ 3 = 22 blue pens.", "j": "Blue pens: twenty-two!", "sub": "simultaneous_compare"},
+      {"q": "What is 263 × 5?", "o": ["1315", "1215", "1415", "1305"], "a": 0, "c": "263 × 5 = 1,315.", "j": "Five times the fun!", "sub": "multiply_3d_by_1d"},
+      {"q": "What is 936 ÷ 6?", "o": ["146", "156", "166", "136"], "a": 1, "c": "936 ÷ 6 = 156.", "j": "Six times one-five-six!", "sub": "divide_3d_by_1d"},
+      {"q": "A farmer has 9 baskets with 14 eggs each. He sells 3 baskets. How many eggs does he have left?", "o": ["84", "74", "94", "126"], "a": 0, "c": "9 × 14 = 126 eggs. 3 × 14 = 42 sold. 126 − 42 = 84 left.", "j": "Egg-cellent work!", "sub": "two_step_mul_div"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "quest", "level": 4, "questions": [
+      {"q": "A shop packs 257 apples into boxes of 8. How many apples are left over after filling as many boxes as possible?", "o": ["0", "1", "2", "3"], "a": 1, "c": "8 × 32 = 256, and 257 − 256 = 1 apple left over.", "j": "One apple didn't fit!", "sub": "division_remainder"},
+      {"q": "A small carton holds 125 ml of milk. A big carton holds 6 times as much. How much milk is in the big carton?", "o": ["650", "750", "850", "730"], "a": 1, "c": "125 × 6 = 750 ml.", "j": "A big carton for big thirsts!", "sub": "comparison_model_times"},
+      {"q": "A shop sells 1,250 red and blue pens in all. There are 230 more red pens than blue pens. How many red pens are there?", "o": ["510", "740", "625", "970"], "a": 1, "c": "(1,250 + 230) ÷ 2 = 740 red pens.", "j": "Red pens take the lead!", "sub": "comparison_model_extra"},
+      {"q": "A shop had 1,450 bottles of juice. It sold 786 bottles in the morning and 395 in the afternoon. How many bottles are left?", "o": ["269", "259", "279", "664"], "a": 0, "c": "1,450 − 786 = 664, then 664 − 395 = 269.", "j": "Juice: nearly sold out!", "sub": "before_after"},
+      {"q": "A big box has 5 times as many apples as a small box. Together they have 1,248 apples. How many apples are in the small box?", "o": ["208", "1040", "416", "624"], "a": 0, "c": "1,248 ÷ 6 = 208 apples in the small box.", "j": "Small box, 208 apples!", "sub": "simultaneous_compare"},
+      {"q": "What is 7 × 80?", "o": ["540", "560", "570", "480"], "a": 1, "c": "7 × 8 = 56, so 7 × 80 = 560.", "j": "Seven eights, with a zero!", "sub": "tables_6_9"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "warm", "level": 4, "questions": [
+      {"q": "156 eggs are packed into trays of 9. How many eggs are left over?", "o": ["2", "3", "4", "5"], "a": 1, "c": "", "j": "", "sub": "division_remainder"},
+      {"q": "One bag has 148 grapes. Another bag has 5 times as many grapes. How many grapes are in the other bag?", "o": ["640", "740", "840", "720"], "a": 1, "c": "", "j": "", "sub": "comparison_model_times"},
+      {"q": "Two shops have 860 customers in all. One shop has 140 more customers than the other. How many customers does the bigger shop have?", "o": ["360", "500", "430", "570"], "a": 1, "c": "", "j": "", "sub": "comparison_model_extra"},
+      {"q": "A tank had 2,400 litres of water. 1,275 litres were used on Monday and 640 litres on Tuesday. How many litres are left?", "o": ["485", "475", "495", "1125"], "a": 0, "c": "", "j": "", "sub": "before_after"},
+      {"q": "Mei has 4 times as many books as her brother. Together they have 1,125 books. How many books does her brother have?", "o": ["225", "900", "450", "675"], "a": 0, "c": "", "j": "", "sub": "simultaneous_compare"},
+      {"q": "What is 9 × 60?", "o": ["450", "540", "630", "560"], "a": 1, "c": "", "j": "", "sub": "tables_6_9"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "fresh", "level": 4, "questions": [
+      {"q": "A baker packs 327 buns into bags of 7. How many buns are left over?", "o": ["3", "4", "5", "6"], "a": 2, "c": "7 × 46 = 322, and 327 − 322 = 5 buns left over.", "j": "Five buns for the baker!", "sub": "division_remainder"},
+      {"q": "429 oranges are shared equally among 6 friends. Each friend gets 71 oranges. How many oranges are left over?", "o": ["2", "3", "4", "5"], "a": 1, "c": "6 × 71 = 426, and 429 − 426 = 3 left over.", "j": "Three spare oranges!", "sub": "division_remainder"},
+      {"q": "A red tin has 236 beans. A blue tin has 4 times as many beans. How many beans are in the blue tin?", "o": ["844", "944", "1044", "924"], "a": 1, "c": "236 × 4 = 944 beans.", "j": "Blue tin, bean mountain!", "sub": "comparison_model_times"},
+      {"q": "Tom scores 175 points. His sister scores 8 times as many points. How many points does his sister score?", "o": ["1300", "1400", "1500", "1380"], "a": 1, "c": "175 × 8 = 1,400 points.", "j": "One thousand four hundred — wow!", "sub": "comparison_model_times"},
+      {"q": "Ali and Ben have 2,400 points in all. Ali has 360 more points than Ben. How many points does Ben have?", "o": ["1020", "1200", "1380", "840"], "a": 0, "c": "(2,400 − 360) ÷ 2 = 1,020 points.", "j": "Ben still did great!", "sub": "comparison_model_extra"},
+      {"q": "A basket has 975 apples and oranges in all. There are 125 more apples than oranges. How many oranges are there?", "o": ["425", "550", "487", "300"], "a": 0, "c": "(975 − 125) ÷ 2 = 425 oranges.", "j": "Oranges: four-two-five!", "sub": "comparison_model_extra"},
+      {"q": "There were 3,860 people at a fair. 1,475 left before lunch and 1,290 left after lunch. How many people stayed?", "o": ["1095", "1085", "1105", "2385"], "a": 0, "c": "3,860 − 1,475 = 2,385, then 2,385 − 1,290 = 1,095.", "j": "Over a thousand stayed!", "sub": "before_after"},
+      {"q": "A baker had 2,750 buns. He sold 1,386 buns in the morning and 954 in the afternoon. How many buns are left?", "o": ["410", "400", "420", "1364"], "a": 0, "c": "2,750 − 1,386 = 1,364, then 1,364 − 954 = 410.", "j": "Four hundred ten buns left!", "sub": "before_after"},
+      {"q": "A shop sells 3 times as many red pens as blue pens. It sells 1,372 pens in all. How many blue pens does it sell?", "o": ["343", "1029", "686", "329"], "a": 0, "c": "1,372 ÷ 4 = 343 blue pens.", "j": "Blue pens: three-four-three!", "sub": "simultaneous_compare"},
+      {"q": "Ali has twice as many stickers as Ben. Together they have 1,845 stickers. How many stickers does Ali have?", "o": ["615", "1230", "920", "1845"], "a": 1, "c": "1,845 ÷ 3 = 615, so Ali has 615 × 2 = 1,230 stickers.", "j": "Ali the sticker king!", "sub": "simultaneous_compare"},
+      {"q": "What is 8 × 90?", "o": ["640", "720", "810", "700"], "a": 1, "c": "8 × 9 = 72, so 8 × 90 = 720.", "j": "Eight nines, super-sized!", "sub": "tables_6_9"}
+    ]},
+    {"topicId": "math-ntuc", "kind": "retry", "level": 4, "questions": [
+      {"q": "263 sweets are shared equally among 8 children. Each child gets 32 sweets. How many sweets are left over?", "o": ["6", "7", "8", "9"], "a": 1, "c": "8 × 32 = 256, and 263 − 256 = 7 left over.", "j": "Seven sweet spares!", "sub": "division_remainder"},
+      {"q": "A small box has 164 stickers. A big box has 7 times as many stickers. How many stickers are in the big box?", "o": ["1048", "1148", "1248", "1128"], "a": 1, "c": "164 × 7 = 1,148 stickers.", "j": "Sticker mountain!", "sub": "comparison_model_times"},
+      {"q": "A school has 1,640 pupils in the morning and afternoon sessions in all. The morning session has 180 more pupils than the afternoon session. How many pupils are in the afternoon session?", "o": ["730", "820", "910", "640"], "a": 0, "c": "(1,640 − 180) ÷ 2 = 730 pupils.", "j": "Afternoon crew: 730 strong!", "sub": "comparison_model_extra"},
+      {"q": "A library had 5,240 books. It lent out 2,375 books in June and 1,640 in July. How many books are left?", "o": ["1225", "1215", "1235", "2865"], "a": 0, "c": "5,240 − 2,375 = 2,865, then 2,865 − 1,640 = 1,225.", "j": "Books: still plenty to read!", "sub": "before_after"},
+      {"q": "A red bag has 6 times as many marbles as a blue bag. Together they have 1,085 marbles. How many marbles are in the blue bag?", "o": ["155", "930", "310", "465"], "a": 0, "c": "1,085 ÷ 7 = 155 marbles in the blue bag.", "j": "Blue bag: one-five-five!", "sub": "simultaneous_compare"}
+    ]},
+    {"topicId": "math-frac", "kind": "quest", "level": 3, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 8 equal parts. The arrow points to the 3rd mark after 0. What fraction is it?", "o": ["3/8", "8/3", "1/3", "3/5"], "a": 0, "c": "The 3rd mark out of 8 equal parts is 3/8.", "j": "Three-eighths, right on the mark!", "sub": "number_line"},
+      {"q": "Which fraction is equal to 1/2?", "o": ["2/4", "1/4", "3/4", "2/3"], "a": 0, "c": "1/2 = 2/4.", "j": "Same size, different numbers!", "sub": "equivalent_fractions"},
+      {"q": "What is 4/8 in its simplest form?", "o": ["1/2", "2/4", "4/8", "1/4"], "a": 0, "c": "Divide top and bottom by 4: 4/8 = 1/2.", "j": "Simplest is best!", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "warm", "level": 3, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 4 equal parts. The arrow points to the 1st mark after 0. What fraction is it?", "o": ["1/4", "4/1", "1/2", "2/4"], "a": 0, "c": "", "j": "", "sub": "number_line"},
+      {"q": "Which fraction is equal to 1/3?", "o": ["2/6", "1/6", "2/3", "3/6"], "a": 0, "c": "", "j": "", "sub": "equivalent_fractions"},
+      {"q": "What is 2/6 in its simplest form?", "o": ["1/3", "2/3", "1/2", "2/6"], "a": 0, "c": "", "j": "", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "fresh", "level": 3, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 6 equal parts. The arrow points to the 5th mark after 0. What fraction is it?", "o": ["5/6", "6/5", "1/5", "5/5"], "a": 0, "c": "The 5th mark out of 6 equal parts is 5/6.", "j": "Five-sixths — nearly whole!", "sub": "number_line"},
+      {"q": "A number line from 0 to 1 is divided into 10 equal parts. The arrow points to the 7th mark after 0. What fraction is it?", "o": ["7/10", "10/7", "1/7", "7/7"], "a": 0, "c": "The 7th mark out of 10 equal parts is 7/10.", "j": "Seven-tenths, spot on!", "sub": "number_line"},
+      {"q": "Which fraction is equal to 3/4?", "o": ["6/8", "3/8", "4/3", "2/4"], "a": 0, "c": "3/4 = 6/8.", "j": "Six-eighths is three-quarters in disguise!", "sub": "equivalent_fractions"},
+      {"q": "What is 6/9 in its simplest form?", "o": ["2/3", "3/9", "1/3", "6/9"], "a": 0, "c": "Divide top and bottom by 3: 6/9 = 2/3.", "j": "Two-thirds, nice and neat!", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "retry", "level": 3, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 5 equal parts. The arrow points to the 2nd mark after 0. What fraction is it?", "o": ["2/5", "5/2", "1/2", "2/2"], "a": 0, "c": "The 2nd mark out of 5 equal parts is 2/5.", "j": "Two-fifths, right there!", "sub": "number_line"}
+    ]},
+    {"topicId": "math-frac", "kind": "quest", "level": 4, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 12 equal parts. The arrow points to the 9th mark after 0. What fraction is it?", "o": ["9/12", "12/9", "9/10", "5/12"], "a": 0, "c": "The 9th mark out of 12 equal parts is 9/12.", "j": "Nine-twelfths — three-quarters in disguise!", "sub": "number_line"},
+      {"q": "Which fraction is equal to 2/3?", "o": ["8/12", "2/6", "3/2", "4/9"], "a": 0, "c": "2/3 = 8/12.", "j": "Eight-twelfths is two-thirds in disguise!", "sub": "equivalent_fractions"},
+      {"q": "What is 10/12 in its simplest form?", "o": ["5/6", "10/6", "2/12", "5/12"], "a": 0, "c": "Divide top and bottom by 2: 10/12 = 5/6.", "j": "Five-sixths, nice and neat!", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "warm", "level": 4, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 9 equal parts. The arrow points to the 4th mark after 0. What fraction is it?", "o": ["4/9", "9/4", "1/4", "4/5"], "a": 0, "c": "", "j": "", "sub": "number_line"},
+      {"q": "Which fraction is equal to 4/5?", "o": ["8/10", "4/10", "5/4", "2/5"], "a": 0, "c": "", "j": "", "sub": "equivalent_fractions"},
+      {"q": "What is 8/20 in its simplest form?", "o": ["2/5", "4/10", "8/10", "1/5"], "a": 0, "c": "", "j": "", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "fresh", "level": 4, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 12 equal parts. The arrow points to the 5th mark after 0. What fraction is it?", "o": ["5/12", "12/5", "1/5", "5/10"], "a": 0, "c": "The 5th mark out of 12 equal parts is 5/12.", "j": "Five-twelfths, right on the mark!", "sub": "number_line"},
+      {"q": "A number line from 0 to 1 is divided into 15 equal parts. The arrow points to the 11th mark after 0. What fraction is it?", "o": ["11/15", "15/11", "1/11", "11/10"], "a": 0, "c": "The 11th mark out of 15 equal parts is 11/15.", "j": "Eleven-fifteenths — sharp eyes!", "sub": "number_line"},
+      {"q": "Which fraction is equal to 5/6?", "o": ["10/12", "5/12", "6/5", "15/12"], "a": 0, "c": "5/6 = 10/12.", "j": "Ten-twelfths, same value!", "sub": "equivalent_fractions"},
+      {"q": "What is 9/15 in its simplest form?", "o": ["3/5", "9/5", "1/5", "3/15"], "a": 0, "c": "Divide top and bottom by 3: 9/15 = 3/5.", "j": "Three-fifths, simplest yet!", "sub": "simplest_form"}
+    ]},
+    {"topicId": "math-frac", "kind": "retry", "level": 4, "questions": [
+      {"q": "A number line from 0 to 1 is divided into 8 equal parts. The arrow points to the 7th mark after 0. What fraction is it?", "o": ["7/8", "8/7", "1/7", "7/7"], "a": 0, "c": "The 7th mark out of 8 equal parts is 7/8.", "j": "Seven-eighths — nearly whole!", "sub": "number_line"}
+    ]}
+,
+    {"topicId": "math-hawker", "kind": "quest", "level": 3, "questions": [
+      {"q": "Pack A has 2 notebooks for $4. Pack B has 3 notebooks for $5.40. Which pack is cheaper for one notebook?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "Pack A: $4 ÷ 2 = $2.00 each. Pack B: $5.40 ÷ 3 = $1.80 each. Pack B is cheaper!", "j": "Pack B wins the bargain race!", "sub": "best_buy_grouping"}
+    ]},
+    {"topicId": "math-hawker", "kind": "warm", "level": 3, "questions": [
+      {"q": "Pack A: 3 pencils for $1.50. Pack B: 6 pencils for $2.40. Which is the better buy?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "", "j": "", "sub": "best_buy_grouping"}
+    ]},
+    {"topicId": "math-hawker", "kind": "fresh", "level": 3, "questions": [
+      {"q": "Pack A: 4 pens for $2. Pack B: 10 pens for $4. Which pack is cheaper for one pen?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "4 pens: $2 ÷ 4 = $0.50 each. 10 pens: $4 ÷ 10 = $0.40 each. The pack of 10 is cheaper!", "j": "Ten pens for the win!", "sub": "best_buy_grouping"}
+    ]},
+    {"topicId": "math-hawker", "kind": "quest", "level": 4, "questions": [
+      {"q": "Pack A: 5 notebooks for $12.50. Pack B: 8 notebooks for $18.40. Which pack is cheaper for one notebook?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "Pack A: $12.50 ÷ 5 = $2.50 each. Pack B: $18.40 ÷ 8 = $2.30 each. Pack B is cheaper!", "j": "Pack B saves 20 cents a book!", "sub": "best_buy_grouping"}
+    ]},
+    {"topicId": "math-hawker", "kind": "warm", "level": 4, "questions": [
+      {"q": "Pack A: 12 eggs for $4.80. Pack B: 30 eggs for $10.50. Which is the better buy per egg?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "", "j": "", "sub": "best_buy_grouping"}
+    ]},
+    {"topicId": "math-hawker", "kind": "fresh", "level": 4, "questions": [
+      {"q": "Pack A: a 2 kg bag of rice for $7. Pack B: a 5 kg bag for $15. Which bag is cheaper per kilogram?", "o": ["Pack A", "Pack B", "They cost the same", "Cannot tell"], "a": 1, "c": "2 kg: $7 ÷ 2 = $3.50 per kg. 5 kg: $15 ÷ 5 = $3.00 per kg. The 5 kg bag is cheaper!", "j": "The big bag wins again!", "sub": "best_buy_grouping"}
+    ]}
+  ]
+}

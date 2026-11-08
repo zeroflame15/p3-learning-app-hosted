@@ -1,0 +1,4982 @@
+{
+  "newTopics": [
+    {
+      "id": "eng-spelling",
+      "img": "",
+      "sub": "eng",
+      "subName": "English",
+      "icon": "✏️",
+      "name": "Spelling Stars",
+      "blurb": "Spot the correctly spelt word.",
+      "quest": [
+        {
+          "q": "Which word is spelt correctly?",
+          "o": [
+            "beautiful",
+            "beautifull",
+            "butiful",
+            "beautifel"
+          ],
+          "a": 0,
+          "c": "Beautiful starts with “beau” — say “beau-ti-ful” slowly.",
+          "j": "Beautiful spelling — you are on a roll!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Mina wrote a card to her best ___. Which spelling is right?",
+          "o": [
+            "freind",
+            "friend",
+            "frind",
+            "frend"
+          ],
+          "a": 1,
+          "c": "Friend has “ie” — “I am your friend till the end!”",
+          "j": "A friend in need is a friend indeed!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Choose the correct spelling of the word that means “from one side to the other”.",
+          "o": [
+            "throo",
+            "thru",
+            "through",
+            "threw"
+          ],
+          "a": 2,
+          "c": "Through has “ough” — the tricky part hides in the middle.",
+          "j": "You made it through — nicely done!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Which sentence has every word spelt correctly?",
+          "o": [
+            "I like ice-cream becouse it is sweet.",
+            "I like icecream because it is swete.",
+            "I like icecream becoz it is sweet.",
+            "I like ice cream because it is sweet."
+          ],
+          "a": 3,
+          "c": "Because is b-e-c-a-u-s-e. Try: “big elephants can always understand small elephants”!",
+          "j": "Sweet spelling, sweet treat!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Pick the word that is spelt right.",
+          "o": [
+            "together",
+            "togther",
+            "togeather",
+            "togetha"
+          ],
+          "a": 0,
+          "c": "Together is to-get-her — three little parts in one word.",
+          "j": "Together we spell it right!",
+          "sub": "spelling"
+        }
+      ],
+      "warm": [
+        {
+          "q": "The baby is crying ___. Which spelling is right?",
+          "o": [
+            "agen",
+            "again",
+            "agian",
+            "agane"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "All the ___ in the class love story time.",
+          "o": [
+            "childrin",
+            "childern",
+            "children",
+            "childrun"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "Many ___ visit the library every day.",
+          "o": [
+            "peeple",
+            "peopel",
+            "pepole",
+            "people"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "You ___ wash your hands before lunch.",
+          "o": [
+            "should",
+            "shud",
+            "shuld",
+            "shold"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "I ___ it was going to rain, so I took an umbrella.",
+          "o": [
+            "thort",
+            "thought",
+            "thaught",
+            "thout"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "We have ___ food for everyone at the party.",
+          "o": [
+            "enugh",
+            "enouf",
+            "enough",
+            "enuf"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "What is the ___ to this question?",
+          "o": [
+            "answear",
+            "awnsers",
+            "anser",
+            "answer"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "Please wash your hands ___ you eat.",
+          "o": [
+            "before",
+            "befour",
+            "befoar",
+            "befor"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "The police ___ the thief yesterday.",
+          "o": [
+            "cought",
+            "caught",
+            "caght",
+            "caughted"
+          ],
+          "a": 1,
+          "c": "Caught is the past of catch — “a-u-g-h-t”!",
+          "j": "Caught red-handed — and correctly spelt!",
+          "sub": "spelling"
+        },
+        {
+          "q": "My ___ loves to bake chocolate cakes.",
+          "o": [
+            "doughter",
+            "dauter",
+            "daughter",
+            "dorter"
+          ],
+          "a": 2,
+          "c": "Daughter has “ugh” in the middle — “d-a-u-g-h-t-e-r”.",
+          "j": "A daughter who bakes? Lucky family!",
+          "sub": "spelling"
+        },
+        {
+          "q": "We wake up ___ every school morning.",
+          "o": [
+            "ealy",
+            "earley",
+            "erly",
+            "early"
+          ],
+          "a": 3,
+          "c": "Early is e-a-r-l-y — like “ear” at the start!",
+          "j": "Early bird, early speller!",
+          "sub": "spelling"
+        },
+        {
+          "q": "There are ___ legs on a spider.",
+          "o": [
+            "eight",
+            "aight",
+            "eigt",
+            "eigth"
+          ],
+          "a": 0,
+          "c": "Eight is e-i-g-h-t — the “gh” is silent but it is there!",
+          "j": "Eight legs, one great spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "What is your ___ colour?",
+          "o": [
+            "faverite",
+            "favourite",
+            "favorit",
+            "favrite"
+          ],
+          "a": 1,
+          "c": "Favourite is f-a-v-o-u-r-i-t-e — remember the “u”!",
+          "j": "My favourite colour is… correctly spelt!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Grandma grows tomatoes in her ___.",
+          "o": [
+            "gardden",
+            "gardan",
+            "garden",
+            "gardun"
+          ],
+          "a": 2,
+          "c": "Garden is g-a-r-d-e-n — “den” at the end, like a little den!",
+          "j": "A garden full of good spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Our class went on a ___ to the museum.",
+          "o": [
+            "jurney",
+            "jorney",
+            "jurny",
+            "journey"
+          ],
+          "a": 3,
+          "c": "Journey is j-o-u-r-n-e-y — “our” is hiding inside it!",
+          "j": "What a journey — and what spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Please ___ carefully to the teacher.",
+          "o": [
+            "listen",
+            "listin",
+            "lisen",
+            "lisson"
+          ],
+          "a": 0,
+          "c": "Listen has a silent “t” — “lis-ten”!",
+          "j": "I am all ears — and all correct!",
+          "sub": "spelling"
+        },
+        {
+          "q": "We climbed a tall ___ on our school trip.",
+          "o": [
+            "mountan",
+            "mountain",
+            "mounten",
+            "mountein"
+          ],
+          "a": 1,
+          "c": "Mountain is m-o-u-n-t-a-i-n — “tain” at the end!",
+          "j": "On top of the mountain — and top of the class!",
+          "sub": "spelling"
+        },
+        {
+          "q": "How ___ do you visit your grandma?",
+          "o": [
+            "oftern",
+            "offen",
+            "often",
+            "oftan"
+          ],
+          "a": 2,
+          "c": "Often is o-f-t-e-n — the “t” is quiet, like a secret!",
+          "j": "Often right — that is the best kind!",
+          "sub": "spelling"
+        }
+      ],
+      "retry": [
+        {
+          "q": "May I have a ___ of cake, please?",
+          "o": [
+            "pece",
+            "peice",
+            "piese",
+            "piece"
+          ],
+          "a": 3,
+          "c": "Piece has “ie” — “a piece of pie” helps you remember!",
+          "j": "A piece of cake — and a piece of great spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "___ sit down and open your books.",
+          "o": [
+            "Please",
+            "Plese",
+            "Pleeze",
+            "Pleese"
+          ],
+          "a": 0,
+          "c": "Please is p-l-e-a-s-e — “please” is a please-ant word!",
+          "j": "Please take a bow!",
+          "sub": "spelling"
+        },
+        {
+          "q": "She wore a ___ dress to the party.",
+          "o": [
+            "prety",
+            "pretty",
+            "preety",
+            "prity"
+          ],
+          "a": 1,
+          "c": "Pretty is p-r-e-t-t-y — double “t” makes it pretty!",
+          "j": "Pretty good spelling, pretty great!",
+          "sub": "spelling"
+        },
+        {
+          "q": "We learn English at ___.",
+          "o": [
+            "skool",
+            "scool",
+            "school",
+            "shool"
+          ],
+          "a": 2,
+          "c": "School is s-c-h-o-o-l — “ch” and double “o”!",
+          "j": "School’s cool — and so is your spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Draw a ___ line with your ruler.",
+          "o": [
+            "strait",
+            "straigt",
+            "strate",
+            "straight"
+          ],
+          "a": 3,
+          "c": "Straight is s-t-r-a-i-g-h-t — “aight” at the end, like “eight”!",
+          "j": "Straight to the top!",
+          "sub": "spelling"
+        },
+        {
+          "q": "What is the ___ like today?",
+          "o": [
+            "weather",
+            "weathar",
+            "wethar",
+            "wether"
+          ],
+          "a": 0,
+          "c": "Weather is w-e-a-t-h-e-r — “eat” is hiding in the middle!",
+          "j": "Whatever the weather, your spelling shines!",
+          "sub": "spelling"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "He ___ dropped his ice cream on the floor.",
+          "o": [
+            "accidently",
+            "accidentally",
+            "acidentally",
+            "accidentaly"
+          ],
+          "a": 1,
+          "c": "Accidentally ends in “ally” — accidents happen, but spelling should not!",
+          "j": "An accidental drop, but no accidental spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Please write your home ___ on the form.",
+          "o": [
+            "adres",
+            "adress",
+            "address",
+            "addres"
+          ],
+          "a": 2,
+          "c": "Address has double “d” and double “s” — a double-double!",
+          "j": "You have got the address — and the spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "I ___ you can do it if you keep trying.",
+          "o": [
+            "beleve",
+            "belive",
+            "beleive",
+            "believe"
+          ],
+          "a": 3,
+          "c": "Believe has “ie” — “believe” rhymes with “receive”!",
+          "j": "I believe in your spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Riding a ___ is good exercise.",
+          "o": [
+            "bicycle",
+            "bycicle",
+            "bicicle",
+            "bysicle"
+          ],
+          "a": 0,
+          "c": "Bicycle is b-i-c-y-c-l-e — “bi” means two wheels!",
+          "j": "Two wheels, one perfect spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Check the ___ to see what day it is.",
+          "o": [
+            "calandar",
+            "calendar",
+            "calander",
+            "calender"
+          ],
+          "a": 1,
+          "c": "Calendar ends in “ar” — “calend-ar”, like “car”!",
+          "j": "Mark this day on the calendar — you spelt it right!",
+          "sub": "spelling"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "The shopping ___ is in the middle of town.",
+          "o": [
+            "centa",
+            "center",
+            "centre",
+            "sentre"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "I am ___ that the show starts at 7pm.",
+          "o": [
+            "sertain",
+            "curtain",
+            "certan",
+            "certain"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "Can you ___ your favourite animal to me?",
+          "o": [
+            "describe",
+            "describ",
+            "discrbe",
+            "discribe"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "The magician made the rabbit ___.",
+          "o": [
+            "disapper",
+            "disappear",
+            "dissapear",
+            "disapear"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "I love ice cream, ___ chocolate flavour.",
+          "o": [
+            "exspecially",
+            "especiallly",
+            "especially",
+            "especialy"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "My birthday is in ___, the shortest month.",
+          "o": [
+            "Februray",
+            "Februery",
+            "Febuary",
+            "February"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "Please move ___ so we can see the board.",
+          "o": [
+            "forward",
+            "forword",
+            "foreward",
+            "foward"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        },
+        {
+          "q": "We learn ___ in English class.",
+          "o": [
+            "gramar",
+            "grammar",
+            "gramma",
+            "grammer"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "spelling"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "The ___ keeps the school safe at night.",
+          "o": [
+            "gaurd",
+            "gard",
+            "guard",
+            "gurd"
+          ],
+          "a": 2,
+          "c": "Guard is g-u-a-r-d — the “u” stands guard too!",
+          "j": "On guard — and on point with spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "What is the ___ of that tall building?",
+          "o": [
+            "hieght",
+            "heigt",
+            "hight",
+            "height"
+          ],
+          "a": 3,
+          "c": "Height is h-e-i-g-h-t — “ei” after “h”!",
+          "j": "You have reached new heights!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Singapore is an ___.",
+          "o": [
+            "island",
+            "iland",
+            "islend",
+            "islan"
+          ],
+          "a": 0,
+          "c": "Island has a silent “s” — “is-land”!",
+          "j": "Island life, island spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Reading books gives you ___.",
+          "o": [
+            "knowlege",
+            "knowledge",
+            "knowledg",
+            "nowledge"
+          ],
+          "a": 1,
+          "c": "Knowledge ends in “dge” — “know” + “ledge”!",
+          "j": "Knowledge is power — and so is spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "We borrow books from the ___.",
+          "o": [
+            "librery",
+            "libary",
+            "library",
+            "librare"
+          ],
+          "a": 2,
+          "c": "Library is l-i-b-r-a-r-y — “brary” like “January”!",
+          "j": "Shh… your spelling is library-quiet and perfect!",
+          "sub": "spelling"
+        },
+        {
+          "q": "The ___ puppy chewed my shoes!",
+          "o": [
+            "noghty",
+            "naugthy",
+            "naugty",
+            "naughty"
+          ],
+          "a": 3,
+          "c": "Naughty is n-a-u-g-h-t-y — “augh” makes the “or” sound!",
+          "j": "Naughty puppy, nice spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Our ___ bakes the best cookies.",
+          "o": [
+            "neighbour",
+            "neigbour",
+            "naybour",
+            "nieghbour"
+          ],
+          "a": 0,
+          "c": "Neighbour is n-e-i-g-h-b-o-u-r — “neigh” like a horse!",
+          "j": "Good neighbours, great spelling!",
+          "sub": "spelling"
+        },
+        {
+          "q": "What a special ___ — a birthday party!",
+          "o": [
+            "ocasion",
+            "occasion",
+            "occassion",
+            "ocassion"
+          ],
+          "a": 1,
+          "c": "Occasion has double “c” and single “s” — “oc-ca-sion”!",
+          "j": "What an occasion — perfectly spelt!",
+          "sub": "spelling"
+        },
+        {
+          "q": "North is the ___ of south.",
+          "o": [
+            "opposit",
+            "oposite",
+            "opposite",
+            "oppisite"
+          ],
+          "a": 2,
+          "c": "Opposite has double “p” — “op-po-site”!",
+          "j": "Quite the opposite of wrong!",
+          "sub": "spelling"
+        },
+        {
+          "q": "A camera is a useful ___ on holiday.",
+          "o": [
+            "posession",
+            "possesson",
+            "possesion",
+            "possession"
+          ],
+          "a": 3,
+          "c": "Possession has double “s” twice — “pos-ses-sion”!",
+          "j": "You possess perfect spelling!",
+          "sub": "spelling"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "I will ___ finish my homework tonight.",
+          "o": [
+            "probably",
+            "probly",
+            "probabely",
+            "probely"
+          ],
+          "a": 0,
+          "c": "Probably is p-r-o-b-a-b-l-y — “prob-a-bly”!",
+          "j": "Probably the best spelling today!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Please ___ the two words with a line.",
+          "o": [
+            "seperate",
+            "separate",
+            "separete",
+            "seprate"
+          ],
+          "a": 1,
+          "c": "Separate has “a” in the middle — “there is a rat in separate”!",
+          "j": "Separate the right from the wrong — done!",
+          "sub": "spelling"
+        },
+        {
+          "q": "What a nice ___ — a new puppy!",
+          "o": [
+            "surprize",
+            "suprise",
+            "surprise",
+            "suprize"
+          ],
+          "a": 2,
+          "c": "Surprise is s-u-r-p-r-i-s-e — “sur-prise”!",
+          "j": "Surprise! Your spelling is brilliant!",
+          "sub": "spelling"
+        },
+        {
+          "q": "We will go to the zoo ___.",
+          "o": [
+            "tommorrow",
+            "tomoro",
+            "tomorow",
+            "tomorrow"
+          ],
+          "a": 3,
+          "c": "Tomorrow has double “m” and double “r” — “tom-or-row”!",
+          "j": "Tomorrow is another day — and another win!",
+          "sub": "spelling"
+        },
+        {
+          "q": "Take an ___ in case it rains.",
+          "o": [
+            "umbrella",
+            "umberlla",
+            "umbrellaa",
+            "umbrela"
+          ],
+          "a": 0,
+          "c": "Umbrella has double “l” — “um-brel-la”!",
+          "j": "Rain or shine, your spelling is fine!",
+          "sub": "spelling"
+        },
+        {
+          "q": "___ is the middle of the school week.",
+          "o": [
+            "Wendsday",
+            "Wednesday",
+            "Wensday",
+            "Wednesdey"
+          ],
+          "a": 1,
+          "c": "Wednesday is W-e-d-n-e-s-d-a-y — “wed-nes-day”!",
+          "j": "Hump day? More like champ day!",
+          "sub": "spelling"
+        }
+      ]
+    },
+    {
+      "id": "eng-visual",
+      "img": "",
+      "sub": "eng",
+      "subName": "English",
+      "icon": "🔍",
+      "name": "Visual Text Detectives",
+      "blurb": "Posters and notices — what are they really saying?",
+      "quest": [
+        {
+          "q": "Read this poster:\n\n🌊 BEACH CLEAN-UP!\nJoin us this Saturday at East Coast Park, 8am–11am. Gloves and bags provided. Let’s keep our beach clean!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To warn people not to swim in the sea",
+            "To teach people how to surf",
+            "To ask people to help clean the beach",
+            "To sell tickets to a beach party"
+          ],
+          "a": 2,
+          "c": "The poster asks people to join in and help — that is what it is for.",
+          "j": "Clean beach, clean win!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n📚 BIG BOOK FAIR!\nOur school library is holding a book fair! Monday to Friday, 9am–4pm. Hundreds of books at low prices. Come and find your next favourite story!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask children to return their library books",
+            "To sell library cards to parents",
+            "To teach children how to read",
+            "To tell families about a book fair at the library"
+          ],
+          "a": 3,
+          "c": "The poster tells people about the fair so they will come.",
+          "j": "A book fair — every page a new adventure!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this notice:\n\nLOST CAT! 🐱\nOur orange cat, Milo, is missing. He was last seen near Block 12, Hougang Avenue 3. He is friendly and loves treats. Please call 9123 4567 if you see him.\n\nWhat colour is the lost cat?",
+          "o": [
+            "Orange",
+            "Black",
+            "White",
+            "Grey"
+          ],
+          "a": 0,
+          "c": "The notice says Milo is an orange cat.",
+          "j": "Here, Milo! Good spotting!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎵 SCHOOL CONCERT!\nCome and enjoy an evening of music! Friday, 7pm, School Hall. Tickets: $5 for adults, free for children under 12.\n\nWhat time does the concert start?",
+          "o": [
+            "8pm",
+            "7pm",
+            "5pm",
+            "6pm"
+          ],
+          "a": 1,
+          "c": "The poster says the concert starts at 7pm.",
+          "j": "Music to my ears — and a correct answer!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🍦 FREE ICE CREAM!\nCome to Sunny’s Ice Cream Shop this Sunday! Free ice cream for the first 50 children. One scoop each. While stocks last!\n\nWho can get a free ice cream?",
+          "o": [
+            "Only adults",
+            "Children who buy a ticket",
+            "The first 50 children",
+            "Every child who comes"
+          ],
+          "a": 2,
+          "c": "Only the first 50 children get one — after that, the free scoops are gone!",
+          "j": "First come, first served — sweet!",
+          "sub": "vt_traps"
+        }
+      ],
+      "warm": [
+        {
+          "q": "Read this poster:\n\n♻️ RECYCLING DRIVE!\nBring your old newspapers and cans to the Community Centre this weekend. Help us turn trash into treasure!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell newspapers at the Community Centre",
+            "To teach people to make treasure",
+            "To ask people to clean the Community Centre",
+            "To ask people to bring old newspapers and cans"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this notice:\n\n⚠️ SWIMMING POOL RULES\nNo running by the pool. No diving in the shallow end. Children must be with an adult.\n\nWhat is the main purpose of this notice?",
+          "o": [
+            "To tell swimmers the pool rules",
+            "To teach children to swim",
+            "To sell swimming tickets",
+            "To ask people to build a pool"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🎨 ART COMPETITION!\nDraw your favourite animal! Entries close Friday. Open to children aged 7 to 12. Prizes for the top 3 drawings.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask children to buy art paper",
+            "To ask children to join an art competition",
+            "To sell drawings of animals",
+            "To teach children to draw animals"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🧁 BAKE SALE!\nSaturday, 10am–2pm, School Canteen. Cakes, cookies and muffins — all $2 each. All money goes to the school library fund.\n\nHow much does each cake cost?",
+          "o": [
+            "$10",
+            "$1",
+            "$2",
+            "$5"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this notice:\n\n🚌 BUS 87 — NEW TIMETABLE\nFrom Monday, Bus 87 leaves Hougang Interchange every 15 minutes, from 6am to 11pm.\n\nHow often does Bus 87 leave?",
+          "o": [
+            "Every 5 minutes",
+            "Every 30 minutes",
+            "Every hour",
+            "Every 15 minutes"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🍎 FRUIT STALL!\nFresh mangoes $3 each. Buy 3 for $8! Open daily, 8am–6pm, at the wet market.\n\nHow much do 3 mangoes cost?",
+          "o": [
+            "$8",
+            "$3",
+            "$9",
+            "$6"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎁 TOY DONATION!\nGive your old toys a new home! Toys must be clean and in working order. Drop them off at the library by Sunday.\n\nWhich toy can be donated?",
+          "o": [
+            "A toy with dead batteries",
+            "A clean teddy bear that still works",
+            "A broken toy car with missing wheels",
+            "A dirty doll with no arms"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n⛸️ ICE SKATING RINK!\nOpen daily, 10am–10pm. Skates for rent: $8. Socks are required — no bare feet on the ice!\n\nWhat must you wear on the ice?",
+          "o": [
+            "Bare feet",
+            "Slippers",
+            "Socks",
+            "Sandals"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "vt_traps"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "Read this poster:\n\n🐶 PET ADOPTION DAY!\nMeet our furry friends looking for a home! Saturday, 11am–4pm, Animal Shelter. All pets are vaccinated and ready to meet you!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell pet food at the shelter",
+            "To teach pets new tricks",
+            "To ask people to bring their pets to the shelter",
+            "To ask people to come and adopt a pet"
+          ],
+          "a": 3,
+          "c": "The poster invites people to meet pets that need homes.",
+          "j": "A new best friend is waiting for you!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🌱 GARDEN OPEN DAY!\nVisit our beautiful community garden! Sunday, 9am–12pm. See vegetables, flowers and herbs growing. Free entry for all!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To invite people to visit the community garden",
+            "To sell vegetables from the garden",
+            "To ask people to plant a garden",
+            "To teach people to water plants"
+          ],
+          "a": 0,
+          "c": "The poster invites everyone to come and visit the garden.",
+          "j": "Come smell the flowers — and the correct answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🚶 CHARITY WALK!\nWalk 5km for a good cause! Sunday, 7am, East Coast Park. Sign up at the Community Centre. Every step helps children in need.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask people to run at the park",
+            "To ask people to join a charity walk",
+            "To teach people to walk 5km",
+            "To sell walking shoes"
+          ],
+          "a": 1,
+          "c": "The poster asks people to sign up and walk for charity.",
+          "j": "Every step counts — and so does this answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n📖 READING CHALLENGE!\nRead 5 books this month and win a prize! Collect your reading card from the library. Challenge ends 30 June.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To teach children to write books",
+            "To ask children to return library books",
+            "To ask children to read 5 books and win a prize",
+            "To sell reading cards at the library"
+          ],
+          "a": 2,
+          "c": "The poster challenges children to read five books for a prize.",
+          "j": "Five books, one prize, one great answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n⚽ FOOTBALL TRIALS!\nWant to join our school football team? Trials on Tuesday, 4pm, School Field. Bring sports shoes and a water bottle. All Primary 3 pupils welcome!\n\nWho can join the trials?",
+          "o": [
+            "Only Primary 6 pupils",
+            "Only teachers",
+            "Only pupils with their own ball",
+            "All Primary 3 pupils"
+          ],
+          "a": 3,
+          "c": "The poster says all Primary 3 pupils are welcome.",
+          "j": "Goal! You scored a correct answer!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this notice:\n\n📦 LOST AND FOUND\nFound: a blue water bottle, a red umbrella and a black wallet. Please collect your items from the General Office by Friday.\n\nWhere can you collect lost items?",
+          "o": [
+            "The General Office",
+            "The library",
+            "The canteen",
+            "The school hall"
+          ],
+          "a": 0,
+          "c": "The notice says to collect items from the General Office.",
+          "j": "Found it! Great detective work!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎬 MOVIE NIGHT!\n“Adventures of Pip the Otter” — Saturday, 6pm, Community Hall. Tickets $4. Children under 7 must come with an adult.\n\nWhich child can watch the movie alone?",
+          "o": [
+            "A 4-year-old",
+            "A 10-year-old",
+            "A 6-year-old",
+            "A 5-year-old"
+          ],
+          "a": 1,
+          "c": "Children under 7 need an adult, so a 10-year-old can come alone.",
+          "j": "Lights, camera, correct answer!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🏊 SWIMMING LESSONS!\nLearn to swim with Coach Tan! Every Saturday, 9am. $60 for 4 lessons. Sign up by 15 March — only 20 places!\n\nWhat should you do if you want to join?",
+          "o": [
+            "Call Coach Tan on Sunday",
+            "Pay $60 on the first day",
+            "Sign up by 15 March",
+            "Just turn up on Saturday"
+          ],
+          "a": 2,
+          "c": "The poster says to sign up by 15 March, and places are limited.",
+          "j": "Dive in — you got it right!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🍓 HEALTHY EATING WEEK!\nEat a rainbow every day! Free fruit with every lunch set this week, while stocks last. Only at the school canteen.\n\nWhen can you get free fruit?",
+          "o": [
+            "Any time you ask for it",
+            "Only on Monday",
+            "With any drink you buy",
+            "With a lunch set, while stocks last"
+          ],
+          "a": 3,
+          "c": "The free fruit comes with a lunch set — and only while stocks last!",
+          "j": "Eat a rainbow — and a correct answer!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🎪 SCHOOL FAIR!\nGames, food and fun for the whole family! Saturday, 10am–3pm, School Field. Entry is free. Rides cost $2 per ride.\n\nHow much is entry to the fair?",
+          "o": [
+            "Free",
+            "$2",
+            "$10",
+            "$5"
+          ],
+          "a": 0,
+          "c": "Entry is free — only the rides cost $2 each.",
+          "j": "Free entry, full marks!",
+          "sub": "vt_details"
+        }
+      ],
+      "retry": [
+        {
+          "q": "Read this poster:\n\n📚 BOOK SWAP!\nBring a book, take a book! Saturday, 10am–12pm, Library. Books must be in good condition. One book per person.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask people to clean the library",
+            "To ask people to swap books at the library",
+            "To sell old books",
+            "To teach people to write books"
+          ],
+          "a": 1,
+          "c": "The poster is about swapping books — bring one, take one!",
+          "j": "Swap a book, keep the knowledge!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🚸 ROAD SAFETY!\nStop, look and listen before you cross. Always use the zebra crossing. Hold an adult’s hand.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell road safety books",
+            "To warn drivers about children",
+            "To teach children how to cross the road safely",
+            "To ask children to build a zebra crossing"
+          ],
+          "a": 2,
+          "c": "The poster teaches the safe steps for crossing a road.",
+          "j": "Stop, look, listen — and answer correctly!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🎵 MUSIC LESSONS!\nLearn piano or guitar! Lessons every Wednesday, 4pm–5pm. $25 per lesson. First lesson free for new pupils!\n\nHow much is the first lesson for a new pupil?",
+          "o": [
+            "$25",
+            "$50",
+            "$10",
+            "Free"
+          ],
+          "a": 3,
+          "c": "The first lesson is free for new pupils.",
+          "j": "Music to my ears!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this notice:\n\n🌳 PARK RULES\nNo littering. Keep dogs on a leash. Do not pick the flowers. Enjoy the park!\n\nWhat must dog owners do?",
+          "o": [
+            "Keep their dogs on a leash",
+            "Let their dogs run free",
+            "Keep their dogs at home",
+            "Walk their dogs at night"
+          ],
+          "a": 0,
+          "c": "The rules say dogs must stay on a leash in the park.",
+          "j": "Good dog — and good answer!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎨 DRAWING CONTEST!\nDraw your dream house! Open to all pupils. Entries must reach the Art Room by Friday, 3pm. Late entries will not be accepted.\n\nWhat happens to late entries?",
+          "o": [
+            "They will be returned on Monday",
+            "They will not be accepted",
+            "They will get extra marks",
+            "They will be judged first"
+          ],
+          "a": 1,
+          "c": "The poster is clear: late entries will not be accepted.",
+          "j": "Right on time — and right on target!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🍔 BURGER DAY!\nBuy 1 burger, get 1 free! Only on Monday, 12pm–2pm. One free burger per person. Only at Burger King, Tampines Mall.\n\nWhen is the burger offer?",
+          "o": [
+            "Sunday, 12pm–2pm",
+            "Monday, all day",
+            "Monday, 12pm–2pm",
+            "Every day at lunch"
+          ],
+          "a": 2,
+          "c": "The offer is only on Monday between 12pm and 2pm.",
+          "j": "A tasty deal — and a tasty answer!",
+          "sub": "vt_traps"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "Read this poster:\n\n🌳 TREE PLANTING DAY!\nHelp us plant 100 trees in our neighbourhood! Join us on Saturday, 14 June, 8am–12pm, at Bishan Park. Tools and gloves will be provided. Volunteers under 12 must come with a parent. Register online by 10 June!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell trees at Bishan Park",
+            "To teach people about different trees",
+            "To ask people to water the park",
+            "To ask people to volunteer to plant trees"
+          ],
+          "a": 3,
+          "c": "The poster asks for volunteers to help plant trees.",
+          "j": "Plant a tree, grow a great answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this notice:\n\n📢 LIBRARY CLOSURE NOTICE\nThe Tampines Library will be closed from 1 to 5 July for upgrading works. All borrowed books can be returned at any other library. We apologise for any inconvenience.\n\nWhy is the library closed?",
+          "o": [
+            "For upgrading works",
+            "Because of a fire",
+            "For a book fair",
+            "Because of a holiday"
+          ],
+          "a": 0,
+          "c": "The notice says the library is closed for upgrading works.",
+          "j": "Closed for upgrades — open for correct answers!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🚲 CYCLING SAFETY WEEK!\nRide safe, ride smart! Always wear a helmet. Use the cycling path, not the road. Check your brakes before every ride. Free helmet checks at the Community Centre, Saturday 9am–1pm.\n\nWhat should you check before every ride?",
+          "o": [
+            "Your shoes",
+            "Your brakes",
+            "Your helmet size",
+            "The weather"
+          ],
+          "a": 1,
+          "c": "The poster says to check your brakes before every ride.",
+          "j": "Brakes checked, answer correct!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎭 DRAMA CLUB SHOW: “THE LION KING”!\nFriday, 18 July, 7pm, School Hall. Tickets: Adults $8, Children $4. Children under 5 enter free. Doors open at 6.30pm. No late entry after 7.15pm.\n\nHow much is a ticket for a child?",
+          "o": [
+            "Free",
+            "$2",
+            "$4",
+            "$8"
+          ],
+          "a": 2,
+          "c": "Children’s tickets cost $4 — only under-5s enter free.",
+          "j": "The show must go on — and so must your correct answers!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🏖️ SENTOSA DAY OUT!\nFamily package: 2 adults + 2 children for $120! Includes island entry and one ride each. Offer valid till 31 August. Book online only. Not valid on public holidays.\n\nWhen can you NOT use this offer?",
+          "o": [
+            "On weekdays",
+            "On Sundays",
+            "In the morning",
+            "On public holidays"
+          ],
+          "a": 3,
+          "c": "The small print says the offer is not valid on public holidays.",
+          "j": "Read the small print — you caught the trap!",
+          "sub": "vt_traps"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "Read this poster:\n\n🩸 BLOOD DONATION DRIVE!\nGive blood, save lives! Saturday, 9am–3pm, Community Club. Donors must be aged 18–60 and in good health. Bring your identity card.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask healthy adults to donate blood",
+            "To sell blood to hospitals",
+            "To teach people about blood",
+            "To ask children to give blood"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this notice:\n\n💧 SAVE WATER!\nTurn off the tap while brushing your teeth. A running tap wastes 6 litres of water every minute. Small steps save a lot!\n\nWhat is the main purpose of this notice?",
+          "o": [
+            "To ask people to drink more water",
+            "To ask people to save water",
+            "To sell water taps",
+            "To teach people to brush teeth"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🧮 MATHS OLYMPIAD!\nAre you a maths whizz? Take part in our Maths Olympiad! For Primary 4 to 6 pupils. Register with your maths teacher by 20 May.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To teach pupils maths",
+            "To ask teachers to set maths questions",
+            "To ask Primary 4 to 6 pupils to join a maths contest",
+            "To sell maths books"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🚌 SCHOOL BUS SERVICE\nNew bus routes start next term. Bus 3 leaves at 6.45am. Bus 5 leaves at 7.00am. Late pupils will not be picked up.\n\nWhat time does Bus 3 leave?",
+          "o": [
+            "7.00am",
+            "6.30am",
+            "7.15am",
+            "6.45am"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎾 TENNIS COACHING!\nBeginners welcome! Every Sunday, 10am–11am, Sports Centre. Rackets provided. $15 per lesson. First trial lesson free!\n\nHow much is each lesson?",
+          "o": [
+            "$15",
+            "$10",
+            "$25",
+            "Free"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this notice:\n\n🗑️ BULKY ITEMS DISPOSAL\nResidents may dispose of bulky items on the first Monday of each month. Place items at the bin centre by 9am. No renovation waste allowed.\n\nWhen can residents dispose of bulky items?",
+          "o": [
+            "Every weekend",
+            "On the first Monday of each month",
+            "Every Monday",
+            "On the first day of each month"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🎁 LUCKY DRAW!\nSpend $50 in one receipt at FairPrice to win a bicycle! One entry per receipt. Draw on 1 September. Winners will be called.\n\nHow do you enter the lucky draw?",
+          "o": [
+            "Buy a bicycle",
+            "Call FairPrice",
+            "Spend $50 in one receipt",
+            "Spend $50 in total over the month"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🍕 PIZZA PROMOTION!\nLarge pizza at $20 (usual price $30)! Only for takeaway. Offer ends Sunday. Not valid with other promotions.\n\nWhat is the catch in this offer?",
+          "o": [
+            "It is only for small pizzas",
+            "It is only on Sundays",
+            "It is only for members",
+            "It is only for takeaway"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "vt_traps"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "Read this poster:\n\n🌏 EARTH DAY!\nSwitch off your lights for one hour, 8.30pm–9.30pm, on 22 April. Together, we can save the planet! Join millions around the world.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask people to switch off lights for Earth Hour",
+            "To sell light bulbs",
+            "To teach people about the Earth",
+            "To ask people to stay up late"
+          ],
+          "a": 0,
+          "c": "The poster asks everyone to switch off lights for one hour.",
+          "j": "Lights out — answer in!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🚀 SCIENCE CENTRE HOLIDAY PROGRAMME!\nBuild your own robot! 2–5 June, 9am–12pm. For children aged 8–12. $120 per child, materials included. Limited to 30 children!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask children to visit the Science Centre",
+            "To tell parents about a robot-building holiday programme",
+            "To sell robots at the Science Centre",
+            "To teach children to use computers"
+          ],
+          "a": 1,
+          "c": "The poster tells parents about a holiday programme where children build robots.",
+          "j": "Robots, rockets and right answers!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n📸 PHOTOGRAPHY CONTEST!\nTheme: “My Neighbourhood”. Send your best photo by 30 November. Open to all ages. Top prize: a brand-new camera worth $500!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To teach people to take photos",
+            "To ask people to visit the neighbourhood",
+            "To ask people to send photos for a contest",
+            "To sell cameras"
+          ],
+          "a": 2,
+          "c": "The poster invites people to enter a photography contest.",
+          "j": "Picture perfect — just like your answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🎤 TALENT SHOW AUDITIONS!\nSing, dance, act — show us your talent! Auditions on Monday, 3pm, Music Room. Prepare a 2-minute act. Only 15 acts will be chosen for the show.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell tickets to a talent show",
+            "To teach pupils to sing and dance",
+            "To ask pupils to watch a show",
+            "To ask pupils to audition for a talent show"
+          ],
+          "a": 3,
+          "c": "The poster asks pupils to prepare an act and audition.",
+          "j": "Star quality — and a star answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🏃 RUN FOR CHARITY!\nJoin our 10km charity run on Sunday, 6am, at the Stadium. Registration fee: $20. All money goes to children’s homes. Finishers get a medal!\n\nWhat do finishers get?",
+          "o": [
+            "A medal",
+            "A trophy",
+            "$20",
+            "A t-shirt"
+          ],
+          "a": 0,
+          "c": "The poster says finishers get a medal.",
+          "j": "You crossed the finish line — with the right answer!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this notice:\n\n🏫 SCHOOL EARLY DISMISSAL\nSchool will end at 11am on Friday, 30 May, for Teachers’ Day. School buses will leave at 11.15am. Please arrange to pick up your child.\n\nWhat time do school buses leave on 30 May?",
+          "o": [
+            "10.45am",
+            "11.15am",
+            "11am",
+            "12pm"
+          ],
+          "a": 1,
+          "c": "The notice says buses leave at 11.15am.",
+          "j": "Right on time!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🍿 CINEMA SPECIAL!\nWatch any movie for $6 on Wednesdays! Tickets must be bought at the counter. Offer is for students only — show your student pass. Not valid on public holidays.\n\nWho can enjoy the $6 ticket?",
+          "o": [
+            "Adults on Wednesday",
+            "Children under 12",
+            "Students with a student pass",
+            "Everyone on Wednesday"
+          ],
+          "a": 2,
+          "c": "The offer is for students only, and you must show your student pass.",
+          "j": "A blockbuster answer!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n✈️ FAMILY HOLIDAY DEAL!\n3 days, 2 nights in Kuala Lumpur — flights and hotel for a family of 4, only $999! Book by 15 December. Travel must be completed by 28 February.\n\nWhat must you do by 15 December?",
+          "o": [
+            "Travel to Kuala Lumpur",
+            "Pay the full $999",
+            "Choose your hotel",
+            "Book the holiday"
+          ],
+          "a": 3,
+          "c": "You must book by 15 December — travel can be later, by 28 February.",
+          "j": "Booked it — the right answer, that is!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n💻 FREE CODING WORKSHOP!\nLearn to code your first game! Saturday, 2pm–4pm, Library. For ages 10–12. Free, but registration is needed. Only 25 places — first come, first served!\n\nWhat should you do first if you want a place?",
+          "o": [
+            "Register for the workshop",
+            "Just turn up on Saturday",
+            "Bring your own laptop",
+            "Pay $25"
+          ],
+          "a": 0,
+          "c": "The workshop is free, but you must register — and places are limited.",
+          "j": "Code cracked!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🐢 TURTLE WATCH!\nSee baby turtles hatch! Guided tours nightly, 8pm–10pm, at Changi Beach. Tours run only from November to February. Bookings essential.\n\nWhen do the turtle tours run?",
+          "o": [
+            "Only in November",
+            "From November to February",
+            "All year round",
+            "From June to August"
+          ],
+          "a": 1,
+          "c": "The poster says tours run only from November to February.",
+          "j": "Slow and steady — like a turtle, and like a great answer!",
+          "sub": "vt_details"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "Read this poster:\n\n🌻 VOLUNTEER WITH US!\nHelp at our food bank! Sort and pack food for families in need. Every Saturday, 10am–1pm. No experience needed. Students welcome!\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To ask families to donate money",
+            "To teach students to cook",
+            "To ask people to volunteer at a food bank",
+            "To sell food to families"
+          ],
+          "a": 2,
+          "c": "The poster asks for volunteers to help at the food bank.",
+          "j": "Kind hands, clever mind!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this poster:\n\n🎻 ORCHESTRA CONCERT!\nEnjoy an evening of classical music! Saturday, 7.30pm, Esplanade Concert Hall. Tickets from $20. Students get 50% off with a student pass.\n\nWhat is the main purpose of this poster?",
+          "o": [
+            "To sell musical instruments",
+            "To teach people to play the violin",
+            "To ask people to join an orchestra",
+            "To tell people about an orchestra concert"
+          ],
+          "a": 3,
+          "c": "The poster tells people about the concert so they will buy tickets.",
+          "j": "Bravo — encore for your answer!",
+          "sub": "vt_purpose"
+        },
+        {
+          "q": "Read this notice:\n\n🚧 ROAD WORKS AHEAD\nJalan Besar will be closed from 10pm to 5am, Monday to Friday, for road works. Please use an alternative route. We apologise for the inconvenience.\n\nWhen is Jalan Besar closed?",
+          "o": [
+            "10pm to 5am, Monday to Friday",
+            "All day, Monday to Friday",
+            "10pm to 5am, every day",
+            "5am to 10pm, Monday to Friday"
+          ],
+          "a": 0,
+          "c": "The notice says the road is closed from 10pm to 5am on weekdays.",
+          "j": "Detour avoided — straight to the right answer!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🏸 BADMINTON CLINIC!\nLearn badminton from a national coach! Sunday, 9am–11am, Sports Hall. For ages 9–13. Rackets provided. $10 per session.\n\nWhat is provided at the clinic?",
+          "o": [
+            "Trophies",
+            "Rackets",
+            "Shoes",
+            "T-shirts"
+          ],
+          "a": 1,
+          "c": "The poster says rackets are provided.",
+          "j": "Smash hit!",
+          "sub": "vt_details"
+        },
+        {
+          "q": "Read this poster:\n\n🛍️ MEGA SALE!\nUp to 70% off everything! This weekend only. Members get an extra 10% off. Discount applies at the counter — prices on tags are before discount.\n\nWhat do the prices on the tags show?",
+          "o": [
+            "Members’ prices",
+            "The usual prices only",
+            "Prices before the discount",
+            "Prices after the discount"
+          ],
+          "a": 2,
+          "c": "The tags show prices before discount — the discount is taken at the counter.",
+          "j": "A real bargain — and a real bargain of an answer!",
+          "sub": "vt_traps"
+        },
+        {
+          "q": "Read this poster:\n\n🍩 DOUGHNUT GIVEAWAY!\nFree doughnut with every coffee! Monday to Friday, 8am–10am only. One per customer. While stocks last.\n\nWhen can you get a free doughnut?",
+          "o": [
+            "Any time with any drink",
+            "Weekends with a coffee",
+            "Any morning with a coffee",
+            "Weekday mornings, 8am–10am, with a coffee"
+          ],
+          "a": 3,
+          "c": "The giveaway is Monday to Friday, 8am–10am, with a coffee — and only while stocks last!",
+          "j": "Sweet — you spotted every condition!",
+          "sub": "vt_traps"
+        }
+      ]
+    }
+  ],
+  "topUps": [
+    {
+      "topicId": "eng-tense",
+      "kind": "quest",
+      "level": 3,
+      "questions": [
+        {
+          "q": "___ am the fastest runner in my class.",
+          "o": [
+            "I",
+            "My",
+            "Mine",
+            "Me"
+          ],
+          "a": 0,
+          "c": "Use “I” when you are the one doing the action.",
+          "j": "I am the fastest — and the smartest with pronouns!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "The teacher gave the prize to ___ because we won.",
+          "o": [
+            "we",
+            "us",
+            "our",
+            "ours"
+          ],
+          "a": 1,
+          "c": "After “to”, use “us” — the receiving word!",
+          "j": "A prize for us — and for your grammar!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "This red bicycle is ___. I got it for my birthday.",
+          "o": [
+            "I",
+            "my",
+            "mine",
+            "me"
+          ],
+          "a": 2,
+          "c": "“Mine” stands alone — it means “my bicycle”!",
+          "j": "Mine, all mine — and all correct!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "Sara forgot ___ umbrella, so she shared mine.",
+          "o": [
+            "herself",
+            "she",
+            "hers",
+            "her"
+          ],
+          "a": 3,
+          "c": "“Her umbrella” — “her” goes before the thing it owns!",
+          "j": "Sharing is caring — and so is good grammar!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "The cat cleaned ___ after playing in the mud.",
+          "o": [
+            "itself",
+            "it",
+            "its",
+            "it’s"
+          ],
+          "a": 0,
+          "c": "“Itself” means the cat did it to its own body!",
+          "j": "A clean cat and a clean answer!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "We built the treehouse by ___.",
+          "o": [
+            "ours",
+            "ourselves",
+            "us",
+            "we"
+          ],
+          "a": 1,
+          "c": "“Ourselves” means we did it with no help!",
+          "j": "Built it ourselves — and answered it ourselves!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ apples on this plate are sweet. Try one!",
+          "o": [
+            "Those",
+            "This",
+            "These",
+            "That"
+          ],
+          "a": 2,
+          "c": "“These” is for things that are near and more than one!",
+          "j": "These apples are sweet — and so is your answer!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "Look at ___ birds over there! They are flying south.",
+          "o": [
+            "this",
+            "these",
+            "that",
+            "those"
+          ],
+          "a": 3,
+          "c": "“Those” is for things that are far away and more than one!",
+          "j": "Those birds fly far — and your grammar flies high!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "There isn’t ___ milk left. We need to buy more.",
+          "o": [
+            "any",
+            "many",
+            "few",
+            "some"
+          ],
+          "a": 0,
+          "c": "Use “any” in a “not” sentence — “isn’t any”!",
+          "j": "Not any milk — but plenty of brains!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "How ___ books did you borrow from the library?",
+          "o": [
+            "much",
+            "many",
+            "little",
+            "less"
+          ],
+          "a": 1,
+          "c": "“Many” goes with things you can count, like books!",
+          "j": "Many books, many right answers!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "The cat is hiding ___ the bed.",
+          "o": [
+            "in",
+            "at",
+            "under",
+            "on"
+          ],
+          "a": 2,
+          "c": "“Under” means below something — the cat is below the bed!",
+          "j": "Found the cat — and the right answer!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "We will meet ___ the library after school.",
+          "o": [
+            "in",
+            "on",
+            "under",
+            "at"
+          ],
+          "a": 3,
+          "c": "“At” is for a place — “at the library”!",
+          "j": "Meet you at the library — with the right answer!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "You like ice cream, ___?",
+          "o": [
+            "don’t you",
+            "are you",
+            "isn’t it",
+            "do you"
+          ],
+          "a": 0,
+          "c": "“You like” is positive, so the tag is negative: “don’t you?”",
+          "j": "You like ice cream, don’t you? I knew it!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "She isn’t coming to the party, ___?",
+          "o": [
+            "is it",
+            "is she",
+            "isn’t she",
+            "does she"
+          ],
+          "a": 1,
+          "c": "“Isn’t coming” is negative, so the tag is positive: “is she?”",
+          "j": "Is she? Isn’t she? You got it right either way!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ did you go on Saturday?",
+          "o": [
+            "Who",
+            "What",
+            "Where",
+            "When"
+          ],
+          "a": 2,
+          "c": "“Where” asks about a place — you went somewhere!",
+          "j": "Where did you go? To the right answer!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "___ is knocking at the door?",
+          "o": [
+            "What",
+            "Where",
+            "Why",
+            "Who"
+          ],
+          "a": 3,
+          "c": "“Who” asks about a person — someone is at the door!",
+          "j": "Who’s there? A correct answer!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "You ___ wash your hands before eating.",
+          "o": [
+            "must",
+            "might",
+            "would",
+            "could"
+          ],
+          "a": 0,
+          "c": "“Must” shows something you have to do!",
+          "j": "A must-do — and a must-get-right!",
+          "sub": "modals"
+        },
+        {
+          "q": "___ I borrow your pencil, please?",
+          "o": [
+            "Will",
+            "May",
+            "Must",
+            "Shall"
+          ],
+          "a": 1,
+          "c": "“May I” is the polite way to ask for permission!",
+          "j": "May I say — well done!",
+          "sub": "modals"
+        },
+        {
+          "q": "___ is at the door. Go and see who it is!",
+          "o": [
+            "No one",
+            "Something",
+            "Someone",
+            "Anyone"
+          ],
+          "a": 2,
+          "c": "“Someone” means a person is there — we just don’t know who!",
+          "j": "Someone is at the door — it’s a correct answer!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "There is ___ in the box. It is empty!",
+          "o": [
+            "someone",
+            "something",
+            "anything",
+            "nothing"
+          ],
+          "a": 3,
+          "c": "“Nothing” means not a single thing — the box is empty!",
+          "j": "Nothing in the box — but everything in your answer!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "The baby ___ loudly when she is hungry.",
+          "o": [
+            "cries",
+            "cried",
+            "crying",
+            "cry"
+          ],
+          "a": 0,
+          "c": "“The baby” is one person, so the verb needs an “s”: cries!",
+          "j": "Wah! The baby cries — and you got it right!",
+          "sub": "verb_form"
+        },
+        {
+          "q": "The dogs ___ barking at the postman.",
+          "o": [
+            "is",
+            "are",
+            "am",
+            "be"
+          ],
+          "a": 1,
+          "c": "“Dogs” is more than one, so we use “are”!",
+          "j": "Woof woof — the dogs agree!",
+          "sub": "sva"
+        },
+        {
+          "q": "I have ___ my homework already.",
+          "o": [
+            "finish",
+            "finishes",
+            "finished",
+            "finishing"
+          ],
+          "a": 2,
+          "c": "After “have”, use the past participle: “have finished”!",
+          "j": "Finished — just like this question!",
+          "sub": "tense_perfect"
+        },
+        {
+          "q": "She has just ___ her lunch.",
+          "o": [
+            "eat",
+            "eats",
+            "ate",
+            "eaten"
+          ],
+          "a": 3,
+          "c": "After “has”, use the past participle: “has eaten”!",
+          "j": "Eaten up — and answered up!",
+          "sub": "tense_perfect"
+        },
+        {
+          "q": "I was tired, ___ I went to bed early.",
+          "o": [
+            "so",
+            "because",
+            "when",
+            "but"
+          ],
+          "a": 0,
+          "c": "“So” shows a result — tired, so bedtime!",
+          "j": "So tired — so right!",
+          "sub": "connectors"
+        },
+        {
+          "q": "We stayed inside ___ it was raining.",
+          "o": [
+            "so",
+            "because",
+            "and",
+            "but"
+          ],
+          "a": 1,
+          "c": "“Because” gives the reason — we stayed in because of the rain!",
+          "j": "Because you are clever — that’s why!",
+          "sub": "connectors"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "warm",
+      "level": 3,
+      "questions": [
+        {
+          "q": "___ (He/Him) is my best friend.",
+          "o": [
+            "His",
+            "He’s",
+            "He",
+            "Him"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "That blue bag is ___.",
+          "o": [
+            "me",
+            "I",
+            "my",
+            "mine"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "She did her homework by ___.",
+          "o": [
+            "herself",
+            "her",
+            "she",
+            "hers"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ book is mine. It is on the table near me.",
+          "o": [
+            "Those",
+            "This",
+            "These",
+            "That"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "There is ___ water in the bottle.",
+          "o": [
+            "many",
+            "few",
+            "a little",
+            "a few"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "Put your shoes ___ the shoe rack.",
+          "o": [
+            "under",
+            "in",
+            "at",
+            "on"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "prepositions"
+        },
+        {
+          "q": "It is a sunny day, ___?",
+          "o": [
+            "isn’t it",
+            "does it",
+            "is it not",
+            "is it"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ do you live?",
+          "o": [
+            "What",
+            "Where",
+            "When",
+            "Who"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "You ___ be quiet in the library.",
+          "o": [
+            "would",
+            "could",
+            "should",
+            "might"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "modals"
+        },
+        {
+          "q": "___ left the door open. Who was it?",
+          "o": [
+            "Anyone",
+            "No one",
+            "Something",
+            "Someone"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "indefinites"
+        },
+        {
+          "q": "My father ___ to work by bus every day.",
+          "o": [
+            "goes",
+            "went",
+            "going",
+            "go"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "verb_form"
+        },
+        {
+          "q": "Each of the pupils ___ a new pencil.",
+          "o": [
+            "is",
+            "has",
+            "have",
+            "are"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "sva"
+        },
+        {
+          "q": "They have ___ to the zoo many times.",
+          "o": [
+            "being",
+            "are",
+            "been",
+            "be"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "tense_perfect"
+        },
+        {
+          "q": "I like apples ___ oranges.",
+          "o": [
+            "but",
+            "so",
+            "because",
+            "and"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "connectors"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "fresh",
+      "level": 3,
+      "questions": [
+        {
+          "q": "The ball hit ___ on the head!",
+          "o": [
+            "me",
+            "my",
+            "mine",
+            "I"
+          ],
+          "a": 0,
+          "c": "“Hit me” — “me” is the one who gets hit!",
+          "j": "Ouch! But your grammar is spot on!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "Is this pen ___? I think it belongs to you.",
+          "o": [
+            "your",
+            "yours",
+            "you",
+            "your’s"
+          ],
+          "a": 1,
+          "c": "“Yours” stands alone — it means “your pen”!",
+          "j": "Yours truly — a correct answer!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "He hurt ___ while playing football.",
+          "o": [
+            "his",
+            "he",
+            "himself",
+            "him"
+          ],
+          "a": 2,
+          "c": "“Himself” — he hurt his own body!",
+          "j": "Ouch! But you got it right!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "Look at ___ mountains in the distance!",
+          "o": [
+            "this",
+            "these",
+            "that",
+            "those"
+          ],
+          "a": 3,
+          "c": "“Those mountains” — far away and more than one!",
+          "j": "Those mountains are tall — and so is your score!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "There are ___ pupils in the hall today.",
+          "o": [
+            "a lot of",
+            "much",
+            "a little",
+            "less"
+          ],
+          "a": 0,
+          "c": "“A lot of” goes with countable pupils!",
+          "j": "A lot of pupils, a lot of brains!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "The school is ___ the park and the market.",
+          "o": [
+            "at",
+            "between",
+            "behind",
+            "under"
+          ],
+          "a": 1,
+          "c": "“Between” — right in the middle of two places!",
+          "j": "Right in between — and right on target!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "They won the game, ___?",
+          "o": [
+            "do they",
+            "aren’t they",
+            "didn’t they",
+            "did they"
+          ],
+          "a": 2,
+          "c": "“They won” is positive, so the tag is negative: “didn’t they?”",
+          "j": "They won — and so did you!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ did the concert start?",
+          "o": [
+            "Who",
+            "What",
+            "Where",
+            "When"
+          ],
+          "a": 3,
+          "c": "“When” asks about time!",
+          "j": "When? Right now — you just got it right!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "We ___ respect our elders.",
+          "o": [
+            "should",
+            "might",
+            "would",
+            "could"
+          ],
+          "a": 0,
+          "c": "“Should” shows what is right to do!",
+          "j": "Respect — and a respectful score!",
+          "sub": "modals"
+        },
+        {
+          "q": "Is there ___ in the fridge to eat?",
+          "o": [
+            "anywhere",
+            "something",
+            "someone",
+            "nothing"
+          ],
+          "a": 1,
+          "c": "“Something” — there is a thing to eat, we just don’t know what!",
+          "j": "Something tasty — and a tasty answer!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "The children are ___ in the playground now.",
+          "o": [
+            "plays",
+            "played",
+            "playing",
+            "play"
+          ],
+          "a": 2,
+          "c": "“Are playing” — right now means the -ing form!",
+          "j": "Playing now — and winning now!",
+          "sub": "verb_form"
+        },
+        {
+          "q": "The box of chocolates ___ on the table.",
+          "o": [
+            "are",
+            "am",
+            "be",
+            "is"
+          ],
+          "a": 3,
+          "c": "“The box” is one thing, so we use “is”!",
+          "j": "Sweet — a chocolate-box answer!",
+          "sub": "sva"
+        },
+        {
+          "q": "Have you ___ your lunch yet?",
+          "o": [
+            "eaten",
+            "ate",
+            "eating",
+            "eat"
+          ],
+          "a": 0,
+          "c": "After “have”, use the past participle: “have eaten”!",
+          "j": "Have you eaten? Have you won? Yes!",
+          "sub": "tense_perfect"
+        },
+        {
+          "q": "She was late ___ she missed the bus.",
+          "o": [
+            "so",
+            "because",
+            "but",
+            "and"
+          ],
+          "a": 1,
+          "c": "“Because” gives the reason for being late!",
+          "j": "Because you are brilliant — that’s why!",
+          "sub": "connectors"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "retry",
+      "level": 3,
+      "questions": [
+        {
+          "q": "Come with ___ to the library.",
+          "o": [
+            "mine",
+            "I",
+            "me",
+            "my"
+          ],
+          "a": 2,
+          "c": "After “with”, use “me”!",
+          "j": "Come with me — to the land of right answers!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "The cat licked ___ paws clean.",
+          "o": [
+            "it’s",
+            "itself",
+            "it",
+            "its"
+          ],
+          "a": 3,
+          "c": "“Its paws” — “its” shows the paws belong to the cat!",
+          "j": "Clean paws, clean answer!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "Be careful not to hurt ___.",
+          "o": [
+            "yourself",
+            "you",
+            "your",
+            "yours"
+          ],
+          "a": 0,
+          "c": "“Yourself” — be careful with your own body!",
+          "j": "Careful — and correct!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ is my favourite toy. It is right here in my hand.",
+          "o": [
+            "Those",
+            "This",
+            "These",
+            "That"
+          ],
+          "a": 1,
+          "c": "“This” — near you and just one!",
+          "j": "This toy, this answer — both favourites!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "I have ___ friends in my class.",
+          "o": [
+            "less",
+            "much",
+            "many",
+            "a little"
+          ],
+          "a": 2,
+          "c": "“Many friends” — friends can be counted!",
+          "j": "Many friends, many right answers!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "We walked ___ the bridge to the other side.",
+          "o": [
+            "under",
+            "in",
+            "at",
+            "across"
+          ],
+          "a": 3,
+          "c": "“Across” means from one side to the other!",
+          "j": "Across the bridge — and across the finish line!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "He can swim, ___?",
+          "o": [
+            "can’t he",
+            "does he",
+            "is he",
+            "can he"
+          ],
+          "a": 0,
+          "c": "“He can” is positive, so the tag is negative: “can’t he?”",
+          "j": "He can swim — and you can answer!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ is your favourite food?",
+          "o": [
+            "Who",
+            "What",
+            "Where",
+            "When"
+          ],
+          "a": 1,
+          "c": "“What” asks about a thing — your favourite food!",
+          "j": "What a great answer!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "You ___ not play with fire. It is dangerous.",
+          "o": [
+            "would",
+            "could",
+            "must",
+            "might"
+          ],
+          "a": 2,
+          "c": "“Must not” is a strong rule — never play with fire!",
+          "j": "A must-know rule — and a must-get answer!",
+          "sub": "modals"
+        },
+        {
+          "q": "There was ___ at home when I came back.",
+          "o": [
+            "something",
+            "someone",
+            "anyone",
+            "no one"
+          ],
+          "a": 3,
+          "c": "“No one” means not a single person was home!",
+          "j": "No one home — but a correct answer lives here!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "We have ___ our project already.",
+          "o": [
+            "finished",
+            "finishing",
+            "finish",
+            "finishes"
+          ],
+          "a": 0,
+          "c": "After “have”, use the past participle: “have finished”!",
+          "j": "Project finished — question finished!",
+          "sub": "tense_perfect"
+        },
+        {
+          "q": "It was raining, ___ we took an umbrella.",
+          "o": [
+            "but",
+            "so",
+            "because",
+            "when"
+          ],
+          "a": 1,
+          "c": "“So” shows the result — raining, so umbrella!",
+          "j": "So smart — so right!",
+          "sub": "connectors"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "quest",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The coach praised ___ for our teamwork.",
+          "o": [
+            "ours",
+            "we",
+            "us",
+            "our"
+          ],
+          "a": 2,
+          "c": "After a verb like “praised”, use “us” — the receiving word!",
+          "j": "Praised by the coach — and by me!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "Between you and ___, I think the test was easy.",
+          "o": [
+            "my",
+            "mine",
+            "I",
+            "me"
+          ],
+          "a": 3,
+          "c": "After “between”, use “me” — “between you and me”!",
+          "j": "Between you and me — you are brilliant!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "Whose bag is this? It is ___ — I left it here yesterday.",
+          "o": [
+            "mine",
+            "me",
+            "I",
+            "my"
+          ],
+          "a": 0,
+          "c": "“Mine” stands alone — no noun after it!",
+          "j": "All mine — and all correct!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "The dog wagged ___ tail happily when Emma came home.",
+          "o": [
+            "it",
+            "its",
+            "it’s",
+            "itself"
+          ],
+          "a": 1,
+          "c": "“Its” shows belonging — the tail belongs to the dog!",
+          "j": "A wagging tail and a wagging win!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "The twins taught ___ to ride a bicycle.",
+          "o": [
+            "their",
+            "they",
+            "themselves",
+            "them"
+          ],
+          "a": 2,
+          "c": "“Themselves” — they taught their own selves!",
+          "j": "Self-taught and self-correct!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "Please help ___ to some cake.",
+          "o": [
+            "you",
+            "your",
+            "yours",
+            "yourself"
+          ],
+          "a": 3,
+          "c": "“Help yourself” is the polite way to offer food!",
+          "j": "Help yourself — to cake and to full marks!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ kind of weather is perfect for a picnic.",
+          "o": [
+            "This",
+            "These",
+            "That",
+            "Those"
+          ],
+          "a": 0,
+          "c": "“This kind” — “this” goes with one kind, right here!",
+          "j": "This weather, this answer — both perfect!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "I have read ___ books before; they were all wonderful.",
+          "o": [
+            "that",
+            "those",
+            "this",
+            "these"
+          ],
+          "a": 1,
+          "c": "“Those books” — books from the past, far in time!",
+          "j": "Those were the days — and this is the answer!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "There is ___ sugar in this tea. It is too sweet!",
+          "o": [
+            "many",
+            "too many",
+            "too much",
+            "a few"
+          ],
+          "a": 2,
+          "c": "“Too much” goes with things you cannot count, like sugar!",
+          "j": "Too much sugar — just the right answer!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "___ of the pupils were late, so the teacher waited.",
+          "o": [
+            "A little",
+            "Much",
+            "Less",
+            "A few"
+          ],
+          "a": 3,
+          "c": "“A few” goes with countable pupils — a small number of them!",
+          "j": "A few late, a lot right!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "The library is ___ the canteen and the hall.",
+          "o": [
+            "between",
+            "behind",
+            "under",
+            "at"
+          ],
+          "a": 0,
+          "c": "“Between” is for a place in the middle of two things!",
+          "j": "Right in between — and right on target!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "We have lived in this town ___ 2019.",
+          "o": [
+            "at",
+            "since",
+            "for",
+            "from"
+          ],
+          "a": 1,
+          "c": "“Since” goes with a point in time — since 2019!",
+          "j": "Since 2019 — and since forever, you are clever!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "Let’s go to the park, ___?",
+          "o": [
+            "do we",
+            "are we",
+            "shall we",
+            "will we"
+          ],
+          "a": 2,
+          "c": "“Let’s” always takes “shall we?” — a special rule!",
+          "j": "Shall we celebrate? Yes, we shall!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "Nobody likes a bully, ___?",
+          "o": [
+            "does they",
+            "do he",
+            "is they",
+            "do they"
+          ],
+          "a": 3,
+          "c": "“Nobody” acts like a negative, so the tag is positive: “do they?”",
+          "j": "Nobody likes a bully — everybody likes your answer!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ long have you been waiting here?",
+          "o": [
+            "How",
+            "What",
+            "Who",
+            "Which"
+          ],
+          "a": 0,
+          "c": "“How long” asks about time — how much time!",
+          "j": "How long? Not long — you answered fast!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "___ of these two books do you prefer?",
+          "o": [
+            "What",
+            "Which",
+            "Where",
+            "Who"
+          ],
+          "a": 1,
+          "c": "“Which” asks you to choose between two things!",
+          "j": "Which one? The right one — yours!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "You ___ have told me earlier. Now it is too late!",
+          "o": [
+            "would",
+            "could",
+            "should",
+            "might"
+          ],
+          "a": 2,
+          "c": "“Should have” talks about something that was a good idea in the past!",
+          "j": "Should have, would have, could have — you did!",
+          "sub": "modals"
+        },
+        {
+          "q": "It ___ rain later, so take an umbrella just in case.",
+          "o": [
+            "will",
+            "shall",
+            "must",
+            "might"
+          ],
+          "a": 3,
+          "c": "“Might” means maybe — it may or may not rain!",
+          "j": "It might rain — but your answer is a sure thing!",
+          "sub": "modals"
+        },
+        {
+          "q": "___ can join the art club. Everyone is welcome!",
+          "o": [
+            "Anyone",
+            "Someone",
+            "No one",
+            "Anything"
+          ],
+          "a": 0,
+          "c": "“Anyone” means any person at all — everyone is welcome!",
+          "j": "Anyone can join — and anyone can see you are clever!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "I looked ___ for my keys, but I could not find them.",
+          "o": [
+            "anywhere",
+            "everywhere",
+            "nowhere",
+            "somewhere"
+          ],
+          "a": 1,
+          "c": "“Everywhere” means in every place — I searched the whole house!",
+          "j": "Everywhere I look, I see a correct answer!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "The news ___ very interesting today.",
+          "o": [
+            "am",
+            "were",
+            "is",
+            "are"
+          ],
+          "a": 2,
+          "c": "“News” looks plural but acts as one thing — “is”!",
+          "j": "Good news — you got it right!",
+          "sub": "verb_form"
+        },
+        {
+          "q": "Neither of the boys ___ here yet.",
+          "o": [
+            "are",
+            "am",
+            "were",
+            "is"
+          ],
+          "a": 3,
+          "c": "“Neither” means not one of them — it takes “is”!",
+          "j": "Neither this nor that — just right!",
+          "sub": "sva"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "warm",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The principal thanked ___ for our hard work.",
+          "o": [
+            "us",
+            "our",
+            "ours",
+            "we"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "That house over there is ___.",
+          "o": [
+            "they",
+            "theirs",
+            "their",
+            "them"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "She blamed ___ for losing the keys.",
+          "o": [
+            "she",
+            "hers",
+            "herself",
+            "her"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ is the book I told you about.",
+          "o": [
+            "These",
+            "That",
+            "Those",
+            "This"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "We have ___ time left. Hurry up!",
+          "o": [
+            "a little",
+            "a few",
+            "many",
+            "few"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "The meeting starts ___ 2pm sharp.",
+          "o": [
+            "by",
+            "at",
+            "in",
+            "on"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "prepositions"
+        },
+        {
+          "q": "You have finished your homework, ___?",
+          "o": [
+            "didn’t you",
+            "do you",
+            "haven’t you",
+            "have you"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ often do you visit the library?",
+          "o": [
+            "What",
+            "Who",
+            "Which",
+            "How"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "We ___ finish this project by Friday.",
+          "o": [
+            "must",
+            "might",
+            "would",
+            "could"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "modals"
+        },
+        {
+          "q": "___ called me while I was out.",
+          "o": [
+            "Something",
+            "Someone",
+            "Anyone",
+            "No one"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "indefinites"
+        },
+        {
+          "q": "The team ___ playing very well today.",
+          "o": [
+            "am",
+            "be",
+            "is",
+            "are"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "verb_form"
+        },
+        {
+          "q": "The children in the hall ___ singing loudly.",
+          "o": [
+            "am",
+            "was",
+            "is",
+            "are"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "sva"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "fresh",
+      "level": 4,
+      "questions": [
+        {
+          "q": "Father took my brother and ___ to the zoo.",
+          "o": [
+            "me",
+            "my",
+            "mine",
+            "I"
+          ],
+          "a": 0,
+          "c": "After “took”, use “me” — the one who was taken!",
+          "j": "To the zoo — and to the top of the class!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "The choice is ___. You decide!",
+          "o": [
+            "your",
+            "yours",
+            "you",
+            "your’s"
+          ],
+          "a": 1,
+          "c": "“Yours” stands alone — the choice belongs to you!",
+          "j": "The choice is yours — and the right answer too!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "They enjoyed ___ at the party.",
+          "o": [
+            "their",
+            "they",
+            "themselves",
+            "them"
+          ],
+          "a": 2,
+          "c": "“Themselves” — they enjoyed their own time!",
+          "j": "A party to remember — and an answer to keep!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "I do not like ___ kind of music.",
+          "o": [
+            "those",
+            "this",
+            "these",
+            "that"
+          ],
+          "a": 3,
+          "c": "“That kind” — “that” goes with one kind, over there!",
+          "j": "Not that kind — but this kind of answer is great!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "She has read ___ books this year.",
+          "o": [
+            "a few",
+            "a little",
+            "much",
+            "less"
+          ],
+          "a": 0,
+          "c": "“A few books” — books can be counted!",
+          "j": "A few books, a lot of brains!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "He has been ill ___ Monday.",
+          "o": [
+            "at",
+            "since",
+            "for",
+            "from"
+          ],
+          "a": 1,
+          "c": "“Since Monday” — since goes with a point in time!",
+          "j": "Since Monday — and since always, you are clever!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "She will come tomorrow, ___?",
+          "o": [
+            "is she",
+            "will she",
+            "won’t she",
+            "does she"
+          ],
+          "a": 2,
+          "c": "“She will” is positive, so the tag is negative: “won’t she?”",
+          "j": "She will come — and so will your next right answer!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ happened to your arm?",
+          "o": [
+            "Where",
+            "When",
+            "Who",
+            "What"
+          ],
+          "a": 3,
+          "c": "“What happened” asks about an event!",
+          "j": "What happened? A correct answer happened!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "You ___ be careful when you cross the road.",
+          "o": [
+            "must",
+            "might",
+            "would",
+            "could"
+          ],
+          "a": 0,
+          "c": "“Must” shows a strong rule — be careful!",
+          "j": "Careful — and correct!",
+          "sub": "modals"
+        },
+        {
+          "q": "I have ___ to wear to the party!",
+          "o": [
+            "anything",
+            "nothing",
+            "something",
+            "anywhere"
+          ],
+          "a": 1,
+          "c": "“Nothing to wear” — not a single thing!",
+          "j": "Nothing to wear — but everything to celebrate!",
+          "sub": "indefinites"
+        },
+        {
+          "q": "The information ___ very useful.",
+          "o": [
+            "am",
+            "were",
+            "is",
+            "are"
+          ],
+          "a": 2,
+          "c": "“Information” is one uncountable thing — “is”!",
+          "j": "Useful information — and a useful answer!",
+          "sub": "verb_form"
+        },
+        {
+          "q": "Both of the girls ___ good singers.",
+          "o": [
+            "am",
+            "was",
+            "is",
+            "are"
+          ],
+          "a": 3,
+          "c": "“Both” means two — so we use “are”!",
+          "j": "Both girls sing — and you win!",
+          "sub": "sva"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-tense",
+      "kind": "retry",
+      "level": 4,
+      "questions": [
+        {
+          "q": "Please pass the salt to ___.",
+          "o": [
+            "me",
+            "my",
+            "mine",
+            "I"
+          ],
+          "a": 0,
+          "c": "After “to”, use “me”!",
+          "j": "Pass the salt — and pass with flying colours!",
+          "sub": "pronoun_subject_object"
+        },
+        {
+          "q": "The decision is ___ to make.",
+          "o": [
+            "her",
+            "hers",
+            "she",
+            "herself"
+          ],
+          "a": 1,
+          "c": "“Hers to make” — the decision belongs to her!",
+          "j": "Her decision — your correct answer!",
+          "sub": "pronoun_possessive"
+        },
+        {
+          "q": "We should be proud of ___.",
+          "o": [
+            "our",
+            "we",
+            "ourselves",
+            "us"
+          ],
+          "a": 2,
+          "c": "“Ourselves” — proud of our own work!",
+          "j": "Proud of ourselves — and of you!",
+          "sub": "pronoun_reflexive"
+        },
+        {
+          "q": "___ days are the best days of my life.",
+          "o": [
+            "This",
+            "These",
+            "That",
+            "Those"
+          ],
+          "a": 3,
+          "c": "“Those days” — days in the past, far in time!",
+          "j": "Those were the days!",
+          "sub": "demonstratives"
+        },
+        {
+          "q": "There is hardly ___ food left in the fridge.",
+          "o": [
+            "any",
+            "some",
+            "many",
+            "a few"
+          ],
+          "a": 0,
+          "c": "“Hardly any” — almost nothing left!",
+          "j": "Hardly any food — but plenty of brains!",
+          "sub": "quantifiers"
+        },
+        {
+          "q": "She arrived ___ time for the show.",
+          "o": [
+            "on",
+            "in",
+            "at",
+            "by"
+          ],
+          "a": 1,
+          "c": "“In time” means not late!",
+          "j": "Just in time — and just right!",
+          "sub": "prepositions"
+        },
+        {
+          "q": "It won’t rain tomorrow, ___?",
+          "o": [
+            "does it",
+            "is it",
+            "will it",
+            "won’t it"
+          ],
+          "a": 2,
+          "c": "“Won’t rain” is negative, so the tag is positive: “will it?”",
+          "j": "It won’t rain — but correct answers will pour!",
+          "sub": "question_tags"
+        },
+        {
+          "q": "___ did you put my bag?",
+          "o": [
+            "When",
+            "Who",
+            "What",
+            "Where"
+          ],
+          "a": 3,
+          "c": "“Where” asks about a place!",
+          "j": "Where is it? Right here — a correct answer!",
+          "sub": "wh_questions"
+        },
+        {
+          "q": "___ you help me carry these books?",
+          "o": [
+            "Can",
+            "Must",
+            "Shall",
+            "Will"
+          ],
+          "a": 0,
+          "c": "“Can you help” is a polite request!",
+          "j": "Can you? Yes, you can — and you did!",
+          "sub": "modals"
+        },
+        {
+          "q": "___ was at the party — the hall was empty!",
+          "o": [
+            "Anyone",
+            "No one",
+            "Everyone",
+            "Someone"
+          ],
+          "a": 1,
+          "c": "“No one” — not a single person was there!",
+          "j": "No one at the party — but a star answer here!",
+          "sub": "indefinites"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "quest",
+      "level": 3,
+      "questions": [
+        {
+          "q": "The baby’s skin is as soft as ___.",
+          "o": [
+            "sandpaper",
+            "wood",
+            "silk",
+            "stone"
+          ],
+          "a": 2,
+          "c": "Silk is famously soft — “as soft as silk”!",
+          "j": "Soft as silk — and smooth as your answer!",
+          "sub": "similes"
+        },
+        {
+          "q": "After running all day, Ali was as hungry as a ___.",
+          "o": [
+            "mouse",
+            "fish",
+            "bird",
+            "lion"
+          ],
+          "a": 3,
+          "c": "“As hungry as a lion” — lions eat a lot!",
+          "j": "Hungry as a lion — and clever as a fox!",
+          "sub": "similes"
+        },
+        {
+          "q": "Please look ___ my little brother while I am away.",
+          "o": [
+            "after",
+            "for",
+            "up",
+            "out"
+          ],
+          "a": 0,
+          "c": "“Look after” means take care of someone!",
+          "j": "Look after your brother — and after your score!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "We ran ___ of milk, so Father went to buy more.",
+          "o": [
+            "up",
+            "out of",
+            "into",
+            "over"
+          ],
+          "a": 1,
+          "c": "“Ran out of” means there is none left!",
+          "j": "Out of milk — but never out of right answers!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of birds flew across the sky.",
+          "o": [
+            "pack",
+            "school",
+            "flock",
+            "herd"
+          ],
+          "a": 2,
+          "c": "A group of birds is a flock!",
+          "j": "A flock of birds — and a flock of right answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "The farmer keeps a ___ of cows in the field.",
+          "o": [
+            "swarm",
+            "pride",
+            "flock",
+            "herd"
+          ],
+          "a": 3,
+          "c": "A group of cows is a herd!",
+          "j": "Moo-ve over — here comes a correct answer!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ going to the park this afternoon.",
+          "o": [
+            "They’re",
+            "Theyre",
+            "Their",
+            "There"
+          ],
+          "a": 0,
+          "c": "“They’re” means “they are” — they are going!",
+          "j": "They’re going to the park — and you’re going to the top!",
+          "sub": "confusables"
+        },
+        {
+          "q": "Put the book over ___, next to the lamp.",
+          "o": [
+            "their",
+            "there",
+            "they’re",
+            "theyre"
+          ],
+          "a": 1,
+          "c": "“There” means a place — over there!",
+          "j": "Over there — and over the moon with your answer!",
+          "sub": "confusables"
+        },
+        {
+          "q": "A verb tells us what someone does. Pick the verb:",
+          "o": [
+            "happy",
+            "quickly",
+            "jump",
+            "garden"
+          ],
+          "a": 2,
+          "c": "“Jump” is a doing word — a verb!",
+          "j": "Jump for joy — you got it!",
+          "sub": "word_class"
+        },
+        {
+          "q": "An adjective describes a thing. Pick the adjective:",
+          "o": [
+            "quickly",
+            "dog",
+            "run",
+            "beautiful"
+          ],
+          "a": 3,
+          "c": "“Beautiful” describes a thing — an adjective!",
+          "j": "Beautiful answer — beautifully done!",
+          "sub": "word_class"
+        },
+        {
+          "q": "The old bridge was shaky and made a creaking sound. A shaky bridge is one that is ___.",
+          "o": [
+            "moving unsteadily",
+            "very tall",
+            "made of stone",
+            "strong and new"
+          ],
+          "a": 0,
+          "c": "A bridge that creaks and moves is unsteady — shaky!",
+          "j": "Shaky bridge, steady answer!",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "warm",
+      "level": 3,
+      "questions": [
+        {
+          "q": "She is as busy as a ___.",
+          "o": [
+            "fish",
+            "bee",
+            "cat",
+            "dog"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "similes"
+        },
+        {
+          "q": "Please turn ___ the light. It is too dark.",
+          "o": [
+            "up",
+            "out",
+            "on",
+            "off"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of bees buzzed around the flowers.",
+          "o": [
+            "herd",
+            "flock",
+            "pack",
+            "swarm"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ book is this? It has a girl’s name written inside it.",
+          "o": [
+            "Your",
+            "You’re",
+            "Yore",
+            "Youre"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which word is a noun?",
+          "o": [
+            "happy",
+            "table",
+            "run",
+            "quickly"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "word_class"
+        },
+        {
+          "q": "The room was gloomy and dark. The word “gloomy” means ___.",
+          "o": [
+            "warm and cosy",
+            "bright and cheerful",
+            "dark and sad",
+            "big and noisy"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "fresh",
+      "level": 3,
+      "questions": [
+        {
+          "q": "The snow was as white as ___.",
+          "o": [
+            "mud",
+            "grass",
+            "wood",
+            "milk"
+          ],
+          "a": 3,
+          "c": "Snow is white like milk — “as white as milk”!",
+          "j": "White as snow — and bright as your answer!",
+          "sub": "similes"
+        },
+        {
+          "q": "I need to look ___ my lost pencil.",
+          "o": [
+            "for",
+            "after",
+            "up",
+            "out"
+          ],
+          "a": 0,
+          "c": "“Look for” means to search for something!",
+          "j": "Found it — the pencil and the answer!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of fish swam past the boat.",
+          "o": [
+            "pack",
+            "school",
+            "herd",
+            "flock"
+          ],
+          "a": 1,
+          "c": "A group of fish is a school!",
+          "j": "A school of fish — and a school of right answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "I can’t hear you. Can you speak louder? I am over ___.",
+          "o": [
+            "heer",
+            "hear",
+            "here",
+            "hair"
+          ],
+          "a": 2,
+          "c": "“Here” means this place — over here!",
+          "j": "I hear you — loud and clear!",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which word is an adverb?",
+          "o": [
+            "quick",
+            "happy",
+            "dog",
+            "quickly"
+          ],
+          "a": 3,
+          "c": "“Quickly” tells us how — an adverb!",
+          "j": "Quickly done — and quickly right!",
+          "sub": "word_class"
+        },
+        {
+          "q": "The puppy was starving, so it ate all its food in one minute. The word “starving” means ___.",
+          "o": [
+            "very hungry",
+            "very sleepy",
+            "very happy",
+            "very thirsty"
+          ],
+          "a": 0,
+          "c": "A starving puppy is super hungry!",
+          "j": "Starving for more right answers!",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "retry",
+      "level": 3,
+      "questions": [
+        {
+          "q": "He was as slow as a ___ on the way to school.",
+          "o": [
+            "bird",
+            "snail",
+            "cheetah",
+            "rabbit"
+          ],
+          "a": 1,
+          "c": "Snails are famously slow — “as slow as a snail”!",
+          "j": "Slow as a snail — but quick as a flash with answers!",
+          "sub": "similes"
+        },
+        {
+          "q": "Don’t give ___! Keep trying!",
+          "o": [
+            "out",
+            "off",
+            "up",
+            "in"
+          ],
+          "a": 2,
+          "c": "“Give up” means to stop trying — never give up!",
+          "j": "Never give up — and never give up a right answer!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of wolves howled at the moon.",
+          "o": [
+            "herd",
+            "flock",
+            "school",
+            "pack"
+          ],
+          "a": 3,
+          "c": "A group of wolves is a pack!",
+          "j": "A pack of wolves — and a pack of right answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ going to be late! Hurry up!",
+          "o": [
+            "You’re",
+            "Yore",
+            "Youre",
+            "Your"
+          ],
+          "a": 0,
+          "c": "“You’re” means “you are” — you are going to be late!",
+          "j": "You’re late — but your answer is on time!",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which of these words names an action?",
+          "o": [
+            "beautiful",
+            "sing",
+            "song",
+            "singer"
+          ],
+          "a": 1,
+          "c": "“Sing” is a doing word — a verb!",
+          "j": "Sing it loud — you got it right!",
+          "sub": "word_class"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "quest",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The mountain lake was as clear as ___.",
+          "o": [
+            "ink",
+            "smoke",
+            "crystal",
+            "mud"
+          ],
+          "a": 2,
+          "c": "“As clear as crystal” — crystal is perfectly clear!",
+          "j": "Crystal clear — and crystal clever!",
+          "sub": "similes"
+        },
+        {
+          "q": "After the long hike, my legs felt as heavy as ___.",
+          "o": [
+            "feathers",
+            "cotton",
+            "paper",
+            "lead"
+          ],
+          "a": 3,
+          "c": "“As heavy as lead” — lead is a very heavy metal!",
+          "j": "Heavy legs, light work for you!",
+          "sub": "similes"
+        },
+        {
+          "q": "The teacher asked us to hand ___ our homework.",
+          "o": [
+            "in",
+            "out",
+            "up",
+            "over"
+          ],
+          "a": 0,
+          "c": "“Hand in” means to give your work to the teacher!",
+          "j": "Hand it in — and hand in a perfect score!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "Our team finally caught ___ with the other team.",
+          "o": [
+            "out",
+            "up",
+            "on",
+            "in"
+          ],
+          "a": 1,
+          "c": "“Caught up” means reached the same level!",
+          "j": "Caught up — and caught the right answer!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of lions rested under the tree.",
+          "o": [
+            "flock",
+            "school",
+            "pride",
+            "herd"
+          ],
+          "a": 2,
+          "c": "A group of lions is a pride!",
+          "j": "A pride of lions — and a pride of correct answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "She bought a ___ of grapes from the market.",
+          "o": [
+            "herd",
+            "flock",
+            "pack",
+            "bunch"
+          ],
+          "a": 3,
+          "c": "Grapes grow in a bunch!",
+          "j": "A bunch of grapes — and a bunch of brains!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ umbrella is this? It is pink.",
+          "o": [
+            "Whose",
+            "Who’s",
+            "Wose",
+            "Whoes"
+          ],
+          "a": 0,
+          "c": "“Whose” asks who owns it!",
+          "j": "Whose umbrella? Yours — and whose answer? Yours too!",
+          "sub": "confusables"
+        },
+        {
+          "q": "The weather is fine today. ___ going for a picnic?",
+          "o": [
+            "Less",
+            "Let’s",
+            "Lets",
+            "Let"
+          ],
+          "a": 1,
+          "c": "“Let’s” means “let us” — let us go!",
+          "j": "Let’s go — to the picnic and to the top!",
+          "sub": "confusables"
+        },
+        {
+          "q": "“She sang beautifully.” Pick the one that tells us HOW she sang:",
+          "o": [
+            "She",
+            "sang",
+            "beautifully",
+            "song"
+          ],
+          "a": 2,
+          "c": "“Beautifully” tells us how she sang — an adverb!",
+          "j": "Beautifully sung — and beautifully answered!",
+          "sub": "word_class"
+        },
+        {
+          "q": "A proper noun names a place or person. Pick the proper noun:",
+          "o": [
+            "city",
+            "river",
+            "school",
+            "Singapore"
+          ],
+          "a": 3,
+          "c": "“Singapore” is the name of a place — a proper noun with a capital!",
+          "j": "Singapore — and a super answer!",
+          "sub": "word_class"
+        },
+        {
+          "q": "The crowd cheered when the magician vanished into thin air. The word “vanished” means ___.",
+          "o": [
+            "disappeared suddenly",
+            "ran away quickly",
+            "fell down",
+            "appeared suddenly"
+          ],
+          "a": 0,
+          "c": "He was there, then he was gone — vanished means disappeared!",
+          "j": "Now you see it — a correct answer!",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "warm",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The kitten’s fur is as soft as ___.",
+          "o": [
+            "wood",
+            "cotton",
+            "sandpaper",
+            "rock"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "similes"
+        },
+        {
+          "q": "Please pick ___ your toys after playing.",
+          "o": [
+            "out",
+            "off",
+            "up",
+            "in"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of players ran onto the field.",
+          "o": [
+            "herd",
+            "flock",
+            "school",
+            "team"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ shoes are these? They are muddy.",
+          "o": [
+            "Whose",
+            "Who’s",
+            "Wose",
+            "Whoes"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which of these words is a naming word?",
+          "o": [
+            "happen",
+            "happiness",
+            "happy",
+            "happily"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "word_class"
+        },
+        {
+          "q": "The old man was frail and needed help to walk. The word “frail” means ___.",
+          "o": [
+            "tall and proud",
+            "young and fit",
+            "weak and fragile",
+            "strong and healthy"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "fresh",
+      "level": 4,
+      "questions": [
+        {
+          "q": "Her voice was as sweet as ___.",
+          "o": [
+            "lemon",
+            "salt",
+            "chilli",
+            "honey"
+          ],
+          "a": 3,
+          "c": "“As sweet as honey” — honey is nature’s sweet treat!",
+          "j": "Sweet as honey — and sweet as your answer!",
+          "sub": "similes"
+        },
+        {
+          "q": "The lights went ___ during the storm.",
+          "o": [
+            "out",
+            "in",
+            "up",
+            "over"
+          ],
+          "a": 0,
+          "c": "“Went out” means the lights stopped working!",
+          "j": "Lights out — answer in!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of keys jingled in his pocket.",
+          "o": [
+            "pack",
+            "bunch",
+            "herd",
+            "flock"
+          ],
+          "a": 1,
+          "c": "Keys come in a bunch!",
+          "j": "A bunch of keys — and a bunch of right answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "I need to buy ___ new shoes. Mine are too small.",
+          "o": [
+            "a pare of",
+            "a payer of",
+            "a pair of",
+            "a pear of"
+          ],
+          "a": 2,
+          "c": "“A pair of shoes” — a pair means two that go together!",
+          "j": "A perfect pair — question and answer!",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which word is an adjective in this sentence: “The brave fireman saved the cat.”?",
+          "o": [
+            "saved",
+            "cat",
+            "fireman",
+            "brave"
+          ],
+          "a": 3,
+          "c": "“Brave” describes the fireman — an adjective!",
+          "j": "Brave fireman, brave answer!",
+          "sub": "word_class"
+        },
+        {
+          "q": "The explorers were exhausted after climbing for hours. The word “exhausted” means ___.",
+          "o": [
+            "very tired",
+            "very excited",
+            "very hungry",
+            "very happy"
+          ],
+          "a": 0,
+          "c": "Climbing for hours leaves you exhausted — very tired!",
+          "j": "Exhausted climbers — but you are full of energy!",
+          "sub": "context_clues"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story",
+      "kind": "retry",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The water was as cold as ___.",
+          "o": [
+            "tea",
+            "ice",
+            "fire",
+            "soup"
+          ],
+          "a": 1,
+          "c": "“As cold as ice” — ice is the coldest thing around!",
+          "j": "Cool as ice — and cool as your answer!",
+          "sub": "similes"
+        },
+        {
+          "q": "We put ___ the tent before it got dark.",
+          "o": [
+            "out",
+            "off",
+            "up",
+            "in"
+          ],
+          "a": 2,
+          "c": "“Put up” a tent means to build it!",
+          "j": "Tent’s up — and your score is up!",
+          "sub": "phrasal_verbs"
+        },
+        {
+          "q": "A ___ of people waited outside the cinema.",
+          "o": [
+            "herd",
+            "flock",
+            "school",
+            "crowd"
+          ],
+          "a": 3,
+          "c": "A big group of people is a crowd!",
+          "j": "A crowd of people — and a crowd of right answers!",
+          "sub": "collective_nouns"
+        },
+        {
+          "q": "___ going to rain. Take an umbrella.",
+          "o": [
+            "It’s",
+            "It",
+            "It is",
+            "Its"
+          ],
+          "a": 0,
+          "c": "“It’s” means “it is” — it is going to rain!",
+          "j": "It’s raining answers — all correct!",
+          "sub": "confusables"
+        },
+        {
+          "q": "Which word is a verb in this sentence: “The dog barked loudly.”?",
+          "o": [
+            "dog",
+            "barked",
+            "loudly",
+            "the"
+          ],
+          "a": 1,
+          "c": "“Barked” is what the dog did — a verb!",
+          "j": "Woof! That’s the sound of a right answer!",
+          "sub": "word_class"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "quest",
+      "level": 3,
+      "questions": [
+        {
+          "q": "Tom woke up early on Saturday. He brushed his teeth, ate his breakfast and put on his shoes. Then he went to the park to play football with his friends. Which sentence is TRUE about Tom?",
+          "o": [
+            "Tom went swimming on Saturday.",
+            "Tom played football at school.",
+            "Tom went to the park to play football.",
+            "Tom stayed at home all day."
+          ],
+          "a": 2,
+          "c": "The passage says Tom went to the park to play football.",
+          "j": "True story — and a true answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Sara loves to read. Every night, she reads a story before bed. Her favourite book is about a brave little mouse. Which sentence is FALSE?",
+          "o": [
+            "Sara reads before bed.",
+            "Sara reads every night.",
+            "Sara’s favourite book is about a mouse.",
+            "Sara hates reading."
+          ],
+          "a": 3,
+          "c": "Sara loves to read — she does not hate it!",
+          "j": "False alarm — but a true answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Ben found a tiny bird in the garden. It could not fly. He took it home and gave it some water. In the passage, the word “it” in “It could not fly” refers to ___.",
+          "o": [
+            "the tiny bird",
+            "the water",
+            "Ben",
+            "the garden"
+          ],
+          "a": 0,
+          "c": "“It” means the tiny bird — the bird could not fly!",
+          "j": "A tiny bird — and a big correct answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "Mei and Lin baked cookies. They shared them with their classmates. Everyone said they were delicious! In the passage, the word “they” in “They shared them” refers to ___.",
+          "o": [
+            "the teachers",
+            "Mei and Lin",
+            "the cookies",
+            "the classmates"
+          ],
+          "a": 1,
+          "c": "“They” means Mei and Lin — they shared the cookies!",
+          "j": "Sweet cookies — and a sweet answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "When Kai won the race, he was over the moon. What does “over the moon” mean in this sentence?",
+          "o": [
+            "Very angry",
+            "Very tired",
+            "Very happy",
+            "Very sad"
+          ],
+          "a": 2,
+          "c": "“Over the moon” means extremely happy!",
+          "j": "Over the moon — and over the top with your answer!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Lily was under the weather, so she stayed in bed. What does “under the weather” mean?",
+          "o": [
+            "Feeling happy",
+            "Feeling excited",
+            "Feeling hungry",
+            "Feeling unwell"
+          ],
+          "a": 3,
+          "c": "“Under the weather” means feeling sick!",
+          "j": "Feel better soon — and well done!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “The boy is tall. He plays basketball.”",
+          "o": [
+            "The boy who is tall plays basketball.",
+            "The boy is tall he plays basketball.",
+            "The boy who is tall play basketball.",
+            "The tall boy plays basketball he is."
+          ],
+          "a": 0,
+          "c": "“Who” joins the sentences — the tall boy plays basketball!",
+          "j": "Joined up — just like your answer!",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which sentence is in the correct order?",
+          "o": [
+            "The cat the mouse chased.",
+            "The cat chased the mouse.",
+            "The mouse the cat chased.",
+            "Chased the cat the mouse."
+          ],
+          "a": 1,
+          "c": "A good sentence starts with who did it — the cat chased the mouse!",
+          "j": "In perfect order — just like your answer!",
+          "sub": "word_order"
+        },
+        {
+          "q": "On Sunday, the Tan family went to the zoo. They saw lions, elephants and monkeys. Father took many photos. Where did the Tan family go on Sunday?",
+          "o": [
+            "To the beach",
+            "To the library",
+            "To the zoo",
+            "To the park"
+          ],
+          "a": 2,
+          "c": "The passage says they went to the zoo!",
+          "j": "To the zoo — and to the top of the class!",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "First, Ana washed her hands. Then she helped her mother cook rice. After dinner, she washed the dishes. What did Ana do FIRST?",
+          "o": [
+            "She cooked rice.",
+            "She washed the dishes.",
+            "She ate dinner.",
+            "She washed her hands."
+          ],
+          "a": 3,
+          "c": "“First” — Ana washed her hands before anything else!",
+          "j": "First things first — a first-class answer!",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The little boat bobbed gently on the waves. The word “bobbed” means ___.",
+          "o": [
+            "moved up and down",
+            "sailed very fast",
+            "sank to the bottom",
+            "stayed still"
+          ],
+          "a": 0,
+          "c": "Bobbing means moving gently up and down on the water!",
+          "j": "Bobbing along — and bobbing up with the right answer!",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "When Hana saw her lost puppy at the gate, she ran to it with tears in her eyes and hugged it tight. How did Hana feel?",
+          "o": [
+            "Scared and shy",
+            "Happy and relieved",
+            "Angry and upset",
+            "Bored and sleepy"
+          ],
+          "a": 1,
+          "c": "Tears and a tight hug — Hana was so happy her puppy was home!",
+          "j": "Happy tears — and a happy answer!",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "Raj packed his bag, put on his raincoat and took an umbrella. He looked out of the window at the dark clouds. Why did Raj take an umbrella?",
+          "o": [
+            "Because he was going swimming",
+            "Because he lost his bag",
+            "Because it was going to rain",
+            "Because it was very hot"
+          ],
+          "a": 2,
+          "c": "Dark clouds and a raincoat — rain was coming!",
+          "j": "Rain or shine — your answer is fine!",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "warm",
+      "level": 3,
+      "questions": [
+        {
+          "q": "The school library opens at 8am. Pupils can borrow two books at a time. Which sentence is TRUE?",
+          "o": [
+            "Pupils can borrow ten books.",
+            "The library opens at 9am.",
+            "Pupils cannot borrow books.",
+            "Pupils can borrow two books."
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Ali has a red bicycle. He rides it to school every day. The word “it” refers to ___.",
+          "o": [
+            "the bicycle",
+            "the school",
+            "Ali",
+            "the road"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "It was raining cats and dogs, so we stayed indoors. What does “raining cats and dogs” mean?",
+          "o": [
+            "Raining all day",
+            "Raining very heavily",
+            "Raining a little",
+            "Raining animals"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “I like cats. I like dogs.”",
+          "o": [
+            "I like cats but dogs.",
+            "Cats and dogs I like.",
+            "I like cats and dogs.",
+            "I like cats I like dogs."
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which of these sentences is in the right order?",
+          "o": [
+            "We breakfast eat in the morning.",
+            "In the morning we breakfast eat.",
+            "Eat we breakfast in the morning.",
+            "We eat breakfast in the morning."
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "word_order"
+        },
+        {
+          "q": "Mei’s favourite colour is blue. She has a blue bag, a blue pencil case and blue shoes. What is Mei’s favourite colour?",
+          "o": [
+            "Blue",
+            "Red",
+            "Green",
+            "Yellow"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "Sam planted a seed. He watered it every day. Soon, a small plant grew. What happened LAST?",
+          "o": [
+            "Sam bought a plant.",
+            "A small plant grew.",
+            "Sam planted a seed.",
+            "Sam watered the seed."
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The brave fireman rushed into the smoky house. The word “brave” means ___.",
+          "o": [
+            "very tired",
+            "very slow",
+            "not afraid",
+            "very afraid"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "Tom’s face turned red when the teacher praised him in front of the class. How did Tom feel?",
+          "o": [
+            "Angry",
+            "Sad",
+            "Bored",
+            "Shy but proud"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "Lily kept looking at the clock. Her bag was packed and she was wearing her shoes. What was Lily probably waiting for?",
+          "o": [
+            "To go out",
+            "To go to bed",
+            "To eat dinner",
+            "To watch television"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "fresh",
+      "level": 3,
+      "questions": [
+        {
+          "q": "Cats sleep a lot. A cat can sleep for 15 hours a day! Which sentence is FALSE?",
+          "o": [
+            "Cats sleep a lot.",
+            "Cats never sleep.",
+            "A cat can sleep 15 hours a day.",
+            "Cats sleep more than people."
+          ],
+          "a": 1,
+          "c": "Cats sleep a lot — they do not “never sleep”!",
+          "j": "Cat nap? More like a cat-tastic answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "The children built a sandcastle. It was very big. Then the waves washed it away. The word “it” in “It was very big” refers to ___.",
+          "o": [
+            "the beach",
+            "the children",
+            "the sandcastle",
+            "the waves"
+          ],
+          "a": 2,
+          "c": "“It” means the sandcastle — it was very big!",
+          "j": "A big sandcastle — and a big correct answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "The test was a piece of cake for Sara. What does “a piece of cake” mean?",
+          "o": [
+            "Very hard",
+            "Very sweet",
+            "Very big",
+            "Very easy"
+          ],
+          "a": 3,
+          "c": "“A piece of cake” means very easy!",
+          "j": "Easy as pie — or should I say, cake!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “The soup was hot. We waited for it to cool.”",
+          "o": [
+            "The soup was hot, so we waited for it to cool.",
+            "The soup was hot we waited for it to cool.",
+            "The soup was hot but we waited for it to cool.",
+            "The soup was hot, we waited for it to cool it."
+          ],
+          "a": 0,
+          "c": "“So” joins them — hot soup, so we waited!",
+          "j": "Hot soup, cool answer!",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which sentence has all its words in the right order?",
+          "o": [
+            "The sweet song the bird sang.",
+            "The bird sang a sweet song.",
+            "The bird a sweet song sang.",
+            "Sang the bird a sweet song."
+          ],
+          "a": 1,
+          "c": "A good sentence starts with who did it — the bird sang!",
+          "j": "Sweet song, sweet answer!",
+          "sub": "word_order"
+        },
+        {
+          "q": "The old man sells ice cream near the school. He sells chocolate, strawberry and mango flavours. What does the old man sell?",
+          "o": [
+            "Books",
+            "Flowers",
+            "Ice cream",
+            "Toys"
+          ],
+          "a": 2,
+          "c": "The passage says he sells ice cream!",
+          "j": "Three scoops of correct!",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "First, mix the flour and sugar. Next, add two eggs. Then bake the cake for 30 minutes. What do you do AFTER adding the eggs?",
+          "o": [
+            "Mix the flour",
+            "Buy the eggs",
+            "Eat the cake",
+            "Bake the cake"
+          ],
+          "a": 3,
+          "c": "After the eggs, it is time to bake!",
+          "j": "Bake it till you make it!",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The giant waves crashed against the rocks. The word “giant” means ___.",
+          "o": [
+            "very big",
+            "very small",
+            "very fast",
+            "very quiet"
+          ],
+          "a": 0,
+          "c": "Giant means very big — giant waves!",
+          "j": "A giant answer!",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "When the lights went out during the storm, Tim hid under his blanket and held his teddy bear tight. How did Tim feel?",
+          "o": [
+            "Proud",
+            "Scared",
+            "Happy",
+            "Excited"
+          ],
+          "a": 1,
+          "c": "Hiding under a blanket with a teddy — Tim was scared!",
+          "j": "Scaredy-cat? No — a brave answer!",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "Mei put on her swimsuit, grabbed her towel and ran to the pool. What was Mei going to do?",
+          "o": [
+            "Go shopping",
+            "Go to school",
+            "Go swimming",
+            "Go to bed"
+          ],
+          "a": 2,
+          "c": "Swimsuit, towel and pool — Mei was going swimming!",
+          "j": "Dive in — you got it right!",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "retry",
+      "level": 3,
+      "questions": [
+        {
+          "q": "Dogs are good pets. They need food, water and exercise every day. Which sentence is TRUE?",
+          "o": [
+            "Dogs do not need food.",
+            "Dogs are bad pets.",
+            "Dogs sleep all day.",
+            "Dogs need exercise every day."
+          ],
+          "a": 3,
+          "c": "The passage says dogs need food, water and exercise!",
+          "j": "Good dogs — and a good answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Emma gave her friend a gift. She was very happy to receive it. The word “she” in “She was very happy” refers to ___.",
+          "o": [
+            "the friend",
+            "the gift",
+            "the teacher",
+            "Emma"
+          ],
+          "a": 0,
+          "c": "The friend received the gift — she was happy!",
+          "j": "A gift of a correct answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "Don’t spill the beans about the surprise party! What does “spill the beans” mean?",
+          "o": [
+            "Make a mess",
+            "Tell a secret",
+            "Drop some beans",
+            "Cook some beans"
+          ],
+          "a": 1,
+          "c": "“Spill the beans” means to tell a secret!",
+          "j": "Secret’s safe with you — and so is this answer!",
+          "sub": "comp_phrase"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "quest",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The River Hongbao is a big festival in Singapore. Every year, thousands of people visit to see the lanterns and enjoy the performances. The festival lasts for about two weeks. Which sentence is TRUE?",
+          "o": [
+            "Only a few people visit the festival.",
+            "The festival is held in Malaysia.",
+            "The festival lasts about two weeks.",
+            "The festival lasts one day."
+          ],
+          "a": 2,
+          "c": "The passage says the festival lasts about two weeks!",
+          "j": "Two weeks of lanterns — and one bright answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Penguins cannot fly, but they are excellent swimmers. They use their wings like flippers to move through the water. Most penguins live in the cold south. Which sentence is FALSE?",
+          "o": [
+            "Penguins live mostly in the cold south.",
+            "Penguins use their wings to swim.",
+            "Penguins are excellent swimmers.",
+            "Penguins can fly."
+          ],
+          "a": 3,
+          "c": "Penguins cannot fly — that is the false part!",
+          "j": "Penguins can’t fly — but your answer can!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "The children found an old map in the attic. It showed the way to a hidden treasure. They decided to follow it the next day. The word “it” in “They decided to follow it” refers to ___.",
+          "o": [
+            "the map",
+            "the treasure",
+            "the children",
+            "the attic"
+          ],
+          "a": 0,
+          "c": "“It” means the map — they followed the map!",
+          "j": "X marks the spot — and the right answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "Mrs Lee planted roses and tulips in her garden. She watered them every morning. Soon, they bloomed beautifully. The word “them” refers to ___.",
+          "o": [
+            "the garden",
+            "the roses and tulips",
+            "Mrs Lee",
+            "the mornings"
+          ],
+          "a": 1,
+          "c": "“Them” means the roses and tulips — she watered them!",
+          "j": "Blooming lovely — just like your answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "After months of practice, Bala finally broke the ice with his new classmates. What does “broke the ice” mean?",
+          "o": [
+            "Fell on the ice",
+            "Made everyone cold",
+            "Started to feel comfortable with new people",
+            "Broke a piece of ice"
+          ],
+          "a": 2,
+          "c": "“Broke the ice” means the awkward feeling melted away!",
+          "j": "Ice broken — and the answer is warm!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "The exam was tough, but Priya decided to hit the books every evening. What does “hit the books” mean?",
+          "o": [
+            "Throw books",
+            "Buy new books",
+            "Drop books",
+            "Study hard"
+          ],
+          "a": 3,
+          "c": "“Hit the books” means to start studying hard!",
+          "j": "Hit the books — and hit the bullseye!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “The book is interesting. It is about space.”",
+          "o": [
+            "The book, which is about space, is interesting.",
+            "The book is interesting it is about space.",
+            "The book which is about space is interesting it.",
+            "The interesting book is about space it is."
+          ],
+          "a": 0,
+          "c": "“Which” joins them neatly — the book about space is interesting!",
+          "j": "Out of this world — a stellar answer!",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which of these sentences is put together correctly?",
+          "o": [
+            "Visited we yesterday the museum.",
+            "Yesterday, we visited the museum.",
+            "Yesterday, we museum visited the.",
+            "We visited yesterday the museum."
+          ],
+          "a": 1,
+          "c": "“Yesterday” first, then who did what — perfect order!",
+          "j": "Yesterday’s trip, today’s correct answer!",
+          "sub": "word_order"
+        },
+        {
+          "q": "The National Gallery is in the Civic District. It houses the largest collection of Singapore art in the world. Visitors can see paintings, sculptures and photographs. What can visitors see at the National Gallery?",
+          "o": [
+            "Trains and buses",
+            "Books and magazines",
+            "Paintings, sculptures and photographs",
+            "Animals and birds"
+          ],
+          "a": 2,
+          "c": "The passage lists paintings, sculptures and photographs!",
+          "j": "A gallery of great answers!",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "First, the caterpillar eats lots of leaves. Then it wraps itself in a cocoon. Finally, it comes out as a butterfly. What happens AFTER the caterpillar wraps itself in a cocoon?",
+          "o": [
+            "It eats lots of leaves.",
+            "It lays eggs.",
+            "It flies south.",
+            "It comes out as a butterfly."
+          ],
+          "a": 3,
+          "c": "After the cocoon comes the butterfly!",
+          "j": "From caterpillar to butterfly — and to a beautiful answer!",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The ancient temple stood on the hill for hundreds of years. The word “ancient” means ___.",
+          "o": [
+            "very old",
+            "very new",
+            "very tall",
+            "very small"
+          ],
+          "a": 0,
+          "c": "Ancient means very, very old!",
+          "j": "Ancient temple, timeless answer!",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "When Sara’s name was called as the winner, her hands shook and her heart beat fast. She could not believe her ears. How did Sara feel?",
+          "o": [
+            "Calm and sleepy",
+            "Excited and nervous",
+            "Bored and tired",
+            "Angry and upset"
+          ],
+          "a": 1,
+          "c": "Shaking hands and a fast heart — excited and nervous!",
+          "j": "Winner, winner — correct answer for dinner!",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "Tom looked at the empty fridge, sighed, and picked up his wallet and shopping list. What was Tom probably going to do?",
+          "o": [
+            "Wash the dishes",
+            "Watch television",
+            "Go shopping for food",
+            "Cook dinner"
+          ],
+          "a": 2,
+          "c": "Empty fridge plus wallet and list — Tom is going shopping!",
+          "j": "Shopping list checked — answer checked!",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "warm",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The sun rises in the east and sets in the west. It gives us light and heat. Which sentence is TRUE?",
+          "o": [
+            "The sun rises in the west.",
+            "The sun gives us cold.",
+            "The sun sets in the east.",
+            "The sun rises in the east."
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "Jia bought a new kite. She flew it at the beach. It soared high into the sky. The word “it” in “It soared high” refers to ___.",
+          "o": [
+            "the kite",
+            "the beach",
+            "the sky",
+            "Jia"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "I was on cloud nine when I won the prize. What does “on cloud nine” mean?",
+          "o": [
+            "Very cold",
+            "Extremely happy",
+            "Very tired",
+            "Very angry"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “The rain stopped. We went out to play.”",
+          "o": [
+            "The rain stopped but we went out to play.",
+            "The rain stopped, we went out to play it.",
+            "The rain stopped, so we went out to play.",
+            "The rain stopped we went out to play."
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which sentence is written correctly, with its words in the right order?",
+          "o": [
+            "Reading in the library are the pupils.",
+            "The library are the pupils reading in.",
+            "Pupils the library in are reading.",
+            "The pupils are reading in the library."
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "word_order"
+        },
+        {
+          "q": "The Merlion is a famous symbol of Singapore. It has the head of a lion and the body of a fish. What does the Merlion look like?",
+          "o": [
+            "A lion’s head and a fish’s body",
+            "A fish’s head and a lion’s body",
+            "A dragon and a fish",
+            "A lion and a horse"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "To make a sandwich, first spread butter on the bread. Then add cheese and ham. Finally, put the other slice on top. What is the FIRST step?",
+          "o": [
+            "Cut the sandwich",
+            "Spread butter on the bread",
+            "Add cheese and ham",
+            "Put the other slice on top"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The hikers were weary after the long climb. The word “weary” means ___.",
+          "o": [
+            "very hungry",
+            "very strong",
+            "very tired",
+            "very happy"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "Ben’s shoulders drooped and he stared at the floor after losing the match. How did Ben feel?",
+          "o": [
+            "Proud and happy",
+            "Excited and cheerful",
+            "Calm and relaxed",
+            "Sad and disappointed"
+          ],
+          "a": 3,
+          "c": "",
+          "j": "",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "Aisha packed an umbrella, a raincoat and a pair of boots. What kind of weather was Aisha expecting?",
+          "o": [
+            "Rainy weather",
+            "Sunny weather",
+            "Snowy weather",
+            "Windy weather"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "fresh",
+      "level": 4,
+      "questions": [
+        {
+          "q": "Bees help flowers by carrying pollen from one flower to another. Without bees, many plants could not make seeds. Which sentence is FALSE?",
+          "o": [
+            "Bees carry pollen between flowers.",
+            "Bees hurt flowers.",
+            "Bees help plants make seeds.",
+            "Many plants need bees."
+          ],
+          "a": 1,
+          "c": "Bees help flowers — they do not hurt them!",
+          "j": "Busy bees — and a busy brain!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "The orchestra played beautifully. The audience clapped loudly for them. The word “them” refers to ___.",
+          "o": [
+            "the music",
+            "the hall",
+            "the orchestra",
+            "the audience"
+          ],
+          "a": 2,
+          "c": "“Them” means the orchestra — the audience clapped for them!",
+          "j": "Encore! Another correct answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "Don’t judge a book by its cover. What does this saying mean?",
+          "o": [
+            "Do not read books",
+            "Do not buy books with covers",
+            "Do not open books",
+            "Do not judge something only by how it looks"
+          ],
+          "a": 3,
+          "c": "A plain cover can hide a wonderful story!",
+          "j": "Judge this answer — it’s a good one!",
+          "sub": "comp_phrase"
+        },
+        {
+          "q": "Join these two sentences: “She was ill. She stayed at home.”",
+          "o": [
+            "She was ill, so she stayed at home.",
+            "She was ill she stayed at home.",
+            "She was ill but she stayed at home.",
+            "She was ill, she stayed at home it."
+          ],
+          "a": 0,
+          "c": "“So” joins them — ill, so she stayed home!",
+          "j": "Get well soon — and well done!",
+          "sub": "synthesis"
+        },
+        {
+          "q": "Which of these sentences has the words in the correct order?",
+          "o": [
+            "Every Sunday my mother cookies delicious bakes.",
+            "My mother bakes delicious cookies every Sunday.",
+            "My mother delicious cookies bakes every Sunday.",
+            "Bakes my mother delicious cookies every Sunday."
+          ],
+          "a": 1,
+          "c": "Who does what, then when — perfect order!",
+          "j": "Fresh from the oven — and fresh from the top!",
+          "sub": "word_order"
+        },
+        {
+          "q": "The Singapore Flyer is a giant observation wheel. From the top, you can see the whole city and even parts of Malaysia and Indonesia. What can you see from the top of the Singapore Flyer?",
+          "o": [
+            "Only the Marina Bay area",
+            "The inside of the wheel",
+            "The whole city and parts of nearby countries",
+            "The whole of Asia"
+          ],
+          "a": 2,
+          "c": "The passage says you can see the city and parts of Malaysia and Indonesia!",
+          "j": "What a view — and what an answer!",
+          "sub": "comp_literal"
+        },
+        {
+          "q": "A seed needs water, sunlight and air to grow. First it sprouts, then it grows leaves, and finally it flowers. What happens FIRST when a seed grows?",
+          "o": [
+            "It grows leaves",
+            "It flowers",
+            "It makes seeds",
+            "It sprouts"
+          ],
+          "a": 3,
+          "c": "“First it sprouts” — sprouting comes first!",
+          "j": "First things first — a sprouting good answer!",
+          "sub": "comp_sequence"
+        },
+        {
+          "q": "The treasure map was fragile and tore easily. The word “fragile” means ___.",
+          "o": [
+            "easily broken",
+            "very strong",
+            "very old",
+            "very heavy"
+          ],
+          "a": 0,
+          "c": "Fragile means it breaks easily — handle with care!",
+          "j": "Handle with care — and handle this answer with pride!",
+          "sub": "comp_vocab"
+        },
+        {
+          "q": "When the teacher announced a surprise test, the class groaned and put their heads on their desks. How did the class feel?",
+          "o": [
+            "Calm and relaxed",
+            "Unhappy and reluctant",
+            "Excited and eager",
+            "Proud and cheerful"
+          ],
+          "a": 1,
+          "c": "Groans and heads on desks — nobody was happy about the test!",
+          "j": "A surprise test? Not a surprise that you got it right!",
+          "sub": "comp_feelings"
+        },
+        {
+          "q": "The streets were wet, the sky was grey, and people were holding umbrellas. What had probably just happened?",
+          "o": [
+            "There was a fire",
+            "It was a sunny day",
+            "It had rained",
+            "It had snowed"
+          ],
+          "a": 2,
+          "c": "Wet streets and umbrellas — it had just rained!",
+          "j": "Rain, rain — go away, come again with another right answer!",
+          "sub": "comp_inference"
+        }
+      ]
+    },
+    {
+      "topicId": "eng-story2",
+      "kind": "retry",
+      "level": 4,
+      "questions": [
+        {
+          "q": "The moon shines at night, but it does not make its own light. It reflects light from the sun. Which sentence is TRUE?",
+          "o": [
+            "The moon makes its own light.",
+            "The moon shines in the daytime.",
+            "The moon is a star.",
+            "The moon reflects light from the sun."
+          ],
+          "a": 3,
+          "c": "The moon borrows light from the sun!",
+          "j": "To the moon and back — with a right answer!",
+          "sub": "comp_true_false"
+        },
+        {
+          "q": "The farmer fed the chickens. Then he collected their eggs. The word “their” refers to ___.",
+          "o": [
+            "the chickens",
+            "the farmer",
+            "the eggs",
+            "the farm"
+          ],
+          "a": 0,
+          "c": "“Their eggs” — the eggs belong to the chickens!",
+          "j": "Fresh eggs — and a fresh correct answer!",
+          "sub": "comp_referent"
+        },
+        {
+          "q": "It’s raining cats and dogs outside! What does this mean?",
+          "o": [
+            "Animals are outside",
+            "It is raining very heavily",
+            "Cats and dogs are falling",
+            "It is raining a little"
+          ],
+          "a": 1,
+          "c": "“Cats and dogs” means very heavy rain!",
+          "j": "Cats, dogs and correct answers — all falling from the sky!",
+          "sub": "comp_phrase"
+        }
+      ]
+    }
+  ]
+}

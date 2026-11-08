@@ -1,0 +1,3900 @@
+{
+  "newTopics": [
+    {
+      "id": "math-length",
+      "img": "",
+      "sub": "math",
+      "subName": "Maths",
+      "icon": "📏",
+      "name": "Measure Masters",
+      "blurb": "Length, mass and volume — measure it all.",
+      "quest": [
+        {
+          "q": "A ribbon is 3 m long. How many centimetres is that?",
+          "o": [
+            "30",
+            "300",
+            "3000",
+            "3"
+          ],
+          "a": 1,
+          "c": "1 m = 100 cm, so 3 × 100 = 300 cm.",
+          "j": "300 cm of ribbon — that's a lot of bows!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A bag of rice weighs 2 kg. How many grams is that?",
+          "o": [
+            "20",
+            "200",
+            "2000",
+            "20000"
+          ],
+          "a": 2,
+          "c": "1 kg = 1000 g, so 2 × 1000 = 2000 g.",
+          "j": "That's a heavy bag of rice!",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "A bottle holds 5 l of water. How many millilitres is that?",
+          "o": [
+            "50",
+            "500",
+            "5000",
+            "50000"
+          ],
+          "a": 2,
+          "c": "1 l = 1000 ml, so 5 × 1000 = 5000 ml.",
+          "j": "5 litres — enough for a very thirsty elephant!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A rope is 2 m 45 cm long. How many centimetres long is it in all?",
+          "o": [
+            "245",
+            "2045",
+            "2450",
+            "24500"
+          ],
+          "a": 0,
+          "c": "2 m = 200 cm, then 200 + 45 = 245 cm.",
+          "j": "A 245-cm rope — perfect for skipping!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "Mei has a 1 m long ribbon. She cuts off 35 cm for a gift. How many centimetres of ribbon are left?",
+          "o": [
+            "65",
+            "75",
+            "35",
+            "135"
+          ],
+          "a": 0,
+          "c": "1 m = 100 cm, then 100 − 35 = 65 cm.",
+          "j": "65 cm left — still enough for another bow!",
+          "sub": "measure_word_problem"
+        }
+      ],
+      "warm": [
+        {
+          "q": "How many centimetres are in 4 m?",
+          "o": [
+            "40",
+            "400",
+            "4000",
+            "4"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_length"
+        },
+        {
+          "q": "How many grams are in 3 kg?",
+          "o": [
+            "30",
+            "300",
+            "3000",
+            "3"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "How many millilitres are in 2 l?",
+          "o": [
+            "20",
+            "200",
+            "2000",
+            "20000"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "The pointer on a kitchen scale points halfway between 0 and 1000. What is the mass in grams?",
+          "o": [
+            "50",
+            "500",
+            "5",
+            "5000"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A pencil is 15 cm long. A ruler is 30 cm long. How long are they together?",
+          "o": [
+            "45",
+            "15",
+            "30",
+            "25"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "Ali walks 200 m to school and Ben walks 350 m. How many metres farther does Ben walk than Ali?",
+          "o": [
+            "150",
+            "50",
+            "550",
+            "250"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "routes_compare"
+        },
+        {
+          "q": "3 kg 250 g is how many grams in all?",
+          "o": [
+            "325",
+            "3250",
+            "30250",
+            "32500"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "compound_units"
+        },
+        {
+          "q": "How many metres are in 700 cm?",
+          "o": [
+            "7",
+            "70",
+            "700",
+            "7000"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "convert_length"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "A table is 2 m long. How many centimetres is that?",
+          "o": [
+            "20",
+            "200",
+            "2000",
+            "2"
+          ],
+          "a": 1,
+          "c": "1 m = 100 cm, so 2 × 100 = 200 cm.",
+          "j": "A 200-cm table — room for the whole family!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A watermelon weighs 4 kg. How many grams is that?",
+          "o": [
+            "40",
+            "400",
+            "4000",
+            "40000"
+          ],
+          "a": 2,
+          "c": "1 kg = 1000 g, so 4 × 1000 = 4000 g.",
+          "j": "A 4000-g watermelon — hope it's sweet!",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "A jug holds 3 l of juice. How many millilitres is that?",
+          "o": [
+            "30",
+            "300",
+            "3000",
+            "30000"
+          ],
+          "a": 2,
+          "c": "1 l = 1000 ml, so 3 × 1000 = 3000 ml.",
+          "j": "3000 ml of juice — party time!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A measuring jug has marks every 100 ml. The water reaches the 6th mark. How many millilitres of water are there?",
+          "o": [
+            "60",
+            "600",
+            "6",
+            "6000"
+          ],
+          "a": 1,
+          "c": "Each mark is 100 ml, so 6 × 100 = 600 ml.",
+          "j": "600 ml — that's a big drink!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A string is 80 cm long. Sam cuts off 25 cm. How many centimetres are left?",
+          "o": [
+            "55",
+            "45",
+            "65",
+            "105"
+          ],
+          "a": 0,
+          "c": "80 − 25 = 55 cm.",
+          "j": "55 cm left — still long enough to tie!",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "The road from home to the park is 400 m. The road from the park to the library is 250 m. How many metres is the whole trip?",
+          "o": [
+            "150",
+            "650",
+            "250",
+            "600"
+          ],
+          "a": 1,
+          "c": "400 + 250 = 650 m.",
+          "j": "650 m — a nice little adventure!",
+          "sub": "routes_compare"
+        },
+        {
+          "q": "1 m 30 cm is how many centimetres?",
+          "o": [
+            "13",
+            "130",
+            "103",
+            "1300"
+          ],
+          "a": 1,
+          "c": "1 m = 100 cm, then 100 + 30 = 130 cm.",
+          "j": "130 cm — taller than a first-grader!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "How many kilograms are in 5000 g?",
+          "o": [
+            "5",
+            "50",
+            "500",
+            "5000"
+          ],
+          "a": 0,
+          "c": "1000 g = 1 kg, so 5000 ÷ 1000 = 5 kg.",
+          "j": "5 kg — that's one heavy schoolbag!",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "How many litres are in 8000 ml?",
+          "o": [
+            "8",
+            "80",
+            "800",
+            "8000"
+          ],
+          "a": 0,
+          "c": "1000 ml = 1 l, so 8000 ÷ 1000 = 8 l.",
+          "j": "8 litres — a whole bucketful!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "On a weighing scale, each small mark is 100 g. The pointer is at the 7th mark. What is the mass in grams?",
+          "o": [
+            "70",
+            "700",
+            "7",
+            "7000"
+          ],
+          "a": 1,
+          "c": "Each mark is 100 g, so 7 × 100 = 700 g.",
+          "j": "700 g — about as heavy as a pineapple!",
+          "sub": "read_scale"
+        }
+      ],
+      "retry": [
+        {
+          "q": "How many centimetres are in 6 m?",
+          "o": [
+            "60",
+            "600",
+            "6000",
+            "6"
+          ],
+          "a": 1,
+          "c": "1 m = 100 cm, so 6 × 100 = 600 cm.",
+          "j": "600 cm — that's a long jump!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A tank holds 4 l of water. How many millilitres is that?",
+          "o": [
+            "40",
+            "400",
+            "4000",
+            "40000"
+          ],
+          "a": 2,
+          "c": "1 l = 1000 ml, so 4 × 1000 = 4000 ml.",
+          "j": "4000 ml — splash!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "2 kg 500 g is how many grams?",
+          "o": [
+            "250",
+            "2500",
+            "20500",
+            "25000"
+          ],
+          "a": 1,
+          "c": "2 kg = 2000 g, then 2000 + 500 = 2500 g.",
+          "j": "2500 g — that's a big bag of flour!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "A measuring jug is marked in 100 ml steps. The milk reaches the 4th mark. How many millilitres is that?",
+          "o": [
+            "40",
+            "400",
+            "4",
+            "4000"
+          ],
+          "a": 1,
+          "c": "Each step is 100 ml, so 4 × 100 = 400 ml.",
+          "j": "400 ml of milk — cookies, anyone?",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A piece of cloth is 90 cm long. Sara cuts off 40 cm. How many centimetres remain?",
+          "o": [
+            "50",
+            "40",
+            "130",
+            "30"
+          ],
+          "a": 0,
+          "c": "90 − 40 = 50 cm.",
+          "j": "50 cm left — enough for a headband!",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "Mei cycles 300 m to the shop and 200 m back home. How many metres does she cycle in all?",
+          "o": [
+            "100",
+            "500",
+            "200",
+            "600"
+          ],
+          "a": 1,
+          "c": "300 + 200 = 500 m.",
+          "j": "500 m — speedy cycling!",
+          "sub": "routes_compare"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "A road is 5 km long. How many metres is that?",
+          "o": [
+            "50",
+            "500",
+            "5000",
+            "50000"
+          ],
+          "a": 2,
+          "c": "1 km = 1000 m, so 5 × 1000 = 5000 m.",
+          "j": "5 km — that's a long walk!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A container holds 7 l 500 ml of water. How many millilitres is that in all?",
+          "o": [
+            "750",
+            "7500",
+            "70500",
+            "75000"
+          ],
+          "a": 1,
+          "c": "7 l = 7000 ml, then 7000 + 500 = 7500 ml.",
+          "j": "7500 ml — that's a lot of splashing!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A parcel weighs 3 kg 750 g. Another parcel weighs 1 kg 250 g. How many grams heavier is the first parcel?",
+          "o": [
+            "2500",
+            "2000",
+            "1500",
+            "5000"
+          ],
+          "a": 0,
+          "c": "3 kg 750 g = 3750 g and 1 kg 250 g = 1250 g, then 3750 − 1250 = 2500 g.",
+          "j": "2500 g heavier — someone packed rocks!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "A ribbon 4 m long is cut into 5 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "20",
+            "80",
+            "800",
+            "40"
+          ],
+          "a": 1,
+          "c": "4 m = 400 cm, then 400 ÷ 5 = 80 cm.",
+          "j": "80 cm each — five perfect pieces!",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "The MRT ride from Station A to Station B is 12 km. From Station B to Station C is 8 km. How many metres is the whole ride?",
+          "o": [
+            "20000",
+            "2000",
+            "200",
+            "200000"
+          ],
+          "a": 0,
+          "c": "12 + 8 = 20 km, and 20 × 1000 = 20000 m.",
+          "j": "20 km on the MRT — window seat, please!",
+          "sub": "routes_compare"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "How many metres are in 9 km?",
+          "o": [
+            "90",
+            "900",
+            "9000",
+            "90000"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "convert_length"
+        },
+        {
+          "q": "Mei buys 2 bags of rice. Each bag weighs 3 kg. How many grams of rice does she buy in all?",
+          "o": [
+            "600",
+            "6000",
+            "60",
+            "60000"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "A jug holds 4 l of juice. Sara pours in 2 l more. How many millilitres are in the jug now?",
+          "o": [
+            "600",
+            "6000",
+            "60",
+            "60000"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A scale has marks every 200 g. The pointer is at the 5th mark. What is the mass in grams?",
+          "o": [
+            "100",
+            "1000",
+            "500",
+            "5000"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A rope 3 m long is cut into 6 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "5",
+            "50",
+            "500",
+            "60"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "Ali walks 1 km 500 m to school. How many metres is that?",
+          "o": [
+            "150",
+            "1500",
+            "15000",
+            "105"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "routes_compare"
+        },
+        {
+          "q": "A ribbon is 5 m 60 cm long. Mei cuts it into 2 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "280",
+            "28",
+            "560",
+            "140"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "compound_units"
+        },
+        {
+          "q": "A 12 m long rope is cut into 3 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "40",
+            "400",
+            "4000",
+            "120"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_length"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "A bridge is 3 km long. How many metres is that?",
+          "o": [
+            "30",
+            "300",
+            "3000",
+            "30000"
+          ],
+          "a": 2,
+          "c": "1 km = 1000 m, so 3 × 1000 = 3000 m.",
+          "j": "A 3000-m bridge — don't look down!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A sack of flour weighs 9 kg. How many grams is that?",
+          "o": [
+            "90",
+            "900",
+            "9000",
+            "90000"
+          ],
+          "a": 2,
+          "c": "1 kg = 1000 g, so 9 × 1000 = 9000 g.",
+          "j": "9000 g of flour — that's a lot of pancakes!",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "A drum holds 6 l 250 ml of oil. How many millilitres is that in all?",
+          "o": [
+            "625",
+            "6250",
+            "60250",
+            "62500"
+          ],
+          "a": 1,
+          "c": "6 l = 6000 ml, then 6000 + 250 = 6250 ml.",
+          "j": "6250 ml of oil — slippery!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A measuring cylinder is marked in 50 ml steps. The water is at the 9th mark. How many millilitres is that?",
+          "o": [
+            "45",
+            "450",
+            "4500",
+            "90"
+          ],
+          "a": 1,
+          "c": "Each step is 50 ml, so 9 × 50 = 450 ml.",
+          "j": "450 ml — science in action!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A 5 m long cloth is cut into 4 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "125",
+            "25",
+            "20",
+            "500"
+          ],
+          "a": 0,
+          "c": "5 m = 500 cm, then 500 ÷ 4 = 125 cm.",
+          "j": "125 cm each — four neat pieces!",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "The walk to the market is 800 m. The walk from the market to the library is 700 m. How many metres is the whole walk?",
+          "o": [
+            "100",
+            "1500",
+            "150",
+            "15000"
+          ],
+          "a": 1,
+          "c": "800 + 700 = 1500 m.",
+          "j": "1500 m — a proper adventure!",
+          "sub": "routes_compare"
+        },
+        {
+          "q": "A parcel weighs 4 kg 80 g. The box alone weighs 80 g. How many grams is the parcel without the box?",
+          "o": [
+            "4000",
+            "4080",
+            "400",
+            "480"
+          ],
+          "a": 0,
+          "c": "4 kg 80 g = 4080 g, then 4080 − 80 = 4000 g.",
+          "j": "4000 g of goodies — no box included!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "A sack weighs 11000 g. Mei takes out 1000 g of flour. How many kilograms are left?",
+          "o": [
+            "10",
+            "11",
+            "100",
+            "1"
+          ],
+          "a": 0,
+          "c": "11000 − 1000 = 10000 g, and 10000 ÷ 1000 = 10 kg.",
+          "j": "10 kg left — still heavy!",
+          "sub": "convert_mass"
+        },
+        {
+          "q": "A tank holds 12000 ml of water. Sam pours out 2000 ml. How many litres are left?",
+          "o": [
+            "10",
+            "12",
+            "100",
+            "2"
+          ],
+          "a": 0,
+          "c": "12000 − 2000 = 10000 ml, and 10000 ÷ 1000 = 10 l.",
+          "j": "10 litres left — still full enough!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "On a scale, each big mark is 500 g. The pointer is at the 6th big mark. What is the mass in grams?",
+          "o": [
+            "300",
+            "3000",
+            "30",
+            "30000"
+          ],
+          "a": 1,
+          "c": "Each mark is 500 g, so 6 × 500 = 3000 g.",
+          "j": "3000 g — that's a big pumpkin!",
+          "sub": "read_scale"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "How many metres are in 7 km?",
+          "o": [
+            "70",
+            "700",
+            "7000",
+            "70000"
+          ],
+          "a": 2,
+          "c": "1 km = 1000 m, so 7 × 1000 = 7000 m.",
+          "j": "7000 m — marathon distance!",
+          "sub": "convert_length"
+        },
+        {
+          "q": "A bottle holds 2 l 350 ml. How many millilitres in all?",
+          "o": [
+            "235",
+            "2350",
+            "20350",
+            "23500"
+          ],
+          "a": 1,
+          "c": "2 l = 2000 ml, then 2000 + 350 = 2350 ml.",
+          "j": "2350 ml — glug glug!",
+          "sub": "convert_volume"
+        },
+        {
+          "q": "A rope is 6 m 45 cm long. Sam cuts off 45 cm. How many centimetres are left?",
+          "o": [
+            "600",
+            "60",
+            "645",
+            "690"
+          ],
+          "a": 0,
+          "c": "6 m 45 cm = 645 cm, then 645 − 45 = 600 cm.",
+          "j": "600 cm left — still a long rope!",
+          "sub": "compound_units"
+        },
+        {
+          "q": "A jug is marked every 250 ml. The juice is at the 4th mark. How many millilitres is that?",
+          "o": [
+            "100",
+            "1000",
+            "250",
+            "2500"
+          ],
+          "a": 1,
+          "c": "Each mark is 250 ml, so 4 × 250 = 1000 ml.",
+          "j": "1000 ml of juice — cheers!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "A wire 6 m long is cut into 3 equal pieces. How long is each piece in centimetres?",
+          "o": [
+            "200",
+            "20",
+            "2",
+            "600"
+          ],
+          "a": 0,
+          "c": "6 m = 600 cm, then 600 ÷ 3 = 200 cm.",
+          "j": "200 cm each — three equal pieces!",
+          "sub": "measure_word_problem"
+        },
+        {
+          "q": "Sara runs 2 km in the morning and 3 km in the evening. How many metres does she run in a day?",
+          "o": [
+            "500",
+            "5000",
+            "50",
+            "50000"
+          ],
+          "a": 1,
+          "c": "2 + 3 = 5 km, and 5 × 1000 = 5000 m.",
+          "j": "5000 m a day — super runner!",
+          "sub": "routes_compare"
+        }
+      ]
+    },
+    {
+      "id": "math-time",
+      "img": "",
+      "sub": "math",
+      "subName": "Maths",
+      "icon": "🕐",
+      "name": "Time Travellers",
+      "blurb": "Telling time and working out durations.",
+      "quest": [
+        {
+          "q": "How many minutes are in 3 hours?",
+          "o": [
+            "30",
+            "180",
+            "300",
+            "3"
+          ],
+          "a": 1,
+          "c": "1 hour = 60 minutes, so 3 × 60 = 180 minutes.",
+          "j": "180 minutes — that's three whole hours of play!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A movie starts at 2:00 pm and ends at 4:00 pm. How long is the movie in hours?",
+          "o": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "a": 1,
+          "c": "4 − 2 = 2 hours.",
+          "j": "A 2-hour movie — bring the popcorn!",
+          "sub": "duration"
+        },
+        {
+          "q": "School ends at 1:30 pm. Sara takes 45 minutes to get home. What time does she get home?",
+          "o": [
+            "2:00 pm",
+            "2:15 pm",
+            "1:15 pm",
+            "2:30 pm"
+          ],
+          "a": 1,
+          "c": "1:30 + 45 minutes = 2:15 pm.",
+          "j": "Home at 2:15 — just in time for a snack!",
+          "sub": "end_time"
+        },
+        {
+          "q": "A train arrives at 10:30 am. The ride takes 1 hour 15 minutes. What time did the train leave?",
+          "o": [
+            "9:00 am",
+            "9:15 am",
+            "9:30 am",
+            "11:45 am"
+          ],
+          "a": 1,
+          "c": "10:30 − 1 hour 15 minutes = 9:15 am.",
+          "j": "The train left at 9:15 — all aboard!",
+          "sub": "start_time"
+        },
+        {
+          "q": "Ali starts reading at 11:00 pm and reads for 2 hours. What time does he finish?",
+          "o": [
+            "1:00 am",
+            "12:00 am",
+            "11:00 pm",
+            "2:00 am"
+          ],
+          "a": 0,
+          "c": "11 pm + 1 hour = 12 am, then 1 more hour = 1 am.",
+          "j": "Reading past midnight — a real bookworm!",
+          "sub": "across_midnight"
+        }
+      ],
+      "warm": [
+        {
+          "q": "How many minutes are in 2 hours?",
+          "o": [
+            "20",
+            "120",
+            "200",
+            "2"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "What is 3:00 pm in 24-hour time?",
+          "o": [
+            "3:00",
+            "15:00",
+            "13:00",
+            "03:00"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "Lunch starts at 12:00 pm and ends at 12:45 pm. How many minutes is lunch?",
+          "o": [
+            "15",
+            "45",
+            "30",
+            "60"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "duration"
+        },
+        {
+          "q": "A bus leaves at 8:00 am. The trip takes 30 minutes. What time does it arrive?",
+          "o": [
+            "8:30 am",
+            "7:30 am",
+            "9:00 am",
+            "8:00 am"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "end_time"
+        },
+        {
+          "q": "Dinner ends at 7:00 pm. It lasted 1 hour. What time did dinner start?",
+          "o": [
+            "6:00 pm",
+            "8:00 pm",
+            "7:00 pm",
+            "5:00 pm"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "start_time"
+        },
+        {
+          "q": "A show starts at 10:00 pm and ends at 12:00 midnight. How many hours does it last?",
+          "o": [
+            "1",
+            "2",
+            "3",
+            "10"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "Mei reads for 30 minutes, then plays for 30 minutes. How many hours is that in all?",
+          "o": [
+            "30",
+            "60",
+            "1",
+            "2"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "two_step_time"
+        },
+        {
+          "q": "How many minutes are in 1 hour 30 minutes?",
+          "o": [
+            "30",
+            "60",
+            "90",
+            "130"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "convert_h_min"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "How many minutes are in 4 hours?",
+          "o": [
+            "40",
+            "240",
+            "400",
+            "4"
+          ],
+          "a": 1,
+          "c": "1 hour = 60 minutes, so 4 × 60 = 240 minutes.",
+          "j": "240 minutes — four hours of fun!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "What is 7:00 pm in 24-hour time?",
+          "o": [
+            "7:00",
+            "17:00",
+            "19:00",
+            "07:00"
+          ],
+          "a": 2,
+          "c": "7 pm is 12 + 7 = 19:00 in 24-hour time.",
+          "j": "19:00 — evening time!",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "A class starts at 9:00 am and ends at 10:30 am. How long is the class in minutes?",
+          "o": [
+            "30",
+            "60",
+            "90",
+            "150"
+          ],
+          "a": 2,
+          "c": "From 9:00 to 10:30 is 1 hour 30 minutes = 90 minutes.",
+          "j": "90 minutes of learning — brain power!",
+          "sub": "duration"
+        },
+        {
+          "q": "A film starts at 6:00 pm and lasts 2 hours 15 minutes. What time does it end?",
+          "o": [
+            "8:00 pm",
+            "8:15 pm",
+            "7:15 pm",
+            "9:15 pm"
+          ],
+          "a": 1,
+          "c": "6:00 + 2 hours 15 minutes = 8:15 pm.",
+          "j": "The film ends at 8:15 — credits roll!",
+          "sub": "end_time"
+        },
+        {
+          "q": "A cake is ready at 4:00 pm. It baked for 50 minutes. What time did it go into the oven?",
+          "o": [
+            "3:00 pm",
+            "3:10 pm",
+            "3:50 pm",
+            "4:50 pm"
+          ],
+          "a": 1,
+          "c": "4:00 − 50 minutes = 3:10 pm.",
+          "j": "Into the oven at 3:10 — smells yummy!",
+          "sub": "start_time"
+        },
+        {
+          "q": "Ben sleeps at 9:00 pm and wakes at 7:00 am. How many hours does he sleep?",
+          "o": [
+            "9",
+            "10",
+            "8",
+            "11"
+          ],
+          "a": 1,
+          "c": "3 hours to midnight, then 7 more hours = 10 hours.",
+          "j": "10 hours of sleep — well rested!",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "A train ride takes 45 minutes. Then Ali walks for 15 minutes. How many minutes is the whole trip?",
+          "o": [
+            "30",
+            "60",
+            "45",
+            "90"
+          ],
+          "a": 1,
+          "c": "45 + 15 = 60 minutes.",
+          "j": "A 60-minute trip — one whole hour!",
+          "sub": "two_step_time"
+        },
+        {
+          "q": "How many hours are in 180 minutes?",
+          "o": [
+            "18",
+            "3",
+            "30",
+            "2"
+          ],
+          "a": 1,
+          "c": "60 minutes = 1 hour, so 180 ÷ 60 = 3 hours.",
+          "j": "180 minutes is 3 hours — time flies!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "What is 11:00 am in 24-hour time?",
+          "o": [
+            "23:00",
+            "11:00",
+            "1:00",
+            "13:00"
+          ],
+          "a": 1,
+          "c": "Morning times stay the same in 24-hour time, so 11:00 am = 11:00.",
+          "j": "11:00 — nearly lunch!",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "Swimming starts at 3:15 pm and ends at 4:15 pm. How long is it in minutes?",
+          "o": [
+            "30",
+            "60",
+            "45",
+            "90"
+          ],
+          "a": 1,
+          "c": "From 3:15 to 4:15 is 1 hour = 60 minutes.",
+          "j": "60 minutes of splashing!",
+          "sub": "duration"
+        }
+      ],
+      "retry": [
+        {
+          "q": "How many minutes are in 5 hours?",
+          "o": [
+            "50",
+            "300",
+            "500",
+            "5"
+          ],
+          "a": 1,
+          "c": "1 hour = 60 minutes, so 5 × 60 = 300 minutes.",
+          "j": "300 minutes — five hours of adventure!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A game starts at 5:00 pm and ends at 6:30 pm. How long is it in minutes?",
+          "o": [
+            "30",
+            "60",
+            "90",
+            "150"
+          ],
+          "a": 2,
+          "c": "From 5:00 to 6:30 is 1 hour 30 minutes = 90 minutes.",
+          "j": "90 minutes of play — game on!",
+          "sub": "duration"
+        },
+        {
+          "q": "A lesson starts at 10:00 am and lasts 40 minutes. What time does it end?",
+          "o": [
+            "10:40 am",
+            "10:30 am",
+            "9:20 am",
+            "11:40 am"
+          ],
+          "a": 0,
+          "c": "10:00 + 40 minutes = 10:40 am.",
+          "j": "Lesson over at 10:40 — break time!",
+          "sub": "end_time"
+        },
+        {
+          "q": "A show ends at 9:00 pm. It lasted 2 hours. What time did it start?",
+          "o": [
+            "7:00 pm",
+            "11:00 pm",
+            "8:00 pm",
+            "6:00 pm"
+          ],
+          "a": 0,
+          "c": "9:00 − 2 hours = 7:00 pm.",
+          "j": "The show started at 7:00 — front row seats!",
+          "sub": "start_time"
+        },
+        {
+          "q": "A night bus leaves at 11:30 pm and the ride takes 1 hour. What time does it arrive?",
+          "o": [
+            "12:30 am",
+            "10:30 pm",
+            "11:30 am",
+            "1:30 am"
+          ],
+          "a": 0,
+          "c": "11:30 pm + 1 hour = 12:30 am.",
+          "j": "Arriving at 12:30 am — past bedtime!",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "Sara practises piano for 20 minutes and violin for 40 minutes. How many minutes does she practise in all?",
+          "o": [
+            "20",
+            "40",
+            "60",
+            "80"
+          ],
+          "a": 2,
+          "c": "20 + 40 = 60 minutes.",
+          "j": "60 minutes of music — beautiful!",
+          "sub": "two_step_time"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "How many minutes are in 2 hours 45 minutes?",
+          "o": [
+            "245",
+            "165",
+            "125",
+            "285"
+          ],
+          "a": 1,
+          "c": "2 hours = 120 minutes, then 120 + 45 = 165 minutes.",
+          "j": "165 minutes — that's a long film!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A flight leaves at 13:40 and lands at 16:10. How long is the flight in minutes?",
+          "o": [
+            "150",
+            "130",
+            "170",
+            "120"
+          ],
+          "a": 0,
+          "c": "From 13:40 to 16:10 is 2 hours 30 minutes = 150 minutes.",
+          "j": "A 150-minute flight — window seat, please!",
+          "sub": "duration"
+        },
+        {
+          "q": "A concert starts at 19:45 and lasts 2 hours 30 minutes. What time does it end?",
+          "o": [
+            "21:15",
+            "22:15",
+            "20:15",
+            "22:45"
+          ],
+          "a": 1,
+          "c": "19:45 + 2 hours 30 minutes = 22:15.",
+          "j": "The concert ends at 22:15 — encore!",
+          "sub": "end_time"
+        },
+        {
+          "q": "A bus arrives at 14:20. The journey took 3 hours 40 minutes. What time did it leave?",
+          "o": [
+            "10:20",
+            "10:40",
+            "11:20",
+            "9:40"
+          ],
+          "a": 1,
+          "c": "14:20 − 3 hours 40 minutes = 10:40.",
+          "j": "The bus left at 10:40 — all aboard!",
+          "sub": "start_time"
+        },
+        {
+          "q": "A ferry leaves at 23:20 and the trip takes 2 hours 50 minutes. What time does it arrive?",
+          "o": [
+            "2:10 am",
+            "1:10 am",
+            "2:50 am",
+            "1:50 am"
+          ],
+          "a": 0,
+          "c": "23:20 + 2 hours 50 minutes = 2:10 am the next day.",
+          "j": "Arriving at 2:10 am — the ferry sails through the night!",
+          "sub": "across_midnight"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "How many minutes are in 3 hours 20 minutes?",
+          "o": [
+            "320",
+            "200",
+            "180",
+            "140"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A film starts at 21:45. What time is that in 12-hour time?",
+          "o": [
+            "9:45 am",
+            "9:45 pm",
+            "21:45 am",
+            "11:45 pm"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "A workshop runs from 10:15 am to 12:45 pm. How many minutes does it last?",
+          "o": [
+            "120",
+            "150",
+            "130",
+            "110"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "duration"
+        },
+        {
+          "q": "A match starts at 15:30 and lasts 1 hour 45 minutes. What time does it end?",
+          "o": [
+            "17:15",
+            "16:15",
+            "17:45",
+            "16:45"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "end_time"
+        },
+        {
+          "q": "Lunch ends at 13:10. It lasted 45 minutes. What time did it start?",
+          "o": [
+            "12:25",
+            "12:35",
+            "12:15",
+            "13:55"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "start_time"
+        },
+        {
+          "q": "Mei goes to bed at 22:30 and wakes at 6:30. How many hours does she sleep?",
+          "o": [
+            "7",
+            "8",
+            "9",
+            "6"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "A journey takes 1 hour 20 minutes by bus and 25 minutes on foot. How many minutes is the whole journey?",
+          "o": [
+            "105",
+            "95",
+            "85",
+            "115"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "two_step_time"
+        },
+        {
+          "q": "How many minutes are in 4 hours 15 minutes?",
+          "o": [
+            "415",
+            "255",
+            "240",
+            "215"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "convert_h_min"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "How many minutes are in 6 hours 10 minutes?",
+          "o": [
+            "610",
+            "370",
+            "360",
+            "350"
+          ],
+          "a": 1,
+          "c": "6 hours = 360 minutes, then 360 + 10 = 370 minutes.",
+          "j": "370 minutes — that's a lot of minutes!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A clock shows 00:30. What time is that in 12-hour time?",
+          "o": [
+            "12:30 am",
+            "12:30 pm",
+            "1:30 am",
+            "12:00 am"
+          ],
+          "a": 0,
+          "c": "00:30 is half past midnight, which is 12:30 am.",
+          "j": "12:30 am — past bedtime!",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "A film starts at 20:05 and ends at 22:35. How long is it in minutes?",
+          "o": [
+            "150",
+            "130",
+            "140",
+            "120"
+          ],
+          "a": 0,
+          "c": "From 20:05 to 22:35 is 2 hours 30 minutes = 150 minutes.",
+          "j": "A 150-minute film — bring extra popcorn!",
+          "sub": "duration"
+        },
+        {
+          "q": "A class starts at 08:50 and lasts 1 hour 25 minutes. What time does it end?",
+          "o": [
+            "10:15",
+            "10:05",
+            "9:15",
+            "10:25"
+          ],
+          "a": 0,
+          "c": "08:50 + 1 hour 25 minutes = 10:15.",
+          "j": "Class ends at 10:15 — time for recess!",
+          "sub": "end_time"
+        },
+        {
+          "q": "A train arrives at 18:05. The ride took 2 hours 35 minutes. What time did it leave?",
+          "o": [
+            "15:30",
+            "15:20",
+            "16:30",
+            "14:30"
+          ],
+          "a": 0,
+          "c": "18:05 − 2 hours 35 minutes = 15:30.",
+          "j": "The train left at 15:30 — choo choo!",
+          "sub": "start_time"
+        },
+        {
+          "q": "A baker starts work at 11:45 pm and works for 4 hours. What time does he finish?",
+          "o": [
+            "3:45 am",
+            "2:45 am",
+            "4:45 am",
+            "3:45 pm"
+          ],
+          "a": 0,
+          "c": "11:45 pm + 15 minutes = 12:00 am, then 3 hours 45 minutes more = 3:45 am.",
+          "j": "Done at 3:45 am — fresh bread for breakfast!",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "Sara studies for 1 hour 10 minutes, then reads for 50 minutes. How many minutes is that in all?",
+          "o": [
+            "120",
+            "110",
+            "100",
+            "130"
+          ],
+          "a": 0,
+          "c": "1 hour 10 minutes = 70 minutes, then 70 + 50 = 120 minutes.",
+          "j": "120 minutes of brain work — clever!",
+          "sub": "two_step_time"
+        },
+        {
+          "q": "How many minutes are in 7 hours 30 minutes?",
+          "o": [
+            "730",
+            "450",
+            "420",
+            "430"
+          ],
+          "a": 1,
+          "c": "7 hours = 420 minutes, then 420 + 30 = 450 minutes.",
+          "j": "450 minutes — that's a whole school day!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A bus leaves at 16:20. What time is that in 12-hour time?",
+          "o": [
+            "4:20 am",
+            "4:20 pm",
+            "6:20 pm",
+            "8:20 am"
+          ],
+          "a": 1,
+          "c": "16:20 is after noon, so 16 − 12 = 4, and it is pm.",
+          "j": "4:20 pm — bus time!",
+          "sub": "tell_time_24h"
+        },
+        {
+          "q": "A concert runs from 19:20 to 21:50. How long is it in minutes?",
+          "o": [
+            "140",
+            "150",
+            "130",
+            "160"
+          ],
+          "a": 1,
+          "c": "From 19:20 to 21:50 is 2 hours 30 minutes = 150 minutes.",
+          "j": "150 minutes of music — rock on!",
+          "sub": "duration"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "How many minutes are in 5 hours 40 minutes?",
+          "o": [
+            "540",
+            "340",
+            "300",
+            "320"
+          ],
+          "a": 1,
+          "c": "5 hours = 300 minutes, then 300 + 40 = 340 minutes.",
+          "j": "340 minutes — tick tock!",
+          "sub": "convert_h_min"
+        },
+        {
+          "q": "A match runs from 16:10 to 18:40. How long is it in minutes?",
+          "o": [
+            "140",
+            "150",
+            "130",
+            "160"
+          ],
+          "a": 1,
+          "c": "From 16:10 to 18:40 is 2 hours 30 minutes = 150 minutes.",
+          "j": "A 150-minute match — go team!",
+          "sub": "duration"
+        },
+        {
+          "q": "A lesson starts at 11:25 and lasts 55 minutes. What time does it end?",
+          "o": [
+            "12:20",
+            "12:10",
+            "12:30",
+            "11:20"
+          ],
+          "a": 0,
+          "c": "11:25 + 55 minutes = 12:20.",
+          "j": "Lesson ends at 12:20 — lunch time!",
+          "sub": "end_time"
+        },
+        {
+          "q": "Dinner ends at 20:15. It lasted 1 hour 30 minutes. What time did it start?",
+          "o": [
+            "18:45",
+            "19:45",
+            "18:15",
+            "19:15"
+          ],
+          "a": 0,
+          "c": "20:15 − 1 hour 30 minutes = 18:45.",
+          "j": "Dinner started at 18:45 — yummy!",
+          "sub": "start_time"
+        },
+        {
+          "q": "A plane leaves at 22:40 and the flight takes 3 hours 30 minutes. What time does it land?",
+          "o": [
+            "2:10 am",
+            "1:10 am",
+            "2:40 am",
+            "3:10 am"
+          ],
+          "a": 0,
+          "c": "22:40 + 3 hours 30 minutes = 2:10 am the next day.",
+          "j": "Landing at 2:10 am — sweet dreams on board!",
+          "sub": "across_midnight"
+        },
+        {
+          "q": "A delivery takes 2 hours 15 minutes by van and 45 minutes by boat. How many minutes is the whole trip?",
+          "o": [
+            "180",
+            "150",
+            "160",
+            "140"
+          ],
+          "a": 0,
+          "c": "2 hours 15 minutes = 135 minutes, then 135 + 45 = 180 minutes.",
+          "j": "180 minutes by van and boat — what a trip!",
+          "sub": "two_step_time"
+        }
+      ]
+    },
+    {
+      "id": "math-area",
+      "img": "",
+      "sub": "math",
+      "subName": "Maths",
+      "icon": "🟦",
+      "name": "Area Adventurers",
+      "blurb": "Area and perimeter — count the squares.",
+      "quest": [
+        {
+          "q": "A shape is made of 12 squares. Each square is 1 cm by 1 cm. What is the area of the shape?",
+          "o": [
+            "12",
+            "6",
+            "24",
+            "10"
+          ],
+          "a": 0,
+          "c": "Count the squares: 12 squares of 1 cm² each = 12.",
+          "j": "12 squares — count them all!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 6 cm long and 4 cm wide. What is its area?",
+          "o": [
+            "10",
+            "20",
+            "24",
+            "14"
+          ],
+          "a": 2,
+          "c": "Area = length × width = 6 × 4 = 24.",
+          "j": "24 square centimetres — nicely covered!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 5 cm long and 3 cm wide. What is its perimeter?",
+          "o": [
+            "8",
+            "15",
+            "16",
+            "30"
+          ],
+          "a": 2,
+          "c": "Perimeter = 2 × (5 + 3) = 16 cm.",
+          "j": "16 cm around the edge — walk the whole way!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has sides of 6 cm, 4 cm, 2 cm, 2 cm, 4 cm and 2 cm. What is its perimeter?",
+          "o": [
+            "20",
+            "18",
+            "22",
+            "16"
+          ],
+          "a": 0,
+          "c": "Add all the sides: 6 + 4 + 2 + 2 + 4 + 2 = 20 cm.",
+          "j": "20 cm around — add them all up!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A square has sides of 5 cm. Its perimeter is 20 cm. What is its area?",
+          "o": [
+            "10",
+            "20",
+            "25",
+            "15"
+          ],
+          "a": 2,
+          "c": "Area = 5 × 5 = 25. The perimeter (20 cm) is a different thing!",
+          "j": "25 square centimetres — area is not perimeter!",
+          "sub": "area_vs_perimeter"
+        }
+      ],
+      "warm": [
+        {
+          "q": "A shape is made of 9 squares of 1 cm² each. What is its area?",
+          "o": [
+            "9",
+            "18",
+            "3",
+            "81"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 3 cm long and 2 cm wide. What is its area?",
+          "o": [
+            "5",
+            "6",
+            "12",
+            "10"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A square has sides of 4 cm. What is its perimeter?",
+          "o": [
+            "8",
+            "12",
+            "16",
+            "20"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has sides 5 cm, 3 cm, 2 cm, 1 cm, 3 cm and 2 cm. What is its perimeter?",
+          "o": [
+            "16",
+            "14",
+            "15",
+            "18"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A rectangle is 7 cm long and 2 cm wide. What is its perimeter?",
+          "o": [
+            "9",
+            "14",
+            "18",
+            "28"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire is bent into a square with sides of 6 cm. The wire is 24 cm long. It is bent again into a rectangle 8 cm long. How wide is the rectangle?",
+          "o": [
+            "2",
+            "4",
+            "6",
+            "8"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "wire_reshaped"
+        },
+        {
+          "q": "A shape is made of 15 squares of 1 cm² each. What is its area?",
+          "o": [
+            "15",
+            "30",
+            "5",
+            "10"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 8 cm long and 3 cm wide. What is its area?",
+          "o": [
+            "11",
+            "24",
+            "22",
+            "16"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "area_rectangle_square"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "A shape is made of 20 squares of 1 cm² each. What is its area?",
+          "o": [
+            "20",
+            "40",
+            "10",
+            "4"
+          ],
+          "a": 0,
+          "c": "Count the squares: 20 squares of 1 cm² each = 20.",
+          "j": "20 squares — count them all!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 9 cm long and 2 cm wide. What is its area?",
+          "o": [
+            "11",
+            "18",
+            "20",
+            "22"
+          ],
+          "a": 1,
+          "c": "Area = 9 × 2 = 18.",
+          "j": "18 square centimetres — covered!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 7 cm long and 4 cm wide. What is its perimeter?",
+          "o": [
+            "11",
+            "22",
+            "28",
+            "14"
+          ],
+          "a": 1,
+          "c": "Perimeter = 2 × (7 + 4) = 22 cm.",
+          "j": "22 cm around the edge!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has sides 7 cm, 5 cm, 3 cm, 2 cm, 4 cm and 3 cm. What is its perimeter?",
+          "o": [
+            "24",
+            "22",
+            "20",
+            "26"
+          ],
+          "a": 0,
+          "c": "Add all the sides: 7 + 5 + 3 + 2 + 4 + 3 = 24 cm.",
+          "j": "24 cm — add them all up!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A square has sides of 6 cm. What is its area?",
+          "o": [
+            "24",
+            "36",
+            "12",
+            "18"
+          ],
+          "a": 1,
+          "c": "Area = 6 × 6 = 36.",
+          "j": "36 square centimetres — a big square!",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire 32 cm long is bent into a rectangle 10 cm long. How wide is the rectangle?",
+          "o": [
+            "6",
+            "12",
+            "22",
+            "16"
+          ],
+          "a": 0,
+          "c": "The wire is 32 cm, so 10 + width = 16, and width = 6 cm.",
+          "j": "6 cm wide — bendy wire magic!",
+          "sub": "wire_reshaped"
+        },
+        {
+          "q": "A shape is made of 18 squares of 1 cm² each. What is its area?",
+          "o": [
+            "18",
+            "36",
+            "9",
+            "6"
+          ],
+          "a": 0,
+          "c": "Count the squares: 18 squares of 1 cm² each = 18.",
+          "j": "18 squares — count them all!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 5 cm long and 5 cm wide. What is its area?",
+          "o": [
+            "10",
+            "20",
+            "25",
+            "15"
+          ],
+          "a": 2,
+          "c": "Area = 5 × 5 = 25.",
+          "j": "25 square centimetres — a perfect square!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A square has sides of 7 cm. What is its perimeter?",
+          "o": [
+            "14",
+            "21",
+            "28",
+            "35"
+          ],
+          "a": 2,
+          "c": "Perimeter = 4 × 7 = 28 cm.",
+          "j": "28 cm around — four sevens!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A wire is bent into a square with sides of 5 cm. The wire is bent again into a rectangle 6 cm long. How wide is the rectangle?",
+          "o": [
+            "4",
+            "5",
+            "6",
+            "10"
+          ],
+          "a": 0,
+          "c": "The wire is 4 × 5 = 20 cm, so 6 + width = 10, and width = 4 cm.",
+          "j": "4 cm wide — the wire changed shape!",
+          "sub": "wire_reshaped"
+        }
+      ],
+      "retry": [
+        {
+          "q": "A shape is made of 14 squares of 1 cm² each. What is its area?",
+          "o": [
+            "14",
+            "28",
+            "7",
+            "10"
+          ],
+          "a": 0,
+          "c": "Count the squares: 14 squares of 1 cm² each = 14.",
+          "j": "14 squares — count them all!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 4 cm long and 6 cm wide. What is its area?",
+          "o": [
+            "10",
+            "24",
+            "20",
+            "12"
+          ],
+          "a": 1,
+          "c": "Area = 4 × 6 = 24.",
+          "j": "24 square centimetres — covered!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 6 cm long and 2 cm wide. What is its perimeter?",
+          "o": [
+            "8",
+            "12",
+            "16",
+            "20"
+          ],
+          "a": 2,
+          "c": "Perimeter = 2 × (6 + 2) = 16 cm.",
+          "j": "16 cm around the edge!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has sides 4 cm, 4 cm, 2 cm, 2 cm, 2 cm and 2 cm. What is its perimeter?",
+          "o": [
+            "16",
+            "14",
+            "12",
+            "18"
+          ],
+          "a": 0,
+          "c": "Add all the sides: 4 + 4 + 2 + 2 + 2 + 2 = 16 cm.",
+          "j": "16 cm — add them all up!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A rectangle is 3 cm long and 8 cm wide. What is its area?",
+          "o": [
+            "11",
+            "24",
+            "22",
+            "16"
+          ],
+          "a": 1,
+          "c": "Area = 3 × 8 = 24.",
+          "j": "24 square centimetres — nicely covered!",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire 28 cm long is bent into a rectangle 9 cm long. How wide is the rectangle?",
+          "o": [
+            "5",
+            "10",
+            "19",
+            "14"
+          ],
+          "a": 0,
+          "c": "The wire is 28 cm, so 9 + width = 14, and width = 5 cm.",
+          "j": "5 cm wide — bendy wire magic!",
+          "sub": "wire_reshaped"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "A shape is made of 24 squares. Each square is 1 cm by 1 cm. Sara adds 6 more squares. What is the area of the shape now?",
+          "o": [
+            "30",
+            "24",
+            "18",
+            "36"
+          ],
+          "a": 0,
+          "c": "24 + 6 = 30 squares, and each is 1 cm², so the area is 30 cm².",
+          "j": "30 cm² — six squares bigger!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 12 cm long and 8 cm wide. Its length is increased by 2 cm. What is the new area?",
+          "o": [
+            "96",
+            "112",
+            "104",
+            "120"
+          ],
+          "a": 1,
+          "c": "The new length is 12 + 2 = 14 cm, so the area is 14 × 8 = 112 cm².",
+          "j": "112 cm² — a longer rectangle!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 15 cm long and 9 cm wide. Its width is increased by 3 cm. What is the new perimeter?",
+          "o": [
+            "48",
+            "54",
+            "42",
+            "60"
+          ],
+          "a": 1,
+          "c": "The new width is 9 + 3 = 12 cm, so the perimeter is 2 × (15 + 12) = 54 cm.",
+          "j": "54 cm — a wider rectangle!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "An L-shaped room has a perimeter of 40 m. Five of its sides are 12 m, 8 m, 4 m, 3 m and 8 m. How long is the sixth side?",
+          "o": [
+            "5",
+            "6",
+            "4",
+            "3"
+          ],
+          "a": 0,
+          "c": "The five known sides add up to 12 + 8 + 4 + 3 + 8 = 35 m, so the last side is 40 − 35 = 5 m.",
+          "j": "5 m — the missing side found!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A rectangle is 10 cm long and 6 cm wide. Its area is 60 cm². What is its perimeter?",
+          "o": [
+            "16",
+            "32",
+            "60",
+            "30"
+          ],
+          "a": 1,
+          "c": "Perimeter = 2 × (10 + 6) = 32 cm. The area (60) is a different thing!",
+          "j": "32 cm — perimeter is not area!",
+          "sub": "area_vs_perimeter"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "A shape is made of 36 squares of 1 cm² each. Sara removes 6 squares. What is its area now?",
+          "o": [
+            "30",
+            "36",
+            "42",
+            "6"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 11 cm long and 7 cm wide. Its length is doubled. What is the new area?",
+          "o": [
+            "77",
+            "154",
+            "140",
+            "84"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A square has sides of 9 cm. Its side is increased by 3 cm. What is the new perimeter?",
+          "o": [
+            "36",
+            "48",
+            "40",
+            "44"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has a perimeter of 32 cm. Five of its sides are 10 cm, 6 cm, 4 cm, 2 cm and 6 cm. How long is the sixth side?",
+          "o": [
+            "4",
+            "6",
+            "2",
+            "8"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A square has sides of 8 cm. Its area is 64 cm². What is its perimeter?",
+          "o": [
+            "16",
+            "32",
+            "64",
+            "24"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire 48 cm long is bent into a square. How long is each side of the square?",
+          "o": [
+            "12",
+            "16",
+            "24",
+            "8"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "wire_reshaped"
+        },
+        {
+          "q": "A shape is made of 45 squares of 1 cm² each. Sara adds 5 more squares. What is its area now?",
+          "o": [
+            "50",
+            "45",
+            "40",
+            "55"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 13 cm long and 6 cm wide. Its width is halved. What is the new area?",
+          "o": [
+            "78",
+            "39",
+            "36",
+            "42"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "area_rectangle_square"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "A shape is made of 28 squares of 1 cm² each. Sara removes 8 squares. What is its area now?",
+          "o": [
+            "20",
+            "28",
+            "36",
+            "12"
+          ],
+          "a": 0,
+          "c": "28 − 8 = 20 squares left, and each is 1 cm², so the area is 20 cm².",
+          "j": "20 cm² — eight squares smaller!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 14 cm long and 5 cm wide. Its length is increased by 6 cm. What is the new area?",
+          "o": [
+            "70",
+            "100",
+            "90",
+            "120"
+          ],
+          "a": 1,
+          "c": "The new length is 14 + 6 = 20 cm, so the area is 20 × 5 = 100 cm².",
+          "j": "100 cm² — a much longer rectangle!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 18 cm long and 6 cm wide. Its length is halved. What is the new perimeter?",
+          "o": [
+            "48",
+            "30",
+            "24",
+            "36"
+          ],
+          "a": 1,
+          "c": "The new length is 18 ÷ 2 = 9 cm, so the perimeter is 2 × (9 + 6) = 30 cm.",
+          "j": "30 cm — half as long!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has a perimeter of 32 cm. Five of its sides are 9 cm, 7 cm, 3 cm, 4 cm and 6 cm. How long is the sixth side?",
+          "o": [
+            "3",
+            "6",
+            "2",
+            "4"
+          ],
+          "a": 0,
+          "c": "The five known sides add up to 9 + 7 + 3 + 4 + 6 = 29 cm, so the last side is 32 − 29 = 3 cm.",
+          "j": "3 cm — the missing side found!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A rectangle is 12 cm long and 5 cm wide. Its perimeter is 34 cm. What is its area?",
+          "o": [
+            "17",
+            "60",
+            "34",
+            "50"
+          ],
+          "a": 1,
+          "c": "The area is length × width, so 12 × 5 = 60 cm².",
+          "j": "60 cm² — area is length times width!",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire is bent into a rectangle 13 cm long and 9 cm wide. How long is the wire?",
+          "o": [
+            "44",
+            "22",
+            "35",
+            "40"
+          ],
+          "a": 0,
+          "c": "The perimeter is 2 × (13 + 9) = 44 cm, so the wire is 44 cm long.",
+          "j": "44 cm of wire — a perfect fit!",
+          "sub": "wire_reshaped"
+        },
+        {
+          "q": "A shape is made of 52 squares of 1 cm² each. Sara adds 8 more squares. What is its area now?",
+          "o": [
+            "60",
+            "52",
+            "44",
+            "68"
+          ],
+          "a": 0,
+          "c": "52 + 8 = 60 squares, and each is 1 cm², so the area is 60 cm².",
+          "j": "60 cm² — eight squares bigger!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 16 cm long and 4 cm wide. Its width is doubled. What is the new area?",
+          "o": [
+            "64",
+            "128",
+            "120",
+            "96"
+          ],
+          "a": 1,
+          "c": "The new width is 4 × 2 = 8 cm, so the area is 16 × 8 = 128 cm².",
+          "j": "128 cm² — twice as wide!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A square has sides of 12 cm. Its side is halved. What is the new perimeter?",
+          "o": [
+            "48",
+            "24",
+            "36",
+            "12"
+          ],
+          "a": 1,
+          "c": "The new side is 12 ÷ 2 = 6 cm, so the perimeter is 4 × 6 = 24 cm.",
+          "j": "24 cm — half the side!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A wire is bent into a square with sides of 11 cm. It is bent again into a rectangle 14 cm long. How wide is the rectangle?",
+          "o": [
+            "8",
+            "11",
+            "14",
+            "22"
+          ],
+          "a": 0,
+          "c": "The wire is 4 × 11 = 44 cm, so 14 + width = 22, and width = 8 cm.",
+          "j": "8 cm wide — the wire changed shape!",
+          "sub": "wire_reshaped"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "A shape is made of 33 squares of 1 cm² each. Sara removes 3 squares. What is its area now?",
+          "o": [
+            "30",
+            "33",
+            "36",
+            "27"
+          ],
+          "a": 0,
+          "c": "33 − 3 = 30 squares left, and each is 1 cm², so the area is 30 cm².",
+          "j": "30 cm² — three squares smaller!",
+          "sub": "area_counting_squares"
+        },
+        {
+          "q": "A rectangle is 15 cm long and 7 cm wide. Its width is increased by 3 cm. What is the new area?",
+          "o": [
+            "105",
+            "150",
+            "135",
+            "120"
+          ],
+          "a": 1,
+          "c": "The new width is 7 + 3 = 10 cm, so the area is 15 × 10 = 150 cm².",
+          "j": "150 cm² — a wider rectangle!",
+          "sub": "area_rectangle_square"
+        },
+        {
+          "q": "A rectangle is 20 cm long and 8 cm wide. Its width is doubled. What is the new perimeter?",
+          "o": [
+            "56",
+            "72",
+            "64",
+            "80"
+          ],
+          "a": 1,
+          "c": "The new width is 8 × 2 = 16 cm, so the perimeter is 2 × (20 + 16) = 72 cm.",
+          "j": "72 cm — twice as wide!",
+          "sub": "perimeter_rectangle_square"
+        },
+        {
+          "q": "A rectilinear shape has a perimeter of 32 cm. Five of its sides are 11 cm, 5 cm, 4 cm, 3 cm and 7 cm. How long is the sixth side?",
+          "o": [
+            "2",
+            "4",
+            "6",
+            "3"
+          ],
+          "a": 0,
+          "c": "The five known sides add up to 11 + 5 + 4 + 3 + 7 = 30 cm, so the last side is 32 − 30 = 2 cm.",
+          "j": "2 cm — the missing side found!",
+          "sub": "perimeter_rectilinear"
+        },
+        {
+          "q": "A square has an area of 100 cm². How long is each side?",
+          "o": [
+            "10",
+            "20",
+            "5",
+            "25"
+          ],
+          "a": 0,
+          "c": "10 × 10 = 100, so each side is 10 cm.",
+          "j": "10 cm each side — a perfect square!",
+          "sub": "area_vs_perimeter"
+        },
+        {
+          "q": "A wire 60 cm long is bent into a rectangle 18 cm long and 12 cm wide. How much wire is left over?",
+          "o": [
+            "0",
+            "2",
+            "6",
+            "10"
+          ],
+          "a": 0,
+          "c": "The rectangle needs 2 × (18 + 12) = 60 cm of wire, so 60 − 60 = 0 cm is left over.",
+          "j": "No wire left — just enough!",
+          "sub": "wire_reshaped"
+        }
+      ]
+    },
+    {
+      "id": "math-angles",
+      "img": "",
+      "sub": "math",
+      "subName": "Maths",
+      "icon": "📐",
+      "name": "Angle Explorers",
+      "blurb": "Right, acute, obtuse — and parallel lines.",
+      "quest": [
+        {
+          "q": "An angle measures 45 degrees. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 1,
+          "c": "45° is less than 90°, so it is an acute angle.",
+          "j": "A tiny 45° angle — sharp and pointy!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many right angles does a rectangle have?",
+          "o": [
+            "2",
+            "3",
+            "4",
+            "5"
+          ],
+          "a": 2,
+          "c": "A rectangle has 4 corners, and each corner is a right angle.",
+          "j": "4 right angles — one at every corner!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Railway tracks are an example of which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 0,
+          "c": "The two rails stay the same distance apart and never meet.",
+          "j": "Choo choo — parallel tracks!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "The corner of a book shows which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Wavy lines"
+          ],
+          "a": 1,
+          "c": "The two edges meet to form a right angle.",
+          "j": "A book corner — a perfect right angle!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "Which of these describes two parallel lines?",
+          "o": [
+            "They meet at a corner",
+            "They stay the same distance apart",
+            "They cross like an X",
+            "They form a T shape"
+          ],
+          "a": 1,
+          "c": "Parallel lines stay the same distance apart and never meet.",
+          "j": "Same distance apart — forever friends!",
+          "sub": "draw_parallel"
+        }
+      ],
+      "warm": [
+        {
+          "q": "An angle measures 90 degrees. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many angles does a triangle have?",
+          "o": [
+            "2",
+            "3",
+            "4",
+            "5"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "The two long sides of a ruler are an example of what?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Zigzag lines"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "The letter T is made of which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "To draw a line parallel to another line, you can use a set square and a ruler. What must stay the same?",
+          "o": [
+            "The distance between the lines",
+            "The length of the lines",
+            "The colour of the lines",
+            "The thickness of the lines"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "Which of these describes two perpendicular lines?",
+          "o": [
+            "They stay the same distance apart",
+            "They meet to form a right angle",
+            "They never meet",
+            "They are both curved"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "draw_perpendicular"
+        },
+        {
+          "q": "An angle measures 120 degrees. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many right angles does a square have?",
+          "o": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "count_angles_in_figure"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "Which of these is an acute angle?",
+          "o": [
+            "30 degrees",
+            "90 degrees",
+            "120 degrees",
+            "180 degrees"
+          ],
+          "a": 0,
+          "c": "30° is less than 90°, so it is an acute angle.",
+          "j": "30° — a sharp little angle!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many angles does a pentagon have?",
+          "o": [
+            "4",
+            "5",
+            "6",
+            "3"
+          ],
+          "a": 1,
+          "c": "A pentagon has 5 sides, so it has 5 angles.",
+          "j": "5 angles — count the corners!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Which of these is a pair of parallel lines?",
+          "o": [
+            "The edges of a door frame that meet at the corner",
+            "The opposite sides of a book",
+            "The hands of a clock",
+            "The two lines of the letter X"
+          ],
+          "a": 1,
+          "c": "The opposite sides of a book stay the same distance apart.",
+          "j": "A book's sides — parallel partners!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "Which of these is a pair of perpendicular lines?",
+          "o": [
+            "The opposite sides of a table",
+            "The adjacent sides of a table",
+            "The rails of a train track",
+            "The lines of the letter V"
+          ],
+          "a": 1,
+          "c": "The sides that meet at a table corner form a right angle.",
+          "j": "Table corners — right angles everywhere!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "Which drawing shows two parallel lines?",
+          "o": [
+            "Two lines that meet at a point",
+            "Two lines that cross in the middle",
+            "Two lines that run side by side without meeting",
+            "Two lines that form a right angle"
+          ],
+          "a": 2,
+          "c": "Parallel lines run side by side and never meet.",
+          "j": "Side by side — never meeting!",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "To draw a line perpendicular to a given line, what angle must it make with the line?",
+          "o": [
+            "An acute angle",
+            "A right angle",
+            "An obtuse angle",
+            "A straight angle"
+          ],
+          "a": 1,
+          "c": "Perpendicular lines meet at 90°, a right angle.",
+          "j": "A right angle — perfectly square!",
+          "sub": "draw_perpendicular"
+        },
+        {
+          "q": "Sara draws an angle of 95 degrees. Tom draws an angle of 85 degrees. Whose angle is obtuse?",
+          "o": [
+            "Sara",
+            "Tom",
+            "Both",
+            "Neither"
+          ],
+          "a": 0,
+          "c": "95° is more than 90°, so Sara's angle is obtuse. Tom's 85° angle is acute.",
+          "j": "Sara's angle is obtuse!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "A triangle has 3 angles. If one is a right angle, how many angles are left?",
+          "o": [
+            "1",
+            "2",
+            "3",
+            "0"
+          ],
+          "a": 1,
+          "c": "3 − 1 = 2 angles are left.",
+          "j": "2 angles left — still a triangle!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "The lines on a notebook page that run across the page are parallel to each other. What does that mean?",
+          "o": [
+            "They meet at the edge",
+            "They stay the same distance apart",
+            "They cross each other",
+            "They form right angles"
+          ],
+          "a": 1,
+          "c": "Parallel lines stay the same distance apart.",
+          "j": "Notebook lines — parallel and neat!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "Which tool is best for drawing a perpendicular line?",
+          "o": [
+            "A set square",
+            "A pair of scissors",
+            "A crayon",
+            "A rubber"
+          ],
+          "a": 0,
+          "c": "A set square has a right angle, perfect for perpendicular lines.",
+          "j": "A set square — the right-angle helper!",
+          "sub": "draw_perpendicular"
+        }
+      ],
+      "retry": [
+        {
+          "q": "An angle measures 60 degrees. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 1,
+          "c": "60° is less than 90°, so it is an acute angle.",
+          "j": "60° — sharp and pointy!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many angles does a hexagon have?",
+          "o": [
+            "4",
+            "5",
+            "6",
+            "7"
+          ],
+          "a": 2,
+          "c": "A hexagon has 6 sides, so it has 6 angles.",
+          "j": "6 angles — count the corners!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Which of these are parallel lines?",
+          "o": [
+            "The two sides of a ladder",
+            "The hands of a clock at 3 o'clock",
+            "The lines of the letter A",
+            "The edges of a pizza slice"
+          ],
+          "a": 0,
+          "c": "The two sides of a ladder stay the same distance apart.",
+          "j": "A ladder's sides — parallel climbers!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "Which of these are perpendicular lines?",
+          "o": [
+            "The rails of a train track",
+            "The corner of a whiteboard",
+            "The opposite sides of a ruler",
+            "The lines of the letter V"
+          ],
+          "a": 1,
+          "c": "The corner of a whiteboard forms a right angle.",
+          "j": "A whiteboard corner — a right angle!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "When you draw parallel lines, what must be true?",
+          "o": [
+            "They must meet at one point",
+            "They must stay the same distance apart",
+            "They must cross each other",
+            "They must be the same length"
+          ],
+          "a": 1,
+          "c": "Parallel lines always stay the same distance apart.",
+          "j": "Same distance apart — forever!",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "Two lines meet and form a right angle. What kind of lines are they?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "Lines that meet at 90° are perpendicular.",
+          "j": "A right angle — perpendicular pals!",
+          "sub": "draw_perpendicular"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "An angle is 45 degrees smaller than a straight angle. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 2,
+          "c": "A straight angle is 180°, so 180 − 45 = 135°, which is more than 90°, so it is obtuse.",
+          "j": "Obtuse — wider than a square corner!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many right angles are in a rectangle and a square together?",
+          "o": [
+            "4",
+            "6",
+            "8",
+            "10"
+          ],
+          "a": 2,
+          "c": "A rectangle has 4 right angles and a square has 4, so 4 + 4 = 8.",
+          "j": "8 right angles — corners everywhere!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Which shape has two pairs of parallel sides?",
+          "o": [
+            "A triangle",
+            "A rectangle",
+            "A circle",
+            "A semicircle"
+          ],
+          "a": 1,
+          "c": "A rectangle has two pairs of opposite sides that are parallel.",
+          "j": "A rectangle — parallel on both sides!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "A flagpole stands on flat ground. The pole and the ground are which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "The pole stands straight up from the ground, forming a right angle.",
+          "j": "A flagpole — standing tall at 90°!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "You draw a line, then use a set square to draw a second line that stays 3 cm away from it all along. What have you drawn?",
+          "o": [
+            "Perpendicular lines",
+            "Parallel lines",
+            "Intersecting lines",
+            "Curved lines"
+          ],
+          "a": 1,
+          "c": "The second line stays the same distance away, so the lines are parallel.",
+          "j": "3 cm apart all along — parallel!",
+          "sub": "draw_parallel"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "Mei draws an angle wider than a square corner but not as wide as a straight line. What type of angle is it?",
+          "o": [
+            "Acute angle",
+            "Right angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "How many angles does an octagon have?",
+          "o": [
+            "6",
+            "7",
+            "8",
+            "9"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Which shape has exactly one pair of parallel sides?",
+          "o": [
+            "A trapezium",
+            "A rectangle",
+            "A square",
+            "A triangle"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "The sides of a rectangle that meet at a corner are which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Wavy lines"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "To draw a line parallel to a given line through a point, what do you use the set square for?",
+          "o": [
+            "To keep the distance the same",
+            "To measure the length",
+            "To draw a circle",
+            "To colour the line"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "Which drawing shows perpendicular lines?",
+          "o": [
+            "Two lines that never meet",
+            "Two lines that meet at 90 degrees",
+            "Two lines that meet at 45 degrees",
+            "Two lines that are the same length"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "draw_perpendicular"
+        },
+        {
+          "q": "An angle is 1 degree smaller than a right angle. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "Two squares are placed side by side. How many right angles do they have in all?",
+          "o": [
+            "4",
+            "6",
+            "8",
+            "12"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "count_angles_in_figure"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "Which of these is an obtuse angle?",
+          "o": [
+            "85 degrees",
+            "95 degrees",
+            "90 degrees",
+            "45 degrees"
+          ],
+          "a": 1,
+          "c": "95° is more than 90°, so it is an obtuse angle.",
+          "j": "95° — just past a right angle!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "A hexagon has 6 angles. How many more angles does it have than a triangle?",
+          "o": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "a": 2,
+          "c": "6 − 3 = 3 more angles.",
+          "j": "3 more angles — hexagon wins!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "A parallelogram has two pairs of parallel sides. How many pairs of parallel sides does a square have?",
+          "o": [
+            "0",
+            "1",
+            "2",
+            "4"
+          ],
+          "a": 2,
+          "c": "A square has two pairs of opposite sides that are parallel.",
+          "j": "A square — parallel twice over!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "The hands of a clock at 3 o'clock are which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "At 3 o'clock the hands form a right angle.",
+          "j": "3 o'clock — a right angle on the clock!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "Which of these is the correct first step to draw a line parallel to line AB?",
+          "o": [
+            "Draw a line that crosses AB",
+            "Place a ruler along AB and slide a set square along it",
+            "Draw a circle around AB",
+            "Erase AB and start again"
+          ],
+          "a": 1,
+          "c": "Slide the set square along the ruler to keep the distance the same.",
+          "j": "Slide the set square — parallel coming up!",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "To draw a line perpendicular to AB at a point on AB, which tool helps you make the right angle?",
+          "o": [
+            "A set square",
+            "A pair of scissors",
+            "A glue stick",
+            "A pencil sharpener"
+          ],
+          "a": 0,
+          "c": "A set square has a right angle built in.",
+          "j": "A set square — the right-angle helper!",
+          "sub": "draw_perpendicular"
+        },
+        {
+          "q": "An angle is 1 degree bigger than a right angle. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 2,
+          "c": "A right angle is 90°, so 90 + 1 = 91°, which is more than 90°, so it is obtuse.",
+          "j": "Obtuse — just a little wider than a square corner!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "A triangle and a square are drawn together. How many angles do they have in all?",
+          "o": [
+            "5",
+            "6",
+            "7",
+            "8"
+          ],
+          "a": 2,
+          "c": "A triangle has 3 angles and a square has 4, so 3 + 4 = 7.",
+          "j": "7 angles — count them all!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "The opposite sides of a parallelogram are parallel. How many sides does a parallelogram have?",
+          "o": [
+            "3",
+            "4",
+            "5",
+            "6"
+          ],
+          "a": 1,
+          "c": "A parallelogram has 4 sides.",
+          "j": "4 sides — two parallel pairs!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "A ladder leans against a wall. The wall and the ground form a right angle. What kind of lines are the wall and the ground?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "The wall and the ground meet at 90°.",
+          "j": "A wall and the ground — perpendicular!",
+          "sub": "draw_perpendicular"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "An angle is 30 degrees smaller than a straight angle. What type of angle is it?",
+          "o": [
+            "Right angle",
+            "Acute angle",
+            "Obtuse angle",
+            "Straight angle"
+          ],
+          "a": 2,
+          "c": "A straight angle is 180°, so 180 − 30 = 150°, which is more than 90°, so it is obtuse.",
+          "j": "Obtuse — wider than a square corner!",
+          "sub": "right_acute_obtuse"
+        },
+        {
+          "q": "A pentagon and a triangle together have how many angles?",
+          "o": [
+            "6",
+            "7",
+            "8",
+            "9"
+          ],
+          "a": 2,
+          "c": "A pentagon has 5 angles and a triangle has 3, so 5 + 3 = 8.",
+          "j": "8 angles — count them all!",
+          "sub": "count_angles_in_figure"
+        },
+        {
+          "q": "Which of these shapes has parallel sides?",
+          "o": [
+            "A circle",
+            "A triangle",
+            "A rectangle",
+            "A semicircle"
+          ],
+          "a": 2,
+          "c": "A rectangle has opposite sides that are parallel.",
+          "j": "A rectangle — parallel sides!",
+          "sub": "identify_parallel"
+        },
+        {
+          "q": "The edges of a door that meet at a corner are which kind of lines?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Wavy lines"
+          ],
+          "a": 1,
+          "c": "The edges meet at a right angle.",
+          "j": "A door corner — a right angle!",
+          "sub": "identify_perpendicular"
+        },
+        {
+          "q": "Two lines are drawn so that they are always 2 cm apart. What kind of lines are they?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Intersecting lines",
+            "Curved lines"
+          ],
+          "a": 0,
+          "c": "Lines that stay the same distance apart are parallel.",
+          "j": "2 cm apart all along — parallel!",
+          "sub": "draw_parallel"
+        },
+        {
+          "q": "Two lines cross and make 4 right angles. What kind of lines are they?",
+          "o": [
+            "Parallel lines",
+            "Perpendicular lines",
+            "Curved lines",
+            "Slanted lines"
+          ],
+          "a": 1,
+          "c": "Lines that cross at 90° are perpendicular.",
+          "j": "4 right angles — perpendicular!",
+          "sub": "draw_perpendicular"
+        }
+      ]
+    },
+    {
+      "id": "math-bargraphs",
+      "img": "",
+      "sub": "math",
+      "subName": "Maths",
+      "icon": "📊",
+      "name": "Bar Graph Buddies",
+      "blurb": "Reading bar graphs like a detective.",
+      "quest": [
+        {
+          "q": "The bar graph shows the number of apples sold each day: Monday 10, Tuesday 15, Wednesday 5. How many apples were sold on Tuesday?",
+          "o": [
+            "5",
+            "10",
+            "15",
+            "25"
+          ],
+          "a": 2,
+          "c": "Tuesday's bar reaches 15.",
+          "j": "15 apples on Tuesday — crunchy!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "The bar graph has marks every 2. The bar for red pens reaches the 5th mark. How many red pens are there?",
+          "o": [
+            "5",
+            "10",
+            "2",
+            "7"
+          ],
+          "a": 1,
+          "c": "Each mark is 2, so 5 × 2 = 10.",
+          "j": "10 red pens — ready to write!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows books read: Ali 8, Ben 5. How many more books did Ali read than Ben?",
+          "o": [
+            "3",
+            "13",
+            "2",
+            "5"
+          ],
+          "a": 0,
+          "c": "8 − 5 = 3 more books.",
+          "j": "3 more books — Ali is a bookworm!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows boys and girls in each class. Class A has 10 boys and 12 girls. Class B has 8 boys and 9 girls. How many more girls are in Class A than in Class B?",
+          "o": [
+            "3",
+            "2",
+            "4",
+            "1"
+          ],
+          "a": 0,
+          "c": "12 − 9 = 3 more girls.",
+          "j": "3 more girls in Class A!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows marbles: red 6, blue 4, green 5. How many marbles are there in all?",
+          "o": [
+            "15",
+            "11",
+            "10",
+            "9"
+          ],
+          "a": 0,
+          "c": "6 + 4 + 5 = 15 marbles.",
+          "j": "15 marbles — a whole collection!",
+          "sub": "total_from_graph"
+        }
+      ],
+      "warm": [
+        {
+          "q": "The graph shows stickers collected: Sam 12, Kim 9. How many stickers did Sam collect?",
+          "o": [
+            "9",
+            "12",
+            "21",
+            "3"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 5. The bar for green apples reaches the 3rd mark. How many green apples are there?",
+          "o": [
+            "3",
+            "5",
+            "15",
+            "8"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows scores: Team A 20, Team B 14. How many more points did Team A score?",
+          "o": [
+            "6",
+            "34",
+            "4",
+            "14"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows pens and pencils: Monday 6 pens and 4 pencils, Tuesday 8 pens and 5 pencils. How many more pens were there on Tuesday than on Monday?",
+          "o": [
+            "2",
+            "4",
+            "1",
+            "3"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows fruit sold: apples 7, oranges 8, bananas 5. How many fruits were sold in all?",
+          "o": [
+            "20",
+            "15",
+            "13",
+            "12"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 4 tickets sold. Each ticket costs $3. How much money was collected?",
+          "o": [
+            "7",
+            "12",
+            "3",
+            "4"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "graph_to_money"
+        },
+        {
+          "q": "The graph shows the number of children in each class: Class 1 has 25, Class 2 has 30. How many children are in Class 2?",
+          "o": [
+            "25",
+            "30",
+            "55",
+            "5"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 10. The bar for buses reaches the 4th mark. How many buses are there?",
+          "o": [
+            "4",
+            "10",
+            "40",
+            "14"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "read_minor_gridlines"
+        }
+      ],
+      "fresh": [
+        {
+          "q": "The graph shows rainfall in millimetres: Monday 20, Tuesday 30. How much rain fell on Monday?",
+          "o": [
+            "20",
+            "30",
+            "50",
+            "10"
+          ],
+          "a": 0,
+          "c": "Monday's bar reaches 20.",
+          "j": "20 mm of rain — bring an umbrella!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 2. The bar for cats reaches the 6th mark. How many cats are there?",
+          "o": [
+            "6",
+            "12",
+            "8",
+            "3"
+          ],
+          "a": 1,
+          "c": "Each mark is 2, so 6 × 2 = 12.",
+          "j": "12 cats — a furry crowd!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows goals scored: Lions 9, Tigers 6. How many more goals did the Lions score?",
+          "o": [
+            "3",
+            "15",
+            "2",
+            "6"
+          ],
+          "a": 0,
+          "c": "9 − 6 = 3 more goals.",
+          "j": "3 more goals — go Lions!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows red and blue cars: Monday 5 red and 3 blue, Tuesday 7 red and 4 blue. How many more red cars were there on Tuesday than on Monday?",
+          "o": [
+            "2",
+            "4",
+            "1",
+            "3"
+          ],
+          "a": 0,
+          "c": "7 − 5 = 2 more red cars.",
+          "j": "2 more red cars on Tuesday!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows pets: dogs 8, cats 6, birds 4. How many pets are there in all?",
+          "o": [
+            "18",
+            "14",
+            "12",
+            "10"
+          ],
+          "a": 0,
+          "c": "8 + 6 + 4 = 18 pets.",
+          "j": "18 pets — a busy household!",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 5 cups sold. Each cup costs $2. How much money was collected?",
+          "o": [
+            "3",
+            "7",
+            "10",
+            "5"
+          ],
+          "a": 2,
+          "c": "5 × $2 = $10.",
+          "j": "10 dollars — clink clink!",
+          "sub": "graph_to_money"
+        },
+        {
+          "q": "The graph shows the number of books in each shelf: Shelf A 14, Shelf B 11. How many books are on Shelf A?",
+          "o": [
+            "11",
+            "14",
+            "25",
+            "3"
+          ],
+          "a": 1,
+          "c": "Shelf A's bar reaches 14.",
+          "j": "14 books on Shelf A — happy reading!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 5. The bar for oranges reaches the 4th mark. How many oranges are there?",
+          "o": [
+            "4",
+            "5",
+            "20",
+            "9"
+          ],
+          "a": 2,
+          "c": "Each mark is 5, so 4 × 5 = 20.",
+          "j": "20 oranges — juicy!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows points: Red team 18, Blue team 12. How many more points does the Red team have?",
+          "o": [
+            "6",
+            "30",
+            "4",
+            "12"
+          ],
+          "a": 0,
+          "c": "18 − 12 = 6 more points.",
+          "j": "6 more points — go Red team!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows 3 cakes sold. Each cake costs $4. How much money was collected?",
+          "o": [
+            "7",
+            "12",
+            "3",
+            "4"
+          ],
+          "a": 1,
+          "c": "3 × $4 = $12.",
+          "j": "12 dollars — sweet!",
+          "sub": "graph_to_money"
+        }
+      ],
+      "retry": [
+        {
+          "q": "The graph shows fish in a pond: goldfish 9, guppies 7. How many goldfish are there?",
+          "o": [
+            "7",
+            "9",
+            "16",
+            "2"
+          ],
+          "a": 1,
+          "c": "The goldfish bar reaches 9.",
+          "j": "9 goldfish — glub glub!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 10. The bar for cars reaches the 3rd mark. How many cars are there?",
+          "o": [
+            "3",
+            "10",
+            "30",
+            "13"
+          ],
+          "a": 2,
+          "c": "Each mark is 10, so 3 × 10 = 30.",
+          "j": "30 cars — beep beep!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows cupcakes: chocolate 12, vanilla 8. How many more chocolate cupcakes are there?",
+          "o": [
+            "4",
+            "20",
+            "2",
+            "8"
+          ],
+          "a": 0,
+          "c": "12 − 8 = 4 more.",
+          "j": "4 more chocolate ones — yummy!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows two picnics. Picnic A had 6 boys and 7 girls. Picnic B had 9 boys and 8 girls. How many more girls were at Picnic B than at Picnic A?",
+          "o": [
+            "1",
+            "2",
+            "3",
+            "4"
+          ],
+          "a": 0,
+          "c": "8 − 7 = 1 more girl.",
+          "j": "1 more girl at Picnic B!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows toys: cars 5, dolls 7, balls 3. How many toys are there in all?",
+          "o": [
+            "15",
+            "12",
+            "10",
+            "8"
+          ],
+          "a": 0,
+          "c": "5 + 7 + 3 = 15 toys.",
+          "j": "15 toys — playtime!",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 6 muffins sold. Each muffin costs $2. How much money was collected?",
+          "o": [
+            "8",
+            "12",
+            "6",
+            "4"
+          ],
+          "a": 1,
+          "c": "6 × $2 = $12.",
+          "j": "12 dollars — muffin money!",
+          "sub": "graph_to_money"
+        }
+      ],
+      "p4quest": [
+        {
+          "q": "The graph shows visitors to a museum: Saturday 240, Sunday 180. How many visitors came on Saturday?",
+          "o": [
+            "180",
+            "240",
+            "420",
+            "60"
+          ],
+          "a": 1,
+          "c": "Saturday's bar reaches 240.",
+          "j": "240 visitors on Saturday — busy museum!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 25. The bar for tickets reaches the 8th mark. How many tickets were sold?",
+          "o": [
+            "200",
+            "175",
+            "225",
+            "250"
+          ],
+          "a": 0,
+          "c": "Each mark is 25, so 8 × 25 = 200.",
+          "j": "200 tickets — sold out!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows money raised: Class A 350, Class B 275. How much more did Class A raise?",
+          "o": [
+            "75",
+            "625",
+            "25",
+            "125"
+          ],
+          "a": 0,
+          "c": "350 − 275 = 75.",
+          "j": "75 more — Class A wins!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows two shops. Shop X sold 120 notebooks and 90 pens. Shop Y sold 150 notebooks and 80 pens. How many more notebooks did Shop Y sell than Shop X?",
+          "o": [
+            "30",
+            "20",
+            "40",
+            "60"
+          ],
+          "a": 0,
+          "c": "150 − 120 = 30 more notebooks.",
+          "j": "30 more notebooks at Shop Y!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows books borrowed: Monday 45, Tuesday 38, Wednesday 52. How many books were borrowed in all?",
+          "o": [
+            "135",
+            "125",
+            "145",
+            "115"
+          ],
+          "a": 0,
+          "c": "45 + 38 + 52 = 135 books.",
+          "j": "135 books — happy readers!",
+          "sub": "total_from_graph"
+        }
+      ],
+      "p4warm": [
+        {
+          "q": "The graph shows the number of students in 3 schools: School A 320, School B 280, School C 350. How many students are in School C?",
+          "o": [
+            "320",
+            "280",
+            "350",
+            "950"
+          ],
+          "a": 2,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 50. The bar for adults reaches the 6th mark. How many adults are there?",
+          "o": [
+            "300",
+            "250",
+            "350",
+            "6"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows the number of trees planted: 2024 planted 480, 2025 planted 365. How many more trees were planted in 2024?",
+          "o": [
+            "115",
+            "845",
+            "85",
+            "125"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows two libraries. Library P has 240 storybooks and 180 comics. Library Q has 260 storybooks and 150 comics. How many more comics does Library P have than Library Q?",
+          "o": [
+            "30",
+            "20",
+            "40",
+            "10"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows the number of visitors: morning 125, afternoon 140, evening 95. How many visitors came in all?",
+          "o": [
+            "360",
+            "350",
+            "340",
+            "370"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 15 tickets sold. Each ticket costs $4. How much more money was collected than if only 10 tickets were sold?",
+          "o": [
+            "20",
+            "60",
+            "40",
+            "10"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "graph_to_money"
+        },
+        {
+          "q": "The graph shows the height of 4 plants: A 45 cm, B 60 cm, C 38 cm, D 52 cm. How tall is plant B?",
+          "o": [
+            "45",
+            "60",
+            "38",
+            "52"
+          ],
+          "a": 1,
+          "c": "",
+          "j": "",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 20. The bar for bicycles reaches the 7th mark. How many bicycles are there?",
+          "o": [
+            "140",
+            "120",
+            "160",
+            "27"
+          ],
+          "a": 0,
+          "c": "",
+          "j": "",
+          "sub": "read_minor_gridlines"
+        }
+      ],
+      "p4fresh": [
+        {
+          "q": "The graph shows the number of books sold in a week: Monday 120, Tuesday 95, Wednesday 130. How many books were sold on Wednesday?",
+          "o": [
+            "120",
+            "95",
+            "130",
+            "345"
+          ],
+          "a": 2,
+          "c": "Wednesday's bar reaches 130.",
+          "j": "130 books on Wednesday — bestsellers!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 25. The bar for children reaches the 12th mark. How many children are there?",
+          "o": [
+            "300",
+            "275",
+            "325",
+            "250"
+          ],
+          "a": 0,
+          "c": "Each mark is 25, so 12 × 25 = 300.",
+          "j": "300 children — a big crowd!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows the number of apples picked: Farm A 640, Farm B 520. How many more apples did Farm A pick?",
+          "o": [
+            "120",
+            "1160",
+            "100",
+            "140"
+          ],
+          "a": 0,
+          "c": "640 − 520 = 120 more apples.",
+          "j": "120 more apples — Farm A wins!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows two classes. Class 1 has 18 boys and 22 girls. Class 2 has 15 boys and 25 girls. How many more girls are in Class 2 than in Class 1?",
+          "o": [
+            "3",
+            "2",
+            "4",
+            "7"
+          ],
+          "a": 0,
+          "c": "25 − 22 = 3 more girls.",
+          "j": "3 more girls in Class 2!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows the number of tickets sold: adults 220, children 180, seniors 95. How many tickets were sold in all?",
+          "o": [
+            "495",
+            "400",
+            "500",
+            "450"
+          ],
+          "a": 0,
+          "c": "220 + 180 + 95 = 495 tickets.",
+          "j": "495 tickets — full house!",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 12 notebooks sold. Each notebook costs $3. How much money was collected?",
+          "o": [
+            "15",
+            "36",
+            "30",
+            "24"
+          ],
+          "a": 1,
+          "c": "12 × $3 = $36.",
+          "j": "36 dollars — stationery shop success!",
+          "sub": "graph_to_money"
+        },
+        {
+          "q": "The graph shows the mass of 4 pumpkins: A 6 kg, B 9 kg, C 4 kg, D 7 kg. How heavy is pumpkin B?",
+          "o": [
+            "6",
+            "9",
+            "4",
+            "7"
+          ],
+          "a": 1,
+          "c": "Pumpkin B's bar reaches 9.",
+          "j": "9 kg — a hefty pumpkin!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 100. The bar for cars reaches the 5th mark. How many cars are there?",
+          "o": [
+            "500",
+            "400",
+            "600",
+            "105"
+          ],
+          "a": 0,
+          "c": "Each mark is 100, so 5 × 100 = 500.",
+          "j": "500 cars — a traffic jam!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows points scored: Team Red 420, Team Blue 375. How many more points did Team Red score?",
+          "o": [
+            "45",
+            "795",
+            "55",
+            "35"
+          ],
+          "a": 0,
+          "c": "420 − 375 = 45 more points.",
+          "j": "45 more points — go Red team!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows 25 cups sold. Each cup costs $2. How much money would be collected if 5 more cups were sold?",
+          "o": [
+            "50",
+            "60",
+            "55",
+            "40"
+          ],
+          "a": 1,
+          "c": "25 + 5 = 30 cups, and 30 × $2 = $60.",
+          "j": "$60 — nearly sold out!",
+          "sub": "graph_to_money"
+        }
+      ],
+      "p4retry": [
+        {
+          "q": "The graph shows the number of eggs collected: Monday 60, Tuesday 75, Wednesday 80. How many eggs were collected on Tuesday?",
+          "o": [
+            "60",
+            "75",
+            "80",
+            "215"
+          ],
+          "a": 1,
+          "c": "Tuesday's bar reaches 75.",
+          "j": "75 eggs on Tuesday — cluck cluck!",
+          "sub": "read_scale"
+        },
+        {
+          "q": "Each mark on the graph is 50. The bar for pens reaches the 9th mark. How many pens are there?",
+          "o": [
+            "450",
+            "400",
+            "500",
+            "59"
+          ],
+          "a": 0,
+          "c": "Each mark is 50, so 9 × 50 = 450.",
+          "j": "450 pens — ready to write!",
+          "sub": "read_minor_gridlines"
+        },
+        {
+          "q": "The graph shows the number of students: School A 560, School B 430. How many more students are in School A?",
+          "o": [
+            "130",
+            "990",
+            "110",
+            "150"
+          ],
+          "a": 0,
+          "c": "560 − 430 = 130 more students.",
+          "j": "130 more students — School A is bigger!",
+          "sub": "difference_between_bars"
+        },
+        {
+          "q": "The graph shows two teams. Team A scored 85 points and Team B scored 76 points in Round 1. In Round 2, Team A scored 90 and Team B scored 88. How many more points did Team A score than Team B in Round 2?",
+          "o": [
+            "2",
+            "9",
+            "12",
+            "4"
+          ],
+          "a": 0,
+          "c": "90 − 88 = 2 more points.",
+          "j": "2 more points — so close!",
+          "sub": "double_bar_compare"
+        },
+        {
+          "q": "The graph shows the number of fruits sold: apples 150, oranges 120, pears 90. How many fruits were sold in all?",
+          "o": [
+            "360",
+            "350",
+            "370",
+            "270"
+          ],
+          "a": 0,
+          "c": "150 + 120 + 90 = 360 fruits.",
+          "j": "360 fruits — a fruity feast!",
+          "sub": "total_from_graph"
+        },
+        {
+          "q": "The graph shows 8 toys sold. Each toy costs $6. How much money was collected?",
+          "o": [
+            "14",
+            "48",
+            "42",
+            "36"
+          ],
+          "a": 1,
+          "c": "8 × $6 = $48.",
+          "j": "48 dollars — toy shop success!",
+          "sub": "graph_to_money"
+        }
+      ]
+    }
+  ],
+  "topUps": []
+}
