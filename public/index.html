@@ -3294,6 +3294,40 @@ function postToServer(key){
    retrying the upload once if the first check misses. A device that
    is not linked, or a server that is not configured, is local-only:
    the local save IS the save there, so it confirms at once. */
+/* Order-insensitive plan comparison (2026-11-09): the server stores
+   the plan in a JSONB column, and PostgreSQL JSONB reorders object keys
+   (by key length, then bytewise), so a JSON.stringify comparison of the
+   round-tripped plan never matches the local object even when the
+   content is identical — every save reported failure although the
+   server held the new plan. Compare the stored content field by field
+   instead: per-day label / subs / study / note / rest / review /
+   light. Object key order is ignored; the subs array order is kept
+   (JSONB preserves array order). Missing fields normalise to the
+   empty/false value, so an older stored plan shape still compares. */
+function planDayEqual(a,b){
+  a=a||{}; b=b||{};
+  if((a.label||'')!==(b.label||''))return false;
+  if((a.study||'')!==(b.study||''))return false;
+  if((a.note||'')!==(b.note||''))return false;
+  if(!!a.rest!==!!b.rest)return false;
+  if(!!a.review!==!!b.review)return false;
+  if(!!a.light!==!!b.light)return false;
+  var sa=a.subs||[], sb=b.subs||[];
+  if(sa.length!==sb.length)return false;
+  for(var i=0;i<sa.length;i++)if(sa[i]!==sb[i])return false;
+  return true;
+}
+function plansEqual(a,b){
+  if(a===null||a===undefined)return b===null||b===undefined;
+  if(b===null||b===undefined)return false;
+  var ka=Object.keys(a), kb=Object.keys(b);
+  if(ka.length!==kb.length)return false;
+  for(var i=0;i<ka.length;i++){
+    if(!Object.prototype.hasOwnProperty.call(b,ka[i]))return false;
+    if(!planDayEqual(a[ka[i]],b[ka[i]]))return false;
+  }
+  return true;
+}
 function confirmPlanSaved(expectedRev, expectedPlan, done){
   var key=syncKey();
   if(!key||typeof fetch==='undefined'){ done(true); return; }
@@ -3306,7 +3340,7 @@ function confirmPlanSaved(expectedRev, expectedPlan, done){
       if(!j||!j.configured){ ok=true; }
       else if(d){
         var rev=(d.familyPlanRev||0);
-        ok=(rev===expectedRev)&&(JSON.stringify(d.familyPlan||null)===JSON.stringify(expectedPlan||null));
+        ok=(rev===expectedRev)&&plansEqual(d.familyPlan||null, expectedPlan||null);
       }
       if(ok){ done(true); return; }
       if(attempts<2){ syncToServer(); setTimeout(check,1500); return; }
