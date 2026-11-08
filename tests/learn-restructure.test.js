@@ -39,7 +39,7 @@ function grabLiteral(marker) {
 // --- the real TOPICS ids, straight from the file -------------------------
 const TOPICS_SRC = grabLiteral('var TOPICS=');
 const REAL_IDS = [...TOPICS_SRC.matchAll(/id:'([a-z0-9-]+)'/g)].map((m) => m[1]);
-assert.equal(REAL_IDS.length, 14, '14 real topics in the file');
+assert.equal(REAL_IDS.length, 31, '31 real topics in the file (14 original + 17 gap-fill, 2026-11-08)');
 
 // --- MYKX data ------------------------------------------------------------
 let MYKX_SUBJECTS = eval(grabLiteral('var MYKX_SUBJECTS='));
@@ -124,10 +124,11 @@ test('MYKX data: 4 subjects in myKx order, 34 topics, 161 sub-topics', () => {
 });
 
 test('MYKX data: every sub-topic is well-formed and maps to a real quest (or null)', () => {
-  // One deliberate exception: Grammar/connectors is taught by the P4
-  // Finish-the-Story bank (eng-story2), which lives outside Grammar's
-  // own Practise quests. It is the ONLY cross-topic bank; the test
-  // enforces that so a typo can never hide as a "cross-topic" map.
+  // Gap-fill (2026-11-08): every sub-topic now has a bank, and every
+  // bank lives inside its own topic — the old Grammar/connectors
+  // exception (taught by eng-story2, outside Grammar's own quests) is
+  // gone: connectors is now taught by eng-tense. crossTopic must be
+  // empty, so a typo can never hide as a "cross-topic" map.
   const crossTopic = [];
   for (const s of MYKX_SUBJECTS) {
     for (const t of s.topics) {
@@ -152,39 +153,44 @@ test('MYKX data: every sub-topic is well-formed and maps to a real quest (or nul
       }
     }
   }
-  assert.deepEqual(crossTopic, ['connectors'], 'connectors is the only cross-topic bank');
+  assert.deepEqual(crossTopic, [], 'no cross-topic banks after the gap-fill');
 });
 
 test('coverage counts match the doc table (per subject)', () => {
+  // Gap-fill (2026-11-08): all 161 sub-topics now have a bank.
   const want = {
-    eng: { yes: 5, p4: 2, partial: 10, no: 22 },
-    math: { yes: 9, p4: 9, partial: 6, no: 43 },
-    sci: { yes: 9, p4: 5, partial: 7, no: 17 },
-    chi: { yes: 2, p4: 0, partial: 2, no: 13 },
+    eng: { yes: 39, p4: 0, partial: 0, no: 0 },
+    math: { yes: 67, p4: 0, partial: 0, no: 0 },
+    sci: { yes: 38, p4: 0, partial: 0, no: 0 },
+    chi: { yes: 17, p4: 0, partial: 0, no: 0 },
   };
   for (const s of MYKX_SUBJECTS) {
     const c = { yes: 0, p4: 0, partial: 0, no: 0 };
     s.topics.forEach((t) => t.subs.forEach((sb) => { c[sb.cov]++; }));
     assert.deepEqual(c, want[s.id], s.id + ' coverage');
   }
-  const total = { yes: 25, p4: 16, partial: 25, no: 95 };
+  const total = { yes: 161, p4: 0, partial: 0, no: 0 };
   const all = { yes: 0, p4: 0, partial: 0, no: 0 };
   MYKX_SUBJECTS.forEach((s) => s.topics.forEach((t) => t.subs.forEach((sb) => { all[sb.cov]++; })));
-  assert.deepEqual(all, total, '161 total: 25 yes + 16 P4-only + 25 partial + 95 without');
+  assert.deepEqual(all, total, '161 total: all yes');
 });
 
 /* --- helpers: counts, pools, session -------------------------------------- */
 test('subject counts: fresh explorer, 0 started, distinct pools only', () => {
   const e = explorer();
-  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('eng'), 3), { started: 0, total: 6, ready: 60, quests: 4 }, 'English: 4 distinct quests x 15');
-  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('math'), 3), { started: 0, total: 10, ready: 60, quests: 4 });
-  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('sci'), 3), { started: 0, total: 7, ready: 45, quests: 3 });
-  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('chi'), 3), { started: 0, total: 11, ready: 45, quests: 3 });
+  // Gap-fill (2026-11-08): FAKE_TOPICS are built from the 31 real
+  // ids, each with a 15-question pool (5 quest + 10 fresh). Ready is
+  // the sum over DISTINCT quests: English 6, Maths 9, Science 5,
+  // Chinese 11 — computed from the assembled MYKX_SUBJECTS.
+  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('eng'), 3), { started: 0, total: 6, ready: 90, quests: 6 }, 'English: 6 distinct quests x 15');
+  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('math'), 3), { started: 0, total: 10, ready: 135, quests: 9 });
+  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('sci'), 3), { started: 0, total: 7, ready: 75, quests: 5 });
+  assert.deepEqual(mykxSubjectCounts(e, mykxSubject('chi'), 3), { started: 0, total: 11, ready: 165, quests: 11 });
   // A quest shared by two topics counts once: MRT Numbers serves both
-  // Numbers and Addition, so Maths ready is 4 x 15, not 5 x 15.
+  // Numbers and Addition, so Maths ready is 9 x 15, not 10 x 15.
   assert.equal(mykxTopicPool(mykxTopic('math', 'math-numbers'), 3), 15, 'Numbers pool is one quest');
   assert.equal(mykxTopicPool(mykxTopic('math', 'math-addsub'), 3), 30, 'Addition pool is two quests');
-  assert.equal(mykxTopicPool(mykxTopic('eng', 'eng-spelling'), 3), 0, 'Spelling has no pool');
+  assert.equal(mykxTopicPool(mykxTopic('eng', 'eng-spelling'), 3), 15, 'Spelling has a pool now (gap-fill)');
   assert.equal(mykxTopicPool(mykxTopic('chi', 'chi-lesson-words'), 3), 30, 'Lesson words pool is two quests');
 });
 
@@ -206,10 +212,13 @@ test('sub-topic notes: ready vs on-the-way, partial, P4-only, practised proxy', 
   const spelling = mykxTopic('eng', 'eng-spelling').subs[0];
   assert.equal(mykxSubReady(tense, 3), true);
   assert.equal(mykxSubNote(e, tense, 3), 'Not yet assessed');
-  assert.equal(mykxSubNote(e, context, 3), 'Some questions ready', 'partial bank says so honestly');
-  assert.equal(mykxSubNote(e, spelling, 3), 'Questions on the way');
-  assert.equal(mykxSubReady(perfect, 3), false, 'perfect tense is P4-only');
-  assert.equal(mykxSubNote(e, perfect, 3), 'Questions on the way');
+  // Gap-fill (2026-11-08): no sub-topic is partial, P4-only or
+  // without a bank any more — every note is 'Not yet assessed' until
+  // the mapped quest is practised.
+  assert.equal(mykxSubNote(e, context, 3), 'Not yet assessed', 'context clues now has a full bank');
+  assert.equal(mykxSubNote(e, spelling, 3), 'Not yet assessed', 'spelling now has a bank');
+  assert.equal(mykxSubReady(perfect, 3), true, 'perfect tense is no longer P4-only');
+  assert.equal(mykxSubNote(e, perfect, 3), 'Not yet assessed');
   assert.equal(mykxSubNote(e, perfect, 4), 'Not yet assessed', 'opens at P4');
   assert.equal(mykxSubNote(e, connectors, 4), 'Not yet assessed');
   const done = explorer({ completed: { 'eng-tense': 5 } });
@@ -222,7 +231,9 @@ test('session first: first unfinished quest in myKx topic order, replay when all
   assert.equal(mykxSessionFirst(e, mykxSubject('chi'), 3), 'chi-family', 'Lesson words first');
   const oneDone = explorer({ completedDay: { 'eng-tense': '2026-11-07' } });
   assert.equal(mykxSessionFirst(oneDone, mykxSubject('eng'), 3), 'eng-punct', 'next quest in the same topic');
-  const allDone = explorer({ completedDay: { 'eng-tense': '2026-11-07', 'eng-punct': '2026-11-07', 'eng-story': '2026-11-07', 'eng-story2': '2026-11-07' } });
+  // Gap-fill (2026-11-08): English has 6 distinct quests now, so
+  // "all done" means all 6, including the two new ones.
+  const allDone = explorer({ completedDay: { 'eng-tense': '2026-11-07', 'eng-punct': '2026-11-07', 'eng-story': '2026-11-07', 'eng-story2': '2026-11-07', 'eng-spelling': '2026-11-07', 'eng-visual': '2026-11-07' } });
   assert.equal(mykxSessionFirst(allDone, mykxSubject('eng'), 3), 'eng-tense', 'all done today: replay the first');
   assert.equal(mykxSessionFirst(e, mykxSubject('math'), 3), 'math-mrt');
   assert.equal(mykxSessionFirst(explorer(), { topics: [] }, 3), null, 'a subject with no quests has no session');
@@ -238,12 +249,16 @@ test('landing: 4 subject cards in myKx order, with counts, session hint, level c
   assert.ok(out.indexOf('Open English') < out.indexOf('Open Maths'), 'English first');
   assert.ok(out.indexOf('Open Maths') < out.indexOf('Open Science'), 'Maths second');
   assert.ok(out.indexOf('Open Science') < out.indexOf('Open Chinese'), 'Science third');
-  assert.ok(out.includes('0 of 6 topics started · 60 questions ready'), 'English counts');
-  assert.ok(out.includes('0 of 10 topics started · 60 questions ready'), 'Maths counts');
-  assert.ok(out.includes('0 of 7 topics started · 45 questions ready'), 'Science counts');
-  assert.ok(out.includes('0 of 11 topics started · 45 questions ready'), 'Chinese counts');
-  assert.ok(out.includes('20 questions · about 12 minutes'), 'English session: 4 quests x 5, about 12 min');
-  assert.ok(out.includes('15 questions · about 9 minutes'), 'Science session: 3 quests x 5, about 9 min');
+  // Gap-fill (2026-11-08): distinct-quest pools grew — English 6x15,
+  // Maths 9x15, Science 5x15, Chinese 11x15.
+  assert.ok(out.includes('0 of 6 topics started · 90 questions ready'), 'English counts');
+  assert.ok(out.includes('0 of 10 topics started · 135 questions ready'), 'Maths counts');
+  assert.ok(out.includes('0 of 7 topics started · 75 questions ready'), 'Science counts');
+  assert.ok(out.includes('0 of 11 topics started · 165 questions ready'), 'Chinese counts');
+  assert.ok(out.includes('30 questions · about 18 minutes'), 'English session: 6 quests x 5, about 18 min');
+  assert.ok(out.includes('45 questions · about 27 minutes'), 'Maths session: 9 quests x 5, about 27 min');
+  assert.ok(out.includes('25 questions · about 15 minutes'), 'Science session: 5 quests x 5, about 15 min');
+  assert.ok(out.includes('55 questions · about 33 minutes'), 'Chinese session: 11 quests x 5, about 33 min');
   assert.ok(out.includes('🎒 P3'), 'level chip on the landing hero');
   assert.ok(out.includes('Frog Quest'), 'hero keeps the Frog Quest story');
   assert.ok(out.includes('<!--PLAN-BANNER-->'), 'study-plan banner stays on the landing');
@@ -259,7 +274,7 @@ test('subject page: hero, session panel, timeline rows, padlocks where no bank',
   assert.ok(out.includes('P3 English'), 'subject hero');
   assert.ok(out.includes('🎒 P3'), 'level chip on the subject hero');
   assert.ok(out.includes('Today’s English session'), 'side panel heading');
-  assert.ok(out.includes('20 questions · about 12 minutes'), 'session count + estimate');
+  assert.ok(out.includes('30 questions · about 18 minutes'), 'session count + estimate (6 quests)');
   assert.ok(out.includes('No evidence yet: your first session starts it.'), 'myKx no-evidence line');
   assert.ok(out.includes('data-learn-start="eng"'), 'Start session button');
   assert.ok(out.includes('Start session'), 'Start session label');
@@ -268,8 +283,10 @@ test('subject page: hero, session panel, timeline rows, padlocks where no bank',
     assert.ok(out.includes(name), 'topic row: ' + name);
   }
   assert.ok(out.includes('19 sub-topics · 30 questions ready'), 'Grammar row counts');
-  assert.ok(out.includes('1 sub-topics · Questions on the way'), 'Spelling row is locked');
-  assert.ok(out.includes('🔒'), 'padlock node on locked topics');
+  assert.ok(out.includes('1 sub-topics · 15 questions ready'), 'Spelling row has a bank now (gap-fill)');
+  // Gap-fill (2026-11-08): no topic is locked any more — no padlocks
+  // anywhere on the subject page, and every topic has a play triangle.
+  assert.ok(!out.includes('🔒'), 'no padlock on any topic');
   assert.ok(out.includes('▶'), 'play-triangle node on topics with questions');
   assert.ok(out.includes('Today’s session starts here'), 'session-start flag on the first topic');
   assert.ok(!out.includes('Tense simple present'), 'sub-topics hidden until the topic expands');
@@ -283,8 +300,10 @@ test('expanded topic: plain sub-topic list (not links) + Practise quest cards', 
     assert.ok(out.includes(name), 'sub-topic listed: ' + name);
   }
   assert.ok(out.includes('Not yet assessed'), 'ready sub-topic note');
-  assert.ok(out.includes('Questions on the way'), 'uncovered sub-topic note');
-  assert.ok(out.includes('Some questions ready'), 'partial sub-topic note');
+  // Gap-fill (2026-11-08): no sub-topic is uncovered or partial any
+  // more, so neither note appears anywhere.
+  assert.ok(!out.includes('Questions on the way'), 'no uncovered sub-topic note');
+  assert.ok(!out.includes('Some questions ready'), 'no partial sub-topic note');
   assert.ok(out.includes('Practise Grammar:'), 'Practise heading');
   assert.ok(out.includes('Quest eng-tense'), 'Tenses Trek card');
   assert.ok(out.includes('Quest eng-punct'), 'Punctuation Pond card');
@@ -298,13 +317,18 @@ test('expanded topic: plain sub-topic list (not links) + Practise quest cards', 
   assert.ok(!subList.includes('<button'), 'sub-topic rows are not buttons');
 });
 
-test('expanded locked topic: sub-topics shown, no Practise link', () => {
-  const out = renderSubject(explorer(), 'eng', 'eng-spelling');
-  assert.ok(out.includes('<li><span>Spelling</span>'), 'locked topic still lists its sub-topic');
-  assert.ok(out.includes('Questions on the way'), 'locked note');
-  assert.ok(out.includes('No questions yet: on the way.'), 'myKx locked line');
-  assert.ok(!out.includes('Practise Spelling:'), 'no Practise heading without a bank');
-  assert.ok(!out.includes('data-quest='), 'no quest button without a bank');
+test('every myKx topic has at least one Practise quest (no locked topics)', () => {
+  // Gap-fill (2026-11-08): the old 'expanded locked topic' test
+  // (Spelling had no Practise link) is obsolete — no topic is locked
+  // after the fill. This test replaces it: all 34 topics Practise.
+  for (const s of MYKX_SUBJECTS) {
+    for (const t of s.topics) {
+      assert.ok(t.quests.length >= 1, t.id + ' has at least one Practise quest');
+      const out = renderSubject(explorer(), s.id, t.id);
+      assert.ok(out.includes('Practise ' + t.name + ':'), t.id + ' shows its Practise heading');
+      assert.ok(out.includes('data-quest='), t.id + ' has a quest button');
+    }
+  }
 });
 
 test('expanded topic with two quests shows both cards; one quest shared by two topics', () => {
@@ -348,7 +372,9 @@ test('level switching: P4 hero, chip and P4-only sub-topics open; P3 keeps them 
   assert.ok(out4.includes('P4 English'), 'P4 subject hero');
   assert.ok(out4.includes('🎒 P4'), 'P4 level chip');
   const p3 = renderSubject(explorer(), 'eng', 'eng-grammar');
-  assert.ok(p3.includes('Tense perfect</span><span class="subnote">Questions on the way</span>'), 'perfect tense locked at P3');
+  // Gap-fill (2026-11-08): perfect tense is no longer P4-only — it
+  // has a P3 bank now, so it is 'Not yet assessed' at both levels.
+  assert.ok(p3.includes('Tense perfect</span><span class="subnote">Not yet assessed</span>'), 'perfect tense has a P3 bank now');
   assert.ok(out4.includes('Tense perfect</span><span class="subnote">Not yet assessed</span>'), 'perfect tense opens at P4');
 });
 

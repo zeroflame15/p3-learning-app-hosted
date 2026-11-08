@@ -1,7 +1,9 @@
 // Custom icon art (requested 2026-11-07 — the flat emoji were
-// boring): glossy 3D icons in public/icons/, wired into the nav,
-// game cards and quest cards, with an emoji fallback if a file ever
-// fails to load.
+// boring; glow-up 2026-11-07 — bigger, floating 3D art, no square
+// frame): glossy 3D objects on TRANSPARENT backgrounds in
+// public/icons/, wired into the nav, game cards, quest cards, section
+// heroes and game/quiz flowheroes, with an emoji fallback if a file
+// ever fails to load.
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -30,18 +32,37 @@ const NAV = eval('(' + extractVar(html, 'NAV') + ')');
 const GAMES = eval('(' + extractVar(html, 'GAMES') + ')');
 const TOPICS = eval('(' + extractVar(html, 'TOPICS') + ')');
 
-test('every nav item, game and quest has a custom icon file that exists', () => {
+test('every nav item, game and quest has an icon: a custom file, or an emoji fallback', () => {
   const wanted = [];
   NAV.forEach(function (n) { wanted.push(['nav ' + n[0], n[3]]); });
   GAMES.forEach(function (g) { wanted.push(['game ' + g.id, g.img]); });
-  TOPICS.forEach(function (t) { wanted.push(['quest ' + t.id, t.img]); });
-  assert.equal(wanted.length, 33, '10 nav + 9 games + 14 quests');
-  for (const [label, file] of wanted) {
-    assert.ok(file && file.startsWith('icons/') && file.endsWith('.webp'), label + ' points at an icons/ webp file, got ' + file);
-    const full = path.join(ROOT, 'public', file);
-    assert.ok(fs.existsSync(full), label + ' file exists: ' + file);
-    assert.ok(fs.statSync(full).size > 10000, label + ' file is a real image, not an empty stub');
+  TOPICS.forEach(function (t) { wanted.push(['quest ' + t.id, t.img, t.icon]); });
+  assert.equal(wanted.length, 50, '10 nav + 9 games + 31 quests');
+  let wired = 0, fallback = 0;
+  for (const [label, file, emo] of wanted) {
+    if (file) {
+      // A wired icon: must be a real transparent webp on disk.
+      wired++;
+      assert.ok(file.startsWith('icons/') && file.endsWith('.webp'), label + ' points at an icons/ webp file, got ' + file);
+      const full = path.join(ROOT, 'public', file);
+      assert.ok(fs.existsSync(full), label + ' file exists: ' + file);
+      // Transparent single-object art is smaller than the old mint tiles.
+      assert.ok(fs.statSync(full).size > 3000, label + ' file is a real image, not an empty stub');
+      // The art floats on transparency: an extended WebP (VP8X) with an
+      // ALPH chunk. A flat white or mint background would have no ALPH.
+      const buf = fs.readFileSync(full);
+      assert.ok(buf.includes(Buffer.from('VP8X')), label + ' is an extended WebP: ' + file);
+      assert.ok(buf.includes(Buffer.from('ALPH')), label + ' has a real alpha channel (transparent background): ' + file);
+    } else {
+      // img:'' — ic() falls back to the emoji, which renders fine.
+      // Gap-fill (2026-11-08): the 17 new topics use img:'' on
+      // purpose; custom 3D art for them is a separate follow-up.
+      fallback++;
+      assert.ok(emo, label + ' has an emoji fallback icon');
+    }
   }
+  assert.equal(wired, 33, '33 wired icons: 10 nav + 9 games + 14 quests');
+  assert.equal(fallback, 17, '17 emoji-fallback topics (the gap-fill topics)');
   const onDisk = fs.readdirSync(ICONS_DIR).filter(function (f) { return f.endsWith('.webp'); });
   assert.equal(onDisk.length, 33, 'exactly the 33 wired icons on disk, no strays');
 });
@@ -54,10 +75,20 @@ test('ic() renders the image with an emoji fallback and the right sizes', () => 
   assert.ok(out.includes('<img class="navic" src="icons/nav-home.webp"'), 'the image renders with its size class');
   assert.ok(out.includes("onerror=\"this.outerHTML='🏠'\""), 'a missing file falls back to the emoji');
   assert.equal(fn(null, '🏠', 'navic'), '🏠', 'no file at all: the emoji alone');
-  assert.ok(html.includes('.navic{width:28px'), 'nav tiles are sized');
-  assert.ok(html.includes('.gicon{width:72px'), 'game-card icons are sized');
-  assert.ok(html.includes('.qicon img{width:46px'), 'quest-card tiles are sized');
-  assert.ok(html.includes('.ic-sm{width:1.35em'), 'inline icons are sized');
+  assert.ok(html.includes('.navic{width:40px'), 'nav icons are big');
+  assert.ok(html.includes('.bottomnav .navic{width:36px'), 'bottom-nav icons are big');
+  assert.ok(html.includes('.gicon{width:110px'), 'game-card icons are big');
+  assert.ok(html.includes('.qicon img{width:72px'), 'quest-card icons are big');
+  assert.ok(html.includes('.ic-sm{width:2em'), 'inline icons are big');
+  assert.ok(html.includes('.heroart{width:120px'), 'hero art is the biggest');
+  // Floating art: no square frame anywhere on the icon classes.
+  for (const sel of ['.navic{', '.gicon{', '.qicon img{', '.ic-sm{', '.heroart{']) {
+    const m = html.match(new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[^}]*\\}'));
+    assert.ok(m, 'rule exists: ' + sel);
+    assert.ok(!m[0].includes('border-radius'), 'no square frame on ' + sel);
+    assert.ok(!m[0].includes('background:'), 'no tile background on ' + sel);
+  }
+  assert.ok(html.includes('filter:drop-shadow'), 'the 3D lift comes from a drop-shadow');
 });
 
 test('the nav, game cards and quest cards show the custom icons, not bare emoji', () => {
@@ -68,6 +99,41 @@ test('the nav, game cards and quest cards show the custom icons, not bare emoji'
   assert.ok(gameCard.includes("ic(g.img,g.e,'gicon')"), 'the game-card band shows the custom icon');
   const questCard = html.slice(html.indexOf('function learnHTML(){'), html.indexOf('function learnHTML(){') + 2500);
   assert.ok(questCard.includes("ic(t.img,t.icon,'qic')"), 'the quest card shows the custom icon');
-  assert.ok(html.includes("ic(g.img,g.e,'ic-sm')"), 'game heroes and leaderboard headers use the custom icon');
-  assert.ok(html.includes("ic(t.img,t.icon,'ic-sm')"), 'quest heroes and leaderboard headers use the custom icon');
+  assert.ok(html.includes("ic(g.img,g.e,'ic-sm')"), 'game pills and leaderboard headers use the custom icon');
+  assert.ok(html.includes("ic(t.img,t.icon,'ic-sm')"), 'quest pills and leaderboard headers use the custom icon');
+});
+
+test('every section top shows the same big artwork, not the old flat emoji', () => {
+  const sections = [
+    ['Learn', 'icons/nav-learn.webp', '📚'],
+    ['Play', 'icons/nav-play.webp', '✨'],
+    ['Trivia', 'icons/nav-trivia.webp', '🎲'],
+    ['Friends', 'icons/nav-friends.webp', '👥'],
+    ['Ask Pip', 'icons/nav-ask.webp', '💬'],
+    ['Critter Lab', 'icons/nav-critter.webp', '🐸'],
+    ['Treasure', 'icons/nav-treasure.webp', '💎'],
+    ['Vibe', 'icons/nav-vibe.webp', '🎵'],
+    ['Create', 'icons/nav-create.webp', '🎨'],
+  ];
+  for (const [name, art, emo] of sections) {
+    assert.ok(html.includes("pageHero('" + art + "','" + emo + "'"), name + ' section top shows its artwork');
+    assert.ok(!html.includes("pageHero('" + emo + "'"), name + ' section top no longer starts with the flat emoji');
+  }
+  assert.ok(html.includes("function pageHero(art, emo, title, sub, stat)"), 'pageHero takes artwork plus an emoji fallback');
+  assert.ok(html.includes("ic(art,emo,'heroart')"), 'pageHero renders the artwork big');
+  // The hero icon tile is gone too: no dark square behind the art.
+  const hero = html.match(/\.pagehero \.heroicon\{[^}]*\}/);
+  assert.ok(hero, 'heroicon rule exists');
+  assert.ok(hero[0].includes('background:transparent'), 'the section-top art sits on transparency, not a tile');
+  assert.ok(!hero[0].includes('background:rgba'), 'no dark tile behind the section-top art');
+  assert.ok(!hero[0].includes('border-radius'), 'no rounded square behind the section-top art');
+});
+
+test('game, quiz and warm-up flowheroes show the big artwork, not Pip or flat emoji', () => {
+  assert.ok(html.includes("ic(g.img,g.e,'heroart')"), 'game flowheroes show the game artwork big');
+  assert.ok(html.includes("ic(t.img,t.icon,'heroart')"), 'quiz and warm-up flowheroes show the topic artwork big');
+  assert.ok(!html.includes('🃏 Memory Match</b>'), 'no flat 🃏 in the Memory flowhero title');
+  assert.ok(!html.includes('🧩 Crossword Quest</b>'), 'no flat 🧩 in the Crossword flowhero title');
+  assert.ok(!html.includes('🚗 Exit Parking</b>'), 'no flat 🚗 in the Parking flowhero title');
+  assert.ok(!html.includes('🔥 Brain warm-up</b>'), 'no flat 🔥 in the warm-up flowhero title');
 });

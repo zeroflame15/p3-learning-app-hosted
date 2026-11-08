@@ -37,7 +37,23 @@ function extractVar(src, name) {
 }
 function Q(q, o, a, c, j) { return { q, o, a, c, j }; }
 const TOPICS = eval('(' + extractVar(html, 'TOPICS') + ')');
+// Runtime-effective FRESH_BANK (see tests/fresh-rotation.test.js):
+// math-ntuc's fresh set is the TRAILING FRESH_BANK['math-ntuc']
+// assignment, not the literal entry — the validator must check live
+// questions against the bank the app actually serves.
 const FRESH = eval('(' + extractVar(html, 'FRESH_BANK') + ')');
+for (const m of html.matchAll(/FRESH_BANK\['([a-z0-9-]+)'\]=\[/g)) {
+  const open = html.indexOf('=[', m.index) + 1;
+  let depth = 0, inStr = false, strCh = '', esc = false, end = -1;
+  for (let i = open; i < html.length; i++) {
+    const ch = html[i];
+    if (inStr) { if (esc) esc = false; else if (ch === '\\') esc = true; else if (ch === strCh) inStr = false; continue; }
+    if (ch === '"' || ch === "'") { inStr = true; strCh = ch; continue; }
+    if (ch === '[' || ch === '{') depth++;
+    if (ch === ']' || ch === '}') { depth--; if (depth === 0) { end = i; break; } }
+  }
+  FRESH[m[1]] = eval('(' + html.slice(open, end + 1) + ')');
+}
 const NTUC = TOPICS.find((t) => t.id === 'math-ntuc');
 const BANK_STEMS = [...NTUC.quest, ...NTUC.p4quest, ...FRESH['math-ntuc'], ...NTUC.p4fresh,
   ...NTUC.warm, ...NTUC.retry].map((q) => q.q);
@@ -72,7 +88,9 @@ const WEAK = [
 ];
 
 test('live-gen: validator accepts a good NTUC set against the real bank', () => {
-  assert.equal(BANK_STEMS.length, 5 + 5 + 10 + 10 + 8 + 6, 'real math-ntuc bank is 44 stems');
+  // Gap-fill (2026-11-08): math-ntuc grew — quest 5->14, p4quest 5->11,
+  // fresh 10->27, p4fresh 10->21, warm 8->17, retry 6->14.
+  assert.equal(BANK_STEMS.length, 14 + 11 + 27 + 21 + 17 + 14, 'real math-ntuc bank is 104 stems (was 44 before the gap-fill)');
   const r = liveGen.validateLiveGenSet(GOOD, BANK_STEMS);
   assert.deepEqual(r, { ok: true, reasons: [] });
 });
