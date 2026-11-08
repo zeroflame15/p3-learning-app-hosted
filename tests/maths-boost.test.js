@@ -88,6 +88,15 @@ const GOOD_MRT = [
   { q: 'Ben counts 7 carriages. Each carriage has 5 windows. How many windows in all?', o: ['30', '35', '40', '12'], a: 1, c: '7 x 5 = 35.' },
   { q: 'A platform has 5 benches with 4 people on each bench. How many people in all?', o: ['16', '20', '24', '9'], a: 1, c: '5 x 4 = 20.' },
 ];
+// A second valid MRT set, disjoint from GOOD_MRT — the retake's
+// fresh set in the exclusion tests (checked against the real bank).
+const GOOD_MRT_2 = [
+  { q: 'A train has 6 carriages. Each carriage has 8 seats. How many seats in all?', o: ['42', '48', '54', '14'], a: 1, c: '6 x 8 = 48.' },
+  { q: 'Mei rides 7 stops to the library and 6 stops home. How many stops does she ride in all?', o: ['11', '13', '15', '19'], a: 1, c: '7 + 6 = 13.' },
+  { q: 'There are 42 passengers. They sit 7 to a row. How many rows are there?', o: ['5', '6', '7', '8'], a: 1, c: '42 ÷ 7 = 6.' },
+  { q: 'Ben counts 9 buses. Each bus has 4 wheels. How many wheels in all?', o: ['32', '36', '40', '13'], a: 1, c: '9 x 4 = 36.' },
+  { q: 'A station has 4 benches with 7 people on each bench. How many people in all?', o: ['24', '28', '32', '11'], a: 1, c: '4 x 7 = 28.' },
+];
 // The missed question the boost models on: a real MRT retry-bank
 // question (12 stations, then 15 more — distinct from the bank's
 // 14+9, 11+13 and 12+8 station questions).
@@ -104,6 +113,12 @@ const FLAWED = [
 test('maths boost: the MRT fixture set is valid against the real MRT bank', () => {
   assert.ok(MRT_STEMS.length > 20, 'real MRT bank has stems to check against, got ' + MRT_STEMS.length);
   assert.deepEqual(liveGen.validateLiveGenSet(GOOD_MRT, MRT_STEMS), { ok: true, reasons: [] });
+});
+
+test('maths boost: the second MRT fixture set is valid and disjoint from the first', () => {
+  assert.deepEqual(liveGen.validateLiveGenSet(GOOD_MRT_2, MRT_STEMS), { ok: true, reasons: [] });
+  GOOD_MRT_2.forEach(function(q){ assert.ok(MRT_STEMS.indexOf(q.q) < 0, 'fresh set stem not in the bank: ' + q.q); });
+  GOOD_MRT.forEach(function(q){ assert.ok(GOOD_MRT_2.every(function(r){ return r.q !== q.q; }), 'fresh set shares no stem with the first set'); });
 });
 
 /* --- lib/rules.js: retake + tries rules ---------------------------- */
@@ -365,7 +380,7 @@ function boostClient() {
   function todayKey() { return TODAY; }
   function topicById(id) { return id === 'math-mrt' ? MRT_TOPIC : (id === 'eng-tense' ? ENG_TOPIC : null); }
   function ex() { return { id: 'e-test-1' }; }
-  const fetchBoostLiveQuestions = eval('(' + fnExact('function fetchBoostLiveQuestions(topicId, level, modelOn){') + ')'); // eslint-disable-line no-unused-vars
+  const fetchBoostLiveQuestions = eval('(' + fnExact('function fetchBoostLiveQuestions(topicId, level, modelOn, avoid){') + ')'); // eslint-disable-line no-unused-vars
   return {
     fetchBoostLiveQuestions, liveGenBankStems, validateLiveGenClient,
     get fetchState() { return boostFetchState; },
@@ -390,6 +405,30 @@ test('boost client: a good live set comes back; a second topic never shares a pe
     assert.equal(sentBody.topicId, 'math-mrt');
     assert.deepEqual(sentBody.modelOn, { q: MODEL_MRT.q, o: MODEL_MRT.o, a: MODEL_MRT.a, c: MODEL_MRT.c });
     assert.ok(Array.isArray(sentBody.bankStems) && sentBody.bankStems.length > 0, 'bank stems are sent for duplicate checks');
+  } finally { global.fetch = origFetch; }
+});
+
+test('boost client: a retake fetch excludes the last drill — sent to the server and checked locally', async () => {
+  const c = boostClient();
+  const origFetch = global.fetch;
+  let sentBody = null;
+  const prev = GOOD_MRT.slice(0, 3);
+  global.fetch = async (_url, opts) => {
+    sentBody = JSON.parse(opts.body);
+    // The retake's fresh set: valid, and disjoint from the last drill.
+    return { ok: true, json: async () => ({ live: true, questions: GOOD_MRT_2 }) };
+  };
+  try {
+    const out = await c.fetchBoostLiveQuestions('math-mrt', 3, MODEL_MRT, prev);
+    assert.deepEqual(out, GOOD_MRT_2, 'the live set still comes back');
+    prev.forEach(function(pq){ assert.ok(sentBody.bankStems.indexOf(pq.q) >= 0, 'the last drill stem is sent as an exclusion'); });
+    // And the client validator itself rejects a set that repeats a
+    // previous-drill question, using the same extended stem list.
+    const bankPlusPrev = c.liveGenBankStems(MRT_TOPIC, 3).concat(prev.map(function(pq){ return pq.q; }));
+    const check = c.validateLiveGenClient(GOOD_MRT, bankPlusPrev);
+    assert.equal(check.ok, false, 'a set repeating the last drill fails validation');
+    assert.ok(check.reasons.some(function(r){ return r.indexOf('duplicate-of-bank') >= 0; }), 'the repeat is named: ' + check.reasons.join(', '));
+    assert.equal(c.validateLiveGenClient(GOOD_MRT, c.liveGenBankStems(MRT_TOPIC, 3)).ok, true, 'the same set is fine without the exclusion');
   } finally { global.fetch = origFetch; }
 });
 
@@ -456,8 +495,8 @@ function toast(m) { toasts.push(m); }
 function go(r) { goes.push(r); }
 function topicById(id) { return id === 'math-mrt' ? MRT_TOPIC : (id === 'eng-tense' ? ENG_TOPIC : null); }
 function questListFor(t, c) { return (c && c.boostList) || (t ? t.quest : []); }
-function fetchBoostLiveQuestions(topicId, level, modelOn) {
-  fetchCalls.push({ topicId, level, modelOn });
+function fetchBoostLiveQuestions(topicId, level, modelOn, avoid) {
+  fetchCalls.push({ topicId, level, modelOn, avoid });
   return fetchStub ? fetchStub(topicId, level, modelOn) : Promise.resolve(null);
 }
 function recordLearnBest() { return false; }
@@ -527,6 +566,26 @@ test('start gate: a Maths retake the same day starts and draws a different bank 
   assert.ok(cur, 'the Maths retake is allowed');
   assert.notDeepEqual(cur.boostList, boostListFor(MRT_TOPIC, 3, 'e1', TODAY), 'not the first drill again');
   assert.deepEqual(cur.boostList, boostListFor(MRT_TOPIC, 3, 'e1', TODAY, 1), 'it is the attempt-1 draw');
+});
+
+test('start gate: a Maths retake fetch excludes the last drill’s questions', () => {
+  EX = explorer({ boost: { 'math-mrt': flaggedRec({ lastBoost: { score: 2, day: TODAY }, tries: 1, triesDay: TODAY }) } });
+  resetStart();
+  cur = { topicId: 'math-mrt', phase: 'boost', boostList: GOOD_MRT.slice(), boostSource: 'live' };
+  startBoostFlow('math-mrt');
+  assert.ok(cur, 'the retake started');
+  assert.equal(fetchCalls.length, 1, 'one live fetch was kicked off');
+  assert.deepEqual(fetchCalls[0].avoid, GOOD_MRT, 'the last drill rides along as exclusions');
+  assert.notDeepEqual(cur.boostList, GOOD_MRT, 'the new drill is a fresh bank list, not the old one');
+});
+
+test('start gate: a first drill passes no exclusions', () => {
+  EX = explorer({ boost: { 'math-mrt': flaggedRec() } });
+  resetStart();
+  startBoostFlow('math-mrt');
+  assert.ok(cur, 'the drill started');
+  assert.equal(fetchCalls.length, 1);
+  assert.equal(fetchCalls[0].avoid, null, 'nothing to exclude on a first drill');
 });
 
 test('start gate: a second non-Maths drill the same day is refused with a kind toast', () => {
