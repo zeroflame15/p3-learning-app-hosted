@@ -171,7 +171,7 @@ test('startGame builds the scramble board from the run seed, after the seed and 
   const startSrc = grab('startGame');
   const seedAt = startSrc.indexOf('gState.seed=seed;');
   const tierAt = startSrc.indexOf("gState.tier=(typeof levelTier==='function'?levelTier(e):'mid');");
-  const scrAt = startSrc.indexOf("genRound('scramble', gState.idx, gState.seed, gState.tier)");
+  const scrAt = startSrc.indexOf("genRound('scramble', gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx])");
   assert.ok(seedAt >= 0 && tierAt >= 0 && scrAt >= 0,
     'startGame sets the seed, stamps the tier and builds the scramble board');
   assert.ok(seedAt < scrAt, 'the scramble board is built after the run seed is set');

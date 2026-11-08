@@ -364,11 +364,12 @@ test('Memory Match stars by moves: par is about the deck size', () => {
 
 test('no new persisted fields: the memory save shape and merge are untouched', () => {
   const saveSrc = html.slice(html.indexOf('function saveGameProgress(){'), html.indexOf('/* ============================================================ ASK PIP'));
-  assert.ok(saveSrc.includes('e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, open:gState.open.slice(), elapsed:elapsed}'),
-    'the memory save still carries exactly the old fields — no pairs/level field was added');
+  assert.ok(saveSrc.includes('e.playProgress.memory={matched:gState.matched, moves:gState.moves, won:gState.won, seed:gState.seed, deck:gState.deck, combo:gState.memCombo||null, open:gState.open.slice(), elapsed:elapsed}'),
+    'the memory save carries the picked combo (so a resume rebuilds the exact board) — still no pairs/level field');
   const mergeSrc = html.slice(html.indexOf('function mergeExplorer'), html.indexOf('function mergeFamilyDB'));
   assert.ok(mergeSrc.includes('matched:unionArr(x.matched,y.matched)'), 'the merge still unions matched pairs');
   assert.ok(mergeSrc.includes('deck:x.deck||y.deck'), 'the merge still carries the deck');
+  assert.ok(mergeSrc.includes('combo:'), 'the merge still carries the memory combo');
   assert.ok(mergeSrc.includes('open:'), 'the merge still carries face-up cards');
   const startSrc = fnText('function startGame(id){');
   assert.ok(startSrc.includes('MEMDECKS'), 'levels and decks are derived in startGame, not stored');
@@ -380,8 +381,10 @@ test('Number Pop escape wiring: timeout marks a miss, timer is cleared everywher
   const bindSrc = fnText('function bindGame(){');
   assert.ok(bindSrc.includes('gState.escapeTimer'), 'bindGame tracks the escape timer');
   assert.ok(bindSrc.includes("if(gState.id==='number'&&!gState.answered)"), 'the timer arms only on an unanswered Number Pop round');
-  assert.ok(bindSrc.includes('gState.escapeTimer!==escId'), 'a stale timer can never mark the wrong round');
-  assert.ok(bindSrc.includes('gState.picked=null; gState.answered=true; gState.streak=0; sndWrong();'),
+  assert.ok(bindSrc.includes("armNumberEscape("), 'bindGame arms the escape through armNumberEscape');
+  const armSrc = fnText('function armNumberEscape(');
+  assert.ok(armSrc.includes('gState.escapeTimer!==escId'), 'a stale timer can never mark the wrong round');
+  assert.ok(armSrc.includes('gState.picked=null; gState.answered=true; gState.streak=0; sndWrong();'),
     'an escaped round counts as a miss with no pick, streak reset, answer revealed');
   const clears = (bindSrc.match(/clearTimeout\(gState\.escapeTimer\)/g) || []).length;
   assert.ok(clears >= 4, 'the timer is cleared on tap, Next, re-render and leaving (got ' + clears + ')');

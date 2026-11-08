@@ -74,13 +74,14 @@ test('pausePlayTimer banks the window and freezes the clock; resumePlayTimer res
 
 test('bindGame pauses on every answer tap and resumes on Next (question games only)', () => {
   const bindSrc = fnText('function bindGame(){');
-  const pauses = (bindSrc.match(/pausePlayTimer\(\); saveGameProgress\(\); render\(\);/g) || []).length;
+  const armSrc = fnText('function armNumberEscape(');
+  const pauses = ((bindSrc.match(/pausePlayTimer\(\); saveGameProgress\(\); render\(\);/g) || []).length) + ((armSrc.match(/pausePlayTimer\(\); saveGameProgress\(\); render\(\);/g) || []).length);
   assert.equal(pauses, 4, 'four answer handlers pause before saving (generic tap + Number Pop escape timeout + scramble auto-check + sentence solve), got ' + pauses);
   const resumes = (bindSrc.match(/if\(gState\.idx<gState\.rounds\)resumePlayTimer\(\);/g) || []).length;
   assert.equal(resumes, 2, 'two one-line Next handlers resume when another round follows (generic + sentence); scramble resumes inside its own block, got ' + resumes);
   // Memory, Parking and Crossword are continuous play: no pause
   // anywhere in their handlers, and the timer chip keeps ticking.
-  const pauseCalls = (bindSrc.match(/pausePlayTimer\(\)/g) || []).length;
+  const pauseCalls = ((bindSrc.match(/pausePlayTimer\(\)/g) || []).length) + ((armSrc.match(/pausePlayTimer\(\)/g) || []).length);
   assert.equal(pauseCalls, 4, 'exactly four pause sites (generic tap + Number Pop escape + scramble auto-check + sentence solve), got ' + pauseCalls);
   // The third pause site is the scramble check, not a stray one:
   // it sits inside scrCheck, the function that grades a filled board.
