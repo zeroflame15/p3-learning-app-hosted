@@ -4407,8 +4407,20 @@ function doorHTML(){
      +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="createBtn">Open my door 🚪</button><button class="btn ghost" id="doorBack">Back</button></div>';
   }
   h+='<p class="small muted" style="margin-top:16px">Grown-ups: tap “Grown-ups” below to open the parent page with your PIN — no picture code needed. Progress syncs across devices linked with your family code — or stays on this device if you never link it.</p>'
-   +'<div style="margin-top:10px"><button class="btn ghost" id="doorGrownups">🌙 Grown-ups</button></div></div></div>';
+   +'<div style="margin-top:10px"><button class="btn ghost" id="doorGrownups">🌙 Grown-ups</button><button class="btn ghost" id="doorAbout" style="margin-left:8px">ℹ️ About this app</button></div></div></div>';
   return h;
+}
+/* About this app (Bryan 2026-11-09): a short note for new families —
+   what the app stores, where it lives, and why the family code and
+   parent PIN must stay private. Shown from the Grand Door. */
+function aboutHTML(){
+  return '<h3 style="margin-top:0">About this app ℹ️</h3>'
+   +'<p style="font-weight:700">A learning app for primary-school explorers. Pip the otter is an AI tutor who hints and explains — she tries her best, but she can get things wrong, so a grown-up should check anything important.</p>'
+   +'<p><b>What is stored:</b> your explorer’s magic name, picture code, primary level, stars, quest and game progress, chats with Pip, and critter and friend details. No email, no real name needed, and no ads.</p>'
+   +'<p><b>Where it lives:</b> on this device. If you link devices with your family code, it also syncs to your family’s own private space on the app’s server (in Singapore), so progress follows the family across devices. Each family has its own separate space — other families cannot see yours.</p>'
+   +'<p><b>Keep your family code private:</b> your 6-letter family code is the key to your family’s data. Anyone with it can link in and see progress and chats. Do not share it, and do not share screenshots of the Grown-ups page — it shows your family code.</p>'
+   +'<p><b>Keep your parent PIN private too:</b> it opens the Grown-ups page, where you can see progress, change the PIN and picture codes, and remove an explorer.</p>'
+   +'<div style="text-align:center;margin-top:14px"><button class="btn" onclick="closeModal()">Got it! 👍</button></div>';
 }
 function renderBubbles(el, arr){
   el.innerHTML=[0,1,2].map(function(i){ return '<div class="bub '+(arr[i]?'filled':'')+'">'+(arr[i]||'·')+'</div>'; }).join('');
@@ -4422,6 +4434,8 @@ function bindDoor(){
      code needed — the PIN is the grown-up gate. */
   var dg=document.getElementById('doorGrownups');
   if(dg)dg.onclick=function(){ sndPop(); go('parent'); };
+  var da=document.getElementById('doorAbout');
+  if(da)da.onclick=function(){ sndPop(); openModal(aboutHTML()); };
   /* Back must work on EVERY door screen. It used to be bound after
      the link-mode early return below, so on the link screen it had
      no handler at all and the button did nothing (fix 6b). */
