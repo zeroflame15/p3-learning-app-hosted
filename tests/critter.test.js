@@ -117,19 +117,22 @@ test('care merges by latest time per action, independently', () => {
   assert.equal(merged.play.at, '2026-11-05T10:30:00.000Z', 'play only on one side is kept');
 });
 
-test('care UI: three buttons, 1 star each, growth once a day on all three', () => {
+test('care UI: three buttons, 1 star each, a care day logs one growth day', () => {
   const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
   assert.ok(page.includes('data-care'), 'care buttons render in Critter Lab');
   assert.ok(page.includes('each care earns ⭐ 1 star'), 'the star reward is shown');
   assert.ok(page.includes('again in'), 'cooldown countdown is shown');
-  const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 3000);
+  const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 4000);
   assert.ok(bind.includes('earnStars(eNow,1)'), 'each care earns exactly 1 star');
-  assert.ok(bind.includes("careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3"), 'all three today grows the frog one stage, once a day, never past Adult');
-  assert.ok(bind.includes('eNow.critterStage++'), 'growth advances the stage');
+  assert.ok(bind.includes('applyCareDay(eNow,todayKey())'), 'a finished care logs a care day through the growth helper');
+  assert.ok(bind.includes("grew into a '+STAGES[eNow.critterStage][1]+'"), 'growing a stage names the new stage');
+  assert.ok(!bind.includes("careAllToday(eNow.care,todayKey())&&eNow.careGrewDay!==todayKey()&&eNow.critterStage<3"), 'the old one-care-day-one-stage trigger is gone');
   assert.ok(html.includes('care:{}, careGrewDay:null'), 'new explorers start with empty care');
+  assert.ok(html.includes('critterStageDays:0'), 'new explorers start with 0 days in the egg stage');
   const merge = grab('mergeExplorer');
   assert.ok(merge.includes('mergeCare(a.care,b.care)'), 'care merges across devices');
-  assert.ok(merge.includes('careGrewDay'), 'the once-a-day growth marker merges too');
+  assert.ok(merge.includes('careGrewDay'), 'the once-a-day care-day marker merges too');
+  assert.ok(merge.includes('critterStageDays'), 'the days-in-stage count merges too');
 });
 
 /* --- Rename timestamp must never detach from its name (live bug 2026-11-05) --- */
@@ -179,13 +182,16 @@ test('care reaction is visual, not just text: frog hops/wiggles and emoji float 
   assert.ok(bind.includes('setTimeout(function(){ careFx=null; }, 1700)'), 'the reaction clears after ~1.7s so it never replays on a later re-render');
 });
 
-test('growth is visible: the frog picture gets taller each stage, and a bar shows today’s cares', () => {
+test('growth is visible: the frog picture gets taller each stage, and a bar shows days in the stage', () => {
   const page = html.slice(html.indexOf('function critterHTML(){'), html.indexOf('function bindCritter(){'));
   assert.ok(page.includes("150+view*30"), 'the frog picture grows taller with the stage — Frogspawn small, Adult Frog big');
   assert.ok(page.includes('Growing up — Stage'), 'the growth stage is labelled');
-  assert.ok(page.includes('/3 cares today'), 'today’s care count is shown');
-  assert.ok(page.includes('careTodayCount(e.care)/3*100'), 'a progress bar fills with today’s cares');
+  assert.ok(page.includes("STAGES[e.critterStage][1]+' — '+stageDays+' of '+stageLen+' days"), 'the bar shows the stage name and the days within it');
+  assert.ok(page.includes('stageDays/stageLen*100'), 'a progress bar fills with the days in the stage');
   assert.ok(page.includes('Grew today!'), 'a growth today is celebrated');
+  assert.ok(page.includes('more care days to grow'), 'the days left to grow are shown');
+  assert.ok(!page.includes('/3 cares today'), 'the old today-only N/3 bar is gone');
+  assert.ok(!page.includes('careTodayCount(e.care)/3*100'), 'the old today-only bar fill is gone');
   assert.ok(!page.includes('Today: '), 'the old text-only today line is gone');
 });
 

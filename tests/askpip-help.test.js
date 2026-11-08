@@ -85,7 +85,7 @@ test('help: link a new device', () => {
 
 test('help: golden bookmark', () => {
   const a = ans('how do I use the golden bookmark');
-  assert.ok(a.indexOf('40') >= 0, 'states the 40-star cost');
+  assert.ok(a.indexOf('200') >= 0, 'states the 200-star cost');
   assert.ok(a.indexOf('Save') >= 0, 'names the Save button');
   assert.ok(ans('how do I save an answer').indexOf('Golden Bookmark') >= 0);
   assert.ok(ans('how do I unbookmark an answer') !== null, 'unbookmark is covered');
