@@ -52,9 +52,8 @@ const spellFns = eval(
   + grabFn('spellStepFor') + '\n'
   + grabFn('spellPlanFor') + '\n'
   + grabFn('spellPlanLine') + '\n'
-  + grabFn('spellHomeNudgeHTML') + '\n'
   + grabFn('spellParentLine') + '\n'
-  + ';({spellStepFor:spellStepFor, spellPlanFor:spellPlanFor, spellPlanLine:spellPlanLine, spellHomeNudgeHTML:spellHomeNudgeHTML, spellParentLine:spellParentLine});'
+  + ';({spellStepFor:spellStepFor, spellPlanFor:spellPlanFor, spellPlanLine:spellPlanLine, spellParentLine:spellParentLine});'
 );
 
 function spellTest(over) {
@@ -221,25 +220,14 @@ test('the practice view shows the plan with today highlighted', () => {
   assert.ok(view.includes('spellPlanLine(t, null, true)'), 'the plan line is in the practice view, highlighted');
 });
 
-test('Home nudges the next spelling test when it is due within 3 days', () => {
+test('the Home nudge is gone — the week cells now carry the spelling step instead', () => {
+  // The per-day cells in My week show each test's step for that day,
+  // so the one-line nudge ("Spelling test — … Today: …") was pure
+  // duplication and was removed; the cells are the home for it now.
+  assert.ok(!html.includes('function spellHomeNudgeHTML'), 'the nudge function is gone');
   const plan = fnBody('function planSectionHTML(');
-  assert.ok(plan.includes('spellHomeNudgeHTML(e)'), 'the week section includes the spelling nudge');
-  const nudge = spellFns.spellHomeNudgeHTML({
-    spellingTests: [spellTest({ testDate: '2026-11-11', lang: 'eng' })],
-  });
-  assert.ok(nudge.includes('Spelling test'), 'a test two days away nudges');
-  assert.ok(nudge.includes('Wed 11 Nov'), 'it names the test date');
-  assert.ok(nudge.includes('My spelling tests'), 'it says where to practise');
-  const far = spellFns.spellHomeNudgeHTML({
-    spellingTests: [spellTest({ testDate: '2026-11-16', lang: 'eng' })],
-  });
-  assert.equal(far, '', 'a test a week away stays quiet');
-  const customSkip = spellFns.spellHomeNudgeHTML({
-    spellingTests: [spellTest({ testDate: '2026-11-12', routine: 'custom', days: [3] })],
-  });
-  assert.equal(customSkip, '', 'a custom routine stays quiet on a non-practice day');
-  assert.equal(spellFns.spellHomeNudgeHTML({ spellingTests: [] }), '', 'no tests, no nudge');
-  assert.equal(spellFns.spellHomeNudgeHTML({}), '', 'no spellingTests field, no nudge');
+  assert.ok(!plan.includes('spellHomeNudgeHTML'), 'the week section no longer calls the nudge');
+  assert.ok(plan.includes('spellDayLinesHTML(e, dk)'), 'each week cell renders the spelling lines for its day');
 });
 
 test('the Grown-ups evening summary names the next spelling test', () => {

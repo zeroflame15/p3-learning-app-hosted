@@ -206,7 +206,7 @@ function weekStripEngine() {
     + grabFn('restDayStripText') + '\n'
     + grabFn('dateKeyOf') + '\n'
     + grabFn('todayKey') + '\n'
-    + 'function spellHomeNudgeHTML(e){ return \'\'; }\n'
+    + 'function spellDayLinesHTML(e, dateKey){ return \'\'; }\n'
     + grabFn('planSectionHTML') + '\n'
     + ';({planSectionHTML:planSectionHTML, studyPlanFor:studyPlanFor, DOWS:DOWS});';
   const ctx = vm.createContext({ DOWS: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], Date: FakeDate, console });
