@@ -336,7 +336,7 @@ test('weak-boost badge and live-gen line survive on the new layout', () => {
   assert.ok(out.includes('data-boost="eng-tense"'), 'boost button on the flagged quest card');
   assert.ok(out.includes('5 quick questions with Pip'), 'badge says what the boost is');
   const live = renderSubject(explorer(), 'math', 'math-muldiv');
-  assert.ok(live.includes('✨ Fresh from Pip'), 'live-gen line stays on the NTUC Totals card');
+  assert.ok(live.includes('📚 Pip’s shelf'), 'server-bank line stays on the NTUC Totals card');
   const chi = renderSubject(explorer(), 'chi', 'chi-listening');
   assert.ok(chi.includes('🔊 This quest has a Listen button'), 'Chinese Listen line stays');
   assert.ok(chi.includes('Quest chi-listen'), 'Listening is unlocked here, unlike myKx');
