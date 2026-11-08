@@ -159,7 +159,7 @@ test('boost finish: 4/5 clears the flag and awards stars once per day', () => {
   const rec = runQuest(4, { phase: 'boost', boostList: list });
   assert.ok(rec.clearedAt, '4/5 clears the flag');
   assert.equal(isActive(rec), false, 'no longer active');
-  assert.deepEqual(rec.lastBoost, { score: 4, day: TODAY }, 'drill recorded for the parent page');
+  assert.deepEqual(rec.lastBoost, { score: 4, day: TODAY, source: 'bank' }, 'drill recorded for the parent page');
   assert.equal(cur.starsEarned, 4, 'first boost of the day earns 4 stars');
   assert.equal(EX.stars, 6, 'stars added: 2 from the first quest run + 4 from the boost');
   // A second boost the same day earns no extra stars.
@@ -177,7 +177,7 @@ test('boost finish: below 4/5 keeps the flag and records the drill', () => {
   const rec = runQuest(2, { phase: 'boost', boostList: list });
   assert.equal(rec.clearedAt, undefined, '2/5 does not clear');
   assert.equal(isActive(rec), true, 'still active');
-  assert.deepEqual(rec.lastBoost, { score: 2, day: TODAY }, 'drill recorded');
+  assert.deepEqual(rec.lastBoost, { score: 2, day: TODAY, source: 'bank' }, 'drill recorded');
   assert.equal(cur.starsEarned, 2, 'the drill still earns its 2 stars the first time');
   // The parent trend stays quest-only: boost scores never touch lastScore.
   assert.equal(rec.lastScore, 1, 'last quest score untouched by the boost');
