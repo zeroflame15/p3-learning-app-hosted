@@ -159,3 +159,16 @@ test('xwPattern shows given letters and blanks, and the input takes the whole wo
   assert.ok(game.includes('xwPattern(gState.sel'), 'the pattern line renders above the box');
   assert.ok(game.includes('already given'), 'the hint says the green letters are given');
 });
+
+test('crossword input focus puts the cursor at the end of what is typed', () => {
+  // A bare focus() leaves the cursor at the start, so the next typed
+  // letter lands in front and spells the wrong word — seen live
+  // 2026-11-07 after a Reveal. Every crossword focus goes through
+  // one helper that moves the cursor to the end.
+  const bind = fnBody('function bindGame');
+  assert.ok(bind.includes('function focusXw(){'), 'a focus helper exists for the crossword input');
+  assert.ok(bind.includes('setSelectionRange(ni.value.length,ni.value.length)'), 'the helper moves the cursor to the end');
+  const calls = (bind.match(/focusXw\(\)/g) || []).length;
+  assert.ok(calls >= 6, 'every crossword focus (pick, clue, check, reveal, input setup) goes through the helper, found ' + calls);
+  assert.ok(!bind.includes('if(ni)ni.focus()') && !bind.includes('if(ni2)ni2.focus()') && !bind.includes('if(ni3)ni3.focus()') && !bind.includes('input.focus()'), 'no bare focus() on the crossword input remains (the helper itself calls focus, then moves the cursor)');
+});

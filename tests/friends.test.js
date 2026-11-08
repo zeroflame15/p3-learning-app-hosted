@@ -460,7 +460,7 @@ test('client: friendBestTimes reads playBest defensively', skipIfNotIntegrated, 
 test('client: friends list page shows every friend, my code and the add row', skipIfNotIntegrated, () => {
   const prelude = clientPrelude()
     + 'friendsCache=[{code:\'XYZ789\',name:\'Kai\',stars:30,bestTimes:{word:{secs:50},number:{secs:25}}},{code:\'MNP456\',name:\'Mei\',stars:5,bestTimes:{sort:{secs:44}}}];\n'
-    + 'function pageHero(icon, title, blurb, stat){ return title + " " + (stat || ""); }\n';
+    + 'function pageHero(art, emo, title, sub, stat){ return title + " " + (stat || ""); }\n';
   const html = eval(prelude + grab('friendFastest') + '\n' + grab('friendsListHTML') + '\n;friendsListHTML()');
   assert.ok(html.includes('My Friends'), 'friends list heading');
   assert.ok(html.includes('Your friend code: ABC2DE'), 'my own code shown so I can share it');
@@ -470,7 +470,7 @@ test('client: friends list page shows every friend, my code and the add row', sk
   assert.ok(html.includes('Fastest: Number Pop 25s'), 'fastest Play time shown per friend');
   assert.ok(html.includes('id="frCode"') && html.includes('id="frSend"'), 'add-a-friend row on the list page');
   assert.ok(html.includes('id="frErr"'), 'persistent error element on the list page');
-  const empty = eval(clientPrelude() + 'friendsCache=[];\n' + 'DB.explorers[0].friends=[];\n' + 'function pageHero(icon, title, blurb, stat){ return title + " " + (stat || ""); }\n'
+  const empty = eval(clientPrelude() + 'friendsCache=[];\n' + 'DB.explorers[0].friends=[];\n' + 'function pageHero(art, emo, title, sub, stat){ return title + " " + (stat || ""); }\n'
     + grab('friendFastest') + '\n' + grab('friendsListHTML') + '\n;friendsListHTML()');
   assert.ok(empty.includes('0 friends'), 'empty list says 0 friends');
   assert.ok(empty.includes('No friends yet'), 'empty list invites the first request');
@@ -551,6 +551,7 @@ test('client: accept resolves the live explorer; boards show server-accepted fri
   const sendSrc = grab('sendFriendRequest');
   assert.ok(sendSrc.includes("getElementById('frErr')"), 'unknown-code error is written to a persistent page element');
   assert.ok(sendSrc.includes('No explorer has that code'), 'unknown-code message is clear');
+  assert.ok(sendSrc.indexOf("showErr('')") >= 0 && sendSrc.indexOf("showErr('')") < sendSrc.indexOf("friendsApi('request'"), 'a new send clears the last attempt\'s error before the request goes out');
   assert.ok(clientSrc.includes('id="frErr"'), 'the error element exists on the friends board');
 });
 

@@ -748,6 +748,7 @@ test('results: a Maths boost that did not clear offers a fresh retake now', () =
   assert.ok(out.indexOf('id="boostRetry"') >= 0, 'retake button present');
   assert.ok(out.indexOf('5 fresh ones') >= 0, 'the button promises fresh questions');
   cur.starsEarned = 0;
+  cur.firstToday = false;
   assert.ok(quizDoneHTML(MRT_TOPIC).indexOf('no extra stars this time') >= 0, 'a retake says plainly it earned nothing extra');
 });
 

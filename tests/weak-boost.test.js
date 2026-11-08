@@ -310,8 +310,28 @@ test('boost results: below 4/5 says the flag stays, and a replay earns no extra 
   assert.ok(out.indexOf('keep it on the boost list') >= 0, 'still-wobbly wording');
   assert.ok(out.indexOf('earned ⭐ 2 stars!') >= 0, 'first boost earns its stars');
   cur.starsEarned = 0;
+  cur.firstToday = false;
   const out2 = quizDoneHTML(TOPIC);
   assert.ok(out2.indexOf('no extra stars this time') >= 0, 'a replay says plainly it earned nothing extra');
+});
+
+test('boost results: a 0-star first drill is encouraged, not called a replay', () => {
+  EX = explorer({ boost: { 'eng-tense': flaggedRec() } });
+  cur = { topicId: 'eng-tense', phase: 'boost', score: 0, starsEarned: 0, firstToday: true, boostList: TOPIC.retry.slice(0, 3).concat(TOPIC.fresh.slice(0, 2)) };
+  const out = quizDoneHTML(TOPIC);
+  assert.ok(out.indexOf('no stars this time, but you kept going!') >= 0, 'a first 0/5 gets encouragement');
+  assert.ok(out.indexOf('already earned them today') < 0, 'it is not called a replay');
+});
+
+test('quest results: a 0-star first quest is encouraged, a 0-star replay says so plainly', () => {
+  EX = explorer();
+  runQuest(0);
+  let out = quizDoneHTML(TOPIC);
+  assert.ok(out.indexOf('no stars this time, but finishing the whole quest takes courage!') >= 0, 'a first 0/5 gets encouragement');
+  assert.ok(out.indexOf('already earned them today') < 0, 'it is not called a replay');
+  runQuest(0);
+  out = quizDoneHTML(TOPIC);
+  assert.ok(out.indexOf('a replay, so no extra stars this time') >= 0, 'a replay scoring 0 still says plainly it earned nothing extra');
 });
 
 /* --- rendering: the three surfaces exist, with kind child wording ----- */
