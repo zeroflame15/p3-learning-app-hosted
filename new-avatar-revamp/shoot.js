@@ -1,4 +1,4 @@
-// Screenshot the avatar preview matrix with the downloaded Chrome.
+// Screenshot the round-2 avatar preview with the downloaded Chrome.
 'use strict';
 const { chromium } = require('/tmp/shot/node_modules/playwright-core');
 const path = require('node:path');
@@ -15,7 +15,7 @@ const path = require('node:path');
   await page.screenshot({ path: path.join(dir, 'proof-full.png'), fullPage: true });
   // Section close-ups: each h2 section's following row.
   const sections = await page.$$('h2');
-  const names = ['animals', 'colours', 'hairs', 'accs', 'tricky', 'closeups', 'frogturtle', 'otterface', 'longhair'];
+  const names = ['topleft', 'natural', 'pink', 'teal', 'accs', 'tricky', 'closeups'];
   for (let i = 0; i < sections.length; i++) {
     const el = await sections[i].evaluateHandle(h => h.nextElementSibling);
     await el.screenshot({ path: path.join(dir, 'proof-' + names[i] + '.png') });
