@@ -21,6 +21,21 @@ function json(res, status, obj) {
   res.json(obj);
 }
 
+// Strip NUL characters (2026-11-09): Postgres text/JSONB cannot store
+// \u0000 — a payload containing one is rejected with 22P05
+// "unsupported Unicode escape sequence" and the whole upsert fails
+// with HTTP 502. The client already strips NULs before sending; this
+// is defense in depth so a stray NUL from any client can never break
+// the write. It mutates nested objects/arrays in place.
+function stripNulDeep(v) {
+  if (typeof v === 'string') return v.replace(/\u0000/g, '');
+  if (v && typeof v === 'object') {
+    if (Array.isArray(v)) { for (let i = 0; i < v.length; i++) v[i] = stripNulDeep(v[i]); }
+    else { for (const k in v) { if (Object.prototype.hasOwnProperty.call(v, k)) v[k] = stripNulDeep(v[k]); } }
+  }
+  return v;
+}
+
 function sb(path, init) {
   return fetch(`${URL}/rest/v1/${path}`, {
     ...init,
@@ -88,6 +103,8 @@ module.exports = async (req, res) => {
     if (!key || !body || !body.data || typeof body.data !== 'object') {
       return json(res, 400, { error: 'code and data required' });
     }
+    // Strip NULs before anything else touches the payload (see above).
+    stripNulDeep(body.data);
     // Keep rows small: reject absurd payloads.
     if (JSON.stringify(body.data).length > 500000) return json(res, 413, { error: 'progress too large' });
     // Revision guard for the family schedule (2026-11-09): the client
