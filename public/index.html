@@ -3735,6 +3735,22 @@ function mergeExplorer(a,b){
   var cn=pickCritterName(a,b); e.critterName=cn.name; e.critterNameAt=cn.at;
   e.care=mergeCare(a.care,b.care);
   e.careGrewDay=((a.careGrewDay||'')>(b.careGrewDay||''))?a.careGrewDay:b.careGrewDay;
+  /* Critter reset (admin, 2026-11-09): an admin "Reset critters to
+     Egg" stamps critterResetAt with the reset time. The side with
+     the LATER critterResetAt wins the critter fields whole — without
+     this, the max-stage + union-discovered + latest-care merges
+     above would resurrect the old critter state from any device
+     still holding it, and the reset would never stick. When both
+     sides share the same reset time (or neither has one), the merges
+     above stand, so care and growth after a reset are kept. */
+  var _crAtA=Date.parse((a&&a.critterResetAt)||'')||0, _crAtB=Date.parse((b&&b.critterResetAt)||'')||0;
+  if(_crAtB>_crAtA||_crAtA>_crAtB){
+    var _cr=_crAtB>_crAtA?b:a;
+    e.critterName=_cr.critterName||'Splash'; e.critterNameAt=_cr.critterNameAt||null;
+    e.critterStage=_cr.critterStage||0; e.critterStageDays=_cr.critterStageDays||0;
+    e.care=JSON.parse(JSON.stringify(_cr.care||{})); e.careGrewDay=_cr.careGrewDay||null;
+    e.discoveredCritters=(_cr.discoveredCritters||[]).slice(); e.critterResetAt=_cr.critterResetAt||null;
+  }
   return e;
 }
 function mergeFamilyDB(local, server){
@@ -4034,12 +4050,12 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], theme:'Frog Pond', themeAt:null, treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[],
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
-function topicById(id){ return TOPICS.find(function(t){return t.id===id;}); }
+function topicById(id){ var t=TOPICS.find(function(x){return x.id===id;}); if(t)return t; return moeQuestTopic(id); }
 function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 /* A stored ISO timestamp (UTC) as a local YYYY-MM-DD date — slicing
    the ISO string shows the UTC date, which is a day early for an
@@ -5540,6 +5556,3984 @@ var MYKX_SUBJECTS=[
   {id:'listening',name:'Listening',map:'chi-listen',cov:'yes'}]}
 ]}
 ];
+/* ============================================================
+   MOE PER-LEVEL LEARN (2026-11-09, pacing 2026-11-09) — the Learn
+   page's topic list. Source of truth: the MOE syllabus research
+   report (research_notes/moe-primary-syllabus-topics-20261109-0206/
+   report.md) + new-questions/topic-map.md (server-bank topic ids).
+   - Maths + Science: true per-level topics from the MOE PDFs.
+     Science is NOT taught in P1/P2 (topics: [], notTaught: true).
+     Speed is NOT a Maths topic at any level. Algebra, Ratio and
+     Average are P6 only. Higher Chinese only from P3.
+   - English: the same 6 Areas of Language Learning at every level;
+     sub-topics deepen by BAND (Lower P1-2 / Middle P3-4 / Upper P5-6).
+     No invented per-year English list.
+   - Chinese: the same 5 skills at every level; sub-topics deepen by
+     PHASE (Foundation Stage 1 P1-2 / Stage 2 P3-4 / Orientation P5-6).
+     No invented per-year Chinese list.
+   - Each MOE topic's quest id IS its server-bank topic id, so the
+     quest flow serves the server bank (sb_questions) for that topic
+     + level first. "fallback" is the nearest LOCAL bank, used for
+     QUESTIONS only when the server has no set — the displayed topic
+     list NEVER falls back to P3 topics for a non-P3 explorer.
+   - A topic with no local fallback shows "0 questions ready" on the
+     Learn page (honest), never a P3 substitute.
+   - PACING (Bryan 2026-11-09): every topic carries a term (1-4) —
+     WHEN it is taught in the school year. Maths/Science topics are
+     spread across the four terms in syllabus/textbook order (first
+     topic Term 1, last topic Term 4); that puts P3 Magnets, the last
+     P3 Science topic, in Term 4, matching Bryan's confirmed "last
+     topic, latter half / 3-4 of the year". English/Chinese skill
+     areas run concurrently all year, so they are Term 1. Only
+     Magnets' term is confirmed from a stated fact; the other
+     Maths/Science terms are derived by order-spread (see the diff
+     notes) — no per-topic term is claimed from a source that does
+     not state it. The current term comes from the calendar month
+     (schoolTermOf), so the rule rolls forward every year with no
+     hardcoded date; its month bands line up with the MOE term
+     breaks already in the app (MOE_SCHOOL_HOLIDAYS: March, June and
+     September breaks end Terms 1-3, year-end ends Term 4).
+     Serving is gated on the term: the session, the "questions
+     ready" counts and the Practise button only cover in-season
+     topics (term <= current term). Out-of-season topics are still
+     LISTED (pacing holds back serving, never the list), marked
+     "Later in the year · Term N", and startQuestFlow/startBoostFlow
+     refuse them with a toast.
+   MYKX_SUBJECTS stays as the local-bank fallback map; Learn
+   rendering now reads this structure instead. No new persisted
+   fields: progress/completed are still keyed by quest id, now also
+   MOE topic ids. ============================================================ */
+var MOE_SUBJECTS_BY_LEVEL={
+ "1": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Lower Primary (P1–P2)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_and_view_attentively_with_emp_0",
+       "name": "Listen and view attentively, with empathy and respect"
+      },
+      {
+       "id": "recognise_sounds_and_words_in_contex_1",
+       "name": "Recognise sounds and words in context"
+      },
+      {
+       "id": "listen_for_understanding_and_respond_2",
+       "name": "Listen for understanding and respond for enjoyment"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "beginning_reading_word_recognition_a_0",
+       "name": "Beginning reading: word recognition, accuracy and fluency"
+      },
+      {
+       "id": "read_with_a_positive_attitude_to_rea_1",
+       "name": "Read with a positive attitude to reading"
+      },
+      {
+       "id": "respond_to_texts_for_enjoyment_and_u_2",
+       "name": "Respond to texts for enjoyment and understanding"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "know_the_basic_features_of_spoken_la_0",
+       "name": "Know the basic features of spoken language"
+      },
+      {
+       "id": "speak_fluently_and_accurately_with_t_1",
+       "name": "Speak fluently and accurately, with the right sounds"
+      },
+      {
+       "id": "plan_ideas_and_take_part_in_discussi_2",
+       "name": "Plan ideas and take part in discussions respectfully"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "writing_readiness_and_handwriting_in_0",
+       "name": "Writing readiness and handwriting in print script"
+      },
+      {
+       "id": "spelling_skills_for_age_appropriate__1",
+       "name": "Spelling skills for age-appropriate words"
+      },
+      {
+       "id": "generate_select_and_organise_ideas_f_2",
+       "name": "Generate, select and organise ideas for writing"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "metalanguage_for_talking_about_langu_0",
+       "name": "Metalanguage for talking about language at word and phrase level"
+      },
+      {
+       "id": "grammar_at_word_phrase_and_sentence__1",
+       "name": "Grammar at word, phrase and sentence level"
+      },
+      {
+       "id": "identify_simple_sentence_functions_i_2",
+       "name": "Identify simple sentence functions in context"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "learn_words_through_experience_and_e_0",
+       "name": "Learn words through experience and enjoyment"
+      },
+      {
+       "id": "build_word_consciousness_1",
+       "name": "Build word consciousness"
+      },
+      {
+       "id": "use_words_for_purpose_audience_and_c_2",
+       "name": "Use words for purpose, audience and context"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-whole-100",
+     "name": "Whole Numbers up to 100",
+     "term": 1,
+     "subs": [
+      {
+       "id": "counting_to_100_0",
+       "name": "Counting to 100"
+      },
+      {
+       "id": "tens_and_ones_place_value_1",
+       "name": "Tens and ones (place value)"
+      },
+      {
+       "id": "reading_and_writing_numerals_and_wor_2",
+       "name": "Reading and writing numerals and words"
+      },
+      {
+       "id": "comparing_and_ordering_3",
+       "name": "Comparing and ordering"
+      },
+      {
+       "id": "number_patterns_4",
+       "name": "Number patterns"
+      },
+      {
+       "id": "ordinal_numbers_1st_10th_5",
+       "name": "Ordinal numbers (1st–10th)"
+      }
+     ],
+     "quests": [
+      "math-whole-100"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-add-sub",
+     "name": "Addition and Subtraction",
+     "term": 1,
+     "subs": [
+      {
+       "id": "concepts_of_addition_and_subtraction_0",
+       "name": "Concepts of addition and subtraction"
+      },
+      {
+       "id": "use_of_and_1",
+       "name": "Use of +, − and ="
+      },
+      {
+       "id": "adding_and_subtracting_within_100_2",
+       "name": "Adding and subtracting within 100"
+      },
+      {
+       "id": "adding_more_than_two_1_digit_numbers_3",
+       "name": "Adding more than two 1-digit numbers"
+      },
+      {
+       "id": "mental_calculation_within_20_4",
+       "name": "Mental calculation within 20"
+      }
+     ],
+     "quests": [
+      "math-add-sub"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-mult-div",
+     "name": "Multiplication and Division",
+     "term": 1,
+     "subs": [
+      {
+       "id": "concepts_of_multiplication_and_divis_0",
+       "name": "Concepts of multiplication and division"
+      },
+      {
+       "id": "use_of_1",
+       "name": "Use of ×"
+      },
+      {
+       "id": "multiplying_within_40_2",
+       "name": "Multiplying within 40"
+      },
+      {
+       "id": "dividing_within_20_3",
+       "name": "Dividing within 20"
+      }
+     ],
+     "quests": [
+      "math-mult-div"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-money",
+     "name": "Money",
+     "term": 2,
+     "subs": [
+      {
+       "id": "counting_money_in_cents_up_to_1_0",
+       "name": "Counting money in cents up to $1"
+      },
+      {
+       "id": "counting_money_in_dollars_up_to_100_1",
+       "name": "Counting money in dollars up to $100"
+      }
+     ],
+     "quests": [
+      "math-money"
+     ],
+     "fallback": "math-hawker"
+    },
+    {
+     "id": "math-length",
+     "name": "Length",
+     "term": 2,
+     "subs": [
+      {
+       "id": "measuring_length_in_centimetres_cm_0",
+       "name": "Measuring length in centimetres (cm)"
+      },
+      {
+       "id": "comparing_and_ordering_lengths_1",
+       "name": "Comparing and ordering lengths"
+      },
+      {
+       "id": "measuring_and_drawing_a_line_segment_2",
+       "name": "Measuring and drawing a line segment to the nearest cm"
+      }
+     ],
+     "quests": [
+      "math-length"
+     ],
+     "fallback": "math-length"
+    },
+    {
+     "id": "math-time",
+     "name": "Time",
+     "term": 3,
+     "subs": [
+      {
+       "id": "telling_time_to_5_minutes_0",
+       "name": "Telling time to 5 minutes"
+      },
+      {
+       "id": "am_pm_1",
+       "name": "am / pm"
+      },
+      {
+       "id": "duration_of_one_hour_half_hour_2",
+       "name": "Duration of one hour / half hour"
+      }
+     ],
+     "quests": [
+      "math-time"
+     ],
+     "fallback": "math-time"
+    },
+    {
+     "id": "math-2d-shapes",
+     "name": "2D Shapes",
+     "term": 3,
+     "subs": [
+      {
+       "id": "rectangle_square_triangle_circle_0",
+       "name": "Rectangle, square, triangle, circle"
+      },
+      {
+       "id": "half_circle_and_quarter_circle_1",
+       "name": "Half circle and quarter circle"
+      },
+      {
+       "id": "forming_figures_with_2d_shapes_2",
+       "name": "Forming figures with 2D shapes"
+      },
+      {
+       "id": "copying_figures_on_a_dot_square_grid_3",
+       "name": "Copying figures on a dot / square grid"
+      }
+     ],
+     "quests": [
+      "math-2d-shapes"
+     ]
+    },
+    {
+     "id": "math-picture-graphs",
+     "name": "Picture Graphs",
+     "term": 4,
+     "subs": [
+      {
+       "id": "reading_data_from_picture_graphs_0",
+       "name": "Reading data from picture graphs"
+      },
+      {
+       "id": "interpreting_data_from_picture_graph_1",
+       "name": "Interpreting data from picture graphs"
+      }
+     ],
+     "quests": [
+      "math-picture-graphs"
+     ],
+     "fallback": "math-bargraphs"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Science starts in P3",
+   "topics": [],
+   "notTaught": true
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Foundation Phase, Stage 1 (P1–P2)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_attentively_to_short_simple_d_0",
+       "name": "Listen attentively to short, simple daily-life content"
+      },
+      {
+       "id": "identify_main_ideas_in_what_is_heard_1",
+       "name": "Identify main ideas in what is heard"
+      },
+      {
+       "id": "hanyu_pinyin_initials_finals_and_ton_2",
+       "name": "Hanyu Pinyin: initials, finals and tones"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "speak_with_correct_pronunciation_usi_0",
+       "name": "Speak with correct pronunciation using taught vocabulary"
+      },
+      {
+       "id": "show_tell_p1_and_book_review_p2_1",
+       "name": "Show & Tell (P1) and Book Review (P2)"
+      },
+      {
+       "id": "conversation_from_a_topic_or_picture_2",
+       "name": "Conversation from a topic or picture"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "read_hanyu_pinyin_and_chinese_charac_0",
+       "name": "Read Hanyu Pinyin and Chinese characters"
+      },
+      {
+       "id": "read_sentences_and_short_passages_1",
+       "name": "Read sentences and short passages"
+      },
+      {
+       "id": "30_minutes_of_reading_time_each_week_2",
+       "name": "30 minutes of reading time each week (MTL SOAR)"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "sentence_writing_from_given_pictures_0",
+       "name": "Sentence writing from given pictures"
+      },
+      {
+       "id": "write_a_paragraph_from_a_picture_p2_1",
+       "name": "Write a paragraph from a picture (P2)"
+      },
+      {
+       "id": "paper_and_pencil_test_sentence_writi_2",
+       "name": "Paper-and-pencil test: sentence writing"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "recognise_characters_taught_0",
+       "name": "Recognise characters taught (识读)"
+      },
+      {
+       "id": "character_structure_radicals_and_str_1",
+       "name": "Character structure, radicals and stroke order"
+      },
+      {
+       "id": "correct_handwriting_and_character_fo_2",
+       "name": "Correct handwriting and character formation"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    }
+   ]
+  }
+ ],
+ "2": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Lower Primary (P1–P2)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_and_view_attentively_with_emp_0",
+       "name": "Listen and view attentively, with empathy and respect"
+      },
+      {
+       "id": "recognise_sounds_and_words_in_contex_1",
+       "name": "Recognise sounds and words in context"
+      },
+      {
+       "id": "listen_for_understanding_and_respond_2",
+       "name": "Listen for understanding and respond for enjoyment"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "beginning_reading_word_recognition_a_0",
+       "name": "Beginning reading: word recognition, accuracy and fluency"
+      },
+      {
+       "id": "read_with_a_positive_attitude_to_rea_1",
+       "name": "Read with a positive attitude to reading"
+      },
+      {
+       "id": "respond_to_texts_for_enjoyment_and_u_2",
+       "name": "Respond to texts for enjoyment and understanding"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "know_the_basic_features_of_spoken_la_0",
+       "name": "Know the basic features of spoken language"
+      },
+      {
+       "id": "speak_fluently_and_accurately_with_t_1",
+       "name": "Speak fluently and accurately, with the right sounds"
+      },
+      {
+       "id": "plan_ideas_and_take_part_in_discussi_2",
+       "name": "Plan ideas and take part in discussions respectfully"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "writing_readiness_and_handwriting_in_0",
+       "name": "Writing readiness and handwriting in print script"
+      },
+      {
+       "id": "spelling_skills_for_age_appropriate__1",
+       "name": "Spelling skills for age-appropriate words"
+      },
+      {
+       "id": "generate_select_and_organise_ideas_f_2",
+       "name": "Generate, select and organise ideas for writing"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "metalanguage_for_talking_about_langu_0",
+       "name": "Metalanguage for talking about language at word and phrase level"
+      },
+      {
+       "id": "grammar_at_word_phrase_and_sentence__1",
+       "name": "Grammar at word, phrase and sentence level"
+      },
+      {
+       "id": "identify_simple_sentence_functions_i_2",
+       "name": "Identify simple sentence functions in context"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "learn_words_through_experience_and_e_0",
+       "name": "Learn words through experience and enjoyment"
+      },
+      {
+       "id": "build_word_consciousness_1",
+       "name": "Build word consciousness"
+      },
+      {
+       "id": "use_words_for_purpose_audience_and_c_2",
+       "name": "Use words for purpose, audience and context"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-whole-1000",
+     "name": "Whole Numbers up to 1000",
+     "term": 1,
+     "subs": [
+      {
+       "id": "counting_in_tens_and_hundreds_0",
+       "name": "Counting in tens and hundreds"
+      },
+      {
+       "id": "hundreds_tens_and_ones_1",
+       "name": "Hundreds, tens and ones"
+      },
+      {
+       "id": "reading_and_writing_numerals_and_wor_2",
+       "name": "Reading and writing numerals and words"
+      },
+      {
+       "id": "comparing_and_ordering_3",
+       "name": "Comparing and ordering"
+      },
+      {
+       "id": "odd_and_even_numbers_4",
+       "name": "Odd and even numbers"
+      }
+     ],
+     "quests": [
+      "math-whole-1000"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-add-sub-3digit",
+     "name": "Addition and Subtraction (up to 3 digits)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "algorithms_up_to_3_digits_0",
+       "name": "Algorithms (up to 3 digits)"
+      },
+      {
+       "id": "mental_calculation_3_digit_ones_tens_1",
+       "name": "Mental calculation: 3-digit + ones / tens / hundreds"
+      }
+     ],
+     "quests": [
+      "math-add-sub-3digit"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-mult-div-tables",
+     "name": "Multiplication and Division (tables 2, 3, 4, 5, 10)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "tables_of_2_3_4_5_10_0",
+       "name": "Tables of 2, 3, 4, 5, 10"
+      },
+      {
+       "id": "use_of_1",
+       "name": "Use of ÷"
+      },
+      {
+       "id": "relationship_between_multiplication__2",
+       "name": "Relationship between multiplication and division"
+      },
+      {
+       "id": "mental_calculation_within_the_tables_3",
+       "name": "Mental calculation within the tables"
+      }
+     ],
+     "quests": [
+      "math-mult-div-tables"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-frac-whole",
+     "name": "Fraction of a Whole",
+     "term": 1,
+     "subs": [
+      {
+       "id": "fraction_as_part_of_a_whole_0",
+       "name": "Fraction as part of a whole"
+      },
+      {
+       "id": "notation_and_representations_1",
+       "name": "Notation and representations"
+      },
+      {
+       "id": "comparing_and_ordering_unit_and_like_2",
+       "name": "Comparing and ordering unit and like fractions"
+      }
+     ],
+     "quests": [
+      "math-frac-whole"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-frac-add-sub",
+     "name": "Addition and Subtraction of Fractions",
+     "term": 2,
+     "subs": [
+      {
+       "id": "adding_like_fractions_within_one_who_0",
+       "name": "Adding like fractions within one whole"
+      },
+      {
+       "id": "subtracting_like_fractions_within_on_1",
+       "name": "Subtracting like fractions within one whole"
+      }
+     ],
+     "quests": [
+      "math-frac-add-sub"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-money-decimal",
+     "name": "Money (decimal notation)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "counting_money_in_dollars_and_cents_0",
+       "name": "Counting money in dollars and cents"
+      },
+      {
+       "id": "reading_and_writing_money_in_decimal_1",
+       "name": "Reading and writing money in decimal notation"
+      },
+      {
+       "id": "comparing_amounts_2",
+       "name": "Comparing amounts"
+      },
+      {
+       "id": "converting_decimal_notation_to_cents_3",
+       "name": "Converting decimal notation to cents"
+      }
+     ],
+     "quests": [
+      "math-money-decimal"
+     ],
+     "fallback": "math-hawker"
+    },
+    {
+     "id": "math-length-mass-volume",
+     "name": "Length, Mass and Volume",
+     "term": 2,
+     "subs": [
+      {
+       "id": "length_in_metres_m_0",
+       "name": "Length in metres (m)"
+      },
+      {
+       "id": "mass_in_kg_and_g_1",
+       "name": "Mass in kg and g"
+      },
+      {
+       "id": "volume_of_liquid_in_litres_2",
+       "name": "Volume of liquid in litres (ℓ)"
+      },
+      {
+       "id": "comparing_and_ordering_lengths_masse_3",
+       "name": "Comparing and ordering lengths, masses, volumes"
+      }
+     ],
+     "quests": [
+      "math-length-mass-volume"
+     ],
+     "fallback": "math-length"
+    },
+    {
+     "id": "math-time-minute",
+     "name": "Time (to the minute)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "telling_time_to_the_minute_0",
+       "name": "Telling time to the minute"
+      },
+      {
+       "id": "measuring_time_in_hours_and_minutes_1",
+       "name": "Measuring time in hours and minutes"
+      },
+      {
+       "id": "converting_hours_and_minutes_to_minu_2",
+       "name": "Converting hours and minutes to minutes"
+      }
+     ],
+     "quests": [
+      "math-time-minute"
+     ],
+     "fallback": "math-time"
+    },
+    {
+     "id": "math-2d-patterns",
+     "name": "2D Shapes (patterns)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "making_patterns_with_2d_shapes_0",
+       "name": "Making patterns with 2D shapes"
+      },
+      {
+       "id": "completing_patterns_by_size_shape_co_1",
+       "name": "Completing patterns by size, shape, colour, orientation"
+      }
+     ],
+     "quests": [
+      "math-2d-patterns"
+     ]
+    },
+    {
+     "id": "math-3d-shapes",
+     "name": "3D Shapes",
+     "term": 3,
+     "subs": [
+      {
+       "id": "cube_cuboid_cone_cylinder_sphere_0",
+       "name": "Cube, cuboid, cone, cylinder, sphere"
+      },
+      {
+       "id": "identifying_naming_and_describing_3d_1",
+       "name": "Identifying, naming and describing 3D shapes"
+      }
+     ],
+     "quests": [
+      "math-3d-shapes"
+     ]
+    },
+    {
+     "id": "math-picture-graphs-scales",
+     "name": "Picture Graphs with Scales",
+     "term": 4,
+     "subs": [
+      {
+       "id": "reading_picture_graphs_with_scales_0",
+       "name": "Reading picture graphs with scales"
+      },
+      {
+       "id": "interpreting_data_from_picture_graph_1",
+       "name": "Interpreting data from picture graphs with scales"
+      }
+     ],
+     "quests": [
+      "math-picture-graphs-scales"
+     ],
+     "fallback": "math-bargraphs"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Science starts in P3",
+   "topics": [],
+   "notTaught": true
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Foundation Phase, Stage 1 (P1–P2)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_attentively_to_short_simple_d_0",
+       "name": "Listen attentively to short, simple daily-life content"
+      },
+      {
+       "id": "identify_main_ideas_in_what_is_heard_1",
+       "name": "Identify main ideas in what is heard"
+      },
+      {
+       "id": "hanyu_pinyin_initials_finals_and_ton_2",
+       "name": "Hanyu Pinyin: initials, finals and tones"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "speak_with_correct_pronunciation_usi_0",
+       "name": "Speak with correct pronunciation using taught vocabulary"
+      },
+      {
+       "id": "show_tell_p1_and_book_review_p2_1",
+       "name": "Show & Tell (P1) and Book Review (P2)"
+      },
+      {
+       "id": "conversation_from_a_topic_or_picture_2",
+       "name": "Conversation from a topic or picture"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "read_hanyu_pinyin_and_chinese_charac_0",
+       "name": "Read Hanyu Pinyin and Chinese characters"
+      },
+      {
+       "id": "read_sentences_and_short_passages_1",
+       "name": "Read sentences and short passages"
+      },
+      {
+       "id": "30_minutes_of_reading_time_each_week_2",
+       "name": "30 minutes of reading time each week (MTL SOAR)"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "sentence_writing_from_given_pictures_0",
+       "name": "Sentence writing from given pictures"
+      },
+      {
+       "id": "write_a_paragraph_from_a_picture_p2_1",
+       "name": "Write a paragraph from a picture (P2)"
+      },
+      {
+       "id": "paper_and_pencil_test_sentence_writi_2",
+       "name": "Paper-and-pencil test: sentence writing"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "recognise_characters_taught_0",
+       "name": "Recognise characters taught (识读)"
+      },
+      {
+       "id": "character_structure_radicals_and_str_1",
+       "name": "Character structure, radicals and stroke order"
+      },
+      {
+       "id": "correct_handwriting_and_character_fo_2",
+       "name": "Correct handwriting and character formation"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    }
+   ]
+  }
+ ],
+ "3": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Middle Primary (P3–P4)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "strengthen_recognition_of_words_in_c_0",
+       "name": "Strengthen recognition of words in context"
+      },
+      {
+       "id": "listen_for_increasingly_complex_info_1",
+       "name": "Listen for increasingly complex information"
+      },
+      {
+       "id": "listen_critically_credibility_of_sou_2",
+       "name": "Listen critically: credibility of sources, relevance, monitoring strategies"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "close_reading_at_literal_and_inferen_0",
+       "name": "Close reading at literal and inferential levels"
+      },
+      {
+       "id": "respond_to_implied_meaning_make_pers_1",
+       "name": "Respond to implied meaning; make personal connections"
+      },
+      {
+       "id": "use_higher_order_thinking_and_metaco_2",
+       "name": "Use higher-order thinking and metacognitive strategies"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "features_of_spoken_language_includin_0",
+       "name": "Features of spoken language, including register"
+      },
+      {
+       "id": "gather_select_and_evaluate_informati_1",
+       "name": "Gather, select and evaluate information; develop ideas"
+      },
+      {
+       "id": "produce_texts_that_recount_entertain_2",
+       "name": "Produce texts that recount, entertain, instruct, describe, inform, respond and evaluate"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "write_neatly_legibly_and_fluently_0",
+       "name": "Write neatly, legibly and fluently"
+      },
+      {
+       "id": "spelling_for_frequently_misspelled_a_1",
+       "name": "Spelling for frequently misspelled and multisyllabic words"
+      },
+      {
+       "id": "write_with_awareness_of_text_structu_2",
+       "name": "Write with awareness of text structures and language features"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "metalanguage_at_text_level_editing_a_0",
+       "name": "Metalanguage at text level; editing and self-correction"
+      },
+      {
+       "id": "cohesive_devices_across_clauses_sent_1",
+       "name": "Cohesive devices across clauses, sentences and paragraphs"
+      },
+      {
+       "id": "language_features_of_different_text__2",
+       "name": "Language features of different text types"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "develop_and_strengthen_vocabulary_kn_0",
+       "name": "Develop and strengthen vocabulary knowledge"
+      },
+      {
+       "id": "examine_how_words_are_formed_and_rel_1",
+       "name": "Examine how words are formed and relate to each other"
+      },
+      {
+       "id": "use_fixed_expressions_accurately_and_2",
+       "name": "Use fixed expressions accurately and appropriately"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-whole-10000",
+     "name": "Whole Numbers up to 10 000",
+     "term": 1,
+     "subs": [
+      {
+       "id": "counting_in_hundreds_and_thousands_0",
+       "name": "Counting in hundreds and thousands"
+      },
+      {
+       "id": "thousands_hundreds_tens_and_ones_1",
+       "name": "Thousands, hundreds, tens and ones"
+      },
+      {
+       "id": "reading_and_writing_numerals_and_wor_2",
+       "name": "Reading and writing numerals and words"
+      },
+      {
+       "id": "comparing_and_ordering_3",
+       "name": "Comparing and ordering"
+      },
+      {
+       "id": "number_patterns_4",
+       "name": "Number patterns"
+      }
+     ],
+     "quests": [
+      "math-whole-10000"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-add-sub-4digit",
+     "name": "Addition and Subtraction (up to 4 digits)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "algorithms_up_to_4_digits_0",
+       "name": "Algorithms (up to 4 digits)"
+      },
+      {
+       "id": "mental_calculation_addition_and_subt_1",
+       "name": "Mental calculation: addition and subtraction of two 2-digit numbers"
+      }
+     ],
+     "quests": [
+      "math-add-sub-4digit"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-mult-div-6789",
+     "name": "Multiplication and Division (tables 6, 7, 8, 9)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "tables_of_6_7_8_9_0",
+       "name": "Tables of 6, 7, 8, 9"
+      },
+      {
+       "id": "division_with_remainder_1",
+       "name": "Division with remainder"
+      },
+      {
+       "id": "multiplication_and_division_algorith_2",
+       "name": "Multiplication and division algorithms (up to 3 digits by 1 digit)"
+      },
+      {
+       "id": "mental_calculation_within_the_tables_3",
+       "name": "Mental calculation within the tables"
+      }
+     ],
+     "quests": [
+      "math-mult-div-6789"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-frac-equivalent",
+     "name": "Equivalent Fractions",
+     "term": 1,
+     "subs": [
+      {
+       "id": "equivalent_fractions_0",
+       "name": "Equivalent fractions"
+      },
+      {
+       "id": "simplest_form_1",
+       "name": "Simplest form"
+      },
+      {
+       "id": "comparing_and_ordering_unlike_fracti_2",
+       "name": "Comparing and ordering unlike fractions"
+      },
+      {
+       "id": "writing_an_equivalent_fraction_3",
+       "name": "Writing an equivalent fraction"
+      }
+     ],
+     "quests": [
+      "math-frac-equivalent"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-frac-add-sub-related",
+     "name": "Addition and Subtraction (related fractions)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "adding_two_related_fractions_within__0",
+       "name": "Adding two related fractions within one whole"
+      },
+      {
+       "id": "subtracting_two_related_fractions_wi_1",
+       "name": "Subtracting two related fractions within one whole"
+      }
+     ],
+     "quests": [
+      "math-frac-add-sub-related"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-money-decimal-ops",
+     "name": "Money (add / subtract in decimal notation)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "adding_money_in_decimal_notation_0",
+       "name": "Adding money in decimal notation"
+      },
+      {
+       "id": "subtracting_money_in_decimal_notatio_1",
+       "name": "Subtracting money in decimal notation"
+      }
+     ],
+     "quests": [
+      "math-money-decimal-ops"
+     ],
+     "fallback": "math-hawker"
+    },
+    {
+     "id": "math-length-mass-volume-compound",
+     "name": "Length, Mass and Volume (compound units)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "length_in_km_volume_in_ml_0",
+       "name": "Length in km, volume in ml"
+      },
+      {
+       "id": "measuring_in_compound_units_1",
+       "name": "Measuring in compound units"
+      },
+      {
+       "id": "converting_km_m_m_cm_kg_g_ml_2",
+       "name": "Converting km↔m, m↔cm, kg↔g, ℓ↔ml"
+      }
+     ],
+     "quests": [
+      "math-length-mass-volume-compound"
+     ],
+     "fallback": "math-length"
+    },
+    {
+     "id": "math-time-seconds",
+     "name": "Time (seconds, 24-hour clock)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "measuring_time_in_seconds_0",
+       "name": "Measuring time in seconds"
+      },
+      {
+       "id": "start_finish_time_and_duration_1",
+       "name": "Start / finish time and duration"
+      },
+      {
+       "id": "24_hour_clock_2",
+       "name": "24-hour clock"
+      }
+     ],
+     "quests": [
+      "math-time-seconds"
+     ],
+     "fallback": "math-time"
+    },
+    {
+     "id": "math-area-perimeter",
+     "name": "Area and Perimeter",
+     "term": 3,
+     "subs": [
+      {
+       "id": "concepts_of_area_and_perimeter_0",
+       "name": "Concepts of area and perimeter"
+      },
+      {
+       "id": "area_in_square_units_cm_and_m_1",
+       "name": "Area in square units, cm² and m²"
+      },
+      {
+       "id": "perimeter_of_a_rectilinear_figure_re_2",
+       "name": "Perimeter of a rectilinear figure, rectangle and square"
+      },
+      {
+       "id": "area_of_a_rectangle_and_square_3",
+       "name": "Area of a rectangle and square"
+      }
+     ],
+     "quests": [
+      "math-area-perimeter"
+     ],
+     "fallback": "math-area"
+    },
+    {
+     "id": "math-angles",
+     "name": "Angles",
+     "term": 3,
+     "subs": [
+      {
+       "id": "concept_of_an_angle_0",
+       "name": "Concept of an angle"
+      },
+      {
+       "id": "right_angles_1",
+       "name": "Right angles"
+      },
+      {
+       "id": "angles_greater_and_smaller_than_a_ri_2",
+       "name": "Angles greater and smaller than a right angle"
+      }
+     ],
+     "quests": [
+      "math-angles"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-perp-parallel",
+     "name": "Perpendicular and Parallel Lines",
+     "term": 3,
+     "subs": [
+      {
+       "id": "perpendicular_lines_0",
+       "name": "Perpendicular lines"
+      },
+      {
+       "id": "parallel_lines_1",
+       "name": "Parallel lines"
+      },
+      {
+       "id": "drawing_perpendicular_and_parallel_l_2",
+       "name": "Drawing perpendicular and parallel lines"
+      }
+     ],
+     "quests": [
+      "math-perp-parallel"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-bar-graphs",
+     "name": "Bar Graphs",
+     "term": 4,
+     "subs": [
+      {
+       "id": "reading_and_interpreting_bar_graphs_0",
+       "name": "Reading and interpreting bar graphs"
+      },
+      {
+       "id": "using_different_scales_on_an_axis_1",
+       "name": "Using different scales on an axis"
+      }
+     ],
+     "quests": [
+      "math-bar-graphs"
+     ],
+     "fallback": "math-bargraphs"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Diversity, cycles, systems, energy and interactions",
+   "topics": [
+    {
+     "id": "sci-diversity-living",
+     "name": "Diversity of Living and Non-Living Things",
+     "term": 1,
+     "subs": [
+      {
+       "id": "characteristics_of_living_things_0",
+       "name": "Characteristics of living things"
+      },
+      {
+       "id": "plants_flowering_and_non_flowering_1",
+       "name": "Plants: flowering and non-flowering"
+      },
+      {
+       "id": "animals_amphibians_birds_fish_insect_2",
+       "name": "Animals: amphibians, birds, fish, insects, mammals, reptiles"
+      },
+      {
+       "id": "fungi_and_bacteria_3",
+       "name": "Fungi and bacteria"
+      },
+      {
+       "id": "classifying_living_things_by_observa_4",
+       "name": "Classifying living things by observable characteristics"
+      }
+     ],
+     "quests": [
+      "sci-diversity-living"
+     ],
+     "fallback": "sci-plants"
+    },
+    {
+     "id": "sci-diversity-materials",
+     "name": "Diversity of Materials",
+     "term": 2,
+     "subs": [
+      {
+       "id": "wood_metal_ceramic_rubber_glass_plas_0",
+       "name": "Wood, metal, ceramic, rubber, glass, plastic, fabric"
+      },
+      {
+       "id": "strength_and_flexibility_1",
+       "name": "Strength and flexibility"
+      },
+      {
+       "id": "float_sink_in_water_2",
+       "name": "Float / sink in water"
+      },
+      {
+       "id": "waterproof_and_transparency_3",
+       "name": "Waterproof and transparency"
+      }
+     ],
+     "quests": [
+      "sci-diversity-materials"
+     ],
+     "fallback": "sci-materials"
+    },
+    {
+     "id": "sci-life-cycles",
+     "name": "Cycles in Plants and Animals (Life Cycles)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "stages_of_flowering_plants_seed_youn_0",
+       "name": "Stages of flowering plants: seed, young plant, adult plant"
+      },
+      {
+       "id": "life_cycles_of_chicken_cockroach_fro_1",
+       "name": "Life cycles of chicken, cockroach, frog, grasshopper, beetle, butterfly, mosquito"
+      }
+     ],
+     "quests": [
+      "sci-life-cycles"
+     ],
+     "fallback": "sci-frog"
+    },
+    {
+     "id": "sci-magnets",
+     "name": "Interaction of Forces (Magnets)",
+     "term": 4,
+     "subs": [
+      {
+       "id": "a_magnet_exerts_a_push_or_pull_0",
+       "name": "A magnet exerts a push or pull"
+      },
+      {
+       "id": "two_poles_unlike_poles_attract_like__1",
+       "name": "Two poles; unlike poles attract, like poles repel"
+      },
+      {
+       "id": "magnets_attract_iron_and_steel_2",
+       "name": "Magnets attract iron and steel"
+      },
+      {
+       "id": "making_a_magnet_by_stroke_and_electr_3",
+       "name": "Making a magnet by stroke and electrical methods"
+      },
+      {
+       "id": "uses_of_magnets_in_everyday_objects_4",
+       "name": "Uses of magnets in everyday objects"
+      }
+     ],
+     "quests": [
+      "sci-magnets"
+     ],
+     "fallback": "sci-magnet"
+    }
+   ]
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Foundation Phase, Stage 2 (P3–P4)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_to_and_comprehend_stories_0",
+       "name": "Listen to and comprehend stories"
+      },
+      {
+       "id": "understand_a_wider_range_of_text_typ_1",
+       "name": "Understand a wider range of text types"
+      },
+      {
+       "id": "describe_daily_life_scenarios_in_con_2",
+       "name": "Describe daily-life scenarios in conversation"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "reading_aloud_with_intonation_and_pa_0",
+       "name": "Reading aloud with intonation and pauses"
+      },
+      {
+       "id": "picture_description_and_conversation_1",
+       "name": "Picture description and conversation"
+      },
+      {
+       "id": "express_thoughts_and_feelings_2",
+       "name": "Express thoughts and feelings"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "reading_comprehension_with_inference_0",
+       "name": "Reading comprehension with inference"
+      },
+      {
+       "id": "express_opinions_with_evidence_from__1",
+       "name": "Express opinions with evidence from texts"
+      },
+      {
+       "id": "vocabulary_application_and_sentence__2",
+       "name": "Vocabulary application and sentence construction"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "four_picture_composition_60_100_word_0",
+       "name": "Four-picture composition, 60–100 words (P3)"
+      },
+      {
+       "id": "interactive_writing_short_reply_to_a_1",
+       "name": "Interactive Writing: short reply to an email or note (P4)"
+      },
+      {
+       "id": "paragraph_writing_with_detailed_desc_2",
+       "name": "Paragraph writing with detailed descriptions"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "recognise_and_write_characters_taugh_0",
+       "name": "Recognise and write characters taught (识读 / 识写)"
+      },
+      {
+       "id": "apply_vocabulary_in_sentences_and_pa_1",
+       "name": "Apply vocabulary in sentences and paragraphs"
+      },
+      {
+       "id": "character_choice_2",
+       "name": "Character choice (辨字测验)"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    },
+    {
+     "id": "chi-higher",
+     "name": "高级华文 Higher Chinese",
+     "term": 1,
+     "subs": [
+      {
+       "id": "literary_based_texts_from_the_hcl_te_0",
+       "name": "Literary-based texts from the HCL textbook"
+      },
+      {
+       "id": "two_additional_periods_a_week_1",
+       "name": "Two additional periods a week"
+      },
+      {
+       "id": "enjoyable_early_experience_of_ethnic_2",
+       "name": "Enjoyable early experience of ethnic literature and culture"
+      }
+     ],
+     "quests": [
+      "chi-higher"
+     ],
+     "fallback": "chi-reading"
+    }
+   ]
+  }
+ ],
+ "4": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Middle Primary (P3–P4)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "strengthen_recognition_of_words_in_c_0",
+       "name": "Strengthen recognition of words in context"
+      },
+      {
+       "id": "listen_for_increasingly_complex_info_1",
+       "name": "Listen for increasingly complex information"
+      },
+      {
+       "id": "listen_critically_credibility_of_sou_2",
+       "name": "Listen critically: credibility of sources, relevance, monitoring strategies"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "close_reading_at_literal_and_inferen_0",
+       "name": "Close reading at literal and inferential levels"
+      },
+      {
+       "id": "respond_to_implied_meaning_make_pers_1",
+       "name": "Respond to implied meaning; make personal connections"
+      },
+      {
+       "id": "use_higher_order_thinking_and_metaco_2",
+       "name": "Use higher-order thinking and metacognitive strategies"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "features_of_spoken_language_includin_0",
+       "name": "Features of spoken language, including register"
+      },
+      {
+       "id": "gather_select_and_evaluate_informati_1",
+       "name": "Gather, select and evaluate information; develop ideas"
+      },
+      {
+       "id": "produce_texts_that_recount_entertain_2",
+       "name": "Produce texts that recount, entertain, instruct, describe, inform, respond and evaluate"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "write_neatly_legibly_and_fluently_0",
+       "name": "Write neatly, legibly and fluently"
+      },
+      {
+       "id": "spelling_for_frequently_misspelled_a_1",
+       "name": "Spelling for frequently misspelled and multisyllabic words"
+      },
+      {
+       "id": "write_with_awareness_of_text_structu_2",
+       "name": "Write with awareness of text structures and language features"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "metalanguage_at_text_level_editing_a_0",
+       "name": "Metalanguage at text level; editing and self-correction"
+      },
+      {
+       "id": "cohesive_devices_across_clauses_sent_1",
+       "name": "Cohesive devices across clauses, sentences and paragraphs"
+      },
+      {
+       "id": "language_features_of_different_text__2",
+       "name": "Language features of different text types"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "develop_and_strengthen_vocabulary_kn_0",
+       "name": "Develop and strengthen vocabulary knowledge"
+      },
+      {
+       "id": "examine_how_words_are_formed_and_rel_1",
+       "name": "Examine how words are formed and relate to each other"
+      },
+      {
+       "id": "use_fixed_expressions_accurately_and_2",
+       "name": "Use fixed expressions accurately and appropriately"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-whole-100000",
+     "name": "Whole Numbers up to 100 000",
+     "term": 1,
+     "subs": [
+      {
+       "id": "ten_thousands_thousands_hundreds_ten_0",
+       "name": "Ten thousands, thousands, hundreds, tens, ones"
+      },
+      {
+       "id": "reading_and_writing_numerals_and_wor_1",
+       "name": "Reading and writing numerals and words"
+      },
+      {
+       "id": "comparing_and_ordering_2",
+       "name": "Comparing and ordering"
+      },
+      {
+       "id": "number_patterns_3",
+       "name": "Number patterns"
+      },
+      {
+       "id": "rounding_to_the_nearest_10_100_1000_4",
+       "name": "Rounding to the nearest 10 / 100 / 1000"
+      }
+     ],
+     "quests": [
+      "math-whole-100000"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-factors-multiples",
+     "name": "Factors and Multiples",
+     "term": 1,
+     "subs": [
+      {
+       "id": "factors_multiples_and_their_relation_0",
+       "name": "Factors, multiples and their relationship"
+      },
+      {
+       "id": "1_digit_factor_of_a_number_within_10_1",
+       "name": "1-digit factor of a number within 100"
+      },
+      {
+       "id": "common_factors_and_common_multiples_2",
+       "name": "Common factors and common multiples"
+      }
+     ],
+     "quests": [
+      "math-factors-multiples"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-four-ops",
+     "name": "Four Operations",
+     "term": 1,
+     "subs": [
+      {
+       "id": "multiplication_algorithm_up_to_4_dig_0",
+       "name": "Multiplication algorithm (up to 4 digits × 1 digit; up to 3 digits × 2 digits)"
+      },
+      {
+       "id": "division_algorithm_up_to_4_digits_1__1",
+       "name": "Division algorithm (up to 4 digits ÷ 1 digit)"
+      }
+     ],
+     "quests": [
+      "math-four-ops"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-frac-mixed-improper",
+     "name": "Mixed Numbers and Improper Fractions",
+     "term": 1,
+     "subs": [
+      {
+       "id": "mixed_numbers_0",
+       "name": "Mixed numbers"
+      },
+      {
+       "id": "improper_fractions_1",
+       "name": "Improper fractions"
+      },
+      {
+       "id": "their_relationship_2",
+       "name": "Their relationship"
+      }
+     ],
+     "quests": [
+      "math-frac-mixed-improper"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-frac-of-set",
+     "name": "Fraction of a Set",
+     "term": 1,
+     "subs": [
+      {
+       "id": "fraction_as_part_of_a_set_0",
+       "name": "Fraction as part of a set"
+      }
+     ],
+     "quests": [
+      "math-frac-of-set"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-frac-add-sub-2denom",
+     "name": "Addition and Subtraction (two different denominators)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "adding_fractions_with_two_different__0",
+       "name": "Adding fractions with two different denominators"
+      },
+      {
+       "id": "subtracting_fractions_with_two_diffe_1",
+       "name": "Subtracting fractions with two different denominators"
+      }
+     ],
+     "quests": [
+      "math-frac-add-sub-2denom"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-decimals-3dp",
+     "name": "Decimals up to 3 decimal places",
+     "term": 2,
+     "subs": [
+      {
+       "id": "tenths_hundredths_thousandths_0",
+       "name": "Tenths, hundredths, thousandths"
+      },
+      {
+       "id": "comparing_and_ordering_decimals_1",
+       "name": "Comparing and ordering decimals"
+      },
+      {
+       "id": "decimals_as_fractions_and_fractions__2",
+       "name": "Decimals as fractions and fractions as decimals"
+      },
+      {
+       "id": "rounding_decimals_3",
+       "name": "Rounding decimals"
+      }
+     ],
+     "quests": [
+      "math-decimals-3dp"
+     ]
+    },
+    {
+     "id": "math-decimals-add-sub",
+     "name": "Addition and Subtraction of Decimals",
+     "term": 2,
+     "subs": [
+      {
+       "id": "adding_decimals_up_to_2_dp_0",
+       "name": "Adding decimals (up to 2 dp)"
+      },
+      {
+       "id": "subtracting_decimals_up_to_2_dp_1",
+       "name": "Subtracting decimals (up to 2 dp)"
+      }
+     ],
+     "quests": [
+      "math-decimals-add-sub"
+     ]
+    },
+    {
+     "id": "math-decimals-mult-div",
+     "name": "Multiplication and Division of Decimals",
+     "term": 2,
+     "subs": [
+      {
+       "id": "multiplying_and_dividing_decimals_by_0",
+       "name": "Multiplying and dividing decimals by a 1-digit whole number"
+      },
+      {
+       "id": "dividing_a_whole_number_by_a_whole_n_1",
+       "name": "Dividing a whole number by a whole number, quotient as a decimal"
+      },
+      {
+       "id": "rounding_answers_to_a_specified_accu_2",
+       "name": "Rounding answers to a specified accuracy"
+      }
+     ],
+     "quests": [
+      "math-decimals-mult-div"
+     ]
+    },
+    {
+     "id": "math-area-perimeter-composite",
+     "name": "Area and Perimeter (composite figures)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "one_dimension_of_a_rectangle_from_th_0",
+       "name": "One dimension of a rectangle from the other and area / perimeter"
+      },
+      {
+       "id": "side_of_a_square_from_area_perimeter_1",
+       "name": "Side of a square from area / perimeter"
+      },
+      {
+       "id": "area_and_perimeter_of_composite_figu_2",
+       "name": "Area and perimeter of composite figures of rectangles and squares"
+      }
+     ],
+     "quests": [
+      "math-area-perimeter-composite"
+     ],
+     "fallback": "math-area"
+    },
+    {
+     "id": "math-angles-degrees",
+     "name": "Angles (measuring / drawing in degrees)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "notation_abc_a_0",
+       "name": "Notation ∠ABC, ∠a"
+      },
+      {
+       "id": "measuring_angles_in_degrees_1",
+       "name": "Measuring angles in degrees"
+      },
+      {
+       "id": "drawing_an_angle_of_a_given_size_2",
+       "name": "Drawing an angle of a given size"
+      }
+     ],
+     "quests": [
+      "math-angles-degrees"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-rectangle-square",
+     "name": "Rectangle and Square",
+     "term": 3,
+     "subs": [
+      {
+       "id": "properties_of_rectangles_and_squares_0",
+       "name": "Properties of rectangles and squares (excluding diagonals)"
+      },
+      {
+       "id": "drawing_rectangles_and_squares_1",
+       "name": "Drawing rectangles and squares"
+      }
+     ],
+     "quests": [
+      "math-rectangle-square"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-line-symmetry",
+     "name": "Line Symmetry",
+     "term": 3,
+     "subs": [
+      {
+       "id": "identifying_symmetric_figures_0",
+       "name": "Identifying symmetric figures"
+      },
+      {
+       "id": "whether_a_straight_line_is_a_line_of_1",
+       "name": "Whether a straight line is a line of symmetry"
+      },
+      {
+       "id": "completing_a_symmetric_figure_on_a_s_2",
+       "name": "Completing a symmetric figure on a square grid"
+      }
+     ],
+     "quests": [
+      "math-line-symmetry"
+     ]
+    },
+    {
+     "id": "math-nets",
+     "name": "Nets",
+     "term": 3,
+     "subs": [
+      {
+       "id": "2d_representations_of_cube_cuboid_co_0",
+       "name": "2D representations of cube, cuboid, cone, cylinder, prism, pyramid"
+      },
+      {
+       "id": "identifying_nets_of_cube_cuboid_pris_1",
+       "name": "Identifying nets of cube, cuboid, prism, pyramid"
+      },
+      {
+       "id": "the_solid_formed_by_a_given_net_2",
+       "name": "The solid formed by a given net"
+      }
+     ],
+     "quests": [
+      "math-nets"
+     ]
+    },
+    {
+     "id": "math-tables-line-pie",
+     "name": "Tables, Line Graphs and Pie Charts",
+     "term": 4,
+     "subs": [
+      {
+       "id": "completing_a_table_from_given_data_0",
+       "name": "Completing a table from given data"
+      },
+      {
+       "id": "reading_and_interpreting_tables_1",
+       "name": "Reading and interpreting tables"
+      },
+      {
+       "id": "reading_and_interpreting_line_graphs_2",
+       "name": "Reading and interpreting line graphs and pie charts"
+      }
+     ],
+     "quests": [
+      "math-tables-line-pie"
+     ],
+     "fallback": "math-bargraphs"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Diversity, cycles, systems, energy and interactions",
+   "topics": [
+    {
+     "id": "sci-matter",
+     "name": "Cycles in Matter and Water (Matter)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "matter_has_mass_and_occupies_space_0",
+       "name": "Matter has mass and occupies space"
+      },
+      {
+       "id": "three_states_of_matter_solid_liquid__1",
+       "name": "Three states of matter: solid, liquid, gas"
+      },
+      {
+       "id": "states_differ_by_shape_and_volume_2",
+       "name": "States differ by shape and volume"
+      },
+      {
+       "id": "measuring_mass_and_volume_3",
+       "name": "Measuring mass and volume"
+      }
+     ],
+     "quests": [
+      "sci-matter"
+     ],
+     "fallback": "sci-materials"
+    },
+    {
+     "id": "sci-plant-parts",
+     "name": "Plant System (Plant parts and functions)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "parts_of_plants_and_their_functions_0",
+       "name": "Parts of plants and their functions"
+      },
+      {
+       "id": "leaf_stem_and_root_1",
+       "name": "Leaf, stem and root"
+      }
+     ],
+     "quests": [
+      "sci-plant-parts"
+     ],
+     "fallback": "sci-plants"
+    },
+    {
+     "id": "sci-digestive-system",
+     "name": "Human System (Digestive System)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "human_systems_and_their_functions_ov_0",
+       "name": "Human systems and their functions (overview)"
+      },
+      {
+       "id": "mouth_gullet_stomach_small_intestine_1",
+       "name": "Mouth, gullet, stomach, small intestine, large intestine"
+      },
+      {
+       "id": "functions_of_each_part_of_the_digest_2",
+       "name": "Functions of each part of the digestive system"
+      }
+     ],
+     "quests": [
+      "sci-digestive-system"
+     ]
+    },
+    {
+     "id": "sci-light",
+     "name": "Energy Forms and Uses (Light)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "an_object_is_seen_when_it_reflects_l_0",
+       "name": "An object is seen when it reflects light or is a source of light"
+      },
+      {
+       "id": "light_travels_in_straight_lines_1",
+       "name": "Light travels in straight lines"
+      },
+      {
+       "id": "shadows_formed_when_light_is_blocked_2",
+       "name": "Shadows: formed when light is blocked"
+      },
+      {
+       "id": "what_affects_shadows_3",
+       "name": "What affects shadows"
+      }
+     ],
+     "quests": [
+      "sci-light"
+     ]
+    },
+    {
+     "id": "sci-heat",
+     "name": "Energy Forms and Uses (Heat)",
+     "term": 4,
+     "subs": [
+      {
+       "id": "common_sources_of_heat_0",
+       "name": "Common sources of heat"
+      },
+      {
+       "id": "temperature_measures_degree_of_hotne_1",
+       "name": "Temperature measures degree of hotness"
+      },
+      {
+       "id": "heat_flows_from_hotter_to_colder_2",
+       "name": "Heat flows from hotter to colder"
+      },
+      {
+       "id": "effects_of_heat_gain_and_loss_3",
+       "name": "Effects of heat gain and loss"
+      },
+      {
+       "id": "good_and_poor_conductors_of_heat_4",
+       "name": "Good and poor conductors of heat"
+      }
+     ],
+     "quests": [
+      "sci-heat"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Foundation Phase, Stage 2 (P3–P4)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listen_to_and_comprehend_stories_0",
+       "name": "Listen to and comprehend stories"
+      },
+      {
+       "id": "understand_a_wider_range_of_text_typ_1",
+       "name": "Understand a wider range of text types"
+      },
+      {
+       "id": "describe_daily_life_scenarios_in_con_2",
+       "name": "Describe daily-life scenarios in conversation"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "reading_aloud_with_intonation_and_pa_0",
+       "name": "Reading aloud with intonation and pauses"
+      },
+      {
+       "id": "picture_description_and_conversation_1",
+       "name": "Picture description and conversation"
+      },
+      {
+       "id": "express_thoughts_and_feelings_2",
+       "name": "Express thoughts and feelings"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "reading_comprehension_with_inference_0",
+       "name": "Reading comprehension with inference"
+      },
+      {
+       "id": "express_opinions_with_evidence_from__1",
+       "name": "Express opinions with evidence from texts"
+      },
+      {
+       "id": "vocabulary_application_and_sentence__2",
+       "name": "Vocabulary application and sentence construction"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "four_picture_composition_60_100_word_0",
+       "name": "Four-picture composition, 60–100 words (P3)"
+      },
+      {
+       "id": "interactive_writing_short_reply_to_a_1",
+       "name": "Interactive Writing: short reply to an email or note (P4)"
+      },
+      {
+       "id": "paragraph_writing_with_detailed_desc_2",
+       "name": "Paragraph writing with detailed descriptions"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "recognise_and_write_characters_taugh_0",
+       "name": "Recognise and write characters taught (识读 / 识写)"
+      },
+      {
+       "id": "apply_vocabulary_in_sentences_and_pa_1",
+       "name": "Apply vocabulary in sentences and paragraphs"
+      },
+      {
+       "id": "character_choice_2",
+       "name": "Character choice (辨字测验)"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    },
+    {
+     "id": "chi-higher",
+     "name": "高级华文 Higher Chinese",
+     "term": 1,
+     "subs": [
+      {
+       "id": "literary_based_texts_from_the_hcl_te_0",
+       "name": "Literary-based texts from the HCL textbook"
+      },
+      {
+       "id": "two_additional_periods_a_week_1",
+       "name": "Two additional periods a week"
+      },
+      {
+       "id": "enjoyable_early_experience_of_ethnic_2",
+       "name": "Enjoyable early experience of ethnic literature and culture"
+      }
+     ],
+     "quests": [
+      "chi-higher"
+     ],
+     "fallback": "chi-reading"
+    }
+   ]
+  }
+ ],
+ "5": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Upper Primary (P5–P6)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "apply_listening_and_viewing_skills_t_0",
+       "name": "Apply listening and viewing skills to complex information, including abstract ideas"
+      },
+      {
+       "id": "evaluate_relevance_and_soundness_of__1",
+       "name": "Evaluate relevance and soundness of arguments"
+      },
+      {
+       "id": "compare_and_contrast_texts_2",
+       "name": "Compare and contrast texts"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "close_reading_of_diverse_and_multipl_0",
+       "name": "Close reading of diverse and multiple texts"
+      },
+      {
+       "id": "comprehend_complex_ambiguous_texts_1",
+       "name": "Comprehend complex, ambiguous texts"
+      },
+      {
+       "id": "respond_critically_how_writers_style_2",
+       "name": "Respond critically; how writers' style creates impact"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "conventions_of_speech_and_speaker_ro_0",
+       "name": "Conventions of speech and speaker roles in different situations"
+      },
+      {
+       "id": "self_adjust_and_revise_speech_for_pu_1",
+       "name": "Self-adjust and revise speech for purpose and listener"
+      },
+      {
+       "id": "produce_texts_that_explain_argue_eva_2",
+       "name": "Produce texts that explain, argue, evaluate and persuade"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "spell_accurately_and_consistently_in_0",
+       "name": "Spell accurately and consistently in standard English"
+      },
+      {
+       "id": "sophisticated_idea_generation_for_in_1",
+       "name": "Sophisticated idea generation for intended effects"
+      },
+      {
+       "id": "create_texts_that_respond_argue_eval_2",
+       "name": "Create texts that respond, argue, evaluate and persuade; hybrid texts"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "strengthen_grammatical_metalanguage__0",
+       "name": "Strengthen grammatical metalanguage learnt before"
+      },
+      {
+       "id": "identify_and_address_recurring_error_1",
+       "name": "Identify and address recurring errors"
+      },
+      {
+       "id": "cohesive_devices_and_structures_acro_2",
+       "name": "Cohesive devices and structures across a full range of texts"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "take_an_active_role_in_studying_word_0",
+       "name": "Take an active role in studying word meaning"
+      },
+      {
+       "id": "recognise_and_use_words_for_literary_1",
+       "name": "Recognise and use words for literary effect"
+      },
+      {
+       "id": "use_words_meaningfully_with_semiotic_2",
+       "name": "Use words meaningfully with semiotic modes"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-whole-10m",
+     "name": "Whole Numbers up to 10 million",
+     "term": 1,
+     "subs": [
+      {
+       "id": "reading_and_writing_numerals_and_wor_0",
+       "name": "Reading and writing numerals and words"
+      }
+     ],
+     "quests": [
+      "math-whole-10m"
+     ],
+     "fallback": "math-mrt"
+    },
+    {
+     "id": "math-four-ops-10-100-1000",
+     "name": "Four Operations (× / ÷ by 10, 100, 1000)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "multiplying_and_dividing_by_10_100_1_0",
+       "name": "Multiplying and dividing by 10, 100, 1000 and their multiples"
+      },
+      {
+       "id": "order_of_operations_1",
+       "name": "Order of operations"
+      },
+      {
+       "id": "use_of_brackets_2",
+       "name": "Use of brackets"
+      }
+     ],
+     "quests": [
+      "math-four-ops-10-100-1000"
+     ],
+     "fallback": "math-ntuc"
+    },
+    {
+     "id": "math-frac-division",
+     "name": "Fraction and Division",
+     "term": 1,
+     "subs": [
+      {
+       "id": "dividing_a_whole_number_by_a_whole_n_0",
+       "name": "Dividing a whole number by a whole number, quotient as a fraction"
+      },
+      {
+       "id": "expressing_fractions_as_decimals_1",
+       "name": "Expressing fractions as decimals"
+      }
+     ],
+     "quests": [
+      "math-frac-division"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-frac-four-ops",
+     "name": "Four Operations with Fractions",
+     "term": 1,
+     "subs": [
+      {
+       "id": "adding_and_subtracting_mixed_numbers_0",
+       "name": "Adding and subtracting mixed numbers"
+      },
+      {
+       "id": "multiplying_a_fraction_by_a_whole_nu_1",
+       "name": "Multiplying a fraction by a whole number"
+      },
+      {
+       "id": "multiplying_a_proper_fraction_by_a_p_2",
+       "name": "Multiplying a proper fraction by a proper or improper fraction"
+      }
+     ],
+     "quests": [
+      "math-frac-four-ops"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-decimals-four-ops",
+     "name": "Four Operations with Decimals",
+     "term": 2,
+     "subs": [
+      {
+       "id": "multiplying_and_dividing_decimals_up_0",
+       "name": "Multiplying and dividing decimals (up to 3 dp) by 10, 100, 1000"
+      },
+      {
+       "id": "converting_measurements_between_unit_1",
+       "name": "Converting measurements between units in decimal form"
+      }
+     ],
+     "quests": [
+      "math-decimals-four-ops"
+     ]
+    },
+    {
+     "id": "math-percentage",
+     "name": "Percentage",
+     "term": 2,
+     "subs": [
+      {
+       "id": "expressing_a_part_of_a_whole_as_a_pe_0",
+       "name": "Expressing a part of a whole as a percentage"
+      },
+      {
+       "id": "finding_a_percentage_part_of_a_whole_1",
+       "name": "Finding a percentage part of a whole"
+      },
+      {
+       "id": "discount_gst_and_annual_interest_2",
+       "name": "Discount, GST and annual interest"
+      }
+     ],
+     "quests": [
+      "math-percentage"
+     ]
+    },
+    {
+     "id": "math-rate",
+     "name": "Rate",
+     "term": 2,
+     "subs": [
+      {
+       "id": "rate_as_an_amount_per_unit_of_anothe_0",
+       "name": "Rate as an amount per unit of another quantity"
+      },
+      {
+       "id": "finding_rate_total_amount_or_number__1",
+       "name": "Finding rate, total amount or number of units"
+      }
+     ],
+     "quests": [
+      "math-rate"
+     ]
+    },
+    {
+     "id": "math-area-triangle",
+     "name": "Area of Triangle",
+     "term": 2,
+     "subs": [
+      {
+       "id": "concepts_of_base_and_height_0",
+       "name": "Concepts of base and height"
+      },
+      {
+       "id": "area_of_a_triangle_1",
+       "name": "Area of a triangle"
+      },
+      {
+       "id": "area_of_composite_figures_of_rectang_2",
+       "name": "Area of composite figures of rectangles, squares and triangles"
+      }
+     ],
+     "quests": [
+      "math-area-triangle"
+     ],
+     "fallback": "math-area"
+    },
+    {
+     "id": "math-volume-cube-cuboid",
+     "name": "Volume of Cube and Cuboid",
+     "term": 3,
+     "subs": [
+      {
+       "id": "building_solids_with_unit_cubes_0",
+       "name": "Building solids with unit cubes"
+      },
+      {
+       "id": "volume_in_cubic_units_cm_and_m_1",
+       "name": "Volume in cubic units, cm³ and m³"
+      },
+      {
+       "id": "volume_of_a_cube_and_cuboid_2",
+       "name": "Volume of a cube and cuboid"
+      },
+      {
+       "id": "volume_of_liquid_in_a_rectangular_ta_3",
+       "name": "Volume of liquid in a rectangular tank"
+      }
+     ],
+     "quests": [
+      "math-volume-cube-cuboid"
+     ]
+    },
+    {
+     "id": "math-angles-line-point",
+     "name": "Angles (straight line, at a point, vertically opposite)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "angles_on_a_straight_line_0",
+       "name": "Angles on a straight line"
+      },
+      {
+       "id": "angles_at_a_point_1",
+       "name": "Angles at a point"
+      },
+      {
+       "id": "vertically_opposite_angles_2",
+       "name": "Vertically opposite angles"
+      },
+      {
+       "id": "finding_unknown_angles_3",
+       "name": "Finding unknown angles"
+      }
+     ],
+     "quests": [
+      "math-angles-line-point"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-triangle",
+     "name": "Triangle",
+     "term": 3,
+     "subs": [
+      {
+       "id": "properties_of_isosceles_equilateral__0",
+       "name": "Properties of isosceles, equilateral and right-angled triangles"
+      },
+      {
+       "id": "angle_sum_of_a_triangle_1",
+       "name": "Angle sum of a triangle"
+      },
+      {
+       "id": "finding_unknown_angles_2",
+       "name": "Finding unknown angles"
+      }
+     ],
+     "quests": [
+      "math-triangle"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-parallelogram-rhombus-trapezium",
+     "name": "Parallelogram, Rhombus and Trapezium",
+     "term": 4,
+     "subs": [
+      {
+       "id": "properties_of_parallelogram_rhombus__0",
+       "name": "Properties of parallelogram, rhombus and trapezium"
+      },
+      {
+       "id": "finding_unknown_angles_1",
+       "name": "Finding unknown angles"
+      }
+     ],
+     "quests": [
+      "math-parallelogram-rhombus-trapezium"
+     ],
+     "fallback": "math-angles"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Diversity, cycles, systems, energy and interactions",
+   "topics": [
+    {
+     "id": "sci-reproduction",
+     "name": "Cycles in Plants and Animals (Reproduction)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "living_things_reproduce_to_ensure_co_0",
+       "name": "Living things reproduce to ensure continuity of kind"
+      },
+      {
+       "id": "plant_reproduction_pollination_ferti_1",
+       "name": "Plant reproduction: pollination, fertilisation, seed dispersal, germination"
+      },
+      {
+       "id": "human_reproduction_fertilisation_in__2",
+       "name": "Human reproduction: fertilisation in the womb"
+      },
+      {
+       "id": "a_cell_is_a_basic_unit_of_life_stand_3",
+       "name": "A cell is a basic unit of life (Standard)"
+      }
+     ],
+     "quests": [
+      "sci-reproduction"
+     ],
+     "fallback": "sci-frog"
+    },
+    {
+     "id": "sci-water-cycle",
+     "name": "Cycles in Matter and Water (Water)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "water_in_three_interchangeable_state_0",
+       "name": "Water in three interchangeable states"
+      },
+      {
+       "id": "melting_freezing_boiling_evaporation_1",
+       "name": "Melting, freezing, boiling / evaporation, condensation"
+      },
+      {
+       "id": "melting_point_0_c_boiling_point_100__2",
+       "name": "Melting point 0 °C, boiling point 100 °C"
+      },
+      {
+       "id": "the_water_cycle_and_its_importance_3",
+       "name": "The water cycle and its importance"
+      },
+      {
+       "id": "water_pollution_and_earth_s_water_re_4",
+       "name": "Water pollution and Earth’s water resources"
+      }
+     ],
+     "quests": [
+      "sci-water-cycle"
+     ]
+    },
+    {
+     "id": "sci-respiratory-circulatory",
+     "name": "Human System (Respiratory and Circulatory Systems)",
+     "term": 2,
+     "subs": [
+      {
+       "id": "air_nitrogen_carbon_dioxide_oxygen_w_0",
+       "name": "Air: nitrogen, carbon dioxide, oxygen, water vapour"
+      },
+      {
+       "id": "respiratory_system_nose_windpipe_lun_1",
+       "name": "Respiratory system: nose, windpipe, lungs"
+      },
+      {
+       "id": "circulatory_system_heart_blood_blood_2",
+       "name": "Circulatory system: heart, blood, blood vessels"
+      },
+      {
+       "id": "how_plants_fish_and_humans_take_in_o_3",
+       "name": "How plants, fish and humans take in oxygen"
+      },
+      {
+       "id": "transport_of_substances_in_plants_an_4",
+       "name": "Transport of substances in plants and humans"
+      }
+     ],
+     "quests": [
+      "sci-respiratory-circulatory"
+     ]
+    },
+    {
+     "id": "sci-plant-transport",
+     "name": "Plant System (Respiratory and Circulatory Systems)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "parts_of_the_plant_transport_system__0",
+       "name": "Parts of the plant transport system and their functions"
+      },
+      {
+       "id": "water_travels_from_roots_to_other_pa_1",
+       "name": "Water travels from roots to other parts"
+      },
+      {
+       "id": "food_travels_from_leaves_to_other_pa_2",
+       "name": "Food travels from leaves to other parts"
+      }
+     ],
+     "quests": [
+      "sci-plant-transport"
+     ],
+     "fallback": "sci-plants"
+    },
+    {
+     "id": "sci-electrical-system",
+     "name": "Electrical System",
+     "term": 4,
+     "subs": [
+      {
+       "id": "a_circuit_battery_wire_bulb_switch_0",
+       "name": "A circuit: battery, wire, bulb, switch"
+      },
+      {
+       "id": "a_closed_circuit_allows_current_to_f_1",
+       "name": "A closed circuit allows current to flow"
+      },
+      {
+       "id": "electrical_conductors_and_insulators_2",
+       "name": "Electrical conductors and insulators"
+      },
+      {
+       "id": "constructing_simple_circuits_from_di_3",
+       "name": "Constructing simple circuits from diagrams"
+      },
+      {
+       "id": "what_affects_current_batteries_and_b_4",
+       "name": "What affects current: batteries and bulbs in series and parallel"
+      }
+     ],
+     "quests": [
+      "sci-electrical-system"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Orientation Phase (P5–P6)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listening_comprehension_dialogues_an_0",
+       "name": "Listening Comprehension: dialogues, announcements, advertisements"
+      },
+      {
+       "id": "listen_to_stories_explanations_and_i_1",
+       "name": "Listen to stories, explanations and introductions"
+      },
+      {
+       "id": "critical_listening_writer_s_purpose__2",
+       "name": "Critical listening: writer’s purpose and implicit meaning"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "e_oral_reading_aloud_0",
+       "name": "E-oral: Reading Aloud (朗读)"
+      },
+      {
+       "id": "video_based_conversation_1",
+       "name": "Video-Based Conversation (会话)"
+      },
+      {
+       "id": "communicate_with_fluency_and_precisi_2",
+       "name": "Communicate with fluency and precision"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "critical_reading_purpose_implicit_me_0",
+       "name": "Critical reading: purpose, implicit meaning, evaluating information"
+      },
+      {
+       "id": "open_ended_answers_in_your_own_words_1",
+       "name": "Open-ended answers in your own words"
+      },
+      {
+       "id": "cloze_and_completing_a_dialogue_2",
+       "name": "Cloze and completing a dialogue (完成对话)"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "topic_composition_or_picture_composi_0",
+       "name": "Topic composition or picture composition (≥100 characters)"
+      },
+      {
+       "id": "varied_sentence_structures_and_idiom_1",
+       "name": "Varied sentence structures and idioms (成语)"
+      },
+      {
+       "id": "precise_vocabulary_and_well_structur_2",
+       "name": "Precise vocabulary and well-structured compositions"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "advanced_vocabulary_and_idioms_0",
+       "name": "Advanced vocabulary and idioms (成语)"
+      },
+      {
+       "id": "precise_word_choice_for_purpose_and__1",
+       "name": "Precise word choice for purpose and audience"
+      },
+      {
+       "id": "character_and_word_correction_2",
+       "name": "Character and word correction (辨字 / 词语)"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    },
+    {
+     "id": "chi-higher",
+     "name": "高级华文 Higher Chinese",
+     "term": 1,
+     "subs": [
+      {
+       "id": "heavier_load_additional_content_and__0",
+       "name": "Heavier load: additional content and skills"
+      },
+      {
+       "id": "advanced_vocabulary_idioms_introduce_1",
+       "name": "Advanced vocabulary, idioms introduced earlier"
+      },
+      {
+       "id": "emphasis_on_writing_comprehension_an_2",
+       "name": "Emphasis on writing, comprehension and critical thinking"
+      }
+     ],
+     "quests": [
+      "chi-higher"
+     ],
+     "fallback": "chi-reading"
+    }
+   ]
+  }
+ ],
+ "6": [
+  {
+   "id": "eng",
+   "name": "English",
+   "icon": "📖",
+   "art": "icons/topic-eng-story.webp",
+   "head": "#1e3a5f",
+   "blurb": "Listening, reading, speaking, writing, grammar and vocabulary · Upper Primary (P5–P6)",
+   "topics": [
+    {
+     "id": "eng-listening",
+     "name": "Listening and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "apply_listening_and_viewing_skills_t_0",
+       "name": "Apply listening and viewing skills to complex information, including abstract ideas"
+      },
+      {
+       "id": "evaluate_relevance_and_soundness_of__1",
+       "name": "Evaluate relevance and soundness of arguments"
+      },
+      {
+       "id": "compare_and_contrast_texts_2",
+       "name": "Compare and contrast texts"
+      }
+     ],
+     "quests": [
+      "eng-listening"
+     ]
+    },
+    {
+     "id": "eng-reading",
+     "name": "Reading and Viewing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "close_reading_of_diverse_and_multipl_0",
+       "name": "Close reading of diverse and multiple texts"
+      },
+      {
+       "id": "comprehend_complex_ambiguous_texts_1",
+       "name": "Comprehend complex, ambiguous texts"
+      },
+      {
+       "id": "respond_critically_how_writers_style_2",
+       "name": "Respond critically; how writers' style creates impact"
+      }
+     ],
+     "quests": [
+      "eng-reading"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-speaking",
+     "name": "Speaking and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "conventions_of_speech_and_speaker_ro_0",
+       "name": "Conventions of speech and speaker roles in different situations"
+      },
+      {
+       "id": "self_adjust_and_revise_speech_for_pu_1",
+       "name": "Self-adjust and revise speech for purpose and listener"
+      },
+      {
+       "id": "produce_texts_that_explain_argue_eva_2",
+       "name": "Produce texts that explain, argue, evaluate and persuade"
+      }
+     ],
+     "quests": [
+      "eng-speaking"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-writing",
+     "name": "Writing and Representing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "spell_accurately_and_consistently_in_0",
+       "name": "Spell accurately and consistently in standard English"
+      },
+      {
+       "id": "sophisticated_idea_generation_for_in_1",
+       "name": "Sophisticated idea generation for intended effects"
+      },
+      {
+       "id": "create_texts_that_respond_argue_eval_2",
+       "name": "Create texts that respond, argue, evaluate and persuade; hybrid texts"
+      }
+     ],
+     "quests": [
+      "eng-writing"
+     ],
+     "fallback": "eng-story2"
+    },
+    {
+     "id": "eng-grammar",
+     "name": "Grammar",
+     "term": 1,
+     "subs": [
+      {
+       "id": "strengthen_grammatical_metalanguage__0",
+       "name": "Strengthen grammatical metalanguage learnt before"
+      },
+      {
+       "id": "identify_and_address_recurring_error_1",
+       "name": "Identify and address recurring errors"
+      },
+      {
+       "id": "cohesive_devices_and_structures_acro_2",
+       "name": "Cohesive devices and structures across a full range of texts"
+      }
+     ],
+     "quests": [
+      "eng-grammar"
+     ],
+     "fallback": "eng-tense"
+    },
+    {
+     "id": "eng-vocabulary",
+     "name": "Vocabulary",
+     "term": 1,
+     "subs": [
+      {
+       "id": "take_an_active_role_in_studying_word_0",
+       "name": "Take an active role in studying word meaning"
+      },
+      {
+       "id": "recognise_and_use_words_for_literary_1",
+       "name": "Recognise and use words for literary effect"
+      },
+      {
+       "id": "use_words_meaningfully_with_semiotic_2",
+       "name": "Use words meaningfully with semiotic modes"
+      }
+     ],
+     "quests": [
+      "eng-vocabulary"
+     ],
+     "fallback": "eng-story"
+    }
+   ]
+  },
+  {
+   "id": "math",
+   "name": "Maths",
+   "icon": "🔢",
+   "art": "icons/topic-math-mrt.webp",
+   "head": "#4a3a10",
+   "blurb": "Numbers, fractions, measurement, geometry and data",
+   "topics": [
+    {
+     "id": "math-frac-divide",
+     "name": "Four Operations with Fractions (dividing fractions)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "dividing_a_proper_fraction_by_a_whol_0",
+       "name": "Dividing a proper fraction by a whole number"
+      },
+      {
+       "id": "dividing_a_whole_number_or_proper_fr_1",
+       "name": "Dividing a whole number or proper fraction by a proper fraction"
+      }
+     ],
+     "quests": [
+      "math-frac-divide"
+     ],
+     "fallback": "math-frac"
+    },
+    {
+     "id": "math-percentage-whole-increase",
+     "name": "Percentage (finding the whole, % increase / decrease)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "finding_the_whole_given_a_part_and_t_0",
+       "name": "Finding the whole given a part and the percentage"
+      },
+      {
+       "id": "percentage_increase_and_decrease_1",
+       "name": "Percentage increase and decrease"
+      }
+     ],
+     "quests": [
+      "math-percentage-whole-increase"
+     ]
+    },
+    {
+     "id": "math-ratio",
+     "name": "Ratio",
+     "term": 1,
+     "subs": [
+      {
+       "id": "notation_and_interpretation_of_a_b_a_0",
+       "name": "Notation and interpretation of a:b and a:b:c"
+      },
+      {
+       "id": "equivalent_ratios_1",
+       "name": "Equivalent ratios"
+      },
+      {
+       "id": "dividing_a_quantity_in_a_given_ratio_2",
+       "name": "Dividing a quantity in a given ratio"
+      },
+      {
+       "id": "ratio_in_simplest_form_3",
+       "name": "Ratio in simplest form"
+      },
+      {
+       "id": "relationship_between_fraction_and_ra_4",
+       "name": "Relationship between fraction and ratio"
+      }
+     ],
+     "quests": [
+      "math-ratio"
+     ]
+    },
+    {
+     "id": "math-algebra",
+     "name": "Algebra",
+     "term": 2,
+     "subs": [
+      {
+       "id": "using_a_letter_to_represent_an_unkno_0",
+       "name": "Using a letter to represent an unknown number"
+      },
+      {
+       "id": "simple_algebraic_expressions_a_3_a_3_1",
+       "name": "Simple algebraic expressions (a+3, a−3, 3a, a÷3)"
+      },
+      {
+       "id": "simplifying_and_evaluating_by_substi_2",
+       "name": "Simplifying and evaluating by substitution"
+      },
+      {
+       "id": "simple_linear_equations_whole_number_3",
+       "name": "Simple linear equations (whole-number coefficient)"
+      }
+     ],
+     "quests": [
+      "math-algebra"
+     ]
+    },
+    {
+     "id": "math-area-circumference-circle",
+     "name": "Area and Circumference of Circle",
+     "term": 2,
+     "subs": [
+      {
+       "id": "area_and_circumference_of_a_circle_0",
+       "name": "Area and circumference of a circle"
+      },
+      {
+       "id": "area_and_perimeter_of_a_semicircle_a_1",
+       "name": "Area and perimeter of a semicircle and quarter circle"
+      },
+      {
+       "id": "area_and_perimeter_of_composite_figu_2",
+       "name": "Area and perimeter of composite figures"
+      }
+     ],
+     "quests": [
+      "math-area-circumference-circle"
+     ],
+     "fallback": "math-area"
+    },
+    {
+     "id": "math-volume-cube-cuboid-p6",
+     "name": "Volume of Cube and Cuboid (P6)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "one_dimension_of_a_cuboid_from_volum_0",
+       "name": "One dimension of a cuboid from volume and other dimensions"
+      },
+      {
+       "id": "length_of_an_edge_of_a_cube_from_vol_1",
+       "name": "Length of an edge of a cube from volume"
+      },
+      {
+       "id": "height_of_a_cuboid_from_volume_and_b_2",
+       "name": "Height of a cuboid from volume and base area"
+      }
+     ],
+     "quests": [
+      "math-volume-cube-cuboid-p6"
+     ]
+    },
+    {
+     "id": "math-special-quadrilaterals",
+     "name": "Special Quadrilaterals",
+     "term": 3,
+     "subs": [
+      {
+       "id": "finding_unknown_angles_in_composite__0",
+       "name": "Finding unknown angles in composite figures of square, rectangle, triangle, parallelogram, rhombus and trapezium"
+      }
+     ],
+     "quests": [
+      "math-special-quadrilaterals"
+     ],
+     "fallback": "math-angles"
+    },
+    {
+     "id": "math-average",
+     "name": "Average of a Set of Data",
+     "term": 4,
+     "subs": [
+      {
+       "id": "average_as_total_value_number_of_dat_0",
+       "name": "Average as total value ÷ number of data"
+      },
+      {
+       "id": "relationship_between_average_total_v_1",
+       "name": "Relationship between average, total value and number of data"
+      }
+     ],
+     "quests": [
+      "math-average"
+     ],
+     "fallback": "math-bargraphs"
+    }
+   ]
+  },
+  {
+   "id": "sci",
+   "name": "Science",
+   "icon": "🔬",
+   "art": "icons/topic-sci-frog.webp",
+   "head": "#1e4034",
+   "blurb": "Diversity, cycles, systems, energy and interactions",
+   "topics": [
+    {
+     "id": "sci-forces",
+     "name": "Interaction of Forces (Frictional, Gravitational, Elastic Spring)",
+     "term": 1,
+     "subs": [
+      {
+       "id": "force_as_a_push_or_pull_0",
+       "name": "Force as a push or pull"
+      },
+      {
+       "id": "effects_of_a_force_on_an_object_1",
+       "name": "Effects of a force on an object"
+      },
+      {
+       "id": "frictional_force_and_motion_2",
+       "name": "Frictional force and motion"
+      },
+      {
+       "id": "objects_have_weight_because_of_gravi_3",
+       "name": "Objects have weight because of gravity"
+      },
+      {
+       "id": "elastic_spring_force_standard_only_4",
+       "name": "Elastic spring force (Standard only)"
+      }
+     ],
+     "quests": [
+      "sci-forces"
+     ],
+     "fallback": "sci-magnet"
+    },
+    {
+     "id": "sci-interactions-environment",
+     "name": "Interactions within the Environment",
+     "term": 2,
+     "subs": [
+      {
+       "id": "factors_affecting_survival_temperatu_0",
+       "name": "Factors affecting survival: temperature, light, water, food"
+      },
+      {
+       "id": "producers_consumers_and_decomposers_1",
+       "name": "Producers, consumers and decomposers"
+      },
+      {
+       "id": "food_chains_and_food_webs_2",
+       "name": "Food chains and food webs"
+      },
+      {
+       "id": "adaptations_structural_and_behaviour_3",
+       "name": "Adaptations: structural and behavioural"
+      },
+      {
+       "id": "man_s_impact_conservation_deforestat_4",
+       "name": "Man’s impact: conservation, deforestation, pollution, global warming"
+      }
+     ],
+     "quests": [
+      "sci-interactions-environment"
+     ]
+    },
+    {
+     "id": "sci-photosynthesis",
+     "name": "Energy Forms and Uses (Photosynthesis)",
+     "term": 3,
+     "subs": [
+      {
+       "id": "the_sun_is_our_primary_source_of_ene_0",
+       "name": "The Sun is our primary source of energy"
+      },
+      {
+       "id": "photosynthesis_needs_water_light_ene_1",
+       "name": "Photosynthesis needs water, light energy and carbon dioxide"
+      },
+      {
+       "id": "photosynthesis_produces_sugar_and_ox_2",
+       "name": "Photosynthesis produces sugar and oxygen"
+      },
+      {
+       "id": "how_plants_and_animals_obtain_energy_3",
+       "name": "How plants and animals obtain energy differently"
+      }
+     ],
+     "quests": [
+      "sci-photosynthesis"
+     ],
+     "fallback": "sci-plants"
+    },
+    {
+     "id": "sci-energy-conversion",
+     "name": "Energy Conversion",
+     "term": 4,
+     "subs": [
+      {
+       "id": "energy_from_most_resources_is_derive_0",
+       "name": "Energy from most resources is derived from the Sun"
+      },
+      {
+       "id": "energy_conversion_from_one_form_to_a_1",
+       "name": "Energy conversion from one form to another"
+      },
+      {
+       "id": "forms_of_energy_kinetic_potential_li_2",
+       "name": "Forms of energy: kinetic, potential, light, electrical, sound, heat"
+      }
+     ],
+     "quests": [
+      "sci-energy-conversion"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "chi",
+   "name": "Chinese",
+   "icon": "🀄",
+   "art": "icons/topic-chi-listen.webp",
+   "head": "#4c2a33",
+   "blurb": "Listening, speaking, reading, writing and characters · Orientation Phase (P5–P6)",
+   "topics": [
+    {
+     "id": "chi-listening",
+     "name": "聆听 Listening",
+     "term": 1,
+     "subs": [
+      {
+       "id": "listening_comprehension_dialogues_an_0",
+       "name": "Listening Comprehension: dialogues, announcements, advertisements"
+      },
+      {
+       "id": "listen_to_stories_explanations_and_i_1",
+       "name": "Listen to stories, explanations and introductions"
+      },
+      {
+       "id": "critical_listening_writer_s_purpose__2",
+       "name": "Critical listening: writer’s purpose and implicit meaning"
+      }
+     ],
+     "quests": [
+      "chi-listening"
+     ],
+     "fallback": "chi-listen"
+    },
+    {
+     "id": "chi-speaking",
+     "name": "口语 Speaking",
+     "term": 1,
+     "subs": [
+      {
+       "id": "e_oral_reading_aloud_0",
+       "name": "E-oral: Reading Aloud (朗读)"
+      },
+      {
+       "id": "video_based_conversation_1",
+       "name": "Video-Based Conversation (会话)"
+      },
+      {
+       "id": "communicate_with_fluency_and_precisi_2",
+       "name": "Communicate with fluency and precision"
+      }
+     ],
+     "quests": [
+      "chi-speaking"
+     ],
+     "fallback": "chi-oral"
+    },
+    {
+     "id": "chi-reading",
+     "name": "阅读 Reading",
+     "term": 1,
+     "subs": [
+      {
+       "id": "critical_reading_purpose_implicit_me_0",
+       "name": "Critical reading: purpose, implicit meaning, evaluating information"
+      },
+      {
+       "id": "open_ended_answers_in_your_own_words_1",
+       "name": "Open-ended answers in your own words"
+      },
+      {
+       "id": "cloze_and_completing_a_dialogue_2",
+       "name": "Cloze and completing a dialogue (完成对话)"
+      }
+     ],
+     "quests": [
+      "chi-reading"
+     ],
+     "fallback": "chi-reading"
+    },
+    {
+     "id": "chi-writing",
+     "name": "写作 Writing",
+     "term": 1,
+     "subs": [
+      {
+       "id": "topic_composition_or_picture_composi_0",
+       "name": "Topic composition or picture composition (≥100 characters)"
+      },
+      {
+       "id": "varied_sentence_structures_and_idiom_1",
+       "name": "Varied sentence structures and idioms (成语)"
+      },
+      {
+       "id": "precise_vocabulary_and_well_structur_2",
+       "name": "Precise vocabulary and well-structured compositions"
+      }
+     ],
+     "quests": [
+      "chi-writing"
+     ],
+     "fallback": "chi-composition"
+    },
+    {
+     "id": "chi-characters",
+     "name": "识字 / 写字 Characters",
+     "term": 1,
+     "subs": [
+      {
+       "id": "advanced_vocabulary_and_idioms_0",
+       "name": "Advanced vocabulary and idioms (成语)"
+      },
+      {
+       "id": "precise_word_choice_for_purpose_and__1",
+       "name": "Precise word choice for purpose and audience"
+      },
+      {
+       "id": "character_and_word_correction_2",
+       "name": "Character and word correction (辨字 / 词语)"
+      }
+     ],
+     "quests": [
+      "chi-characters"
+     ],
+     "fallback": "chi-char"
+    },
+    {
+     "id": "chi-higher",
+     "name": "高级华文 Higher Chinese",
+     "term": 1,
+     "subs": [
+      {
+       "id": "heavier_load_additional_content_and__0",
+       "name": "Heavier load: additional content and skills"
+      },
+      {
+       "id": "advanced_vocabulary_idioms_introduce_1",
+       "name": "Advanced vocabulary, idioms introduced earlier"
+      },
+      {
+       "id": "emphasis_on_writing_comprehension_an_2",
+       "name": "Emphasis on writing, comprehension and critical thinking"
+      }
+     ],
+     "quests": [
+      "chi-higher"
+     ],
+     "fallback": "chi-reading"
+    }
+   ]
+  }
+ ]
+};
+/* schoolTermOf(dateKey): which Singapore school term a YYYY-MM-DD
+   date falls in — Term 1 Jan-Mar, Term 2 Mar-May, Term 3 Jun-Sep,
+   Term 4 Sep-Nov (Dec is year-end: the whole year has been taught,
+   so it counts as Term 4). Month-based, so it rolls forward every
+   year; the bands match the MOE term breaks in MOE_SCHOOL_HOLIDAYS. */
+function schoolTermOf(dateKey){
+  var m=+String(dateKey||'').slice(5,7);
+  if(!(m>=1&&m<=12))m=new Date().getMonth()+1;
+  if(m<=3)return 1;
+  if(m<=5)return 2;
+  if(m<=8)return 3;
+  return 4;
+}
+/* moeInSeason(tp, todayStr): this topic has been taught (or is being
+   taught now) — its term has been reached. todayStr is 'YYYY-MM-DD';
+   defaults to today. */
+function moeInSeason(tp, todayStr){
+  if(!tp)return false;
+  return (tp.term||1)<=schoolTermOf(todayStr||todayKey());
+}
+function moeSubjects(level){ var lv=(typeof level==='number'&&level>=1&&level<=6)?level:3; return MOE_SUBJECTS_BY_LEVEL[String(lv)]||MOE_SUBJECTS_BY_LEVEL['3']; }
+function moeSubject(id, level){ var ss=moeSubjects(level); for(var i=0;i<ss.length;i++)if(ss[i].id===id)return ss[i]; return null; }
+function moeTopic(subjId, topicId, level){ var s=moeSubject(subjId,level); if(!s)return null; for(var i=0;i<s.topics.length;i++)if(s.topics[i].id===topicId)return s.topics[i]; return null; }
+/* moeQuestTopic(id): the quest-flow view of a MOE topic. It is NOT
+   added to TOPICS (TOPICS stays the 31 local-bank quests, and Home /
+   games / leaderboard keep reading it). Quest + fresh banks come
+   ONLY from the topic's local fallback (or [] when there is none —
+   the server bank is the primary source). Warm-up + retry banks are
+   practice, so they fall back to the subject's default local quest
+   when the topic has no fallback of its own — that also gives the
+   server fetch time to land before the quest starts. */
+function moeQuestTopic(id){
+  var found=null, lv=null;
+  Object.keys(MOE_SUBJECTS_BY_LEVEL).forEach(function(k){ MOE_SUBJECTS_BY_LEVEL[k].forEach(function(s){ s.topics.forEach(function(tp){ if(tp.id===id&&!found){ found={tp:tp,s:s}; lv=+k; } }); }); });
+  if(!found)return null;
+  var fb=found.tp.fallback?TOPICS.find(function(t){ return t.id===found.tp.fallback; })||null:null;
+  var defId={eng:'eng-story',math:'math-mrt',sci:'sci-plants',chi:'chi-listen'}[found.s.id];
+  var defT=defId?TOPICS.find(function(t){ return t.id===defId; })||null:null;
+  function qbank(kind){ return (fb&&fb[kind])||[]; }
+  function pbank(kind){ if(fb&&fb[kind]&&fb[kind].length)return fb[kind]; if(defT&&defT[kind])return defT[kind]; return []; }
+  return {id:id, sub:found.s.id, subName:found.s.name, icon:found.s.icon, img:found.s.art, name:found.tp.name, blurb:'Singapore MOE syllabus · Primary '+lv+' '+found.s.name+'.', term:found.tp.term||1, quest:qbank('quest'), fresh:qbank('fresh'), warm:pbank('warm'), retry:pbank('retry'), p4quest:qbank('p4quest'), p4fresh:qbank('p4fresh'), p4warm:pbank('p4warm'), p4retry:pbank('p4retry'), moe:true, fallback:found.tp.fallback||null};
+}
+/* Distinct local-bank questions ready for one MOE topic: the daily
+   pool (quest + fresh) of its fallback quest. 0 when there is no
+   fallback — the server bank may still serve it; the Learn page
+   shows "0 questions ready" for that case, never a substitute. */
+function moeTopicPool(tp, level){ var t=topicById(tp.id); if(!t)return 0; return poolQuestions(t, level).length; }
+function moeTopicStarted(e, tp){ return !!((e.progress&&e.progress[tp.id])||(e.completed&&e.completed[tp.id])); }
+function moeSubNote(e, sub, level, tp){
+  if(!tp)return '0 questions ready';
+  if(!moeInSeason(tp))return 'Later in the year · Term '+tp.term;
+  if(moeTopicPool(tp, level)===0)return '0 questions ready';
+  if(e.completed&&e.completed[tp.id])return 'Practised ✓';
+  return 'Not yet assessed';
+}
+/* Subject-card counts, MOE style, PACED: total = every topic in the
+   subject this level (the whole year's list stays visible); started,
+   ready and quests count IN-SEASON topics only, so the "questions
+   ready" count and the session size never promise a topic school has
+   not taught yet. todayStr is 'YYYY-MM-DD'; defaults to today. */
+function moeSubjectCounts(e, subj, level, todayStr){
+  var started=0, ready=0, quests=0;
+  subj.topics.forEach(function(tp){
+    if(!moeInSeason(tp, todayStr))return;
+    quests++;
+    if(moeTopicStarted(e, tp))started++;
+    ready+=moeTopicPool(tp, level);
+  });
+  return {started:started, total:subj.topics.length, ready:ready, quests:quests};
+}
+/* First quest of today's session: the first IN-SEASON topic (MOE
+   order) not finished today; if all in-season ones are done, the
+   first in-season one again (a replay). A later-term topic is never
+   suggested before its term. todayStr is 'YYYY-MM-DD'; defaults to
+   today. */
+function moeSessionFirst(e, subj, level, todayStr){
+  var day=todayStr||todayKey();
+  var cands=[];
+  subj.topics.forEach(function(tp){ if(moeInSeason(tp, day))cands.push(tp.id); });
+  if(!cands.length)return null;
+  var open=cands.filter(function(qid){ return !(e.completedDay&&e.completedDay[qid]===day); });
+  return open[0]||cands[0];
+}
+/* Coverage flag (Bryan 2026-11-09): MOE topic ids at this level with
+   no local-bank questions ready — the Learn page shows them as
+   "0 questions ready" instead of hiding them or substituting a
+   P3 topic. The server bank is the primary source, so a topic in
+   this list may still be served from the server. */
+function moeUncoveredTopics(level){
+  var out=[];
+  moeSubjects(level).forEach(function(s){ s.topics.forEach(function(tp){ if(moeTopicPool(tp, level)===0)out.push(tp.id); }); });
+  return out;
+}
+/* Topics held back by pacing at this level on a date: the ones the
+   session, counts and Practise button must not serve yet. */
+function moeOutOfSeasonTopics(level, todayStr){
+  var out=[];
+  moeSubjects(level).forEach(function(s){ s.topics.forEach(function(tp){ if(!moeInSeason(tp, todayStr))out.push(tp.id); }); });
+  return out;
+}
+
 /* Learn navigation state — session-only (never persisted, never
    synced). go('learn') from any other route resets it to the
    subject cards, so the sidebar always lands on the myKx-style
@@ -5590,7 +9584,7 @@ function learnHTML(){
   var e=ex();
   var doneCount=Object.keys(e.completed).length;
   var lvl=levelNum(e);
-  var subj=learnView.subject?mykxSubject(learnView.subject):null;
+  var subj=learnView.subject?moeSubject(learnView.subject,lvl):null;
   /* myKx Learn restructure (2026-11-07): Learn is subject cards
      → subject page (topics on a vertical timeline) → expand a
      topic for its sub-topics → Practise the mapped quest(s).
@@ -5604,7 +9598,7 @@ function learnHTML(){
   var openCards='';
   var openT=null;
   if(subj&&learnView.openTopic){
-    openT=mykxTopic(subj.id,learnView.openTopic);
+    openT=moeTopic(subj.id,learnView.openTopic,lvl);
     if(openT){
       openCards=openT.quests.map(function(qid){ var t=topicById(qid); if(!t)return '';
        var st=questState(e,t.id,todayKey()); var done=e.completed[t.id]; var prog=e.progress[t.id];
@@ -5626,34 +9620,36 @@ function learnHTML(){
        +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
        +(t.sub==='chi'?'<p class="small muted" style="margin:10px 0 0">🔊 This quest has a Listen button — hear it, then say it out loud!</p>':'')
        +(t.id===LIVE_GEN_TOPIC?'<p class="small muted" style="margin:10px 0 0">📚 Pip’s shelf — questions from Pip’s bank.</p>':'')
+       +(t.moe?'<p class="small muted" style="margin:10px 0 0">📚 Pip’s shelf — questions from Pip’s bank.</p>':'')
        +(st==='completed-today'?'<p style="margin:10px 0 0"><span class="pill done">✔ Completed — replay any time!</span></p>':'')
        +(st==='fresh-today'?'<p style="margin:10px 0 0"><span class="pill done">🌅 Fresh questions for today — a brand-new set</span></p>':'')
        +(bB?(_canBoost?'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — 5 quick questions with Pip</span></p><button class="btn teal" data-boost="'+t.id+'" style="margin-top:8px">🌱 Start my boost</button>':'<p style="margin:10px 0 0"><span class="pill prog">🌱 Needs a boost — done for today, fresh questions tomorrow</span></p>'):'')
-       +'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button></div>'; }).join('');
+       +((t.moe&&!moeInSeason(t))?'<p style="margin:10px 0 0"><span class="pill prog">⏳ Later in the year — Pip brings this one in Term '+t.term+', when school teaches it.</span></p>':'<button class="btn" data-quest="'+t.id+'" style="margin-top:12px">'+(st==='completed-today'?'↻ Replay':(st==='in-progress'?'▶ Resume quest':'▶ Start quest'))+'</button>')+'</div>'; }).join('');
     }
   }
   if(subj){
-    var counts=mykxSubjectCounts(e,subj,lvl);
-    var firstQ=mykxSessionFirst(e,subj,lvl);
+    var counts=moeSubjectCounts(e,subj,lvl);
+    var firstQ=moeSessionFirst(e,subj,lvl);
     var firstT=firstQ?topicById(firstQ):null;
     var sessionQ=counts.quests*5, sessionMin=counts.quests*3;
     return pageHero(subj.art,subj.icon,'P'+lvl+' '+subj.name,esc(subj.blurb)+' — every topic, every sub-topic, Singapore MOE syllabus.','🎒 P'+levelNum(e)+' · '+counts.started+' of '+counts.total+' topics started')
      +'<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div><b>Today’s '+esc(subj.name)+' session</b><p style="font-weight:700;margin:6px 0 0">'+sessionQ+' questions · about '+sessionMin+' minutes · 5 questions per quest.</p><p class="small muted" style="font-weight:700;margin:6px 0 0">'+(counts.started?(firstT?'Pip suggests starting with '+esc(firstT.name)+' today.':''):'No evidence yet: your first session starts it.')+'</p></div></div>'
      +(firstQ?'<button class="btn" data-learn-start="'+subj.id+'" style="margin-top:12px">▶ Start session</button>':'<p class="small muted" style="font-weight:700;margin:10px 0 0">Questions for this subject are on the way.</p>')
      +'</div>'
+     +(subj.notTaught?'<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div><b>Science starts in P3</b><p style="font-weight:700;margin:6px 0 0">There is no Science subject in Primary 1 or Primary 2. Pip will add Science topics when you reach P3!</p></div></div></div>':'')
      +'<button class="btn ghost" data-learn-back style="margin-bottom:12px">← All subjects</button>'
      +'<div class="learn-timeline">'
      +subj.topics.map(function(tp){
-       var pool=mykxTopicPool(tp,lvl);
+       var pool=moeTopicPool(tp,lvl);
        var hasQ=pool>0;
-       var started=mykxTopicStarted(e,tp);
+       var started=moeTopicStarted(e,tp);
        var isOpen=learnView.openTopic===tp.id;
        var isSessionStart=!!(firstQ&&tp.quests.indexOf(firstQ)>=0);
-       return '<div class="learn-topic"><button type="button" class="learn-topic-row" data-learn-topic="'+tp.id+'"><span class="tnode">'+(hasQ?'▶':'🔒')+'</span><span style="flex:1;text-align:left"><b>'+esc(tp.name)+'</b><span class="small muted" style="display:block;font-weight:700">'+tp.subs.length+' sub-topics · '+(hasQ?pool+' questions ready':'Questions on the way')+'</span></span>'
+       return '<div class="learn-topic"><button type="button" class="learn-topic-row" data-learn-topic="'+tp.id+'"><span class="tnode">'+(moeInSeason(tp)?'▶':'⏳')+'</span><span style="flex:1;text-align:left"><b>'+esc(tp.name)+'</b><span class="small muted" style="display:block;font-weight:700">'+tp.subs.length+' sub-topics · '+(hasQ?pool+' questions ready':'0 questions ready')+(moeInSeason(tp)?'':' · Later in the year · Term '+tp.term)+'</span></span>'
        +(started?'<span class="pill done">Started ✓</span>':'')
        +(isSessionStart?'<span class="pill prog">Today’s session starts here</span>':'')
        +'<span class="small muted">'+(isOpen?'▾':'▸')+'</span></button>'
-       +(isOpen?'<ul class="learn-subs">'+tp.subs.map(function(sb){ return '<li><span>'+esc(sb.name)+'</span><span class="subnote">'+mykxSubNote(e,sb,lvl)+'</span></li>'; }).join('')+'</ul>'
+       +(isOpen?'<ul class="learn-subs">'+tp.subs.map(function(sb){ return '<li><span>'+esc(sb.name)+'</span><span class="subnote">'+moeSubNote(e,sb,lvl,tp)+'</span></li>'; }).join('')+'</ul>'
          +(openCards?'<p style="font-weight:800;margin:12px 0 0">Practise '+esc(tp.name)+':</p>'+openCards:'<p class="small muted" style="font-weight:700;margin:10px 0 0">No questions yet: on the way.</p>'):'')
        +'</div>';
      }).join('')
@@ -5664,8 +9660,8 @@ function learnHTML(){
    + learnPlanBannerHTML(e)
    + spellTestsEntryHTML(e)
    + '<div class="grid c2">'
-   + MYKX_SUBJECTS.map(function(sj){
-    var c=mykxSubjectCounts(e,sj,lvl);
+   + moeSubjects(lvl).map(function(sj){
+    var c=moeSubjectCounts(e,sj,lvl);
     return '<div class="questcard learncard"><div class="iconrow"><span class="qicon">'+ic(sj.art,sj.icon,'qic')+'</span><div><span class="pill '+sj.id+'">'+esc(sj.name)+'</span><h3 style="margin:4px 0 0">P'+lvl+' '+esc(sj.name)+'</h3></div></div>'
      +'<p class="muted" style="font-weight:700;margin:10px 0 0">'+esc(sj.blurb)+'</p>'
      +'<p class="small" style="font-weight:800;margin:8px 0 0">'+c.started+' of '+c.total+' topics started · '+c.ready+' questions ready</p>'
@@ -5722,7 +9718,7 @@ function bindLearn(){
   document.querySelectorAll('[data-learn-subject]').forEach(function(b){ b.onclick=function(){ learnView.subject=b.getAttribute('data-learn-subject'); learnView.openTopic=null; sndPop(); render(); }; });
   document.querySelectorAll('[data-learn-back]').forEach(function(b){ b.onclick=function(){ learnView.subject=null; learnView.openTopic=null; sndPop(); render(); }; });
   document.querySelectorAll('[data-learn-topic]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-learn-topic'); learnView.openTopic=(learnView.openTopic===id?null:id); sndPop(); render(); }; });
-  document.querySelectorAll('[data-learn-start]').forEach(function(b){ b.onclick=function(){ var s=mykxSubject(b.getAttribute('data-learn-start')); var q=s?mykxSessionFirst(ex(),s,levelNum(ex())):null; if(q)startQuestFlow(q); }; });
+  document.querySelectorAll('[data-learn-start]').forEach(function(b){ b.onclick=function(){ var s=moeSubject(b.getAttribute('data-learn-start'),levelNum(ex())); var q=s?moeSessionFirst(ex(),s,levelNum(ex())):null; if(q)startQuestFlow(q); }; });
   var sa=document.getElementById('spAddBtn'); if(sa)sa.onclick=function(){ sndPop(); openSpellAddModal(); };
   document.querySelectorAll('[data-spellopen]').forEach(function(b){ b.onclick=function(){ spellOpenId=b.getAttribute('data-spellopen'); spellTest=null; sndPop(); go('spelltest'); }; });
   document.querySelectorAll('[data-spelldel]').forEach(function(b){ b.onclick=function(){ deleteSpellTest(b.getAttribute('data-spelldel')); }; });
@@ -6635,6 +10631,7 @@ function recordLearnBest(e, topicId){
   return false;
 }
 function startQuestFlow(topicId){
+  var _gt=topicById(topicId); if(_gt&&_gt.moe&&!moeInSeason(_gt)){ toast('Pip will bring that one in Term '+_gt.term+' — school has not taught it yet!'); return; }
   var e=ex();
   var p=e.progress[topicId];
   /* A saved record for the ORIGINAL run is stale once that run
@@ -6706,6 +10703,7 @@ function beginQuest(topicId){
      so pausing mid-quest never changes the questions. */
   var isDone=!!e.completed[topicId];
   var pool=isDone?dailyPoolIndices(t, todayKey(), e.id, levelNum(e)):[0,1,2,3,4];
+  if(!pool.length)pool=[0,1,2,3,4]; /* MOE quest with no local fallback bank: the server set is 5 questions. */
   /* Live-gen experiment: use today's cached live set when it exists
      and validates; otherwise the bank, silently, with the fallback
      counted for the parent page. The fetch was kicked off when the
@@ -6753,6 +10751,7 @@ function boostListFor(t, level, explorerId, dayStr, attempt){
 }
 function startBoostFlow(topicId){
   var e=ex(), t=topicById(topicId);
+  if(t&&t.moe&&!moeInSeason(t)){ toast('Pip will bring that one in Term '+t.term+' — school has not taught it yet!'); return; }
   if(!t){ toast('That quest is missing — try another one.'); return; }
   var _rec=(e.boost||{})[topicId]||{};
   /* Retake gate (2026-11-08): a Maths boost may be retaken the same
@@ -9982,33 +13981,37 @@ function bindParent(){
    checked SERVER-SIDE on every admin request (ADMIN_PASSWORD
    env var, Vercel); the password is kept only in memory for
    this tab and is never stored in localStorage. The admin page
-   lets Bryan find a family (by code or by explorer name) and
-   reset its parent PIN when a parent forgot it. Explorer names
-   are not unique, so a name search may return several families
-   and Bryan picks the right one — the reset always acts on the
-   family CODE of the family he picked, never on a name.
+   lets Bryan find a family (by family code, friend code, or
+   explorer name) and reset its parent PIN when a parent forgot it,
+   or reset the family's critters back to Egg. Explorer names are
+   not unique, so a name search may return several families and
+   Bryan picks the right one — a reset always acts on the family
+   CODE of the family he picked, never on a name.
    ============================================================ */
-var adminPw=null, adminResults=[], adminMsg='', adminOk='', adminResetCode=null;
+var adminPw=null, adminResults=[], adminMsg='', adminOk='', adminResetCode=null, adminCrittersCode=null;
 function adminHTML(){
-  var h='<div style="max-width:560px;margin:0 auto;padding:24px 14px"><div class="card"><h2 style="margin-top:0">🔐 Admin — reset a forgotten parent PIN</h2>'
+  var h='<div style="max-width:560px;margin:0 auto;padding:24px 14px"><div class="card"><h2 style="margin-top:0">🔐 Admin — reset a forgotten parent PIN or a family’s critters</h2>'
    +'<p class="muted" style="font-weight:700">For the app owner only. This page is not linked from anywhere in the app — only a direct link reaches it, and the master admin password is checked on the server for every step.</p>';
   if(!adminPw){
     h+='<label class="flabel">Master admin password</label><input class="field" id="admPw" type="password" placeholder="Master admin password" style="text-align:center"><div style="margin-top:12px"><button class="btn" id="admUnlock">Unlock</button></div>'
      +(adminMsg?'<div class="feedback no" style="margin-top:12px">'+esc(adminMsg)+'</div>':'');
   } else {
     h+='<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap"><p style="font-weight:800;margin:0">🔓 Unlocked as admin</p><button class="btn ghost" id="admLock">🔒 Lock</button></div>'
-     +'<p style="font-weight:700">Find a family by its 6-letter family code, or by the child’s explorer name. A name may match several families — pick the right one before resetting.</p>'
-     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><div style="flex:1;min-width:200px"><label class="flabel">Family code or explorer name</label><input class="field" id="admQ" placeholder="e.g. ABC2DE or Star"></div><button class="btn" id="admSearch">Search</button></div>'
+     +'<p style="font-weight:700">Find a family by its 6-letter family code, an explorer’s friend code, or the child’s explorer name. A name may match several families — pick the right one before resetting.</p>'
+     +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end"><div style="flex:1;min-width:200px"><label class="flabel">Family code, friend code, or explorer name</label><input class="field" id="admQ" placeholder="e.g. ABC2DE, 6QHVDY, or Star"></div><button class="btn" id="admSearch">Search</button></div>'
      +(adminMsg?'<div class="feedback no" style="margin-top:12px">'+esc(adminMsg)+'</div>':'')
      +(adminOk?'<div class="feedback yes" style="margin-top:12px">'+esc(adminOk)+'</div>':'');
     if(adminResults.length){
       h+='<h4 style="margin:18px 0 6px">Matching families</h4>'+adminResults.map(function(f){
         var names=f.explorers.map(function(x){ return esc(x.name)+' ('+esc(x.level)+')'; }).join(', ')||'(no explorers)';
-        return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b style="letter-spacing:2px">'+esc(f.code)+'</b> · '+names+'<br><button class="btn ghost" data-admreset="'+esc(f.code)+'" style="margin-top:6px">Reset PIN</button></div>';
+        return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b style="letter-spacing:2px">'+esc(f.code)+'</b> · '+names+'<br><button class="btn ghost" data-admreset="'+esc(f.code)+'" style="margin-top:6px">Reset PIN</button> <button class="btn ghost" data-admcritters="'+esc(f.code)+'" style="margin-top:6px">Reset critters to Egg</button></div>';
       }).join('');
     }
     if(adminResetCode){
       h+='<div class="card" style="margin-top:14px"><h4 style="margin-top:0">New PIN for family '+esc(adminResetCode)+'</h4><p class="small muted" style="font-weight:700">Type the new 4-digit PIN twice. Tell the parent the new PIN afterwards — they use it to open the Grown-ups page.</p><label class="flabel">New 4-digit PIN</label><input class="field" id="admPin1" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN" style="text-align:center"><label class="flabel">Type it again</label><input class="field" id="admPin2" type="password" inputmode="numeric" maxlength="4" placeholder="New PIN again" style="text-align:center"><div style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="admDoReset">Reset PIN</button><button class="btn ghost" id="admCancelReset">Cancel</button></div></div>';
+    }
+    if(adminCrittersCode){
+      h+='<div class="card" style="margin-top:14px"><h4 style="margin-top:0">Reset critters to Egg for family '+esc(adminCrittersCode)+'</h4><p class="small muted" style="font-weight:700">This resets ALL explorers in this family back to Egg (Stage 1 of 4). It clears discovered critters and care progress, and the frog’s name goes back to ‘Splash’. Stars, quests, badges, treasures, spelling tests, the schedule and the parent PIN are not touched. This cannot be undone.</p><div style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="admDoCritters">Yes, reset critters to Egg</button><button class="btn ghost" id="admCancelCritters">Cancel</button></div></div>';
     }
   }
   return h+'</div></div>';
@@ -10022,7 +14025,7 @@ function bindAdmin(){
     if(x.status===502)return 'Could not reach the family records. Check the server setup and try again.';
     return (x.body&&x.body.error)||'Something went wrong.';
   }
-  function needUnlock(){ adminPw=null; adminResults=[]; adminResetCode=null; adminMsg='Wrong password — please unlock again.'; adminOk=''; render(); }
+  function needUnlock(){ adminPw=null; adminResults=[]; adminResetCode=null; adminCrittersCode=null; adminMsg='Wrong password — please unlock again.'; adminOk=''; render(); }
   var pwEl=document.getElementById('admPw');
   if(pwEl)pwEl.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); var u=document.getElementById('admUnlock'); if(u)u.click(); } });
   var unlock=document.getElementById('admUnlock');
@@ -10039,7 +14042,7 @@ function bindAdmin(){
     }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
   };
   var lock=document.getElementById('admLock');
-  if(lock)lock.onclick=function(){ adminPw=null; adminResults=[]; adminMsg=''; adminOk=''; adminResetCode=null; render(); };
+  if(lock)lock.onclick=function(){ adminPw=null; adminResults=[]; adminMsg=''; adminOk=''; adminResetCode=null; adminCrittersCode=null; render(); };
   var qEl=document.getElementById('admQ');
   if(qEl)qEl.addEventListener('keydown',function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); var s=document.getElementById('admSearch'); if(s)s.click(); } });
   var search=document.getElementById('admSearch');
@@ -10053,13 +14056,14 @@ function bindAdmin(){
       if(x.status===401){ needUnlock(); return; }
       if(x.status===503||x.status===502){ adminMsg=serverMsg(x); render(); return; }
       if(x.status!==200){ adminMsg=serverMsg(x); render(); return; }
-      adminResults=x.body.families||[]; adminResetCode=null;
-      if(adminResults.length){ adminOk='Found '+adminResults.length+' famil'+(adminResults.length===1?'y':'ies')+'. Pick the right one to reset its PIN.'; adminMsg=''; }
+      adminResults=x.body.families||[]; adminResetCode=null; adminCrittersCode=null;
+      if(adminResults.length){ adminOk='Found '+adminResults.length+' famil'+(adminResults.length===1?'y':'ies')+'. Pick the right one to reset its PIN or its critters.'; adminMsg=''; }
       else { adminMsg='No family found for that search. Check the code or name and try again.'; adminOk=''; }
       render();
     }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
   };
-  document.querySelectorAll('[data-admreset]').forEach(function(b){ b.onclick=function(){ adminResetCode=b.getAttribute('data-admreset'); adminMsg=''; adminOk=''; render(); var el=document.getElementById('admPin1'); if(el)el.focus(); }; });
+  document.querySelectorAll('[data-admreset]').forEach(function(b){ b.onclick=function(){ adminResetCode=b.getAttribute('data-admreset'); adminCrittersCode=null; adminMsg=''; adminOk=''; render(); var el=document.getElementById('admPin1'); if(el)el.focus(); }; });
+  document.querySelectorAll('[data-admcritters]').forEach(function(b){ b.onclick=function(){ adminCrittersCode=b.getAttribute('data-admcritters'); adminResetCode=null; adminMsg=''; adminOk=''; render(); }; });
   var cancel=document.getElementById('admCancelReset');
   if(cancel)cancel.onclick=function(){ adminResetCode=null; render(); };
   var doReset=document.getElementById('admDoReset');
@@ -10073,6 +14077,18 @@ function bindAdmin(){
       if(x.status!==200){ adminMsg=serverMsg(x); render(); return; }
       adminOk='PIN reset for family '+x.body.code+' — tell the parent the new PIN. They use it to open the Grown-ups page.';
       adminMsg=''; adminResetCode=null; render();
+    }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
+  };
+  var cancelCritters=document.getElementById('admCancelCritters');
+  if(cancelCritters)cancelCritters.onclick=function(){ adminCrittersCode=null; render(); };
+  var doCritters=document.getElementById('admDoCritters');
+  if(doCritters)doCritters.onclick=function(){
+    postAdmin('/api/admin-reset-critters',{password:adminPw,code:adminCrittersCode}).then(function(x){
+      if(x.status===401){ needUnlock(); return; }
+      if(x.status===503||x.status===502){ adminMsg=serverMsg(x); render(); return; }
+      if(x.status!==200){ adminMsg=serverMsg(x); render(); return; }
+      adminOk='Critters reset to Egg for family '+x.body.code+' — '+x.body.resetCount+' explorer'+(x.body.resetCount===1?'':'s')+' back at Stage 1, frog named Splash.';
+      adminMsg=''; adminCrittersCode=null; render();
     }).catch(function(){ adminMsg='Could not reach the server. Check the connection and try again.'; render(); });
   };
 }
