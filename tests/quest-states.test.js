@@ -112,8 +112,11 @@ test('replay: a completed-today quest or game can start again from its Replay bu
   assert.ok(!startQ.includes('completed-today'), 'no guard blocks a quest replay');
   const startG = fnBody('function startGame(id){');
   assert.ok(!startG.includes('completed-today'), 'no guard blocks a game replay');
-  const home = fnBody('function homeHTML(){');
-  assert.ok(home.includes('↻ Replay this quest'), 'Home card offers Replay for today’s finished quest');
+  /* Phase 2 (2026-11-10): the Home quest card is now a board card
+     rendered by boardCardHTML — that is where the Replay button
+     lives, not inline in homeHTML any more. */
+  const board = fnBody('function boardCardHTML(e, t, isPick, todayPlan){');
+  assert.ok(board.includes('↻ Replay this quest'), 'Home board card offers Replay for today’s finished quest');
 });
 
 /* --- Replay follow-up fixes (seen live 2026-11-05) -------------------

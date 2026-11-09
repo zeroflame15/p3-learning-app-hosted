@@ -259,7 +259,12 @@ test('Home prompt shows only when the explorer has no level, and never blocks na
   const homeSrc = fnText('function homeHTML(){');
   assert.ok(homeSrc.indexOf("!e.level?'<div class=\"card\"") >= 0, 'the prompt renders only for explorers with no level');
   assert.ok(homeSrc.indexOf('data-home-lvl') >= 0, 'the prompt carries the level buttons');
-  assert.ok(homeSrc.indexOf("return lvlPrompt+'<div class=\"homegrid\">") >= 0, 'Home still renders its grid with or without the prompt');
+  /* Phase 2 (2026-11-10): Home is hero (full width, no homegrid) +
+     streak strip + frog hero + quest board. The prompt is prepended
+     to that whole stack, so Home still renders everything with or
+     without it. */
+  assert.ok(homeSrc.indexOf('return lvlPrompt+hero') >= 0, 'Home still renders its hero, streak, frog and quest board with or without the prompt');
+  assert.ok(homeSrc.indexOf('+ boardSection') >= 0, 'the quest board follows the prompt in the Home return');
 });
 
 test('Learn shows the active explorer level in its header', () => {
