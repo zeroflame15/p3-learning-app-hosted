@@ -423,6 +423,9 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .questcard .progressbar{background:#e8e2d0;border-color:#e8e2d0}
 .questcard .progressbar>div{background:#3e8e52}
 .questcard .btn{background:#3e8e52;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
+.diffbtn{background:#efe9dc;color:#2a2753;border:2px solid #d8d0ba;border-radius:999px;padding:8px 14px;font-weight:800;cursor:pointer}
+.diffbtn.sel{background:#2f7a3d;color:#fff;border-color:#2f7a3d}
+.boardcard.done{opacity:.55;filter:grayscale(.55)}
 .questcard.done,.gamecard.done,.gamecard.locked{opacity:.55;filter:grayscale(.55)}
 .btn:disabled{cursor:not-allowed;opacity:.75}
 .swapbox{border-radius:16px;padding:10px 8px;text-align:center;font-family:"Fredoka","Nunito",sans-serif;font-weight:600;font-size:.92rem;border:0;width:100%}
@@ -3656,6 +3659,28 @@ function mergeExplorer(a,b){
   e.badges=unionArr(a.badges,b.badges);
   e.treasures=unionArr(a.treasures,b.treasures);
   e.discoveredCritters=unionArr(a.discoveredCritters,b.discoveredCritters);
+  /* Critter Friend badge (Phase 2 fix, 2026-11-10): visitedStages
+     records which life-cycle stages the child has VIEWED in Critter
+     Lab; the badge fires at 4. It was never merged, so every save
+     dropped it back to [] and the badge could never fire (seen live:
+     the server showed visitedStages=[] after all four stages were
+     tapped). Union both sides — a visit on either device counts. */
+  if((a&&a.visitedStages!==undefined)||(b&&b.visitedStages!==undefined))e.visitedStages=unionArr(a.visitedStages||[],b.visitedStages||[]);
+  /* Difficulty preference (Phase 2, Pillar 3): -1 easier / 0 just
+     right / +1 harder, with a timestamp — later wins, same rule as
+     theme / code / level. A stale device must never resurrect an old
+     preference the child has since changed. */
+  /* Only when at least one side carries a preference: a merge must
+     never invent diffPref/diffPrefAt on a legacy explorer, or a
+     no-change pull would report a change (the streak fields follow
+     the same rule — see the streak block above). */
+  if((a&&(a.diffPref!==undefined||a.diffPrefAt!==undefined))||(b&&(b.diffPref!==undefined||b.diffPrefAt!==undefined))){
+    var _dAtA=Date.parse((a&&a.diffPrefAt)||'')||0, _dAtB=Date.parse((b&&b.diffPrefAt)||'')||0;
+    if(_dAtB>_dAtA){ e.diffPref=(b.diffPref==null?0:b.diffPref); e.diffPrefAt=b.diffPrefAt; }
+    else if(_dAtA>_dAtB){ e.diffPref=(a.diffPref==null?0:a.diffPref); e.diffPrefAt=a.diffPrefAt; }
+    else if(_dAtA&&_dAtB&&_dAtB===_dAtA){ e.diffPref=(b.diffPref==null?0:b.diffPref); e.diffPrefAt=b.diffPrefAt; }
+    else { e.diffPref=((a.diffPref!=null)?a.diffPref:((b.diffPref!=null)?b.diffPref:0)); if(a.diffPrefAt||b.diffPrefAt)e.diffPrefAt=a.diffPrefAt||b.diffPrefAt; }
+  }
   e.completed=unionObjMax(a.completed,b.completed);
   e.completedDay=unionObjLatest(a.completedDay,b.completedDay);
   e.playDoneDay=unionObjLatest(a.playDoneDay,b.playDoneDay);
@@ -3666,7 +3691,7 @@ function mergeExplorer(a,b){
   e.deletedFavAnswers=unionArr(a.deletedFavAnswers||[],b.deletedFavAnswers||[]);
   if(e.deletedFavAnswers.length)e.favAnswers=e.favAnswers.filter(function(f){ return e.deletedFavAnswers.indexOf(f)<0; });
   var prog={}; Object.keys(a.progress||{}).forEach(function(k){ prog[k]=a.progress[k]; });
-  Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; prog[k]=(!x?y:{idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh,elapsed:Math.max(x.elapsed||0,y.elapsed||0)}); });
+  Object.keys(b.progress||{}).forEach(function(k){ var x=prog[k], y=b.progress[k]; if(!x){ prog[k]=y; return; } prog[k]={idx:Math.max(x.idx||0,y.idx||0),score:Math.max(x.score||0,y.score||0),wrong:unionArr(x.wrong,y.wrong),picked:x.picked||y.picked,answered:x.answered||y.answered,pool:x.pool||y.pool,fresh:x.fresh||y.fresh,elapsed:Math.max(x.elapsed||0,y.elapsed||0)}; if(x.diffSwap!==undefined||y.diffSwap!==undefined)prog[k].diffSwap=Object.assign({},x.diffSwap||{},y.diffSwap||{}); });
   /* A finished run's progress must not come back from the server:
      a delete does not sync, so the server's copy would resurrect
      a finished quest at its last question. Drop any ORIGINAL-run
@@ -4171,7 +4196,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
@@ -5495,6 +5520,60 @@ function pageHero(art, emo, title, sub, stat){
 }
 
 /* ============================================================ HOME */
+/* ---------- Quest board (Phase 2, Pillar 4, 2026-11-10) ----------
+   Home shows THREE quest choices a day instead of one suggested
+   quest, so she picks the subject and the order (autonomy is the
+   top thing children asked for in the research). The picks come
+   from today's study plan (the same pool as the old single pick),
+   unfinished first, and are spread across subjects where possible
+   — a board of three Maths quests teaches her nothing about
+   choosing. Out-of-season topics never appear (they show the
+   hold-back note in Learn, never a Start button). Completing ANY
+   one counts for the streak (the streak rule is unchanged — any 1
+   quest/day). swapIdx rotates the board, so "Show me different
+   quests" deals a fresh hand. */
+function boardInSeason(t){
+  if(!t)return false;
+  if(t.moe)return moeInSeason(t);
+  return true;
+}
+function boardPicks(e, todayPlan){
+  var unfinished=TOPICS.filter(function(x){return !e.completed[x.id];});
+  var pool=planTopics(todayPlan).filter(function(x){return !e.completed[x.id];});
+  if(!pool.length)pool=unfinished.slice();
+  if(!pool.length)pool=TOPICS.slice();
+  pool=pool.filter(boardInSeason);
+  if(!pool.length)return [];
+  var bySub={}, subs=[];
+  pool.forEach(function(t){ if(!bySub[t.sub]){ bySub[t.sub]=[]; subs.push(t.sub); } bySub[t.sub].push(t); });
+  var picks=[]; var s0=(e.swapIdx||0)%Math.max(subs.length,1);
+  for(var round=0; round<4 && picks.length<3; round++){
+    for(var s=0; s<subs.length && picks.length<3; s++){
+      var sub=subs[(s0+s)%subs.length];
+      var list=bySub[sub];
+      var cand=list[((e.swapIdx||0)+round)%list.length];
+      if(cand&&picks.indexOf(cand)<0)picks.push(cand);
+    }
+  }
+  return picks.slice(0,3);
+}
+function boardCardHTML(e, t, isPick, todayPlan){
+  var qprog=e.progress[t.id]?e.progress[t.id].idx:0;
+  var qstate=questState(e,t.id,todayKey());
+  var qdone=qstate==='completed-today';
+  var qfresh=qstate==='fresh-today';
+  var inPlan=(todayPlan.subs&&todayPlan.subs.indexOf(t.sub)>=0)||todayPlan.review;
+  return '<div class="boardcard'+(qdone?' done':'')+'" style="background:#f7f3e8;border-radius:16px;padding:14px">'
+   +'<div class="themeslabel" style="color:#8a6d1f">'+(isPick?'⭐ Pip’s pick · ':'')+esc(t.subName)+'</div>'
+   +'<h3 style="margin:6px 0 2px;font-size:1.15rem">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+'</h3>'
+   +'<p class="muted" style="font-weight:700;margin:0">5 questions · about 15 minutes'+(inPlan?' · <span class="pill done">📅 In today’s plan</span>':'')+'</p>'
+   +'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
+   +(qdone?'<p style="margin-top:10px;background:#e5f4e3;border-radius:12px;padding:8px 10px;font-weight:700;color:#2f7a3d">✔ Done today — streak safe!</p><button class="btn" data-quest="'+t.id+'" style="margin-top:8px">↻ Replay this quest</button>'
+     : qfresh?'<p style="margin-top:10px;background:#e5f4e3;border-radius:12px;padding:8px 10px;font-weight:700;color:#2f7a3d">🏆 Finished before — fresh set ready!</p><button class="btn" data-quest="'+t.id+'" style="margin-top:8px">▶ Start fresh set</button>'
+     :'<button class="btn" data-quest="'+t.id+'" style="margin-top:10px">'+(qprog>0?'Continue the quest':'▶ Start this quest')+'</button>')
+   +'<p style="margin-top:10px;color:#5b5785;font-weight:600;font-size:.9rem">'+esc(t.blurb)+'</p>'
+   +'</div>';
+}
 function homeHTML(){
   var e=ex(), t=themeOf(e), tname=themeName(e);
   var doneCount=Object.keys(e.completed).length;
@@ -5506,12 +5585,8 @@ function homeHTML(){
      all is done, a finished quest's fresh set. Saturday is rest. */
   var todayPlan=studyPlanFor(new Date().getDay());
   var todayEvent=schoolEventFor(new Date());
-  var planPool=planTopics(todayPlan).filter(function(x){return !e.completed[x.id];});
-  if(todayPlan.review&&!planPool.length)planPool=TOPICS.slice();
-  var poolForPick=planPool.length?planPool:unfinished;
-  var picks=todayPlan.rest?[]:[poolForPick[e.swapIdx%Math.max(poolForPick.length,1)], poolForPick[(e.swapIdx+1)%Math.max(poolForPick.length,1)]].filter(Boolean);
-  if(!picks.length&&!todayPlan.rest)picks=[TOPICS[e.swapIdx%TOPICS.length]];
-  var quest=picks[0], alt=picks[1];
+  var board=boardPicks(e, todayPlan);
+  var quest=board[0];
   var nextTreasure=TREASURES.find(function(x){return e.treasures.indexOf(x.id)<0;});
   var dayIdx=Math.floor(Date.now()/86400000);
   var pipSays=PIP_SAYS[dayIdx%PIP_SAYS.length];
@@ -5519,10 +5594,8 @@ function homeHTML(){
   if(e.lastTopic&&topicById(e.lastTopic)&&e.completed[e.lastTopic])memory='Pip remembers: you finished '+esc(topicById(e.lastTopic).name)+' — what a superstar!';
   else if(e.treasures.length){ var lt=TREASURES.filter(function(x){return e.treasures.indexOf(x.id)>=0;}).slice(-1)[0]; if(lt)memory='Pip remembers the day you unlocked the '+esc(lt.name)+'!'; }
   var st=STAGES[e.critterStage];
-  var qprog=quest?(e.progress[quest.id]?e.progress[quest.id].idx:0):0;
-  var qstate=quest?questState(e,quest.id,todayKey()):'';
-  var qdone=qstate==='completed-today';
-  var qfresh=qstate==='fresh-today';
+  /* Quest progress/state is per board card now (boardCardHTML) — the
+     single-quest qprog/qstate/qdone/qfresh are gone with the old card. */
   var compass=e.treasures.indexOf('compass')>=0&&quest? '<p class="small" style="font-weight:800;margin-top:10px">🧭 Star Compass points to: <b>'+esc(quest.name)+'</b> — a great next quest!</p>':'';
   var badgeHTML=e.badges.map(function(b){ var m={'brave':'🦁 Brave Tryer','comeback':'🏆 Comeback Kid','first':'🌟 First Quest','perfect':'💯 Perfect Quest','critter':'🐸 Critter Friend','player':'🎮 Arcade Star','spotter':'🔍 Critter Spotter','naturalist':'🌿 Young Naturalist'}; return m[b]?'<span class="badge">'+m[b]+'</span>':''; }).join('');
   var hero='<section class="heroT"><img class="bg" src="assets/terrarium.webp" alt="Jiyuna’s glowing terrarium at night"><div class="shade"></div><div class="tintwash"></div>'
@@ -5537,27 +5610,24 @@ function homeHTML(){
    + Object.keys(THEMES).map(function(name){ var th=THEMES[name]; return '<button type="button" class="themechip '+(tname===name?'sel':'')+'" data-theme="'+esc(name)+'" aria-pressed="'+(tname===name)+'">'+esc(name)+'<span class="themedots" aria-hidden="true">'+(th.dots||[]).map(function(c){ return '<i style="background:'+c+'"></i>'; }).join('')+'</span></button>'; }).join('')
    +'</div><div class="themeline">'+t.line+'</div></div>'
    +'</div></section>';
-  var questCard='<section class="questcard'+(qdone?' done':'')+'"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
-   +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+ic(quest.img,quest.icon,'ic-sm')+' '+esc(quest.name)+'</h2>'
-    +'<p style="font-weight:800;margin:2px 0 0;color:#2f7a3d">🐸 Frog Quest — quest '+(doneCount+1)+' of 14: we\'re saving a frog tonight, one question at a time!</p>'
-    +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions · about 15 minutes'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
-    +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
-    +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
-    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">✔ Quest complete — amazing exploring!</p><p style="font-weight:800;margin:10px 0 0;color:#d97706">🔥 Streak: '+(e.streak||0)+' day'+((e.streak||0)===1?'':'s')+' in a row — come back tomorrow to keep it alive!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">A fresh set of questions returns tomorrow morning — or replay today’s set right now if you like!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Replay this quest</button>'
-      : qfresh? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">🏆 You finished this one before — today’s fresh set is ready!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">▶ Start today’s fresh set</button>'
-      : '<button class="btn" data-quest="'+quest.id+'" style="margin-top:14px">'+(qprog>0?'Continue the quest':'Start today’s quest')+'</button>')
-    +'<p style="margin-top:12px;color:#5b5785;font-weight:600">'+esc(quest.blurb)+'</p>'
-    + compass
-    +(alt? '<div style="margin-top:14px;border-top:2px dashed #e8e2d0;padding-top:12px"><p style="font-weight:700;color:#6d6899;margin:0 0 8px">Or pick today’s adventure — your call!</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><span class="swapbox" style="background:#e5f4e3;color:#2f7a3d">'+esc(quest.name)+'<span style="display:block;font-size:.75rem;font-weight:700">Today’s pick</span></span><button type="button" class="swapbox" id="swapAlt" style="background:#efe9dc;color:#2a2753;cursor:pointer">'+esc(alt.name)+'<span style="display:block;font-size:.75rem;font-weight:700;color:#6d6899">Swap to this one</span></button></div></div>':'')
-    : '<p style="margin-top:8px;font-weight:700">Today’s quest is being planted… check back in a moment.</p>')
-   +'</section>';
+  var boardSection='';
   if(todayPlan.rest){
-    questCard='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🌴 Today — rest day</div>'
+    boardSection='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🌴 Today — rest day</div>'
      +'<h2 style="margin:8px 0 2px;font-size:1.55rem">No quest today — it’s dance & art day!</h2>'
      +'<p style="font-weight:700;margin:8px 0 0">💃 Dance 12:00–1:00pm · 🎨 Art 1:30–3:00pm. The timetable says <b>no extra study</b> after that, and Pip agrees. If you’d like a little terrarium time, play a game or visit your critter — purely for fun.</p>'
      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button type="button" class="btn" data-go2="play">✨ Play a game</button><button type="button" class="btn" data-go2="critter" style="background:#efe9dc;color:#2a2753;box-shadow:0 4px 0 #d8d0ba">🐸 Visit my critter</button></div></section>';
-  } else if(todayEvent&&todayEvent.kind==='closure'){
-    questCard=questCard.replace('🍃 Today’s quest','🍃 Today’s quest — school is closed today, so this one is gentle & optional');
+  } else if(!board.length){
+    boardSection='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest board</div><p style="margin-top:8px;font-weight:700">Today’s quests are being planted… check back in a moment.</p></section>';
+  } else {
+    boardSection='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest board — pick one!</div>'
+     +'<p style="font-weight:800;margin:8px 0 0">This is quest '+(doneCount+1)+' of 14 — every quest is one more hop on our Frog Quest! Finish any ONE to keep your streak alive. ⭐ Pip’s pick is first — or choose your own!</p>'
+     +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">'
+     +board.map(function(t,i){ return boardCardHTML(e,t,i===0,todayPlan); }).join('')
+     +'</div>'
+     +'<div style="margin-top:14px"><button type="button" class="btn ghost" id="boardShuffle">🔀 Show me different quests</button></div>'
+     + compass
+     +'</section>';
+    if(todayEvent&&todayEvent.kind==='closure'){ boardSection=boardSection.replace('🍃 Today’s quest board','🍃 Today’s quest board — school is closed today, so these are gentle & optional'); }
   }
   var critterHeroCard='<button type="button" data-go2="critter" style="display:block;width:100%;text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink);margin-top:20px;cursor:pointer"><img src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'" style="width:100%;height:220px;object-fit:contain;display:block;background:linear-gradient(180deg,#e8f5e9,#c8e6c9);padding:12px 0"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">🐸 Your companion critter — tap to visit Critter Lab!</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.5rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'<p style="font-weight:800;margin:12px 0 0;color:#2f7a3d">👉 Tap to feed, clean &amp; play with '+esc(e.critterName)+' in Critter Lab!</p></div></button>';
   var treasureCard='<button type="button" data-go2="treasure" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;color:var(--ink)"><div class="themeslabel" style="color:var(--ink-soft)">Treasure Realm</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+e.treasures.length+' of '+TREASURES.length+' collected</div>'
@@ -5583,9 +5653,10 @@ function homeHTML(){
      get one drill per topic per day. Inline so the page functions
      stay self-contained for the standalone test harnesses. */
   var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; var _can=(t.sub==='math'||(((r&&r.lastBoost)||{}).day||'')!==todayKey()); return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p>'+(_can?'<button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>':'<p class="small muted" style="font-weight:700;margin:6px 0">Boost done for today — Pip will have fresh questions tomorrow! 🌙</p>'); }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
-  return lvlPrompt+'<div class="homegrid">'+hero+questCard+'</div>'
+  return lvlPrompt+hero
    + streakStripHTML(e, quest?quest.id:null)
    + critterHeroCard
+   + boardSection
    + boostCard
    + planSectionHTML(e, todayPlan, todayEvent)
    +'<div class="cardrow two">'+treasureCard+creativeCard+'</div>'
@@ -5601,7 +5672,7 @@ function bindHome(){
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
   document.querySelectorAll('[data-boost]').forEach(function(b){ b.onclick=function(){ startBoostFlow(b.getAttribute('data-boost')); }; });
   document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ sndPop(); go(b.getAttribute('data-go2')); }; });
-  var sw=document.getElementById('swapAlt'); if(sw)sw.onclick=function(){ ex().swapIdx+=1; save(); sndPop(); render(); };
+  var sw=document.getElementById('boardShuffle'); if(sw)sw.onclick=function(){ ex().swapIdx+=1; save(); sndPop(); render(); };
   document.querySelectorAll('[data-mood]').forEach(function(b){ b.onclick=function(){ var e=ex(); if(!e.mood)e.mood={}; e.mood[todayKey()]=b.getAttribute('data-mood'); save(); sndCorrect(); toast('Pip noted how you feel today 💛'); render(); }; });
 }
 
@@ -10052,23 +10123,170 @@ function optsShuffled(q, seed){
   var order=seededShuffle(q.o.map(function(_,i){return i;}), seed);
   return {q:q.q, o:order.map(function(i){return q.o[i];}), a:order.indexOf(q.a), c:q.c, j:q.j};
 }
+/* ---------- Adaptive difficulty (Phase 2, Pillar 3, 2026-11-10) ----------
+   "How did that question feel?" — Too easy / Just right / Too hard —
+   honoured AT ONCE, not just recorded. The next question shifts one
+   level for the same topic: easier = one level lower, harder = one
+   level higher (the server bank is the only source with real P1–P6
+   differentiation; the local bank is used only when it has a
+   genuinely different bank for that level, and the current question
+   is kept when the adjacent level has no question of its own).
+   "Too hard" also shows Pip's hint first on the next question.
+   Two wrong answers in a row auto-drop a level + hint (never a fail
+   screen). The choice is remembered per-explorer (diffPref) and
+   shapes the next quest, which starts at that shift. Each quest
+   starts winnable (first question gentler), then ramps.
+   A swap is an override on the quest's fixed list (cur.diffSwap,
+   index -> question); it is persisted in progress and carried by
+   the progress merge, so a resumed quest keeps its swapped
+   questions. The adjacent-level sets are fetched in the background
+   at quest start into a session-only cache (diffBankCache) — never
+   the main server-bank cache, whose key is per-topic with no level,
+   so a difficulty fetch can never clobber the quest's own set.
+   diffBankCache lives on the long-standing top-level var line with
+   cur/warm/quizTimer — a standalone var here would break the test
+   harness, which extracts a function up to the next "function"
+   keyword and chokes on a var between two functions. */
+function diffQuestionId(q){ if(!q||typeof q!=='object')return ''; return (typeof q.id==='string'&&q.id)?q.id:(typeof q.q==='string'?q.q:''); }
+function diffIsExcluded(q, excludeIds){
+  if(!q)return true;
+  if(excludeIds.indexOf(diffQuestionId(q))>=0)return true;
+  if(q.q&&excludeIds.indexOf(q.q)>=0)return true;
+  return false;
+}
+function fetchDiffBank(topicId, level){
+  if(level<1||level>6)return null;
+  var key=topicId+'|'+level;
+  if(diffBankCache[key])return diffBankCache[key];
+  var e=ex(); if(!e)return null;
+  var day=todayKey();
+  fetch('/api/daily-set',{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code:(typeof syncKey==='function'?syncKey():null)||'', explorerId:e.id, topicId:topicId, level:level, count:SB_COUNT, day:day})})
+  .then(function(r){ return r.ok?r.json():null; })
+  .then(function(j){
+    if(j&&j.source==='server'&&Array.isArray(j.questions)&&sbShapeOk(j.questions)){
+      var norm=j.questions.map(function(q){ return sbNormalizeQuestion(q); }).filter(Boolean);
+      if(norm.length===SB_COUNT)diffBankCache[key]={day:day, questions:norm};
+    }
+  })
+  .catch(function(){});
+  return null;
+}
+function diffQuestionFor(t, level, shift, excludeIds){
+  if(!t||!shift)return null;
+  var lv=Math.max(1,Math.min(6,level+shift));
+  if(lv===level)return null;
+  excludeIds=excludeIds||[];
+  var key=t.id+'|'+lv;
+  var rec=diffBankCache[key];
+  if(rec&&rec.day===todayKey()&&Array.isArray(rec.questions)){
+    for(var i=0;i<rec.questions.length;i++){
+      var q=rec.questions[i];
+      if(q&&!diffIsExcluded(q,excludeIds)){ var n=sbNormalizeQuestion(q); return n||q; }
+    }
+  }
+  var curQ=bankFor(t,'quest',level), curF=bankFor(t,'fresh',level);
+  var adjQ=bankFor(t,'quest',lv), adjF=bankFor(t,'fresh',lv);
+  var pool=[];
+  if(adjQ!==curQ)pool=pool.concat(adjQ);
+  if(adjF!==curF)pool=pool.concat(adjF);
+  for(var j=0;j<pool.length;j++){
+    var qq=pool[j];
+    if(qq&&!diffIsExcluded(qq,excludeIds))return qq;
+  }
+  return null;
+}
+function diffSwapAt(c, t, level, idx, shift){
+  if(!c||idx==null||!t)return false;
+  var list=questListFor(t,c,level);
+  if(idx<0||idx>=list.length)return false;
+  if(c.diffSwap&&c.diffSwap[idx])return true;
+  var exclude=[];
+  list.forEach(function(q){ if(!q)return; var id=diffQuestionId(q); if(id&&exclude.indexOf(id)<0)exclude.push(id); if(q.q&&exclude.indexOf(q.q)<0)exclude.push(q.q); });
+  if(c.diffSwap)Object.keys(c.diffSwap).forEach(function(i){ var q=c.diffSwap[i]; if(!q)return; var id=diffQuestionId(q); if(id&&exclude.indexOf(id)<0)exclude.push(id); if(q.q&&exclude.indexOf(q.q)<0)exclude.push(q.q); });
+  var q=diffQuestionFor(t, level, shift, exclude);
+  if(!q)return false;
+  if(!c.diffSwap)c.diffSwap={};
+  c.diffSwap[idx]=q;
+  return true;
+}
+function diffSwapNext(c, t, level){
+  if(!c)return false;
+  return diffSwapAt(c, t, level, c.idx+1, c.diffShift||0);
+}
+function diffHintText(q){
+  if(q&&q.c&&String(q.c).trim())return String(q.c).trim();
+  return 'Take it slow — read the question once more, and think about what you already know. You’ve got this! 💛';
+}
+function diffButtonsHTML(){
+  if(!cur)return '';
+  var s=cur.diffShift||0;
+  function b(felt,label,emoji){
+    var sel=((felt==='hard'&&s===-1)||(felt==='just'&&s===0)||(felt==='easy'&&s===1));
+    return '<button type="button" class="diffbtn'+(sel?' sel':'')+'" data-diff="'+felt+'">'+emoji+' '+label+'</button>';
+  }
+  return '<div style="margin-top:14px"><p class="small" style="font-weight:800;margin:0 0 6px;color:#6d6899">How did that question feel?</p><div style="display:flex;gap:8px;flex-wrap:wrap">'+b('easy','Too easy','😄')+b('just','Just right','🙂')+b('hard','Too hard','😅')+'</div></div>';
+}
+function applyDifficultyChoice(felt){
+  if(!cur)return;
+  var e=ex(); if(!e)return;
+  var t=topicById(cur.topicId); if(!t)return;
+  var level=levelNum(e);
+  var shift=(felt==='hard'?-1:(felt==='easy'?1:0));
+  cur.diffShift=shift;
+  if(felt==='hard'&&cur.idx+1<questListFor(t,cur,level).length)cur.hintForIdx=cur.idx+1;
+  e.diffPref=shift; e.diffPrefAt=new Date().toISOString();
+  diffSwapNext(cur, t, level);
+  if(cur.phase==='quest')persistProgress(); else save();
+  toast(felt==='hard'?'Got it — the next one will be gentler, with a hint to help! 💛':felt==='easy'?'You got it — the next one will be a bigger challenge! 🚀':'Just right — Pip will keep them coming at this level! 🙂');
+  render();
+}
+function noteQuestAnswer(ok){
+  if(!cur||cur.phase!=='quest')return;
+  if(ok){ cur.consecWrong=0; return; }
+  cur.consecWrong=(cur.consecWrong||0)+1;
+  if(cur.consecWrong!==2)return;
+  cur.diffShift=-1;
+  var e=ex();
+  if(e){ e.diffPref=-1; e.diffPrefAt=new Date().toISOString(); }
+  var t=topicById(cur.topicId);
+  if(t&&e&&cur.idx+1<questListFor(t,cur,levelNum(e)).length)cur.hintForIdx=cur.idx+1;
+  if(t&&e)diffSwapNext(cur, t, levelNum(e));
+  cur.consecWrong=0;
+  toast('That one was tricky — Pip will make the next one gentler, with a hint to help! 💛');
+}
 function questListFor(t, c, level){
-  if(c.phase==='boost')return (c.boostList||[]).slice();
-  if(c.phase!=='quest'){
+  var _list;
+  if(c.phase==='boost')_list=(c.boostList||[]).slice();
+  else if(c.phase!=='quest'){
     /* Second Chance: a fresh draw from the retry bank every time
        (requested 2026-11-07 — the old retry was the same 3
        questions, always). The draw is stored on the retry run, so
        a re-render never re-draws mid-round. */
     var pool=(c.retryPool&&c.retryPool.length?c.retryPool:[0,1,2]);
     var rb=bankFor(t,'retry',level);
-    return pool.map(function(ri){ return rb[ri]; }).filter(Boolean);
+    _list=pool.map(function(ri){ return rb[ri]; }).filter(Boolean);
   }
   /* Live-gen experiment: a quest that started on a live set plays
      that set verbatim (options already shuffled once, at cache time). */
-  if(c.phase==='quest'&&c.liveGen&&c.liveGen.length===LIVE_GEN_COUNT)return c.liveGen;
-  if(!c.pool||!c.pool.length)return bankFor(t,'quest',level);
-  var pool=poolQuestions(t, level);
-  return c.pool.map(function(pi){ var q=pool[pi]; if(!q)return null; return c.fresh?optsShuffled(q, hashStr(t.id+'#'+pi)):q; }).filter(Boolean);
+  else if(c.phase==='quest'&&c.liveGen&&c.liveGen.length===LIVE_GEN_COUNT)_list=c.liveGen;
+  else if(!c.pool||!c.pool.length)_list=bankFor(t,'quest',level);
+  else {
+    var pool=poolQuestions(t, level);
+    _list=c.pool.map(function(pi){ var q=pool[pi]; if(!q)return null; return c.fresh?optsShuffled(q, hashStr(t.id+'#'+pi)):q; }).filter(Boolean);
+  }
+  /* Difficulty swap (Phase 2, Pillar 3): cur.diffSwap overrides a
+     question by index with an adjacent-level one. The list is
+     copied first, so the bank / live set is never mutated. This is
+     inlined here (not a separate helper) so the function stays
+     self-contained for the test harness, which extracts it alone. */
+  if(c&&c.diffSwap){
+    _list=_list.slice();
+    Object.keys(c.diffSwap).forEach(function(k){
+      var i=parseInt(k,10);
+      if(!isNaN(i)&&i>=0&&i<_list.length&&c.diffSwap[k])_list[i]=c.diffSwap[k];
+    });
+  }
+  return _list;
 }
 /* ---------- Daily game refresh + Ask Pip from a question (2026-11-08) ----------
    Feature 1 — every game pulls a FRESH set each day, with no repeated
@@ -10869,7 +11087,7 @@ function fetchServerBankQuestions(topicId, level){
   })();
   return sbFetchPromise;
 }
-var cur=null, warm=null, quizTimer=null;
+var cur=null, warm=null, quizTimer=null, diffBankCache={};
 /* Quest timing (requested 2026-11-07): the same answer-only clock
    as the Play Arcade — it counts only the time a question is on
    screen waiting for an answer. cur.answerSecs banks the seconds
@@ -10911,6 +11129,10 @@ function recordLearnBest(e, topicId){
 function startQuestFlow(topicId){
   var _gt=topicById(topicId); if(_gt&&_gt.moe&&!moeInSeason(_gt)){ toast('Pip will bring that one in Term '+_gt.term+' — school has not taught it yet!'); return; }
   var e=ex();
+  /* Phase 2: pre-fetch the adjacent levels in the background
+     (session-only — never the main server-bank cache) so a "Too
+     hard" / "Too easy" tap can swap the next question right away. */
+  var _dl=levelNum(e); if(_dl>1)fetchDiffBank(topicId,_dl-1); if(_dl<6)fetchDiffBank(topicId,_dl+1);
   var p=e.progress[topicId];
   /* A saved record for the ORIGINAL run is stale once that run
      finished: a delete does not sync, so the server can resurrect
@@ -10929,7 +11151,7 @@ function loadProgress(topicId){
      with (p.pool), whatever the date is now — it is never re-pulled.
      Progress saved by older builds has no pool: it means the
      original quest set, in order. */
-  var lc={topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh, answerSecs:(p.elapsed||0), startedAt:(p.answered?null:Date.now()), liveGen:null, liveGenSource:'bank', fibTyped:(p.fibTyped||''), fibCorrect:!!p.fibCorrect};
+  var lc={topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh, answerSecs:(p.elapsed||0), startedAt:(p.answered?null:Date.now()), liveGen:null, liveGenSource:'bank', fibTyped:(p.fibTyped||''), fibCorrect:!!p.fibCorrect, diffSwap:(p.diffSwap||{}), diffShift:((ex()&&ex().diffPref)||0), hintForIdx:null, consecWrong:0};
   /* Live-gen experiment: an unfinished quest resumes with the exact
      live set it started with, from the on-device cache. No cache
      (other device, cleared data) degrades to the bank pool it already
@@ -10941,7 +11163,7 @@ function loadProgress(topicId){
 }
 function persistProgress(){
   var e=ex(); if(!cur||cur.phase!=='quest')return;
-  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs(), fibTyped:(cur.fibTyped||''), fibCorrect:!!cur.fibCorrect}; save();
+  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs(), fibTyped:(cur.fibTyped||''), fibCorrect:!!cur.fibCorrect, diffSwap:(cur.diffSwap||{})}; save();
 }
 function warmupHTML(){
   var t=topicById(warm.topicId);
@@ -10995,7 +11217,14 @@ function beginQuest(topicId){
     if(use.source==='live'){ liveGen=use.questions; liveGenSource='live'; }
     else recordLiveGenStat('fallback', null, liveGenFetchState.status==='pending'?'still-loading':(liveGenFetchState.reason||use.reason));
   }
-  cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now(), liveGen:liveGen, liveGenSource:liveGenSource};
+  cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now(), liveGen:liveGen, liveGenSource:liveGenSource, diffShift:(e.diffPref||0), diffSwap:{}, hintForIdx:null, consecWrong:0};
+  /* Phase 2: start winnable — the first question follows the child's
+     saved difficulty (a "Too hard" last time starts easier, a "Too
+     easy" starts harder); with no preference the first question is
+     a gentler one (level-1) when one is ready, then it ramps to the
+     normal level. No adjacent question ready yet? The original
+     first question stands — never an error. */
+  diffSwapAt(cur, t, levelNum(e), 0, cur.diffShift!==0?cur.diffShift:-1);
   persistProgress(); go('quiz');
 }
 /* Boost retake rules (2026-11-08) — mirrors of lib/rules.js:
@@ -11084,6 +11313,7 @@ function quizHTML(){
      +'<button class="btn" id="boostStart" style="margin-top:14px">▶ Start my boost</button> <button class="btn ghost" id="boostLater" style="margin-top:14px">Maybe later</button></div>';
   }
   var q=list[cur.idx];
+  var _hint=(cur.hintForIdx!=null&&cur.hintForIdx===cur.idx&&!cur.answered)?'<div class="speech" style="margin:12px 0 0"><b>💡 Pip’s hint:</b> '+esc(diffHintText(q))+'</div>':'';
   var left=list.length-cur.idx-1;
   var listenBtn=t.sub==='chi'?'<button class="btn teal" id="qListen" style="margin-bottom:12px">🔊 Listen — then say it out loud!</button>':'';
   var _fib=isFibQuestion(q);
@@ -11098,11 +11328,11 @@ function quizHTML(){
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
    +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+((cur.liveGenSource==='live'||cur.boostSource==='live')?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
-   +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+listenBtn
+   +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+listenBtn+_hint
    +(_fib
      ?'<div><input class="field" id="qFibInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="60" value="'+esc(cur.answered?(cur.fibTyped||''):'')+'" '+(cur.answered?'disabled':'')+' style="max-width:340px;font-weight:800"><div style="margin-top:10px"><button class="btn" id="qFibCheck" '+(cur.answered?'disabled':'')+'>Check my answer ✓</button></div>'+(cur.answered?'<p class="small muted" style="font-weight:700;margin:8px 0 0">Your answer: “'+esc(cur.fibTyped||'')+'”</p>':'')+'</div>'
      :'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>')
-   +'<div style="margin-top:10px"><button class="btn ghost" id="qAskPip">🦦 Ask Pip about this question</button></div>'
+   +diffButtonsHTML()+'<div style="margin-top:10px"><button class="btn ghost" id="qAskPip">🦦 Ask Pip about this question</button></div>'
    +'<div id="qFb">'+fb+'</div>'
    +'<button class="btn ghost" id="qQuit" style="margin-top:8px">'+(cur.phase==='boost'?'Stop my boost for now':'Save &amp; quit — resume later')+'</button></div>';
 }
@@ -11152,9 +11382,14 @@ function bindQuiz(){
   /* Ask Pip about this quest question: Pip explains it in a new
      thread, and the answer-only clock pauses while the child is away. */
   var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:(Array.isArray(q.o)?q.o.slice():[]), answer:questAnswerText(q), clue:q.c||''}); };
+  /* Phase 2 difficulty buttons: how the question felt. Honoured at
+     once — the next question shifts a level and "Too hard" also
+     shows Pip's hint first on the next question. */
+  document.querySelectorAll('[data-diff]').forEach(function(b){ b.onclick=function(){ applyDifficultyChoice(b.getAttribute('data-diff')); }; });
   document.querySelectorAll('[data-qopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-qopt'),10); cur.picked=i; cur.answered=true;
     if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:questAnswerText(q)}; } }
+    noteQuestAnswer(i===q.a);
     pauseLearnTimer();
     if(cur.phase==='quest')persistProgress(); else save();
     render();
@@ -11166,6 +11401,7 @@ function bindQuiz(){
     var ok=checkFibAnswer(q, typed);
     cur.fibTyped=typed; cur.fibCorrect=ok; cur.picked=ok?q.a:-1; cur.answered=true;
     if(ok){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:questAnswerText(q)}; } }
+    noteQuestAnswer(ok);
     pauseLearnTimer();
     if(cur.phase==='quest')persistProgress(); else save();
     render();
@@ -13556,8 +13792,19 @@ function mergeCare(a,b){ var out={}; ['feed','clean','play'].forEach(function(id
    (merge keeps the furthest stage) snapped the view straight back
    to Adult Frog. The view and the growth stage are separate now. */
 var critterView=null;
+var critterViewFor=null;
+function resetCritterViewFor(e){
+  /* The viewed stage is per-explorer display state, but critterView
+     is a global — without this, switching explorers on the same
+     device showed the previous explorer's viewed stage (and a stale
+     care message) in a fresh explorer's Critter Lab (seen live).
+     Reset the view (and the stale care message) the moment Critter
+     Lab renders for a different explorer. Real growth is untouched. */
+  if(!e)return;
+  if(critterViewFor!==e.id){ critterView=null; critterViewFor=e.id; careMsg=null; }
+}
 function critterHTML(){
-  var e=ex(); var view=(critterView==null?e.critterStage:critterView); var st=STAGES[view]; var grownUp=e.critterStage>=3;
+  var e=ex(); resetCritterViewFor(e); var view=(critterView==null?e.critterStage:critterView); var st=STAGES[view]; var grownUp=e.critterStage>=3;
   var stageLen=critterStageLen(e.critterStage), stageDays=e.critterStageDays||0;
   /* "Grew today" is derived, not stored: a care day that grows the
      frog resets stageDays to 0, so a counted care day today with 0
