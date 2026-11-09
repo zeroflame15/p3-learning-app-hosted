@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="light" />
 <link rel="icon" href="data:," />
-<title>P3 Learning App</title>
+<title>Pip's Learning App</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -619,7 +619,7 @@ function sndEntrance(){
    2026-11-05 at Bryan's request and replaced with these two files
    he sent: a background-music track and jungle birdsong. */
 var VIBES=[
- {id:'bg-music', name:'Background Music', icon:'🎵', file:'assets/vibe-background-music.mp3', blurb:'The gentle tune Bryan picked — soft and steady for study time.'},
+ {id:'bg-music', name:'Background Music', icon:'🎵', file:'assets/vibe-background-music.mp3', blurb:'A gentle tune — soft and steady for study time.'},
  {id:'jungle-birds', name:'Jungle Birds', icon:'🐦', file:'assets/vibe-jungle-birds.mp3', blurb:'Birdsong in the jungle — chirps and rustles, like a morning in the trees.'}
 ];
 var vibeId=null, vibeAudio=null, lastVibeId='bg-music';
@@ -692,7 +692,7 @@ if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.on
 </script>
 <script>
 /* ============================================================
-   CONTENT — 31 Primary 3 topics. Each quest = 5 questions.
+   CONTENT — 31 topics (P3-derived; being rebuilt per level from the MOE syllabus). Each quest = 5 questions.
    warm = fresh warm-up bank (never repeats quest wording).
    retry = "cousin" questions for the Second Chance round.
    Q format: [question, [options], correctIndex, clue, pipJoke]
@@ -5314,9 +5314,10 @@ function bindHome(){
 
 /* ============================================================ LEARN + WARM-UP + QUIZ */
 /* myKx Learn structure (2026-11-07): the 4 subjects, 34 topics and 161
-   sub-topics of the Singapore MOE P3 syllabus, copied from the myKx
-   guest Learn page (live check) and the myKx repo skill packs
-   (content/skills/p3-STAR/skill.json). See mykx-p3-syllabus.md.
+   sub-topics of the Singapore MOE syllabus, P3-derived and copied from
+   the myKx guest Learn page (live check) and the myKx repo skill packs
+   (content/skills/p3-STAR/skill.json). See mykx-p3-syllabus.md. The list
+   is being rebuilt per level (P1–P6) from the MOE syllabus.
    Layout here is myKx's; the mint styling stays ours.
    Each sub-topic: id (myKx skill id), name (the live page's human
    name), map (our TOPICS id whose bank covers it, or null), cov:
@@ -6831,8 +6832,8 @@ function finishRound(t){
 
 /* ============================================================ TRIVIA TIME */
 var TRIVIA_CATS={all:['🎲','All topics'],eng:['📖','English'],math:['🔢','Maths'],sci:['🔬','Science'],chi:['🀄','Chinese'],gen:['🌍','General Knowledge']};
-/* Trivia bank (requested 2026-11-07): Primary 3 level, matched to
-   what the child learns — English, Maths, Science and Chinese —
+/* Trivia bank (requested 2026-11-07): a general primary-school bank,
+   matched to what the child learns — English, Maths, Science and Chinese —
    plus a General Knowledge category (added 2026-11-07) for extra
    knowledge outside school subjects: the world, animals, space,
    Singapore and everyday life. Each item shows a question, a hint,
@@ -6922,7 +6923,7 @@ function triviaHTML(){
    +(triviaState.revealed
      ?'<div class="feedback ok" style="font-size:1.15rem">🎉 '+esc(t.a)+'</div><button class="btn" id="tvNext" style="margin-top:14px">Next trivia 🎲</button>'
      :'<button class="btn" id="tvShow" style="margin-top:14px">Show the answer 👀</button>')
-   +'<p class="small muted" style="font-weight:700;margin-top:14px">Questions match Primary 3 learning — English, Maths, Science and Chinese — plus General Knowledge from outside school. There is always another one!</p></div>';
+   +'<p class="small muted" style="font-weight:700;margin-top:14px">Questions match primary school learning — English, Maths, Science and Chinese — plus General Knowledge from outside school. There is always another one!</p></div>';
 }
 function bindTrivia(){
   document.querySelectorAll('[data-tcat]').forEach(function(b){ b.onclick=function(){
