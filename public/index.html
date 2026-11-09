@@ -3280,9 +3280,21 @@ function postToServer(key){
   if(!key||!DB)return;
   try{
     fetch('/api/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:key,device:DEVICE_ID,data:DB})}).then(function(r){
-      if(r.ok){ postRetryCount=0; return; }
+      if(r.ok){
+        postRetryCount=0;
+        /* Store the server's post-upload timestamp (2026-11-09):
+           the lightweight "has it changed" check compares the
+           server's updatedAt against DB.updatedAt, so after a
+           successful upload DB.updatedAt must be the server's new
+           timestamp — otherwise the next auto-pull would see a
+           mismatch and download the whole row for no reason. */
+        try{ return r.json(); }catch(e){ return null; }
+      }
       if(typeof console!=='undefined'&&console.warn)console.warn('postToServer: server answered '+r.status+' — queuing a retry');
       if(postRetryCount<2){ postRetryCount++; syncToServer(); }
+      return null;
+    }).then(function(j){
+      if(j&&typeof j.updatedAt==='string'&&j.updatedAt){ DB.updatedAt=j.updatedAt; saveLocal(); }
     }).catch(function(){});
   }catch(e){}
 }
@@ -3377,35 +3389,63 @@ function uploadAfterPull(){
        the queue is clear — this cannot loop on its own. */
     if(syncUploadPending){ syncUploadPending=false; syncToServer(); }
   };
-  try{
-    fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){ return r.json(); }).then(function(j){
-      try{
-        if(j&&j.configured&&j.data&&j.data.explorers){
-          var before=JSON.stringify(DB);
-          /* Converge from the store first (2026-11-09): a stale GET
-             must not clobber a newer plan another tab just saved to
-             localStorage. The before-snapshot is taken first, so
-             adopting a newer plan from the store counts as a change
-             and the merged result is uploaded. */
-          mergeStoredIntoDB();
-          if(!DB.explorers||!DB.explorers.length){ DB=JSON.parse(JSON.stringify(j.data)); ensureSyncCode(); }
-          else { DB=mergeFamilyDB(DB, j.data); ensureSyncCode(); }
-          DB.updatedAt=j.updatedAt||DB.updatedAt||null;
-          if(JSON.stringify(DB)!==before){
-            saveLocal();
-            /* The merge REPLACES the DB object, so every live closure
-               still holding the old explorer (Ask Pip's send handler
-               included) now points at a detached copy: a question or
-               reply written through it is silently lost when save()
-               serialises the new DB. Re-render when safe so all
-               handlers re-bind to the fresh explorer. */
-            if(safeToRender())render();
+  /* The full pull-then-upload, unchanged from before (2026-11-09):
+     download the whole server record, converge from the store,
+     union-merge, then upload. */
+  function fullPullThenUpload(){
+    try{
+      fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){ return r.json(); }).then(function(j){
+        try{
+          if(j&&j.configured&&j.data&&j.data.explorers){
+            var before=JSON.stringify(DB);
+            /* Converge from the store first (2026-11-09): a stale GET
+               must not clobber a newer plan another tab just saved to
+               localStorage. The before-snapshot is taken first, so
+               adopting a newer plan from the store counts as a change
+               and the merged result is uploaded. */
+            mergeStoredIntoDB();
+            if(!DB.explorers||!DB.explorers.length){ DB=JSON.parse(JSON.stringify(j.data)); ensureSyncCode(); }
+            else { DB=mergeFamilyDB(DB, j.data); ensureSyncCode(); }
+            DB.updatedAt=j.updatedAt||DB.updatedAt||null;
+            if(JSON.stringify(DB)!==before){
+              saveLocal();
+              /* The merge REPLACES the DB object, so every live closure
+                 still holding the old explorer (Ask Pip's send handler
+                 included) now points at a detached copy: a question or
+                 reply written through it is silently lost when save()
+                 serialises the new DB. Re-render when safe so all
+                 handlers re-bind to the fresh explorer. */
+              if(safeToRender())render();
+            }
           }
-        }
-      }catch(e){}
+        }catch(e){}
+        done();
+      }, function(){ done(); });
+    }catch(e){ done(); }
+  }
+  /* Lightweight "has it changed" check first (2026-11-09): if the
+     server row has not changed since this DB was last synced, skip
+     the pull and upload straight away — the server's revision guard
+     still protects the timetable. FAIL-OPEN: any check failure falls
+     through to the full pull-then-upload. */
+  var checkP;
+  try{
+    checkP=fetch('/api/progress?code='+encodeURIComponent(key)+'&check=1').then(function(r){ if(!r.ok)return null; return r.json(); }).then(function(j){ if(!j||!j.configured)return null; var u=j.updatedAt; return (typeof u==='string'&&u)?u:null; }).catch(function(){ return null; });
+  }catch(e){ checkP=Promise.resolve(null); }
+  checkP.then(function(serverAt){
+    if(serverAt&&DB&&DB.explorers&&DB.explorers.length&&DB.updatedAt&&serverAt===DB.updatedAt){
+      /* Unchanged: converge from the store (another tab may have
+         written during the 800ms debounce), then upload. */
+      var c=false;
+      try{ c=mergeStoredIntoDB(); }catch(e){}
+      if(c){ try{ saveLocal(); }catch(e){} }
       done();
-    }, function(){ done(); });
-  }catch(e){ done(); }
+      return;
+    }
+    fullPullThenUpload();
+  }).catch(function(){
+    if(syncPulling)fullPullThenUpload();
+  });
 }
 /* Merge a server family record with the local one — a UNION, never a
    last-write-wins overwrite. Progress in this app only ever grows
@@ -3764,31 +3804,67 @@ function syncFromServer(opts){
      This also keeps a pull from ever starting a second pull. */
   if(syncPulling)return Promise.resolve(false);
   syncPulling=true;
-  return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
-    syncPulling=false; drainPendingUpload();
-    if(!j||!j.configured||!j.data||!j.data.explorers)return false;
-    var server=j.data;
-    /* Converge from the store first (2026-11-09): a stale GET must
-       not clobber a newer plan another tab just saved to
-       localStorage. The before-snapshot is taken first, so adopting
-       a newer plan from the store counts as a change and the merged
-       result is uploaded to the server. */
-    var before=JSON.stringify(DB);
-    mergeStoredIntoDB();
-    var localEmpty=!DB.explorers||!DB.explorers.length;
-    /* Upload the merged result with a direct POST (postToServer),
-       NOT syncToServer(): syncToServer pulls first, and calling it
-       here would start another pull from inside a pull. */
-    if(localEmpty){ DB=JSON.parse(JSON.stringify(server)); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null; saveLocal(); postToServer(key); return true; }
-    /* Always union-merge: timestamps are NOT trusted as a winner,
-       because an open device's per-minute screen-time save keeps
-       bumping its local timestamp. The merge keeps the richer side
-       of every field, so nothing either device did is lost. */
-    DB=mergeFamilyDB(DB, server); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null;
-    var changed=JSON.stringify(DB)!==before;
-    if(changed){ saveLocal(); postToServer(key); }
-    return changed;
-  }).catch(function(){ syncPulling=false; drainPendingUpload(); return false; });
+  /* The full pull, unchanged from before (2026-11-09): download the
+     whole server record, converge from the store, union-merge, and
+     upload back if anything changed. */
+  function fullPull(){
+    return fetch('/api/progress?code='+encodeURIComponent(key)).then(function(r){return r.json();}).then(function(j){
+      syncPulling=false; drainPendingUpload();
+      if(!j||!j.configured||!j.data||!j.data.explorers)return false;
+      var server=j.data;
+      /* Converge from the store first (2026-11-09): a stale GET must
+         not clobber a newer plan another tab just saved to
+         localStorage. The before-snapshot is taken first, so adopting
+         a newer plan from the store counts as a change and the merged
+         result is uploaded to the server. */
+      var before=JSON.stringify(DB);
+      mergeStoredIntoDB();
+      var localEmpty=!DB.explorers||!DB.explorers.length;
+      /* Upload the merged result with a direct POST (postToServer),
+         NOT syncToServer(): syncToServer pulls first, and calling it
+         here would start another pull from inside a pull. */
+      if(localEmpty){ DB=JSON.parse(JSON.stringify(server)); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null; saveLocal(); postToServer(key); return true; }
+      /* Always union-merge: timestamps are NOT trusted as a winner,
+         because an open device's per-minute screen-time save keeps
+         bumping its local timestamp. The merge keeps the richer side
+         of every field, so nothing either device did is lost. */
+      DB=mergeFamilyDB(DB, server); ensureSyncCode(); DB.updatedAt=j.updatedAt||DB.updatedAt||null;
+      var changed=JSON.stringify(DB)!==before;
+      if(changed){ saveLocal(); postToServer(key); }
+      return changed;
+    }).catch(function(){ syncPulling=false; drainPendingUpload(); return false; });
+  }
+  /* Lightweight "has it changed" check first (2026-11-09): a ~100-byte
+     GET that returns only the server row's updatedAt. If it matches
+     this DB's updatedAt — the server state as of the last successful
+     sync — and this DB is non-empty, the server has nothing new and
+     the whole-row download is skipped. FAIL-OPEN: any failure,
+     non-OK answer, or malformed response resolves null and the full
+     pull runs instead, so a download is never skipped on uncertainty.
+     A local DB with no updatedAt (never synced) always does the
+     full pull. */
+  var checkP;
+  try{
+    checkP=fetch('/api/progress?code='+encodeURIComponent(key)+'&check=1').then(function(r){ if(!r.ok)return null; return r.json(); }).then(function(j){ if(!j||!j.configured)return null; var u=j.updatedAt; return (typeof u==='string'&&u)?u:null; }).catch(function(){ return null; });
+  }catch(e){ checkP=Promise.resolve(null); }
+  return checkP.then(function(serverAt){
+    if(serverAt&&DB&&DB.explorers&&DB.explorers.length&&DB.updatedAt&&serverAt===DB.updatedAt){
+      syncPulling=false; drainPendingUpload();
+      /* Unchanged on the server: converge from the store (another
+         tab may have written while this pull was deciding) and, if
+         that changed anything, upload it — exactly as a no-change
+         pull would. Otherwise nothing to do. */
+      var before=JSON.stringify(DB);
+      mergeStoredIntoDB();
+      var changed=JSON.stringify(DB)!==before;
+      if(changed){ saveLocal(); postToServer(key); }
+      return changed;
+    }
+    return fullPull();
+  }).catch(function(){
+    if(syncPulling)return fullPull();
+    return false;
+  });
 }
 /* Live sync: pull the server record on a timer and when the tab
    becomes visible again, but re-render only when it is safe to do
@@ -6291,15 +6367,15 @@ function fetchBoostLiveQuestions(topicId, level, modelOn, avoid){
      (POST /api/report-answers): correct -> mastered, wrong -> due.
      A failed report never blocks the child; the set is simply served
      again another day. Question state lives server-side only.
-   - Precedence on math-ntuc: server-bank set first, live-gen set
+   - Precedence on every topic: server-bank set first, live-gen set
      second, bank third. The quest chip shows which one is playing:
      "📚 Pip's shelf" for a server set, "✨ Fresh from Pip" for live. */
 var SB_TOPIC='math-ntuc';
 var SB_COUNT=5;
 var sbFetchState={status:'idle', reason:null};
 var sbFetchPromise=null;
-function sbCacheKey(eid){ return 'jyn-servbank-v1:'+eid+':'+SB_TOPIC; }
-function loadSbCache(eid, topicId){ if(topicId!==SB_TOPIC)return null; var rec=liveGenLSGet(sbCacheKey(eid)); if(!rec||!Array.isArray(rec.questions)||rec.questions.length!==SB_COUNT)return null; return rec; }
+function sbCacheKey(eid, topicId){ return 'jyn-servbank-v1:'+eid+':'+topicId; }
+function loadSbCache(eid, topicId){ var rec=liveGenLSGet(sbCacheKey(eid, topicId)); if(!rec||!Array.isArray(rec.questions)||rec.questions.length!==SB_COUNT)return null; return rec; }
 function sbShapeOk(questions){
   if(!Array.isArray(questions)||questions.length!==SB_COUNT)return false;
   return questions.every(function(q){
@@ -6311,7 +6387,6 @@ function sbShapeOk(questions){
   });
 }
 function saveSbCache(eid, topicId, day, questions){
-  if(topicId!==SB_TOPIC)return null;
   /* Shuffle the options once, deterministically for this explorer +
      topic + day — same as the live-gen cache. The server id rides
      along: it is what the report call sends back. */
@@ -6321,7 +6396,7 @@ function saveSbCache(eid, topicId, day, questions){
     return {id:q.id, q:q.q, o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:q.c, j:q.j||''};
   });
   var rec={topicId:topicId, day:day, questions:shuffled, savedAt:Date.now()};
-  liveGenLSSet(sbCacheKey(eid), rec);
+  liveGenLSSet(sbCacheKey(eid, topicId), rec);
   return rec;
 }
 function sbPick(cached, today){
@@ -6344,7 +6419,7 @@ function reportServerBankAnswers(topicId, list, wrongIdx){
      mastered and wrong ones due; if this call never lands, the set
      is simply served again another day — safe by design. */
   try{
-    var e=ex(); if(!e||topicId!==SB_TOPIC)return;
+    var e=ex(); if(!e)return;
     var results=(list||[]).map(function(q, i){
       return {questionId:q.id, correct:(wrongIdx||[]).indexOf(i)<0};
     }).filter(function(r){ return typeof r.questionId==='string'&&r.questionId.length>0; });
@@ -6353,7 +6428,6 @@ function reportServerBankAnswers(topicId, list, wrongIdx){
   }catch(err){}
 }
 function fetchServerBankQuestions(topicId, level){
-  if(topicId!==SB_TOPIC)return null;
   if(sbFetchState.status==='pending')return sbFetchPromise;
   var e=ex(); if(!e)return null;
   var day=todayKey();
@@ -6435,7 +6509,7 @@ function startQuestFlow(topicId){
      one is discarded and the quest starts again from Question 1. */
   if(p&&!p.fresh&&e.completedDay&&e.completedDay[topicId]){ delete e.progress[topicId]; save(); p=null; }
   if(p){ cur=loadProgress(topicId); go('quiz'); }
-  else { var tt=topicById(topicId); warm={topicId:topicId, order:dailyWarmIndices(tt, todayKey(), e.id, levelNum(e)), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; if(topicId===LIVE_GEN_TOPIC){ fetchServerBankQuestions(topicId, levelNum(e)); fetchLiveGenQuestions(topicId, levelNum(e)); } go('warmup'); }
+  else { var tt=topicById(topicId); warm={topicId:topicId, order:dailyWarmIndices(tt, todayKey(), e.id, levelNum(e)), idx:0, correct:0, left:60, timer:null, picked:null, answered:false}; fetchServerBankQuestions(topicId, levelNum(e)); if(topicId===LIVE_GEN_TOPIC){ fetchLiveGenQuestions(topicId, levelNum(e)); } go('warmup'); }
 }
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
 function loadProgress(topicId){
@@ -6449,11 +6523,9 @@ function loadProgress(topicId){
      live set it started with, from the on-device cache. No cache
      (other device, cleared data) degrades to the bank pool it already
      saved — never an error. */
-  if(topicId===LIVE_GEN_TOPIC){
-    var sbUse=sbUsable(ex().id, topicId, levelNum(ex()), todayKey(), true);
-    if(sbUse.source==='server'){ lc.liveGen=sbUse.questions; lc.liveGenSource='server'; }
-    else { var use=liveGenUsable(ex().id, topicId, levelNum(ex()), todayKey(), true); if(use.source==='live'){ lc.liveGen=use.questions; lc.liveGenSource='live'; } }
-  }
+  var sbUse=sbUsable(ex().id, topicId, levelNum(ex()), todayKey(), true);
+  if(sbUse.source==='server'){ lc.liveGen=sbUse.questions; lc.liveGenSource='server'; }
+  else if(topicId===LIVE_GEN_TOPIC){ var use=liveGenUsable(ex().id, topicId, levelNum(ex()), todayKey(), true); if(use.source==='live'){ lc.liveGen=use.questions; lc.liveGenSource='live'; } }
   return lc;
 }
 function persistProgress(){
@@ -6504,14 +6576,12 @@ function beginQuest(topicId){
      quest started (startQuestFlow), so by the end of warm-up it has
      usually landed; a skipped warm-up may still be loading. */
   var liveGen=null, liveGenSource='bank';
-  if(topicId===LIVE_GEN_TOPIC){
-    var sbUse=sbUsable(e.id, topicId, levelNum(e), todayKey(), false);
-    if(sbUse.source==='server'){ liveGen=sbUse.questions; liveGenSource='server'; }
-    else {
-      var use=liveGenUsable(e.id, topicId, levelNum(e), todayKey(), false);
-      if(use.source==='live'){ liveGen=use.questions; liveGenSource='live'; }
-      else recordLiveGenStat('fallback', null, liveGenFetchState.status==='pending'?'still-loading':(liveGenFetchState.reason||use.reason));
-    }
+  var sbUse=sbUsable(e.id, topicId, levelNum(e), todayKey(), false);
+  if(sbUse.source==='server'){ liveGen=sbUse.questions; liveGenSource='server'; }
+  else if(topicId===LIVE_GEN_TOPIC){
+    var use=liveGenUsable(e.id, topicId, levelNum(e), todayKey(), false);
+    if(use.source==='live'){ liveGen=use.questions; liveGenSource='live'; }
+    else recordLiveGenStat('fallback', null, liveGenFetchState.status==='pending'?'still-loading':(liveGenFetchState.reason||use.reason));
   }
   cur={topicId:topicId, phase:'quest', idx:0, score:0, wrong:[], picked:null, answered:false, pool:pool, fresh:isDone, answerSecs:0, startedAt:Date.now(), liveGen:liveGen, liveGenSource:liveGenSource};
   persistProgress(); go('quiz');
