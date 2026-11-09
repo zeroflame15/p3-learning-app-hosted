@@ -60,7 +60,7 @@ const SYNC_FNS = [
   'function mergeFamilyDB(local, server){', 'function syncFromServer(opts){',
   'function mergeStoredIntoDB(){', 'function save(){', 'function load(){',
   'function migrateStages(){', 'function isModalOpen(){', 'function safeToRender(){',
-  'function newExplorer(name, code){', 'function genFriendCode(){',
+  'function newExplorer(name, code, level){', 'function genFriendCode(){',
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -126,6 +126,7 @@ function makeTab(store, server, deviceId, bus) {
     JSON, Object, Array, Math, Date, Promise,
     DB: null, DEVICE_ID: deviceId,
     syncPulling: false, syncUploadPending: false, syncTimer: null, postRetryCount: 0,
+    lastUploadStatus: 0, lastUploadOk: false, uploadsActive: 0, uploadFinal: false,
     route: 'door',
     localStorage: {
       getItem: (k) => (k in store ? store[k] : null),

@@ -69,8 +69,10 @@ test('safe re-render never interrupts a question, game or modal', () => {
 
 test('60s screen-time save still runs and goes through syncToServer', () => {
   assert.ok(html.includes('setInterval(function(){ if(ex()&&document.visibilityState==='), '60s screen-time interval missing');
-  const idx = html.indexOf('addMinutes(1); save();');
-  assert.ok(idx >= 0, 'screen-time save missing');
+  const start = html.indexOf('setInterval(function(){ if(ex()&&document.visibilityState===');
+  const line = html.slice(start, html.indexOf('\n', start));
+  assert.ok(line.includes('addMinutes(1);'), 'screen-time minute still counted');
+  assert.ok(line.includes('save();'), 'screen-time save missing');
 });
 
 test('Grand Door is NOT skipped on load: no straight-to-Home', () => {
@@ -152,7 +154,7 @@ test('postToServer checks the response: a non-OK answer is retried (bounded) and
   assert.ok(b.includes('if(r.ok)'), 'postToServer must check the response status');
   assert.ok(b.includes('postRetryCount=0'), 'a successful POST must reset the retry budget');
   assert.ok(b.includes("console.warn('postToServer: server answered '"), 'a non-OK answer must be surfaced in diagnostics');
-  assert.ok(b.includes('if(postRetryCount<2){ postRetryCount++; syncToServer(); }'), 'a non-OK answer must queue a bounded retry, not an endless loop');
+  assert.ok(b.includes('if(postRetryCount<2){ postRetryCount++; retryComing=true; syncToServer(); }'), 'a non-OK answer must queue a bounded retry, not an endless loop');
   assert.ok(!b.includes('}).catch(function(){}); }catch(e){}'), 'the old silent fire-and-forget must be gone');
 });
 

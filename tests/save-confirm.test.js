@@ -68,6 +68,7 @@ function runConfirm(expectedRev, expectedPlan, stored) {
   const sandbox = {
     console, setTimeout, clearTimeout, JSON, Object, Array, Math, Date, Promise,
     syncKey: () => '8SXU6S',
+    lastUploadStatus: 0, uploadsActive: 0, uploadFinal: false, syncPulling: false,
     syncToServer: () => { calls.sync++; },
     fetch: (url) => {
       calls.get++;
@@ -82,9 +83,10 @@ function runConfirm(expectedRev, expectedPlan, stored) {
   vm.createContext(sandbox);
   vm.runInContext(fnText('function planDayEqual('), sandbox);
   vm.runInContext(fnText('function plansEqual('), sandbox);
+  vm.runInContext(fnText('function confirmFailReason(){'), sandbox);
   vm.runInContext(fnText('function confirmPlanSaved('), sandbox);
   vm.runInContext(`confirmPlanSaved(${expectedRev}, __plan, function(ok){ __result = ok; });`, sandbox);
-  return sleep(4500).then(() => ({ ok: sandbox.__result, getCalls: calls.get, syncCalls: calls.sync }));
+  return sleep(8500).then(() => ({ ok: sandbox.__result, getCalls: calls.get, syncCalls: calls.sync }));
 }
 
 test('confirm succeeds when the server holds the new plan (JSONB-reordered keys)', async () => {
@@ -102,7 +104,7 @@ test('confirm succeeds when the server holds the new plan (JSONB-reordered keys)
   assert.equal(r.getCalls, 1, 'success on the first check — no retry needed');
 });
 
-test('confirm fails (and retries once) when the server still holds the old plan', async () => {
+test('confirm fails (after polling the full window) when the server still holds the old plan', async () => {
   const stored = {
     familyPlan: jsonbNormalize(JSON.parse(JSON.stringify(OLD_PLAN))),
     familyPlanRev: 6,
@@ -111,8 +113,8 @@ test('confirm fails (and retries once) when the server still holds the old plan'
   };
   const r = await runConfirm(7, JSON.parse(JSON.stringify(LOCAL_PLAN)), stored);
   assert.equal(r.ok, false, 'confirm must fail when the server still holds the old plan');
-  assert.equal(r.getCalls, 2, 'it retries the GET once before giving up');
-  assert.equal(r.syncCalls, 1, 'it re-triggers an upload before the retry');
+  assert.equal(r.getCalls, 5, 'it polls up to 5 times before giving up (timing fix 2026-11-09: the old 2-attempt window was shorter than the upload pipeline)');
+  assert.equal(r.syncCalls, 1, 'it re-triggers an upload only on the first miss, when no upload is already running');
 });
 
 test('confirm fails when the plan matches but the revision is stale', async () => {

@@ -49,7 +49,7 @@ const SYNC_FNS = [
   'function makeSyncCode(){', 'function syncCodeValid(v){', 'function ensureSyncCode(){',
   'function syncKey(){', 'function drainPendingUpload(){', 'function saveLocal(){',
   'function postToServer(key){', 'function planDayEqual(', 'function plansEqual(',
-  'function confirmPlanSaved(', 'function syncToServer(){',
+  'function confirmPlanSaved(', 'function confirmFailReason(){', 'function syncToServer(){',
   'function uploadAfterPull(){',
   'function unionArr(a,b){', 'function unionObjMax(a,b){', 'function unionObjLatest(a,b){',
   'function isThinkingMsg(m){', 'function mergeThreads(aThreads,bThreads){',
@@ -135,6 +135,7 @@ function makeTab(store, server) {
     JSON, Object, Array, Math, Date, Promise,
     DB: null, DEVICE_ID: 'd-test-tab',
     syncPulling: false, syncUploadPending: false, syncTimer: null, postRetryCount: 0,
+    lastUploadStatus: 0, lastUploadOk: false, uploadsActive: 0, uploadFinal: false,
     route: 'parent',
     localStorage: {
       getItem: (k) => (k in store ? store[k] : null),

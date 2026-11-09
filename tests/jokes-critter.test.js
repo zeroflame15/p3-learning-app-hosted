@@ -26,7 +26,7 @@ test('Jokes is in the sidebar and Vibe is the last item', () => {
   assert.ok(jokes, 'Jokes in NAV');
   assert.equal(jokes[1], '😂', 'Jokes uses the laughing emoji');
   assert.equal(jokes[2], 'Jokes', 'Jokes label');
-  assert.equal(jokes[3], '', 'Jokes has no custom icon file yet — emoji fallback via ic()');
+  assert.equal(jokes[3], 'icons/nav-jokes.webp', 'Jokes has a 3D icon file');
   const idx = {};
   NAV.forEach(function (n, i) { idx[n[0]] = i; });
   assert.ok(idx.vibe > idx.jokes, 'Vibe sits last, after Jokes');

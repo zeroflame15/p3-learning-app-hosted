@@ -55,17 +55,17 @@ test('every nav item, game and quest has an icon: a custom file, or an emoji fal
       assert.ok(buf.includes(Buffer.from('ALPH')), label + ' has a real alpha channel (transparent background): ' + file);
     } else {
       // img:'' — ic() falls back to the emoji, which renders fine.
-      // Gap-fill (2026-11-08): the 17 new topics use img:'' on
-      // purpose; custom 3D art for them is a separate follow-up.
-      // The Jokes nav item (2026-11-08) is img:'' too.
+      // Gap-fill (2026-11-09): the 17 gap-fill topics and the Jokes
+      // nav item now have custom 3D art; img:'' would only remain
+      // if an icon file were ever deleted.
       fallback++;
       assert.ok(emo, label + ' has an emoji fallback icon');
     }
   }
-  assert.equal(wired, 33, '33 wired icons: 10 nav + 9 games + 14 quests');
-  assert.equal(fallback, 18, '18 emoji-fallback entries (17 gap-fill topics + the Jokes nav item)');
+  assert.equal(wired, 51, '51 wired icons: 11 nav + 9 games + 31 quests');
+  assert.equal(fallback, 0, '0 emoji-fallback entries — every nav, game and quest has 3D art');
   const onDisk = fs.readdirSync(ICONS_DIR).filter(function (f) { return f.endsWith('.webp'); });
-  assert.equal(onDisk.length, 33, 'exactly the 33 wired icons on disk, no strays');
+  assert.equal(onDisk.length, 51, 'exactly the 51 wired icons on disk, no strays');
 });
 
 test('ic() renders the image with an emoji fallback and the right sizes', () => {
@@ -114,7 +114,7 @@ test('every section top shows the same big artwork, not the old flat emoji', () 
     ['Critter Lab', 'icons/nav-critter.webp', '🐸'],
     ['Treasure', 'icons/nav-treasure.webp', '💎'],
     ['Vibe', 'icons/nav-vibe.webp', '🎵'],
-    ['Jokes', '', '😂'],
+    ['Jokes', 'icons/nav-jokes.webp', '😂'],
     ['Create', 'icons/nav-create.webp', '🎨'],
   ];
   for (const [name, art, emo] of sections) {

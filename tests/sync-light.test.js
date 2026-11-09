@@ -43,7 +43,7 @@ const SYNC_FNS = [
   'function makeSyncCode(){', 'function syncCodeValid(v){', 'function ensureSyncCode(){',
   'function syncKey(){', 'function drainPendingUpload(){', 'function saveLocal(){',
   'function postToServer(key){', 'function planDayEqual(', 'function plansEqual(',
-  'function confirmPlanSaved(', 'function syncToServer(){',
+  'function confirmPlanSaved(', 'function confirmFailReason(){', 'function syncToServer(){',
   'function uploadAfterPull(){',
   'function unionArr(a,b){', 'function unionObjMax(a,b){', 'function unionObjLatest(a,b){',
   'function isThinkingMsg(m){', 'function mergeThreads(aThreads,bThreads){',
@@ -162,6 +162,7 @@ function makeTab(store, server) {
     JSON, Object, Array, Math, Date, Promise,
     DB: null, DEVICE_ID: 'd-test-tab',
     syncPulling: false, syncUploadPending: false, syncTimer: null, postRetryCount: 0,
+    lastUploadStatus: 0, lastUploadOk: false, uploadsActive: 0, uploadFinal: false,
     route: 'parent',
     localStorage: {
       getItem: (k) => (k in store ? store[k] : null),
@@ -354,7 +355,7 @@ test('syncFromServer always downloads when the local DB has no updatedAt', async
 
 /* ================= client: uploadAfterPull + postToServer ================= */
 
-test('uploadAfterPull skips the pull but still uploads when the check says unchanged', async () => {
+test('uploadAfterPull always pulls-then-uploads (no ?check=1 shortcut on the save path)', async () => {
   const store = {};
   const server = makeMockServer();
   const S = '2026-11-09T05:00:00.000Z';
@@ -363,16 +364,20 @@ test('uploadAfterPull skips the pull but still uploads when the check says uncha
   const tab = makeTab(store, server);
   tab.run('load()');
   // A local change that has NOT gone through save() (so DB.updatedAt is
-  // still the server timestamp S). This is the state after an auto-pull
-  // synced in between a save and its debounced upload: the check says
-  // unchanged, so the pull may be skipped — but the upload must go on.
+  // still the server timestamp S). This used to be the state where the
+  // ?check=1 hop said "unchanged" and the pull was skipped — but that
+  // hop can never hit on the upload path (save() always re-stamps
+  // DB.updatedAt) and it cost a whole round trip that pushed uploads
+  // past the confirm window (timing fix 2026-11-09). uploadAfterPull
+  // now always does the full pull-then-upload; only the auto-pull
+  // path in syncFromServer keeps the check.
   tab.run('DB.familyPlan=' + JSON.stringify(VERIFY_PLAN) + '; DB.familyPlanUpdatedAt=new Date().toISOString(); DB.familyPlanRev=(DB.familyPlanRev||0)+1;');
   assert.equal(tab.run('DB.updatedAt'), S, 'DB.updatedAt is still the server timestamp');
   server.log.length = 0;
   tab.run('uploadAfterPull()');
   await waitFor(() => server.posts.some((p) => p.rev === 2), 6000, 'upload POST with rev 2');
-  assert.ok(server.log.some((e) => e.kind === 'check'), 'the check ran');
-  assert.ok(!server.log.some((e) => e.kind === 'full'), 'NO full GET — the pull was skipped');
+  assert.ok(!server.log.some((e) => e.kind === 'check'), 'NO check GET on the upload path any more');
+  assert.ok(server.log.some((e) => e.kind === 'full'), 'the full pull GET ran before the upload');
   assert.equal(server.row.data.familyPlanRev, 2, 'the upload still landed');
   assert.equal(server.row.data.familyPlan[1].study, 'Study 5:00–6:00pm VERIFY', 'the server holds the new plan');
   // Bookkeeping: after the upload, DB.updatedAt is the server's

@@ -129,6 +129,7 @@ function makeTab(store, server, deviceId, bus) {
     JSON, Object, Array, Math, Date, Promise,
     DB: null, DEVICE_ID: deviceId,
     syncPulling: false, syncUploadPending: false, syncTimer: null, postRetryCount: 0,
+    lastUploadStatus: 0, lastUploadOk: false, uploadsActive: 0, uploadFinal: false,
     route: 'parent',
     localStorage: {
       getItem: (k) => (k in store ? store[k] : null),

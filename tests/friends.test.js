@@ -587,7 +587,7 @@ test('client: the friends block never mentions the family sync code', skipIfNotI
 });
 
 test('client: render() ensures a friend code; bindPlay publishes and wires Add-a-friend; parent page has the requests card', skipIfNotIntegrated, () => {
-  const renderFn = clientSrc.slice(clientSrc.indexOf('function render(){', 0), clientSrc.indexOf('function render(){') + 200);
+  const renderFn = clientSrc.slice(clientSrc.indexOf('function render(){', 0), clientSrc.indexOf('function render(){') + 600);
   assert.ok(renderFn.includes('ensureFriendCode()'), 'render() calls ensureFriendCode()');
   const bindPlay = grab('bindPlay');
   assert.ok(bindPlay.includes('publishFriendSnapshot()'), 'entering the arcade publishes our snapshot');
