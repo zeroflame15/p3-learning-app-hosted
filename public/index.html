@@ -3666,6 +3666,14 @@ function mergeExplorer(a,b){
      the server showed visitedStages=[] after all four stages were
      tapped). Union both sides — a visit on either device counts. */
   if((a&&a.visitedStages!==undefined)||(b&&b.visitedStages!==undefined))e.visitedStages=unionArr(a.visitedStages||[],b.visitedStages||[]);
+  /* Board shuffle (Phase 2 fix, 2026-11-10): swapIdx rotates the
+     quest board. It was in the explorer defaults but never merged,
+     so every save() silently reverted the increment and "Show me
+     different quests" never changed the board (seen live). The
+     higher value wins — a stale tab must never rewind the rotation.
+     Guarded like the streak fields so a merge never invents it on a
+     legacy explorer. */
+  if((a&&a.swapIdx!==undefined)||(b&&b.swapIdx!==undefined))e.swapIdx=Math.max(a.swapIdx||0,b.swapIdx||0);
   /* Difficulty preference (Phase 2, Pillar 3): -1 easier / 0 just
      right / +1 harder, with a timestamp — later wins, same rule as
      theme / code / level. A stale device must never resurrect an old
@@ -5538,24 +5546,39 @@ function boardInSeason(t){
   return true;
 }
 function boardPicks(e, todayPlan){
-  var unfinished=TOPICS.filter(function(x){return !e.completed[x.id];});
-  var pool=planTopics(todayPlan).filter(function(x){return !e.completed[x.id];});
+  /* A quest finished today stays on the board as a done card (greyed,
+     "✔ Done today — streak safe!" + ↻ Replay) instead of vanishing
+     and pulling in the next unfinished topic (seen live: Frog Life
+     Cycle disappeared after 5/5 and the board advanced to "quest 2
+     of 14"). Only quests finished on a PREVIOUS day leave the pool —
+     they have a fresh set waiting in Learn. Done-today quests are
+     GUARANTEED a slot (they are appended after the rotated available
+     quests), so the rotation can never push a just-finished quest off
+     the board. */
+  var today=todayKey();
+  function doneBefore(x){ return e.completed[x.id] && !(e.completedDay&&e.completedDay[x.id]===today); }
+  function doneToday(x){ return e.completedDay&&e.completedDay[x.id]===today; }
+  var unfinished=TOPICS.filter(function(x){return !doneBefore(x);});
+  var pool=planTopics(todayPlan).filter(function(x){return !doneBefore(x);});
   if(!pool.length)pool=unfinished.slice();
   if(!pool.length)pool=TOPICS.slice();
   pool=pool.filter(boardInSeason);
   if(!pool.length)return [];
+  var done=pool.filter(doneToday);
+  var avail=pool.filter(function(x){ return !doneToday(x); });
   var bySub={}, subs=[];
-  pool.forEach(function(t){ if(!bySub[t.sub]){ bySub[t.sub]=[]; subs.push(t.sub); } bySub[t.sub].push(t); });
+  avail.forEach(function(t){ if(!bySub[t.sub]){ bySub[t.sub]=[]; subs.push(t.sub); } bySub[t.sub].push(t); });
+  var want=Math.max(0,3-done.length);
   var picks=[]; var s0=(e.swapIdx||0)%Math.max(subs.length,1);
-  for(var round=0; round<4 && picks.length<3; round++){
-    for(var s=0; s<subs.length && picks.length<3; s++){
+  for(var round=0; round<4 && picks.length<want; round++){
+    for(var s=0; s<subs.length && picks.length<want; s++){
       var sub=subs[(s0+s)%subs.length];
       var list=bySub[sub];
       var cand=list[((e.swapIdx||0)+round)%list.length];
       if(cand&&picks.indexOf(cand)<0)picks.push(cand);
     }
   }
-  return picks.slice(0,3);
+  return picks.concat(done).slice(0,3);
 }
 function boardCardHTML(e, t, isPick, todayPlan){
   var qprog=e.progress[t.id]?e.progress[t.id].idx:0;
@@ -11224,7 +11247,20 @@ function beginQuest(topicId){
      a gentler one (level-1) when one is ready, then it ramps to the
      normal level. No adjacent question ready yet? The original
      first question stands — never an error. */
-  diffSwapAt(cur, t, levelNum(e), 0, cur.diffShift!==0?cur.diffShift:-1);
+  /* Phase 2 fix: the saved preference shapes the whole opening, not
+     just the first question. Before, "Too hard" and no preference
+     both swapped only Q1 one level down, so a quest started after
+     "Too hard" looked exactly like a fresh control's (seen live:
+     Q1–Q3 identical). With a preference, swap the first three
+     questions to the shifted level; without one, keep the single
+     gentle first question. A "Too hard" start also hints first on
+     Q1. */
+  if(cur.diffShift!==0){
+    for(var _di=0; _di<3; _di++)diffSwapAt(cur, t, levelNum(e), _di, cur.diffShift);
+    if(cur.diffShift<0)cur.hintForIdx=0;
+  } else {
+    diffSwapAt(cur, t, levelNum(e), 0, -1);
+  }
   persistProgress(); go('quiz');
 }
 /* Boost retake rules (2026-11-08) — mirrors of lib/rules.js:
@@ -13865,25 +13901,27 @@ function critterHTML(){
    +(pondMode==='play'?'<div class="speech" style="margin-top:10px">Move your finger or mouse around the pond — '+esc(e.critterName)+' chases the ball! 🎾 <span id="playCount"></span> <button class="btn ghost" id="careCancel">Stop playing</button></div>':'')
    +(careMsg?'<div class="speech" style="margin-top:10px">'+esc(careMsg)+'</div>':'')
    +'<h4 style="margin:20px 0 8px">Tap a life-cycle stage to explore:</h4>'
-   +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+'</button>'; }).join('')+'</div>'
-   +'<p class="small muted" style="margin-top:12px">Visit every stage to earn the 🐸 Critter Friend badge.</p></div>'
+   +'<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(110px,1fr))">'+STAGES.map(function(s,i){ var _vis=(e.visitedStages||[]).indexOf(i)>=0; return '<button class="stage '+(view===i?'sel':'')+'" data-stage="'+i+'"><img class="simg" src="'+STAGE_IMGS[i]+'" alt="">'+s[1]+(_vis?' ✔':'')+'</button>'; }).join('')+'</div>'
+   +'<p class="small muted" style="margin-top:12px">'+((e.visitedStages||[]).length>=4?'🐸 Critter Friend badge earned — you visited every stage! 🎉':'Visited '+(e.visitedStages||[]).length+' of 4 stages — visit every stage to earn the 🐸 Critter Friend badge.')+'</p></div>'
    + visitingHTML
    +'<div class="card" style="margin-top:16px"><h3 style="margin-top:0">🔍 Critters to discover</h3><p class="muted" style="font-weight:700;margin:0">Tap any critter to discover it and learn how to spot the real one in Singapore. Discover 5 for the 🔍 Critter Spotter badge, and 12 for the 🌿 Young Naturalist badge!</p><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;margin-top:14px"><span>Discovery collection</span><span>'+e.discoveredCritters.length+' / '+CRITTERS.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.discoveredCritters.length/CRITTERS.length*100)+'%"></div></div></div>'
    + collectionHTML;
 }
 function bindCritter(){
   var e=ex(); if(!e.visitedStages)e.visitedStages=[]; if(!e.discoveredCritters)e.discoveredCritters=[];
-  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); critterView=i; /* Looking at a stage never changes growth: the frog grows ONLY by care (applyCareDay). The view (critterView) is UI state only — it shows the stage in the pond, and visiting records the Critter Friend badge. */ if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
+  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); critterView=i; /* Viewing never changes growth. Resolve fresh: save() replaces the DB copy. */ var eNow=(typeof ex==='function'?ex():e); if(!eNow)return; if(!eNow.visitedStages)eNow.visitedStages=[]; if(eNow.visitedStages.indexOf(i)<0)eNow.visitedStages.push(i); if(eNow.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
   document.querySelectorAll('[data-critter]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-critter'); var c=CRITTERS.find(function(x){return x.id===id;}); selCritter=id;
-    if(e.discoveredCritters.indexOf(id)<0){ e.discoveredCritters.push(id); sndCorrect(); toast('Discovered: '+c.name+'! '+c.e);
-      if(e.discoveredCritters.length>=5)awardBadge('spotter','🔍 Critter Spotter');
-      if(e.discoveredCritters.length>=12)awardBadge('naturalist','🌿 Young Naturalist');
-      if(e.discoveredCritters.length>=CRITTERS.length)confettiStars();
+    /* Fresh explorer (same stale-copy trap as the stage tap above). */
+    var eNow=(typeof ex==='function'?ex():e); if(!eNow)return; if(!eNow.discoveredCritters)eNow.discoveredCritters=[];
+    if(eNow.discoveredCritters.indexOf(id)<0){ eNow.discoveredCritters.push(id); sndCorrect(); toast('Discovered: '+c.name+'! '+c.e);
+      if(eNow.discoveredCritters.length>=5)awardBadge('spotter','🔍 Critter Spotter');
+      if(eNow.discoveredCritters.length>=12)awardBadge('naturalist','🌿 Young Naturalist');
+      if(eNow.discoveredCritters.length>=CRITTERS.length)confettiStars();
     } else sndPop();
     save(); render();
     /* The detail card now sits right under this critter's category, so bring it into view instead of making the child scroll up to find it. */
     var cd=document.getElementById('critterDetail'); if(cd)cd.scrollIntoView({behavior:'smooth',block:'nearest'}); }; });
-  var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
+  var cs=document.getElementById('critSave'); if(cs)cs.onclick=function(){ var v=document.getElementById('critName').value.trim(); if(v){ e=ex(); if(!e)return; e.critterName=v; e.critterNameAt=new Date().toISOString(); save(); toast('Your critter is now called '+v+'! 🐸'); render(); } };
   /* Record one care: the SAME rules as the old one-tap buttons —
      1 star, 4-hour cooldown, all three in one day logs one growth
      day for the frog's current stage (see applyCareDay — Egg 7,
@@ -14041,6 +14079,8 @@ function bindCritter(){
   },3800);
   if(pondMode==='clean')spawnDirt();
   if(pondMode==='play')startPlayMode();
+  /* Badge re-check: if the visits already persisted but the badge never fired, award it now. */
+  if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend');
 }
 
 /* ============================================================ TREASURE REALM */
