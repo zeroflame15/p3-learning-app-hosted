@@ -6377,24 +6377,159 @@ var sbFetchState={status:'idle', reason:null};
 var sbFetchPromise=null;
 function sbCacheKey(eid, topicId){ return 'jyn-servbank-v1:'+eid+':'+topicId; }
 function loadSbCache(eid, topicId){ var rec=liveGenLSGet(sbCacheKey(eid, topicId)); if(!rec||!Array.isArray(rec.questions)||rec.questions.length!==SB_COUNT)return null; return rec; }
+/* ---------- Fill-in-the-blank (FIB) questions ----------
+   Encoding (no schema change — see lib/server-bank.js): a FIB row
+   stores its expected answer as TEXT inside the options jsonb
+   object, {"kind":"fib","answer":"42","accept":["forty-two"]},
+   with answer = 0 (unused sentinel). An MCQ row stores options as
+   an array of 4 strings and answer as the right index. The server
+   (api/daily-set.js) normalises both into client questions with
+   k:'fib'|'mcq'; a FIB client question has o:[], a:0, ans (the
+   expected answer) and accept (alternates). A local-bank question
+   has no k and an options array, so it is MCQ by default — the
+   local fallback path is unchanged. Live-gen questions are MCQ
+   too (they carry no k and an options array).
+   Tolerance (checkFibAnswer): case-insensitive, trimmed, internal
+   whitespace collapsed, a trailing full stop ignored; a numeric
+   expected answer also accepts any numerically equal typing
+   ("42", "42.0", "42.00", "1,000", "$42", "1/2" for "0.5"); a
+   trailing unit is stripped ONLY when the question states that
+   unit ("42 cm" counts when the stem says cm/centimetres, never
+   otherwise). Alternates in `accept` are matched with the same
+   text tolerance. A genuinely wrong answer is rejected. */
+function isFibQuestion(q){
+  if(!q||typeof q!=='object')return false;
+  if(q.k==='fib')return true;
+  if(q.k==='mcq')return false;
+  var o=(q.o!==undefined?q.o:q.options);
+  if(o&&typeof o==='object'&&!Array.isArray(o)&&o.kind==='fib')return true;
+  return false;
+}
+function fibExpected(q){
+  if(!q||typeof q!=='object')return null;
+  if(typeof q.ans==='string'&&q.ans.trim().length>0)return q.ans.trim();
+  var o=(q.o!==undefined?q.o:q.options);
+  if(o&&typeof o==='object'&&!Array.isArray(o)&&typeof o.answer==='string'&&o.answer.trim().length>0)return o.answer.trim();
+  return null;
+}
+function fibAccepts(q){
+  var out=[];
+  if(q&&Array.isArray(q.accept))out=out.concat(q.accept);
+  var o=q?(q.o!==undefined?q.o:q.options):undefined;
+  if(o&&typeof o==='object'&&!Array.isArray(o)&&Array.isArray(o.accept))out=out.concat(o.accept);
+  return out.filter(function(a){ return typeof a==='string'&&a.trim().length>0; });
+}
+function fibNormText(s){
+  return String(s==null?'':s).toLowerCase().replace(/[''′]/g,"'").replace(/\s+/g,' ').trim().replace(/[.]+$/,'').trim();
+}
+/* Units a typed answer may trail with — accepted ONLY when the
+   stem states that unit (fibUnitStated). Anything else trailing a
+   number (e.g. "42 boxes") is not a unit and is rejected. */
+var FIB_UNITS={cm:['cm','centimetre','centimetres','centimeter','centimeters'],m:['m','metre','metres','meter','meters'],mm:['mm','millimetre','millimetres','millimeter','millimeters'],km:['km','kilometre','kilometres','kilometer','kilometers'],g:['g','gram','grams','gramme','grammes'],kg:['kg','kilogram','kilograms'],ml:['ml','millilitre','millilitres','milliliter','milliliters'],l:['l','litre','litres','liter','liters'],'$':['$','dollar','dollars']};
+/* fibCanonUnit(token): a trailing unit word resolves to its
+   canonical FIB_UNITS key — 'centimetres' -> 'cm', 'dollars' ->
+   '$' — or null when it is not a known unit at all. */
+function fibCanonUnit(token){
+  var t=String(token||'').toLowerCase();
+  if(t==='$')return '$';
+  var keys=Object.keys(FIB_UNITS);
+  for(var i=0;i<keys.length;i++){ if(keys[i]===t||FIB_UNITS[keys[i]].indexOf(t)>=0)return keys[i]; }
+  return null;
+}
+function fibUnitStated(unit, stem){
+  var words=' '+(String(stem||'').toLowerCase().replace(/[^a-z0-9$ ]/g,' '))+' ';
+  var names=FIB_UNITS[unit]||[unit];
+  return names.some(function(n){ return words.indexOf(' '+n+' ')>=0; });
+}
+function fibParseNumber(s, stem){
+  var t=String(s==null?'':s).trim();
+  if(!t)return null;
+  t=t.replace(/,/g,'');
+  if(t.charAt(0)==='$')t=t.slice(1).trim();
+  var m=t.match(/^(.+?)\s+([A-Za-z$]+)\.?$/);
+  if(m){
+    var unit=fibCanonUnit(m[2]);
+    if(unit){
+      if(!fibUnitStated(unit, stem))return null;
+      t=m[1].trim();
+    } else return null;
+  }
+  var fr=t.match(/^(-?\d+)\s*\/\s*(\d+)$/);
+  if(fr){ var d=parseFloat(fr[2]); if(d===0)return null; return parseFloat(fr[1])/d; }
+  if(!/^-?(\d+\.?\d*|\.\d+)$/.test(t))return null;
+  var n=parseFloat(t);
+  return isFinite(n)?n:null;
+}
+function checkFibAnswer(q, typed){
+  var exp=fibExpected(q);
+  if(exp==null)return false;
+  var t=String(typed==null?'':typed);
+  if(!t.trim())return false;
+  var nT=fibNormText(t), nE=fibNormText(exp);
+  if(nT===nE)return true;
+  var acc=fibAccepts(q);
+  for(var i=0;i<acc.length;i++){ if(fibNormText(acc[i])===nT)return true; }
+  var expNum=fibParseNumber(exp, q.q||q.stem||'');
+  var typedNum=fibParseNumber(t, q.q||q.stem||'');
+  if(expNum!=null&&typedNum!=null)return Math.abs(expNum-typedNum)<=Math.max(1e-9,Math.abs(expNum)*1e-9);
+  return false;
+}
+/* questAnswerText(q): the answer to SHOW a child ("The right
+   answer is …") and to hand to Ask Pip — the FIB expected text,
+   or the MCQ option at the answer index. */
+function questAnswerText(q){
+  if(isFibQuestion(q))return fibExpected(q)||'';
+  if(q&&Array.isArray(q.o)&&typeof q.a==='number')return q.o[q.a]||'';
+  return '';
+}
+/* sbNormalizeQuestion(q): a server-bank question in either shape
+   (a daily-set client object, or a raw sb_questions row with
+   .options/.stem/.answer) -> the canonical cached client shape,
+   or null when malformed. MCQ keeps its 4 options + index;
+   FIB keeps ans/accept and o:[], a:0. */
+function sbNormalizeQuestion(q){
+  if(!q||typeof q!=='object')return null;
+  var stem=q.q||q.stem, c=q.c||q.explanation||'', j=q.j||q.joke||'';
+  if(typeof q.id!=='string'||!q.id.length)return null;
+  if(typeof stem!=='string'||stem.trim().length<12)return null;
+  if(typeof c!=='string')return null;
+  if(isFibQuestion(q)){
+    var exp=fibExpected(q); if(!exp)return null;
+    return {id:q.id, q:stem, o:[], a:0, c:c, j:j, k:'fib', ans:exp, accept:fibAccepts(q)};
+  }
+  var o=(q.o!==undefined?q.o:q.options);
+  var a=(typeof q.a==='number'?q.a:q.answer);
+  if(!Array.isArray(o)||o.length!==4||typeof a!=='number'||a<0||a>3||Math.floor(a)!==a)return null;
+  return {id:q.id, q:stem, o:o.slice(), a:a, c:c, j:j, k:'mcq'};
+}
 function sbShapeOk(questions){
   if(!Array.isArray(questions)||questions.length!==SB_COUNT)return false;
   return questions.every(function(q){
-    return q&&typeof q==='object'&&typeof q.id==='string'&&q.id.length>0
-      &&typeof q.q==='string'&&q.q.trim().length>=12
-      &&Array.isArray(q.o)&&q.o.length===4
-      &&typeof q.a==='number'&&q.a>=0&&q.a<=3&&Math.floor(q.a)===q.a
-      &&typeof q.c==='string';
+    if(!q||typeof q!=='object')return false;
+    if(typeof q.id!=='string'||!q.id.length)return false;
+    if(typeof q.q!=='string'||q.q.trim().length<12)return false;
+    if(typeof q.c!=='string')return false;
+    // FIB: no options to shuffle — the typed answer rides in ans
+    // (k:'fib', or a raw {kind:'fib'} options object).
+    if(isFibQuestion(q))return typeof fibExpected(q)==='string'&&fibExpected(q).length>0;
+    return Array.isArray(q.o)&&q.o.length===4
+      &&typeof q.a==='number'&&q.a>=0&&q.a<=3&&Math.floor(q.a)===q.a;
   });
 }
 function saveSbCache(eid, topicId, day, questions){
   /* Shuffle the options once, deterministically for this explorer +
      topic + day — same as the live-gen cache. The server id rides
-     along: it is what the report call sends back. */
+     along: it is what the report call sends back. FIB questions
+     have no options to shuffle: they are normalised (k:'fib',
+     ans, accept) and cached verbatim. */
   var seed=hashStr(eid+'|'+topicId+'|'+day);
   var shuffled=questions.map(function(q, qi){
+    if(isFibQuestion(q)){
+      var n=sbNormalizeQuestion(q);
+      return n||{id:q.id, q:q.q, o:[], a:0, c:q.c||'', j:q.j||'', k:'fib', ans:fibExpected(q)||'', accept:fibAccepts(q)};
+    }
     var order=seededShuffle(q.o.map(function(_,i){ return i; }), seed+qi*7919);
-    return {id:q.id, q:q.q, o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:q.c, j:q.j||''};
+    return {id:q.id, q:q.q, o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:q.c, j:q.j||'', k:'mcq'};
   });
   var rec={topicId:topicId, day:day, questions:shuffled, savedAt:Date.now()};
   liveGenLSSet(sbCacheKey(eid, topicId), rec);
@@ -6519,7 +6654,7 @@ function loadProgress(topicId){
      with (p.pool), whatever the date is now — it is never re-pulled.
      Progress saved by older builds has no pool: it means the
      original quest set, in order. */
-  var lc={topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh, answerSecs:(p.elapsed||0), startedAt:(p.answered?null:Date.now()), liveGen:null, liveGenSource:'bank'};
+  var lc={topicId:topicId, phase:'quest', idx:p.idx, score:p.score, wrong:p.wrong||[], picked:(p.picked!=null?p.picked:null), answered:!!p.answered, pool:(p.pool&&p.pool.length?p.pool:[0,1,2,3,4]), fresh:!!p.fresh, answerSecs:(p.elapsed||0), startedAt:(p.answered?null:Date.now()), liveGen:null, liveGenSource:'bank', fibTyped:(p.fibTyped||''), fibCorrect:!!p.fibCorrect};
   /* Live-gen experiment: an unfinished quest resumes with the exact
      live set it started with, from the on-device cache. No cache
      (other device, cleared data) degrades to the bank pool it already
@@ -6531,7 +6666,7 @@ function loadProgress(topicId){
 }
 function persistProgress(){
   var e=ex(); if(!cur||cur.phase!=='quest')return;
-  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs()}; save();
+  e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs(), fibTyped:(cur.fibTyped||''), fibCorrect:!!cur.fibCorrect}; save();
 }
 function warmupHTML(){
   var t=topicById(warm.topicId);
@@ -6674,18 +6809,22 @@ function quizHTML(){
   var q=list[cur.idx];
   var left=list.length-cur.idx-1;
   var listenBtn=t.sub==='chi'?'<button class="btn teal" id="qListen" style="margin-bottom:12px">🔊 Listen — then say it out loud!</button>':'';
+  var _fib=isFibQuestion(q);
+  var _ok=_fib?!!cur.fibCorrect:(cur.picked===q.a);
   var fb='';
   if(cur.answered){
-    if(cur.picked===q.a) fb='<div class="feedback ok">'+PRAISE[(cur.idx+e.stars)%PRAISE.length]+'</div>';
-    else if(cur.phase==='quest') fb='<div class="feedback no"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div>'+esc(q.j||'Oops!')+'<br>💡 Tiny clue: '+esc(q.c)+'<br><span class="small">The right answer is “'+esc(q.o[q.a])+'”. Read the clue once more — it will stick!</span></div></div></div>';
-    else fb='<div class="feedback no">Good brave try! The right answer is “'+esc(q.o[q.a])+'”. '+(q.c?('Clue: '+esc(q.c)):'')+'</div>';
+    if(_ok) fb='<div class="feedback ok">'+PRAISE[(cur.idx+e.stars)%PRAISE.length]+'</div>';
+    else if(cur.phase==='quest') fb='<div class="feedback no"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div>'+esc(q.j||'Oops!')+'<br>💡 Tiny clue: '+esc(q.c)+'<br><span class="small">The right answer is “'+esc(questAnswerText(q))+'”. Read the clue once more — it will stick!</span></div></div></div>';
+    else fb='<div class="feedback no">Good brave try! The right answer is “'+esc(questAnswerText(q))+'”. '+(q.c?('Clue: '+esc(q.c)):'')+'</div>';
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
    +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+((cur.liveGenSource==='live'||cur.boostSource==='live')?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
    +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+listenBtn
-   +'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
+   +(_fib
+     ?'<div><input class="field" id="qFibInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="60" value="'+esc(cur.answered?(cur.fibTyped||''):'')+'" '+(cur.answered?'disabled':'')+' style="max-width:340px;font-weight:800"><div style="margin-top:10px"><button class="btn" id="qFibCheck" '+(cur.answered?'disabled':'')+'>Check my answer ✓</button></div>'+(cur.answered?'<p class="small muted" style="font-weight:700;margin:8px 0 0">Your answer: “'+esc(cur.fibTyped||'')+'”</p>':'')+'</div>'
+     :'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>')
    +'<div style="margin-top:10px"><button class="btn ghost" id="qAskPip">🦦 Ask Pip about this question</button></div>'
    +'<div id="qFb">'+fb+'</div>'
    +'<button class="btn ghost" id="qQuit" style="margin-top:8px">'+(cur.phase==='boost'?'Stop my boost for now':'Save &amp; quit — resume later')+'</button></div>';
@@ -6735,16 +6874,33 @@ function bindQuiz(){
   var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); speakPip(m?m[0]:q.q); toast('Listen… now say it out loud like Pip!'); };
   /* Ask Pip about this quest question: Pip explains it in a new
      thread, and the answer-only clock pauses while the child is away. */
-  var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:q.o.slice(), answer:q.o[q.a], clue:q.c||''}); };
+  var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:(Array.isArray(q.o)?q.o.slice():[]), answer:questAnswerText(q), clue:q.c||''}); };
   document.querySelectorAll('[data-qopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-qopt'),10); cur.picked=i; cur.answered=true;
-    if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:q.o[q.a]}; } }
+    if(i===q.a){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:questAnswerText(q)}; } }
     pauseLearnTimer();
     if(cur.phase==='quest')persistProgress(); else save();
     render();
   }; });
+  function checkFib(){
+    var inp=document.getElementById('qFibInput');
+    var typed=inp?inp.value:'';
+    if(!typed.trim()){ toast('Type your answer first — then tap Check!'); return; }
+    var ok=checkFibAnswer(q, typed);
+    cur.fibTyped=typed; cur.fibCorrect=ok; cur.picked=ok?q.a:-1; cur.answered=true;
+    if(ok){ cur.score++; sndCorrect(); } else { sndWrong(); if(cur.phase==='quest'){ cur.wrong.push(cur.idx); if(!cur.missedExample)cur.missedExample={q:q.q,a:questAnswerText(q)}; } }
+    pauseLearnTimer();
+    if(cur.phase==='quest')persistProgress(); else save();
+    render();
+  }
+  var fibBtn=document.getElementById('qFibCheck'); if(fibBtn)fibBtn.onclick=function(){ checkFib(); };
+  var fibIn=document.getElementById('qFibInput');
+  if(fibIn&&!cur.answered){
+    fibIn.addEventListener('keydown', function(ev){ if(ev.key==='Enter'){ ev.preventDefault(); checkFib(); } });
+    try{ fibIn.focus(); }catch(err){}
+  }
   var nx=document.getElementById('qNext'); if(nx)nx.onclick=function(){
-    cur.idx++; cur.picked=null; cur.answered=false;
+    cur.idx++; cur.picked=null; cur.answered=false; cur.fibTyped=''; cur.fibCorrect=false;
     if(cur.idx<list.length)resumeLearnTimer();
     if(cur.idx>=list.length){ finishRound(t); }
     if(cur.phase==='quest'&&cur.idx<list.length)persistProgress();
