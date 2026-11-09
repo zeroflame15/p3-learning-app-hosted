@@ -130,7 +130,15 @@ module.exports = async (req, res) => {
       headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify({ code: key, data: writeData, updated_at: new Date().toISOString() }),
     });
-    if (!r.ok) return json(res, 502, { error: 'supabase_write_failed' });
+    if (!r.ok) {
+      // Diagnostic (2026-11-09): surface the Supabase error so a 502 can
+      // be diagnosed from the response instead of guessing. The client
+      // shows only the HTTP status; this detail is for the operator.
+      let detail = '';
+      try { detail = (await r.text() || '').slice(0, 500); } catch (e) { /* ignore */ }
+      try { if (typeof console !== 'undefined' && console.error) console.error('progress upsert failed', r.status, detail); } catch (e) { /* ignore */ }
+      return json(res, 502, { error: 'supabase_write_failed', status: r.status, detail });
+    }
     const rows = await r.json().catch(() => []);
     return json(res, 200, { ok: true, updatedAt: rows[0]?.updated_at || new Date().toISOString(), familyPlanRev: writeData.familyPlanRev || 0, planPreserved });
   }
