@@ -3275,6 +3275,7 @@ var postRetryCount=0;
    once the latest upload round has settled with no retry coming. */
 var lastUploadStatus=0;
 var lastUploadOk=false;
+var lastUploadDetail='';
 var uploadsActive=0;
 var uploadFinal=false;
 function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} }
@@ -3309,6 +3310,7 @@ function postToServer(key){
       }
       lastUploadOk=false; lastUploadStatus=r.status||0;
       if(typeof console!=='undefined'&&console.warn)console.warn('postToServer: server answered '+r.status+' — queuing a retry');
+      try{ var _ej=r.clone(); _ej.json().then(function(_j){ if(_j&&_j.detail)lastUploadDetail=String(_j.detail).slice(0,300); }, function(){}); }catch(e){}
       if(postRetryCount<2){ postRetryCount++; retryComing=true; syncToServer(); }
       return null;
     }).then(function(j){
@@ -3448,7 +3450,7 @@ function planSaveFailToast(reason, kind){
   var saved=kind==='reset'?'reset on this device':'saved on this device';
   if(reason==='too-large')return 'The timetable is '+saved+', but the family record is too big to upload — it is over the server’s 500 KB limit. Try deleting some old Ask Pip chats, then save again.';
   if(reason==='network')return 'The timetable is '+saved+', but this device couldn’t reach the server. Check the connection and try saving again.';
-  if(reason==='server')return 'The timetable is '+saved+', but the server answered with an error'+(lastUploadStatus?' (HTTP '+lastUploadStatus+')':'')+'. Try saving again.';
+  if(reason==='server')return 'The timetable is '+saved+', but the server answered with an error'+(lastUploadStatus?' (HTTP '+lastUploadStatus+')':'')+((typeof lastUploadDetail!=='undefined'&&lastUploadDetail)?': '+lastUploadDetail:'')+'. Try saving again.';
   if(kind==='reset')return 'Couldn’t confirm the reset saved to the server — it’s reset on this device. Try again.';
   return 'Couldn’t confirm the timetable saved to the server — it’s saved on this device. Try saving again.';
 }
