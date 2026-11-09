@@ -3278,6 +3278,20 @@ var lastUploadOk=false;
 var lastUploadDetail='';
 var uploadsActive=0;
 var uploadFinal=false;
+/* Strip NUL characters (2026-11-09): Postgres text/JSONB cannot store
+   \u0000 — a payload containing one is rejected with 22P05
+   "unsupported Unicode escape sequence" and the whole upsert fails
+   with HTTP 502. A NUL can sneak into the local DB (e.g. pasted text
+   or a chat message); it is invisible and carries no meaning, so it
+   is removed from every string before the data is saved or synced. */
+function stripNulDeep(v){
+  if(typeof v==='string')return v.replace(/\u0000/g,'');
+  if(v&&typeof v==='object'){
+    if(Array.isArray(v)){ for(var i=0;i<v.length;i++)v[i]=stripNulDeep(v[i]); }
+    else { for(var k in v){ if(Object.prototype.hasOwnProperty.call(v,k))v[k]=stripNulDeep(v[k]); } }
+  }
+  return v;
+}
 function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }catch(e){} }
 /* Direct POST of the current local DB — no GET first. Used only by
    syncFromServer() after it has already pulled and merged, so a
@@ -3290,6 +3304,7 @@ function saveLocal(){ try{ localStorage.setItem(LSKEY, JSON.stringify(DB)); }cat
    retries). */
 function postToServer(key){
   if(!key||!DB)return;
+  if(typeof stripNulDeep==='function')stripNulDeep(DB);
   uploadsActive++;
   uploadFinal=false;
   var responded=false;
@@ -4086,7 +4101,7 @@ function mergeStoredIntoDB(){
   }
   return changed;
 }
-function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); saveLocal(); syncToServer(); }
+function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); if(typeof stripNulDeep==='function')stripNulDeep(DB); saveLocal(); syncToServer(); }
 function load(){
   try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!DB.flags)DB.flags=[]; if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
   DB={explorers:[], parentPin:null, dailyLimit:90, playLimit:20, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
