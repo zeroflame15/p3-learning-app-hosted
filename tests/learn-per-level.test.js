@@ -146,7 +146,7 @@ test('MOE data: 4 subjects per level in order, 154 topic-levels', () => {
 test('Science per level is the MOE list: P3 4, P4 5, P5 5, P6 4', () => {
   assert.deepEqual(sciTopics(3), ['Diversity of Living and Non-Living Things', 'Diversity of Materials', 'Cycles in Plants and Animals (Life Cycles)', 'Interaction of Forces (Magnets)']);
   assert.deepEqual(sciTopics(4), ['Cycles in Matter and Water (Matter)', 'Plant System (Plant parts and functions)', 'Human System (Digestive System)', 'Energy Forms and Uses (Light)', 'Energy Forms and Uses (Heat)']);
-  assert.deepEqual(sciTopics(5), ['Cycles in Plants and Animals (Reproduction)', 'Cycles in Matter and Water (Water)', 'Human System (Respiratory and Circulatory Systems)', 'Plant System (Respiratory and Circulatory Systems)', 'Electrical System']);
+  assert.deepEqual(sciTopics(5), ['Cycles in Plants and Animals (Reproduction)', 'Cycles in Matter and Water (Water)', 'Human System (Respiratory and Circulatory Systems)', 'Plant System (transport)', 'Electrical System']);
   assert.deepEqual(sciTopics(6), ['Interaction of Forces (Frictional, Gravitational, Elastic Spring)', 'Interactions within the Environment', 'Energy Forms and Uses (Photosynthesis)', 'Energy Conversion']);
 });
 
