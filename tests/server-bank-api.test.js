@@ -136,7 +136,7 @@ test('daily-set: two due questions come first, oldest first', async () => {
   } finally { global.fetch = origFetch; clearEnv(); }
 });
 
-test('daily-set: empty bank, wrong topic, bad input, GET, no env, supabase failure', async () => {
+test('daily-set: empty bank, unseeded topic, bad input, GET, no env, supabase failure', async () => {
   setEnv();
   const handler = loadHandler('daily-set');
   const origFetch = global.fetch;
@@ -147,11 +147,15 @@ test('daily-set: empty bank, wrong topic, bad input, GET, no env, supabase failu
     await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', topicId: 'math-ntuc', level: 3 }), res);
     assert.equal(res.statusCode, 502);
     assert.equal(res.body.error, 'not-seeded');
-    // Wrong topic -> 400 (pilot gate).
+    // A topic with no questions -> 502 (not-seeded); the client falls back to the bank.
     res = mockRes();
     await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', topicId: 'math-mrt', level: 3 }), res);
+    assert.equal(res.statusCode, 502);
+    assert.equal(res.body.error, 'not-seeded');
+    // Missing topicId -> 400.
+    res = mockRes();
+    await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', level: 3 }), res);
     assert.equal(res.statusCode, 400);
-    assert.equal(res.body.error, 'pilot_topic_only');
     // Missing code / explorerId -> 400.
     res = mockRes();
     await handler(mockReq('POST', { code: '', explorerId: 'e1', topicId: 'math-ntuc', level: 3 }), res);
@@ -238,7 +242,7 @@ test('report-answers: correct masters, wrong goes due, attempts increment, bad r
   } finally { global.fetch = origFetch; clearEnv(); }
 });
 
-test('report-answers: all rows bad -> 200 with zero counts; wrong topic / bad shape -> 400; write failure -> 502', async () => {
+test('report-answers: all rows bad -> 200 with zero counts; bad shape -> 400; write failure -> 502', async () => {
   setEnv();
   const handler = loadHandler('report-answers');
   const origFetch = global.fetch;
@@ -252,11 +256,15 @@ test('report-answers: all rows bad -> 200 with zero counts; wrong topic / bad sh
     await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', topicId: 'math-ntuc', results: [] }), res);
     assert.equal(res.statusCode, 200);
     assert.deepEqual(res.body, { ok: true, mastered: 0, due: 0 });
-    // Wrong topic -> 400.
+    // A non-pilot topic is accepted now (no pilot gate); empty results -> 200 with zero counts.
     res = mockRes();
     await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', topicId: 'math-mrt', results: [] }), res);
+    assert.equal(res.statusCode, 200);
+    assert.deepEqual(res.body, { ok: true, mastered: 0, due: 0 });
+    // Missing topicId -> 400.
+    res = mockRes();
+    await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', results: [] }), res);
     assert.equal(res.statusCode, 400);
-    assert.equal(res.body.error, 'pilot_topic_only');
     // Missing results -> 400.
     res = mockRes();
     await handler(mockReq('POST', { code: 'ABC2DE', explorerId: 'e1', topicId: 'math-ntuc' }), res);

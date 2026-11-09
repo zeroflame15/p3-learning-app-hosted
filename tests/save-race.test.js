@@ -116,6 +116,12 @@ function mockFetch(server, log, pendingB) {
     const code = m ? decodeURIComponent(m[1]) : null;
     const row = server.row && server.row.code === code ? server.row : null;
     const snap = row ? { configured: true, data: JSON.parse(JSON.stringify(row.data)), updatedAt: row.updatedAt } : { configured: true, data: null, updatedAt: null };
+    // The lightweight check (?check=1) is never deferred: it returns
+    // only updatedAt and resolves at once, so the full GET is the one
+    // that gets deferred (the stale pull under test).
+    if (String(url).includes('check=1')) {
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ configured: true, updatedAt: row ? row.updatedAt : null }) });
+    }
     if (opts && opts._from === 'B') {
       return new Promise((resolve) => { pendingB.push(() => resolve({ ok: true, status: 200, json: async () => snap })); });
     }
@@ -189,7 +195,10 @@ test('stale-GET auto-pull must not revert a timetable save (repro3)', async () =
 
   // Tab B starts its auto-pull; its GET is deferred (stale snapshot).
   const bPull = tabB.run('syncFromServer({})');
-  assert.equal(pendingB.length, 1, 'B GET is deferred');
+  // The check GET resolves at once (microtasks); the full GET it
+  // triggers is the deferred one. Let the check chain run first.
+  await sleep(0);
+  assert.equal(pendingB.length, 1, 'B full GET is deferred (check resolved first)');
   // Tab A saves the restore (TEST rev 2) and its upload lands.
   tabA.run("DB.familyPlan=" + JSON.stringify(TEST_PLAN) + "; DB.familyPlanUpdatedAt=new Date().toISOString(); DB.familyPlanRev=(DB.familyPlanRev||0)+1; save();");
   await sleep(1200);

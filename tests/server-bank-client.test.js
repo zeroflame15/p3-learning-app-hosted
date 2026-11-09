@@ -78,7 +78,7 @@ function clientEngine() {
   const optsShuffled = eval('(' + fnText('function optsShuffled(q, seed){') + ')'); // eslint-disable-line no-unused-vars
   const liveGenLSGet = eval('(' + fnText('function liveGenLSGet(k){') + ')'); // eslint-disable-line no-unused-vars
   const liveGenLSSet = eval('(' + fnText('function liveGenLSSet(k,v){') + ')'); // eslint-disable-line no-unused-vars
-  const sbCacheKey = eval('(' + fnText('function sbCacheKey(eid){') + ')'); // eslint-disable-line no-unused-vars
+  const sbCacheKey = eval('(' + fnText('function sbCacheKey(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars
   const loadSbCache = eval('(' + fnText('function loadSbCache(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars
   const sbShapeOk = eval('(' + fnText('function sbShapeOk(questions){') + ')'); // eslint-disable-line no-unused-vars
   const saveSbCache = eval('(' + fnText('function saveSbCache(eid, topicId, day, questions){') + ')'); // eslint-disable-line no-unused-vars
@@ -123,7 +123,12 @@ test('server-bank client: cache — same day reuses, new day refuses, resume kee
   assert.equal(c.sbPick(c.loadSbCache('e-test-1', 'math-ntuc'), '2026-11-08').source, 'server');
   assert.equal(c.sbPick(c.loadSbCache('e-test-1', 'math-ntuc'), '2026-11-09').source, 'bank');
   assert.equal(c.sbPickResume(c.loadSbCache('e-test-1', 'math-ntuc')).source, 'server', 'resume keeps the set whatever the day');
-  assert.equal(c.loadSbCache('e-test-1', 'math-mrt'), null, 'cache is per pilot topic only');
+  // The cache is per topic: a set saved for one topic never leaks into another.
+  const mrtRec = c.saveSbCache('e-test-1', 'math-mrt', '2026-11-08', GOOD_SB);
+  assert.equal(mrtRec.topicId, 'math-mrt');
+  assert.deepEqual(c.loadSbCache('e-test-1', 'math-mrt').questions.map((q) => q.id), GOOD_SB.map((q) => q.id));
+  assert.deepEqual(c.loadSbCache('e-test-1', 'math-ntuc').questions.map((q) => q.id), GOOD_SB.map((q) => q.id), 'saving another topic does not clobber the pilot set');
+  assert.equal(c.loadSbCache('e-test-1', 'eng-spelling'), null, 'no cache for a topic never saved');
   assert.equal(c.loadSbCache('e-other', 'math-ntuc'), null, 'cache is per explorer');
   assert.equal(c.sbUsable('e-test-1', 'math-ntuc', 3, '2026-11-08', false).source, 'server');
   assert.equal(c.sbUsable('e-test-1', 'math-ntuc', 3, '2026-11-09', false).source, 'bank');
@@ -141,7 +146,7 @@ test('server-bank client: shape check — ids required, 5 questions, 4 options, 
   assert.equal(c.sbShapeOk(GOOD_SB.map((q) => ({ q: q.q, o: q.o, a: q.a, c: q.c, j: q.j }))), false);
   // A corrupt cache is unusable, never played.
   c.saveSbCache('e-test-1', 'math-ntuc', '2026-11-08', GOOD_SB);
-  c.localStorage.setItem(c.sbCacheKey('e-test-1'), JSON.stringify({ topicId: 'math-ntuc', day: '2026-11-08', questions: GOOD_SB.slice(0, 3) }));
+  c.localStorage.setItem(c.sbCacheKey('e-test-1', 'math-ntuc'), JSON.stringify({ topicId: 'math-ntuc', day: '2026-11-08', questions: GOOD_SB.slice(0, 3) }));
   assert.equal(c.sbUsable('e-test-1', 'math-ntuc', 3, '2026-11-08', false).source, 'bank');
 });
 
@@ -165,9 +170,12 @@ test('server-bank client: fetch success caches the set; a second call reuses it 
     const second = await c.fetchServerBankQuestions('math-ntuc', 3);
     assert.equal(calls, 1, 'second call reuses today’s cached set');
     assert.deepEqual(second, first);
-    // A non-pilot topic never fetches at all.
-    assert.equal(await c.fetchServerBankQuestions('math-mrt', 3), null);
-    assert.equal(calls, 1);
+    // A non-pilot topic fetches the same way and caches under its own key.
+    const mrt = await c.fetchServerBankQuestions('math-mrt', 3);
+    assert.equal(calls, 2, 'a non-pilot topic now fetches the server bank too');
+    assert.equal(mrt.length, 5);
+    assert.deepEqual(c.loadSbCache('e-test-1', 'math-mrt').questions.map((q) => q.id), GOOD_SB.map((q) => q.id));
+    assert.deepEqual(c.loadSbCache('e-test-1', 'math-ntuc').questions.map((q) => q.id), GOOD_SB.map((q) => q.id), 'the pilot cache is untouched');
   } finally { global.fetch = origFetch; }
 });
 
@@ -229,9 +237,12 @@ test('server-bank client: report fires on finish with per-question results, and 
   global.fetch = async () => { calls++; return { ok: true, json: async () => ({}) }; };
   try {
     c.reportServerBankAnswers('math-ntuc', GOOD_SB.map((q) => ({ q: q.q, o: q.o, a: q.a, c: q.c, j: q.j })), []);
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(calls, 0, 'a set without server ids reports nothing');
+    // A non-pilot topic reports the same way now (no pilot gate).
     c.reportServerBankAnswers('math-mrt', GOOD_SB, []);
     await new Promise((r) => setTimeout(r, 0));
-    assert.equal(calls, 0);
+    assert.equal(calls, 1, 'a non-pilot topic reports its answers too');
   } finally { global.fetch = origFetch; }
 });
 
