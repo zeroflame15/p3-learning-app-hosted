@@ -39,7 +39,7 @@ function grabLiteral(marker) {
 // --- the real adminHTML, eval'd with the page's esc and the admin
 // state vars it closes over (same pattern as learnHTML in
 // tests/learn-restructure.test.js) -------------------------------
-var adminPw = null, adminResults = [], adminMsg = '', adminOk = '', adminResetCode = null;
+var adminPw = null, adminResults = [], adminMsg = '', adminOk = '', adminResetCode = null, adminCrittersCode = null;
 const esc = eval('(' + grabFn('esc(') + ')');
 const adminHTML = eval('(' + grabFn('adminHTML(') + ')');
 
@@ -94,7 +94,7 @@ test('adminHTML: unlocked state shows search, results, and the reset form for a 
   ];
   adminMsg = ''; adminOk = ''; adminResetCode = null;
   let out = adminHTML();
-  assert.ok(out.includes('Family code or explorer name'), 'search box shown after unlock');
+  assert.ok(out.includes('Family code, friend code, or explorer name'), 'search box names all three ways to find a family');
   assert.ok(out.includes('id="admSearch"'), 'search button shown after unlock');
   assert.ok(out.includes('ABC2DE'), 'first matching family listed');
   assert.ok(out.includes('Star (P3)'), 'explorer name and level listed');
