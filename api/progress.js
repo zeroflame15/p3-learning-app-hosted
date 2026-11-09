@@ -1,5 +1,6 @@
 // /api/progress — server-side progress sync, keyed by FAMILY SYNC CODE.
 // GET  ?code=<6-letter code>        -> { configured, data|null, updatedAt|null }
+// GET  ?code=<...> &check=1         -> { configured, updatedAt|null } (no data)
 // POST { code, data }               -> { ok, updatedAt }  (upsert, one row per family)
 // Legacy clients that only send `device` (a random per-device id) still
 // work: the device id is accepted as the key, so an unlinked device keeps
@@ -59,6 +60,20 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const key = resolveKey(req.query || {}, null);
     if (!key) return json(res, 400, { error: 'code required' });
+    // Lightweight "has it changed" check (2026-11-09): ?check=1 returns
+    // ONLY {configured, updatedAt} — no data field at all. The client
+    // calls this before every pull; if the server row has not changed
+    // since the client's last sync, it skips downloading the whole
+    // family record (~40 KB) and the response is ~100 bytes instead.
+    // The Supabase query selects only updated_at, so the data never
+    // leaves the database for a check.
+    if (req.query && (req.query.check === '1' || req.query.check === 'true')) {
+      const r = await sb(`${TABLE}?code=eq.${encodeURIComponent(key)}&select=updated_at`);
+      if (!r.ok) return json(res, 502, { error: 'supabase_read_failed' });
+      const rows = await r.json();
+      if (!rows.length) return json(res, 200, { configured: true, updatedAt: null });
+      return json(res, 200, { configured: true, updatedAt: rows[0].updated_at });
+    }
     const r = await sb(`${TABLE}?code=eq.${encodeURIComponent(key)}&select=data,updated_at`);
     if (!r.ok) return json(res, 502, { error: 'supabase_read_failed' });
     const rows = await r.json();

@@ -1,4 +1,4 @@
-// POST /api/daily-set — SERVER-BANK PILOT (one topic: math-ntuc).
+// POST /api/daily-set — SERVER BANK (all topics).
 // Serves one day's quest set (5 questions) from Supabase: due
 // questions first (oldest first), then fresh ones in a day-seeded
 // shuffle; mastered questions are never served. The client falls
@@ -19,7 +19,6 @@
 'use strict';
 
 const {
-  SB_TOPIC,
   SB_COUNT,
   SB_SERVABLE_KINDS,
   sbDaySeed,
@@ -57,25 +56,22 @@ module.exports = async (req, res) => {
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return json(res, 400, { error: 'bad json', fallback: true }); } }
-  // Pilot gate: exactly one topic, nothing else may be served.
-  if (body?.topicId !== SB_TOPIC) {
-    return json(res, 400, { error: 'pilot_topic_only', topicId: SB_TOPIC, fallback: true });
-  }
-  if (!isId(body?.code) || !isId(body?.explorerId)) {
-    return json(res, 400, { error: 'code and explorerId required', fallback: true });
+  if (!isId(body?.code) || !isId(body?.explorerId) || !isId(body?.topicId)) {
+    return json(res, 400, { error: 'code, explorerId and topicId required', fallback: true });
   }
   const level = (typeof body?.level === 'number' && body.level >= 1 && body.level <= 6) ? Math.floor(body.level) : 3;
   const count = (typeof body?.count === 'number' && body.count >= 1 && body.count <= SB_COUNT) ? Math.floor(body.count) : SB_COUNT;
   const day = (typeof body?.day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(body.day)) ? body.day : new Date().toISOString().slice(0, 10);
   const code = body.code.trim();
   const explorerId = body.explorerId.trim();
+  const topicId = body.topicId.trim();
 
   // 1. The servable pool: this topic + level, quest-pool kinds only.
   // Warm/retry rows exist in the table but are never served as a
   // quest (warm-up stays bank in the pilot).
   let pool;
   try {
-    const r = await sb(`sb_questions?topic=eq.${encodeURIComponent(SB_TOPIC)}&level=eq.${level}&select=id,stem,options,answer,explanation,joke,sub_topic`);
+    const r = await sb(`sb_questions?topic=eq.${encodeURIComponent(topicId)}&level=eq.${level}&select=id,stem,options,answer,explanation,joke,sub_topic`);
     if (!r.ok) return json(res, 502, { error: 'supabase_read_failed', fallback: true });
     pool = (await r.json()).filter((q) => SB_SERVABLE_KINDS.indexOf(q.sub_topic) >= 0);
   } catch (e) {
@@ -106,7 +102,7 @@ module.exports = async (req, res) => {
   // 3. Pick: due first (oldest first), then fresh in a day-seeded
   // shuffle — the same seed inputs as the page's daily rotation, so
   // a lost client cache re-serves the same set for the day.
-  const picked = pickSet({ due, fresh, count, seed: sbDaySeed(explorerId, SB_TOPIC, day) });
+  const picked = pickSet({ due, fresh, count, seed: sbDaySeed(explorerId, topicId, day) });
   const questions = picked.questions.map((q) => ({
     id: q.id, q: q.stem, o: q.options, a: q.answer, c: q.explanation || '', j: q.joke || '',
   }));
@@ -133,7 +129,7 @@ module.exports = async (req, res) => {
   }
 
   return json(res, 200, {
-    source: 'server', topicId: SB_TOPIC, level, day,
+    source: 'server', topicId: topicId, level, day,
     questions, served: servedCount, due: dueCount, fresh: freshCount,
   });
 };

@@ -1,4 +1,4 @@
-// POST /api/report-answers — SERVER-BANK PILOT (one topic: math-ntuc).
+// POST /api/report-answers — SERVER BANK (all topics).
 // The client fires this fire-and-forget when a server-bank quest
 // finishes: correct -> mastered (never served again), wrong -> due
 // (recycled in a future set, oldest first). A failed report never
@@ -15,7 +15,7 @@
 // Env: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY (server only).
 'use strict';
 
-const { SB_TOPIC, nextStatus } = require('../lib/server-bank');
+const { nextStatus } = require('../lib/server-bank');
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const KEY = process.env.SUPABASE_SECRET_KEY;
@@ -48,12 +48,8 @@ module.exports = async (req, res) => {
 
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body); } catch { return json(res, 400, { error: 'bad json', fallback: true }); } }
-  // Pilot gate: exactly one topic.
-  if (body?.topicId !== SB_TOPIC) {
-    return json(res, 400, { error: 'pilot_topic_only', topicId: SB_TOPIC, fallback: true });
-  }
-  if (!isId(body?.code) || !isId(body?.explorerId) || !Array.isArray(body?.results)) {
-    return json(res, 400, { error: 'code, explorerId and results required', fallback: true });
+  if (!isId(body?.code) || !isId(body?.explorerId) || !isId(body?.topicId) || !Array.isArray(body?.results)) {
+    return json(res, 400, { error: 'code, explorerId, topicId and results required', fallback: true });
   }
   const code = body.code.trim();
   const explorerId = body.explorerId.trim();
