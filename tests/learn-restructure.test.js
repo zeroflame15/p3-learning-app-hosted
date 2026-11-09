@@ -44,6 +44,12 @@ assert.equal(REAL_IDS.length, 31, '31 real topics in the file (14 original + 17 
 // --- MYKX data ------------------------------------------------------------
 let MYKX_SUBJECTS = eval(grabLiteral('var MYKX_SUBJECTS='));
 
+// --- MOE data (Learn rebuild 2026-11-09): the page renders MOE topics now,
+// so the harness topicById must resolve MOE quest ids to virtual topics,
+// exactly like the page's topicById does. ---------------------------------
+const MOE_SUBJECTS_BY_LEVEL = eval('(' + grabLiteral('var MOE_SUBJECTS_BY_LEVEL=') + ')');
+const moeQuestTopic = eval('(' + grabFn('moeQuestTopic(') + ')');
+
 // --- page-function stubs the eval'd code closes over ----------------------
 function mkQ(prefix, i) {
   return { q: prefix + ' question ' + i + '?', o: ['A' + i, 'B' + i, 'C' + i, 'D' + i], a: 0, c: 'Clue ' + i, j: 'Joke ' + i };
@@ -65,7 +71,8 @@ const FAKE_TOPICS = REAL_IDS.map((id) => {
   t.sub = id.startsWith('eng') ? 'eng' : id.startsWith('math') ? 'math' : id.startsWith('sci') ? 'sci' : 'chi';
   return t;
 });
-function topicById(id) { return FAKE_TOPICS.find((t) => t.id === id) || null; }
+var TOPICS = FAKE_TOPICS;
+const topicById = eval('(' + grabFn('topicById(') + ')');
 function levelNum(e) { const n = parseInt((e && e.level || '').replace('P', ''), 10); return (n >= 1 && n <= 6) ? n : 3; }
 function bankFor(t, kind, level) {
   if (!t) return [];
@@ -97,6 +104,17 @@ const mykxSubReady = eval('(' + grabFn('mykxSubReady(') + ')');
 const mykxSubNote = eval('(' + grabFn('mykxSubNote(') + ')');
 const mykxSubjectCounts = eval('(' + grabFn('mykxSubjectCounts(') + ')');
 const mykxSessionFirst = eval('(' + grabFn('mykxSessionFirst(') + ')');
+// MOE rebuild (2026-11-09): learnHTML now renders the MOE structure.
+const schoolTermOf = eval('(' + grabFn('schoolTermOf(') + ')');
+const moeInSeason = eval('(' + grabFn('moeInSeason(') + ')');
+const moeSubjects = eval('(' + grabFn('moeSubjects(') + ')');
+const moeSubject = eval('(' + grabFn('moeSubject(') + ')');
+const moeTopic = eval('(' + grabFn('moeTopic(') + ')');
+const moeTopicPool = eval('(' + grabFn('moeTopicPool(') + ')');
+const moeTopicStarted = eval('(' + grabFn('moeTopicStarted(') + ')');
+const moeSubNote = eval('(' + grabFn('moeSubNote(') + ')');
+const moeSubjectCounts = eval('(' + grabFn('moeSubjectCounts(') + ')');
+const moeSessionFirst = eval('(' + grabFn('moeSessionFirst(') + ')');
 const learnHTML = eval('(' + grabFn('learnHTML(') + ')');
 
 function explorer(over) {
@@ -249,16 +267,17 @@ test('landing: 4 subject cards in myKx order, with counts, session hint, level c
   assert.ok(out.indexOf('Open English') < out.indexOf('Open Maths'), 'English first');
   assert.ok(out.indexOf('Open Maths') < out.indexOf('Open Science'), 'Maths second');
   assert.ok(out.indexOf('Open Science') < out.indexOf('Open Chinese'), 'Science third');
-  // Gap-fill (2026-11-08): distinct-quest pools grew — English 6x15,
-  // Maths 9x15, Science 5x15, Chinese 11x15.
-  assert.ok(out.includes('0 of 6 topics started · 90 questions ready'), 'English counts');
-  assert.ok(out.includes('0 of 10 topics started · 135 questions ready'), 'Maths counts');
-  assert.ok(out.includes('0 of 7 topics started · 75 questions ready'), 'Science counts');
-  assert.ok(out.includes('0 of 11 topics started · 165 questions ready'), 'Chinese counts');
+  // MOE rebuild (2026-11-09): P3 counts from the MOE structure, fake
+  // 15-question fallback pools — English 5x15 (Listening has no
+  // fallback), Maths 12x15, Science 4x15, Chinese 6x15.
+  assert.ok(out.includes('0 of 6 topics started · 75 questions ready'), 'English counts');
+  assert.ok(out.includes('0 of 12 topics started · 180 questions ready'), 'Maths counts');
+  assert.ok(out.includes('0 of 4 topics started · 60 questions ready'), 'Science counts');
+  assert.ok(out.includes('0 of 6 topics started · 90 questions ready'), 'Chinese counts');
   assert.ok(out.includes('30 questions · about 18 minutes'), 'English session: 6 quests x 5, about 18 min');
-  assert.ok(out.includes('45 questions · about 27 minutes'), 'Maths session: 9 quests x 5, about 27 min');
-  assert.ok(out.includes('25 questions · about 15 minutes'), 'Science session: 5 quests x 5, about 15 min');
-  assert.ok(out.includes('55 questions · about 33 minutes'), 'Chinese session: 11 quests x 5, about 33 min');
+  assert.ok(out.includes('60 questions · about 36 minutes'), 'Maths session: 12 quests x 5, about 36 min');
+  assert.ok(out.includes('20 questions · about 12 minutes'), 'Science session: 4 quests x 5, about 12 min');
+  assert.ok(out.includes('30 questions · about 18 minutes'), 'Chinese session: 6 quests x 5, about 18 min');
   assert.ok(out.includes('🎒 P3'), 'level chip on the landing hero');
   assert.ok(out.includes('Frog Quest'), 'hero keeps the Frog Quest story');
   assert.ok(out.includes('<!--PLAN-BANNER-->'), 'study-plan banner stays on the landing');
@@ -269,113 +288,119 @@ test('landing: 4 subject cards in myKx order, with counts, session hint, level c
 });
 
 /* --- rendering: subject page ---------------------------------------------- */
-test('subject page: hero, session panel, timeline rows, padlocks where no bank', () => {
+test('subject page: hero, session panel, timeline rows, no padlocks (MOE rebuild)', () => {
   const out = renderSubject(explorer(), 'eng');
   assert.ok(out.includes('P3 English'), 'subject hero');
   assert.ok(out.includes('🎒 P3'), 'level chip on the subject hero');
   assert.ok(out.includes('Today’s English session'), 'side panel heading');
   assert.ok(out.includes('30 questions · about 18 minutes'), 'session count + estimate (6 quests)');
-  assert.ok(out.includes('No evidence yet: your first session starts it.'), 'myKx no-evidence line');
+  assert.ok(out.includes('No evidence yet: your first session starts it.'), 'no-evidence line');
   assert.ok(out.includes('data-learn-start="eng"'), 'Start session button');
   assert.ok(out.includes('Start session'), 'Start session label');
   assert.ok(out.includes('← All subjects'), 'back to the subject cards');
-  for (const name of ['Grammar', 'Vocabulary', 'Spelling', 'Synthesis and word order', 'Visual text', 'Comprehension']) {
+  // MOE rebuild (2026-11-09): the 6 Areas of Language Learning, Middle band.
+  for (const name of ['Listening and Viewing', 'Reading and Viewing', 'Speaking and Representing', 'Writing and Representing', 'Grammar', 'Vocabulary']) {
     assert.ok(out.includes(name), 'topic row: ' + name);
   }
-  assert.ok(out.includes('19 sub-topics · 30 questions ready'), 'Grammar row counts');
-  assert.ok(out.includes('1 sub-topics · 15 questions ready'), 'Spelling row has a bank now (gap-fill)');
-  // Gap-fill (2026-11-08): no topic is locked any more — no padlocks
-  // anywhere on the subject page, and every topic has a play triangle.
+  assert.ok(out.includes('3 sub-topics · 15 questions ready'), 'Grammar row counts');
+  assert.ok(out.includes('3 sub-topics · 0 questions ready'), 'Listening row honestly shows 0 (no local fallback)');
+  // No topic is locked any more — no padlocks anywhere on the subject
+  // page, and every topic has a play triangle (the server bank may
+  // serve even a 0-questions-ready topic).
   assert.ok(!out.includes('🔒'), 'no padlock on any topic');
-  assert.ok(out.includes('▶'), 'play-triangle node on topics with questions');
+  assert.ok(out.includes('▶'), 'play-triangle node on topics');
   assert.ok(out.includes('Today’s session starts here'), 'session-start flag on the first topic');
-  assert.ok(!out.includes('Tense simple present'), 'sub-topics hidden until the topic expands');
+  assert.ok(!out.includes('Metalanguage at text level'), 'sub-topics hidden until the topic expands');
   assert.ok(!out.includes('▶ Start quest'), 'no quest cards until a topic expands');
   assert.ok(out.includes('<!--QUEST-BOARD-->'), 'leaderboard stays on the subject page too');
 });
 
 test('expanded topic: plain sub-topic list (not links) + Practise quest cards', () => {
   const out = renderSubject(explorer(), 'eng', 'eng-grammar');
-  for (const name of ['Tense simple present', 'Tense perfect', 'Verb form', 'Punctuation', 'Question tags']) {
+  // MOE rebuild (2026-11-09): Middle-band Grammar sub-topics.
+  for (const name of ['Metalanguage at text level; editing and self-correction', 'Cohesive devices across clauses, sentences and paragraphs', 'Language features of different text types']) {
     assert.ok(out.includes(name), 'sub-topic listed: ' + name);
   }
   assert.ok(out.includes('Not yet assessed'), 'ready sub-topic note');
-  // Gap-fill (2026-11-08): no sub-topic is uncovered or partial any
-  // more, so neither note appears anywhere.
   assert.ok(!out.includes('Questions on the way'), 'no uncovered sub-topic note');
   assert.ok(!out.includes('Some questions ready'), 'no partial sub-topic note');
   assert.ok(out.includes('Practise Grammar:'), 'Practise heading');
-  assert.ok(out.includes('Quest eng-tense'), 'Tenses Trek card');
-  assert.ok(out.includes('Quest eng-punct'), 'Punctuation Pond card');
   assert.ok(out.includes('▶ Start quest'), 'Practise starts the quest');
-  assert.ok(out.includes('data-quest="eng-tense"'), 'Practise wires to the quest');
+  assert.ok(out.includes('data-quest="eng-grammar"'), 'Practise wires to the MOE quest id');
+  assert.ok(out.includes('📚 Pip’s shelf'), 'MOE quest card says its questions come from Pip’s shelf');
   // Sub-topic rows are a plain list: <li> rows, never links or buttons.
-  assert.ok(out.includes('<li><span>Tense simple present</span>'), 'sub-topic row is a plain list item');
+  assert.ok(out.includes('<li><span>Metalanguage at text level; editing and self-correction</span>'), 'sub-topic row is a plain list item');
   assert.ok(!out.includes('<a '), 'no anchor links anywhere on the Learn page');
   const subList = out.slice(out.indexOf('<ul class="learn-subs">'), out.indexOf('</ul>'));
   assert.ok(!subList.includes('data-quest'), 'sub-topic rows carry no Practise action');
   assert.ok(!subList.includes('<button'), 'sub-topic rows are not buttons');
 });
 
-test('every myKx topic has at least one Practise quest (no locked topics)', () => {
-  // Gap-fill (2026-11-08): the old 'expanded locked topic' test
-  // (Spelling had no Practise link) is obsolete — no topic is locked
-  // after the fill. This test replaces it: all 34 topics Practise.
-  for (const s of MYKX_SUBJECTS) {
-    for (const t of s.topics) {
-      assert.ok(t.quests.length >= 1, t.id + ' has at least one Practise quest');
-      const out = renderSubject(explorer(), s.id, t.id);
-      assert.ok(out.includes('Practise ' + t.name + ':'), t.id + ' shows its Practise heading');
-      assert.ok(out.includes('data-quest='), t.id + ' has a quest button');
+test('every MOE topic has exactly one Practise quest (its own server-bank id)', () => {
+  // MOE rebuild (2026-11-09): replaces the myKx version — every MOE
+  // topic at every level Practises, including 0-questions-ready ones.
+  for (let lv = 1; lv <= 6; lv++) {
+    for (const s of MOE_SUBJECTS_BY_LEVEL[String(lv)]) {
+      for (const t of s.topics) {
+        assert.deepEqual(t.quests, [t.id], t.id + ' has exactly one quest: itself');
+        const out = renderSubject(explorer({ level: 'P' + lv }), s.id, t.id);
+        assert.ok(out.includes('Practise ' + t.name + ':'), t.id + ' shows its Practise heading');
+        assert.ok(out.includes('data-quest="' + t.id + '"'), t.id + ' has a quest button');
+      }
     }
   }
 });
 
-test('expanded topic with two quests shows both cards; one quest shared by two topics', () => {
-  const add = renderSubject(explorer(), 'math', 'math-addsub');
-  assert.ok(add.includes('Quest math-mrt'), 'Addition shows MRT Numbers');
-  assert.ok(add.includes('Quest math-ntuc'), 'Addition shows NTUC Totals');
-  const comp = renderSubject(explorer(), 'eng', 'eng-comprehension');
-  assert.ok(comp.includes('Quest eng-story2'), 'Comprehension Practise is Finish the Story');
-  const synth = renderSubject(explorer(), 'eng', 'eng-synthesis');
-  assert.ok(synth.includes('Quest eng-story2'), 'Synthesis Practise is the same quest');
+test('one quest per MOE topic; a shared fallback bank still means distinct quest ids', () => {
+  // Reading, Speaking and Writing all fall back to eng-story2's bank,
+  // but each MOE topic's quest id is its own — progress/completion is
+  // tracked per MOE topic, never merged across them.
+  for (const tid of ['eng-reading', 'eng-speaking', 'eng-writing']) {
+    const out = renderSubject(explorer(), 'eng', tid);
+    assert.ok(out.includes('data-quest="' + tid + '"'), tid + ' Practises its own quest id');
+    assert.ok(!out.includes('data-quest="eng-story2"'), tid + ' never wires to the fallback id');
+  }
 });
 
 /* --- preserved behaviour --------------------------------------------------- */
 test('quest states survive: completed-today greys out with Replay; in-progress resumes', () => {
-  const done = explorer({ completed: { 'eng-tense': 5 }, completedDay: { 'eng-tense': '2026-11-07' } });
+  const done = explorer({ completed: { 'eng-grammar': 5 }, completedDay: { 'eng-grammar': '2026-11-07' } });
   const outDone = renderSubject(done, 'eng', 'eng-grammar');
   assert.ok(outDone.includes('✔ Completed'), 'completed-today pill');
   assert.ok(outDone.includes('↻ Replay'), 'Replay button');
-  const prog = explorer({ progress: { 'eng-tense': { idx: 2, score: 2 } } });
+  const prog = explorer({ progress: { 'eng-grammar': { idx: 2, score: 2 } } });
   const outProg = renderSubject(prog, 'eng', 'eng-grammar');
   assert.ok(outProg.includes('▶ Resume quest'), 'in-progress resumes');
   assert.ok(outProg.includes('In progress — tap to resume at question 3'), 'resume position shown');
 });
 
-test('weak-boost badge and live-gen line survive on the new layout', () => {
-  const flagged = explorer({ boost: { 'eng-tense': { lastScore: 1, prevScore: 2, at: '2026-11-07T00:00:00.000Z' } } });
+test('weak-boost badge and Pip shelf line survive on the new layout', () => {
+  const flagged = explorer({ boost: { 'eng-grammar': { lastScore: 1, prevScore: 2, at: '2026-11-07T00:00:00.000Z' } } });
   const out = renderSubject(flagged, 'eng', 'eng-grammar');
   assert.ok(out.includes('🌱 Needs a boost'), 'boost badge on the flagged quest card');
-  assert.ok(out.includes('data-boost="eng-tense"'), 'boost button on the flagged quest card');
+  assert.ok(out.includes('data-boost="eng-grammar"'), 'boost button on the flagged quest card');
   assert.ok(out.includes('5 quick questions with Pip'), 'badge says what the boost is');
-  const live = renderSubject(explorer(), 'math', 'math-muldiv');
-  assert.ok(live.includes('📚 Pip’s shelf'), 'server-bank line stays on the NTUC Totals card');
+  const math = renderSubject(explorer(), 'math', 'math-mult-div-6789');
+  assert.ok(math.includes('📚 Pip’s shelf'), 'server-bank line stays on a MOE Maths card');
   const chi = renderSubject(explorer(), 'chi', 'chi-listening');
   assert.ok(chi.includes('🔊 This quest has a Listen button'), 'Chinese Listen line stays');
-  assert.ok(chi.includes('Quest chi-listen'), 'Listening is unlocked here, unlike myKx');
+  assert.ok(chi.includes('data-quest="chi-listening"'), 'Listening Practises its MOE quest id');
 });
 
-test('level switching: P4 hero, chip and P4-only sub-topics open; P3 keeps them locked', () => {
+test('level switching: hero, chip and band sub-topics follow the level', () => {
   const p4 = explorer({ level: 'P4' });
   const out4 = renderSubject(p4, 'eng', 'eng-grammar');
   assert.ok(out4.includes('P4 English'), 'P4 subject hero');
   assert.ok(out4.includes('🎒 P4'), 'P4 level chip');
-  const p3 = renderSubject(explorer(), 'eng', 'eng-grammar');
-  // Gap-fill (2026-11-08): perfect tense is no longer P4-only — it
-  // has a P3 bank now, so it is 'Not yet assessed' at both levels.
-  assert.ok(p3.includes('Tense perfect</span><span class="subnote">Not yet assessed</span>'), 'perfect tense has a P3 bank now');
-  assert.ok(out4.includes('Tense perfect</span><span class="subnote">Not yet assessed</span>'), 'perfect tense opens at P4');
+  // MOE rebuild (2026-11-09): English sub-topics change by band, not
+  // by lock — P1/P2 show the Lower band, P3/P4 the Middle band,
+  // P5/P6 the Upper band.
+  const p1 = renderSubject(explorer({ level: 'P1' }), 'eng', 'eng-grammar');
+  assert.ok(p1.includes('Metalanguage for talking about language at word and phrase level'), 'Lower-band grammar at P1');
+  assert.ok(out4.includes('Metalanguage at text level; editing and self-correction'), 'Middle-band grammar at P4');
+  const p5 = renderSubject(explorer({ level: 'P5' }), 'eng', 'eng-grammar');
+  assert.ok(p5.includes('Strengthen grammatical metalanguage learnt before'), 'Upper-band grammar at P5');
+  assert.ok(!p1.includes('Strengthen grammatical metalanguage learnt before'), 'P1 does not show Upper-band grammar');
 });
 
 /* --- wiring + no new persisted state --------------------------------------- */
