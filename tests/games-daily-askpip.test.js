@@ -1,6 +1,7 @@
 // Daily game refresh + Ask Pip from a question (2026-11-08):
 // every game pulls a fresh set each day with no repeats inside the
-// day, and any question can be asked to Pip in its own thread.
+// day. Ask Pip from a question is Learn-only since 2026-11-09:
+// games no longer offer it (button and wiring removed).
 // The sidebar is independently scrollable (same build).
 'use strict';
 const test = require('node:test');
@@ -347,10 +348,14 @@ test('bankSecsLeft: remaining seconds, clamped', () => {
   assert.equal(e.bankSecsLeft(0, 10000), 0, 'a zero deadline is zero');
 });
 
-test('the Ask Pip button is on question screens, not on Memory/Parking (source-level)', () => {
+test('Ask Pip is on Learn question screens only — games no longer offer it (source-level)', () => {
   assert.ok(html.includes('id="wuAskPip"'), 'warm-up has an Ask Pip button');
   assert.ok(html.includes('id="qAskPip"'), 'quest has an Ask Pip button');
-  assert.ok(html.includes('id="gAskPip"'), 'games have an Ask Pip button');
+  assert.ok(!html.includes('id="gAskPip"'), 'games no longer have an Ask Pip button');
+  const gameHtml = fnText('function gameHTML(');
+  assert.ok(!gameHtml.includes('AskPip'), 'no game screen renders an Ask Pip button');
+  const bindGame = fnText('function bindGame(');
+  assert.ok(!bindGame.includes('gAskPip') && !bindGame.includes('askPipAbout'), 'games no longer wire any button to askPipAbout');
   const memStart = html.indexOf("if(gState.id==='memory'){");
   const memEnd = html.indexOf("if(gState.idx>=gState.rounds){", memStart);
   assert.ok(!html.slice(memStart, memEnd).includes('AskPip'), 'Memory Match has no Ask Pip button');
@@ -365,8 +370,6 @@ test('the Ask Pip button is on question screens, not on Memory/Parking (source-l
   assert.ok(bindWarmup.includes('wuAskPip') && bindWarmup.includes('askPipAbout'), 'warm-up wires its button to askPipAbout');
   const bindQuiz = fnText('function bindQuiz(');
   assert.ok(bindQuiz.includes('qAskPip') && bindQuiz.includes('askPipAbout'), 'quest wires its button to askPipAbout');
-  const bindGame = fnText('function bindGame(');
-  assert.ok(bindGame.includes('gAskPip') && bindGame.includes('askPipAbout'), 'games wire their button to askPipAbout');
   const askLive = fnText('function askPipLive(');
   assert.ok(askLive.includes('opts'), 'askPipLive takes an opts argument');
   assert.ok(askLive.includes('mode:') && askLive.includes('explain:'), 'askPipLive sends mode + explain to the server');

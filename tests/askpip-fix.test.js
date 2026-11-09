@@ -1,8 +1,10 @@
 // Ask Pip fix (2026-11-08, live-verified failures): Ask Pip from a
-// quest or game question created NO thread, and an in-progress game
-// run was lost across the round trip. These tests reproduce both
-// failures against the real page functions, plus the explain-prompt
+// quest question created NO thread, and an in-progress game run was
+// lost across the round trip. These tests reproduce the quest
+// failure against the real page functions, plus the explain-prompt
 // strengthening (Pip must lead with a hint, not the answer).
+// The game-question test was removed 2026-11-09: games no longer
+// offer Ask Pip, so there is no game entry point left to test.
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -153,42 +155,6 @@ test('askPipAbout quest: creates the thread on the live explorer (was: no thread
   h.returnFromAskPip();
   assert.equal(h.goCalls().slice(-1)[0], 'quiz', 'back goes to the quiz');
   assert.ok(h.getCur().startedAt, 'the answer-only clock resumes on return');
-});
-
-/* ---------------- Failures 2 + 3: Ask Pip from a game question ---------------- */
-
-test('askPipAbout game: creates the thread AND keeps the in-progress run (was: no thread, run lost)', async () => {
-  const h = askFlow();
-  const run1 = { idx: 6, score: 5, seed: 111, elapsed: 60, answered: true, picked: 0, keys: ['r1k0', 'r1k1', 'r1k2', 'r1k3', 'r1k4', 'r1k5'], at: 1000 };
-  const run2keys = ['r2k0', 'r2k1', 'r2k2', 'r2k3', 'r2k4', 'r2k5'];
-  h.setDB(makeDB(makeExplorer({ id: 'e1', threads: [], playProgress: { word: run1 } })));
-  h.setLocal(LSKEY, JSON.stringify(h.getDB()));
-  const beforeAsk = JSON.stringify(h.getDB());
-  // Word Garden run 2, round 2, unanswered — in memory only so far.
-  h.setGState({ id: 'word', idx: 1, score: 0, seed: 222, keys: run2keys, answered: false, picked: null, startedAt: Date.now(), answerSecs: 10, rounds: 6, tier: 'mid' });
-  h.askPipAbout({ src: 'game', gameId: 'word', label: 'Word Garden', question: 'Sara loves to read... Which sentence is FALSE?', options: ['A', 'B', 'C', 'D'], answer: 'B', clue: '' });
-  await flush();
-  const e = h.ex();
-  assert.equal(e.threads.length, 1, 'a thread is created on the live explorer');
-  assert.ok(e.threads[0].title.includes('Sara loves to read'), 'the thread is titled with the game question');
-  assert.equal(h.getAskReturn().route, 'game', 'return route is the game');
-  // The in-progress run survives the save — the old max-idx merge
-  // resurrected run 1's idx=6 here, so the run looked finished.
-  assert.equal(e.playProgress.word.idx, 1, 'the saved progress is run 2 (round 2), not run 1 (finished)');
-  assert.deepEqual(e.playProgress.word.keys, run2keys, "the saved keys are run 2's");
-  assert.equal(e.playProgress.word.seed, 222, "the saved seed is run 2's");
-  assert.ok(e.playProgress.word.at > 1000, 'the saved record carries the newer run time');
-  // A later save against a stale stored copy (still run 1) does not
-  // resurrect run 1 either.
-  h.setLocal(LSKEY, beforeAsk);
-  h.save();
-  assert.equal(h.ex().playProgress.word.idx, 1, 'a later save against a stale copy still keeps run 2');
-  assert.equal(h.ex().threads.length, 1, 'the thread survives that save too');
-  // Returning goes back to the same round, clock running.
-  h.returnFromAskPip();
-  assert.equal(h.goCalls().slice(-1)[0], 'game', 'back goes to the game');
-  assert.equal(h.getGState().idx, 1, 'the game resumes at round 2, not round 1');
-  assert.ok(h.getGState().startedAt, 'the answer-only clock resumes on return');
 });
 
 /* ---------------- Warm-up still works (regression) ---------------- */
