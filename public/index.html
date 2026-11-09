@@ -9956,7 +9956,8 @@ function questListFor(t, c, level){
        same-day replay replays today's grid.
      * Exit Parking: 18 fixed levels in order, each played once —
        no repeats are possible, so nothing changes.
-   Feature 2 — Ask Pip from a question: see askPipAbout() below. The
+   Feature 2 — Ask Pip from a question (Learn quests/warm-ups only;
+   removed from games 2026-11-09): see askPipAbout() below. The
    child opens a NEW Ask Pip thread with the question, Pip hints
    first there (she is not given the answer, so she cannot blurt
    it out), and "Back to my
@@ -10814,7 +10815,7 @@ function warmupHTML(){
    +'<h3 style="margin-top:14px">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'
    +'<div id="wuOpts">'+q.o.map(function(o,i){ var cls='optbtn'; if(warm.answered){ if(i===q.a)cls+=' right'; else if(i===warm.picked)cls+=' wrong'; } else if(i===warm.picked)cls+=' picked'; return '<button class="'+cls+'" data-wopt="'+i+'" '+(warm.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
    +'<div style="margin-top:10px"><button class="btn ghost" id="wuAskPip">🦦 Ask Pip about this question</button></div>'
-   +'<div id="wuFb">'+(warm.answered?('<div class="feedback '+(warm.picked===q.a?'ok':'no')+'">'+(warm.picked===q.a?'Correct! Warm brain, go go go! 🔥':'Not quite — the answer is “'+esc(q.o[q.a])+'”. Warm-up tries still count!')+'</div>'+whyBoxHTML('warmup',warm)+'<button class="btn" id="wuNext">'+(warm.idx+1>=warm.order.length?'Finish warm-up':'Next ▶')+'</button>'):'')+'</div>'
+   +'<div id="wuFb">'+(warm.answered?('<div class="feedback '+(warm.picked===q.a?'ok':'no')+'">'+(warm.picked===q.a?'Correct! Warm brain, go go go! 🔥':'Not quite — the answer is “'+esc(q.o[q.a])+'”. Warm-up tries still count!')+'</div><button class="btn" id="wuNext">'+(warm.idx+1>=warm.order.length?'Finish warm-up':'Next ▶')+'</button>'):'')+'</div>'
    +'<button class="btn ghost" id="wuSkip" style="margin-top:10px">Skip warm-up</button></div>';
 }
 function bindWarmup(){
@@ -10826,8 +10827,7 @@ function bindWarmup(){
     var i=parseInt(b.getAttribute('data-wopt'),10); var q=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]];
     warm.picked=i; warm.answered=true; if(i===q.a){ warm.correct++; sndCorrect(); } else sndWrong(); render();
   }; });
-  var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ warm.idx++; warm.picked=null; warm.answered=false; warm.whyText=''; warm.whyState='idle'; warm.whyReply=''; warm.whyKey=''; render(); };
-  bindWhyBox('warmup',warm);
+  var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ warm.idx++; warm.picked=null; warm.answered=false; render(); };
   var sk=document.getElementById('wuSkip'); if(sk)sk.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
   /* Ask Pip about this warm-up question: Pip explains it in a new
      thread, and the 60s countdown pauses while the child is away. */
@@ -10932,104 +10932,6 @@ function startBoostFlow(topicId){
   }
   go('quiz');
 }
-
-/* ============================================================
-   WHY-BOX (2026-11-09, Bryan): after a child answers a quest
-   or warm-up question, Pip asks "Why do you think so?" The
-   child may type their reasoning — or skip it. It is OPTIONAL:
-   it never blocks Next, the answer-only timer, or star awarding
-   (stars are decided in finishRound, which this never touches).
-   Pip's feedback reuses the existing Ask Pip path (askPipLive,
-   plain mode — NOT explain mode, whose server-side hint-first
-   swap would replace Pip's feedback with a generic hint whenever
-   it states the answer; here the answer is already known, so
-   Pip may confirm it or gently correct the thinking). One short
-   live call per use, only when the child taps "Tell Pip". If the
-   live call fails, or the child moves on first, the local
-   fallback answers instead (or the reply is dropped silently —
-   never a wedge, never a hang: askPipLive never rejects).
-   SESSION-ONLY on purpose: the reasoning lives on the run
-   object (cur / warm), never on the explorer record, so there is
-   no new persisted field, nothing for mergeExplorer to carry,
-   and no extra bytes on the family row (whose size is already
-   near the sync cap — see the 2026-11-09 "unable to sync" bug).
-   A fresh question resets it; Next / Skip clears it.
-   ============================================================ */
-function whyIsCorrect(kind, st, q){
-  if(!q)return false;
-  if(kind==='quest'&&isFibQuestion(q))return !!st.fibCorrect;
-  return st.picked===q.a;
-}
-function whyPickedText(kind, st, q){
-  if(!q)return '';
-  if(kind==='quest'&&isFibQuestion(q))return st.fibTyped||'';
-  if(st.picked!=null&&q.o&&q.o[st.picked]!=null)return q.o[st.picked];
-  return '';
-}
-function whyCurrentQuestion(kind, st){
-  var e=ex(); if(!e||!st)return null;
-  var t=topicById(st.topicId); if(!t)return null;
-  if(kind==='quest'){ var list=questListFor(t, st, levelNum(e)); return (list&&list[st.idx])||null; }
-  var bank=bankFor(t,'warm',levelNum(e));
-  return (bank&&bank[st.order[st.idx]])||null;
-}
-function whyPrompt(q, correct, picked, reasoning, answer, topicName){
-  return 'I answered a '+(topicName||'school')+' question: "'+(q.q||'')+'" The right answer is "'+(answer||'')+'". I picked "'+(picked||'')+'". I think so because: "'+(reasoning||'')+'" Was my thinking right? Tell me in 2 short sentences, kindly — say what was good about my thinking, and gently fix it if I got the idea wrong.';
-}
-function whyFallback(correct, clue){
-  if(correct)return 'Lovely thinking! 🌟 You spotted the key idea — keep trusting that brain of yours!';
-  return 'Good brave thinking! 💛 '+(clue?('Remember: '+clue):'Have another look at the clue — the idea will click!');
-}
-function whyBoxHTML(kind, st){
-  if(!st||!st.answered)return '';
-  var state=st.whyState||'idle';
-  if(state==='skipped')return '';
-  var head='<div class="whybox" style="margin-top:12px;padding:12px;border:2px dashed var(--teal,#2a9d8f);border-radius:12px;text-align:left">';
-  if(state==='done'){
-    return head+'<b>🤔 Why did you think so?</b><p style="font-weight:700;margin:8px 0 4px">You said: “'+esc(st.whyText||'')+'”</p><div style="display:flex;gap:10px;align-items:flex-start;margin-top:8px"><div style="font-size:1.6rem">🦦</div><div style="font-weight:700">'+esc(st.whyReply||'')+'</div></div></div>';
-  }
-  if(state==='thinking'){
-    return head+'<b>🤔 Why did you think so?</b><p style="font-weight:700;margin:8px 0">You said: “'+esc(st.whyText||'')+'”</p><p style="font-weight:800">🦦 Pip is thinking…</p></div>';
-  }
-  return head+'<b>🤔 Why do you think so?</b><p class="small muted" style="font-weight:700;margin:6px 0">Tell Pip your thinking — optional! It never changes your stars, and you can skip it.</p><textarea id="whyInput" class="field" rows="2" maxlength="280" placeholder="I picked it because…" style="width:100%;font-weight:700">'+esc(st.whyText||'')+'</textarea><div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn teal" id="whySend">Tell Pip 💬</button><button class="btn ghost" id="whySkip">Skip</button></div></div>';
-}
-function bindWhyBox(kind, st){
-  var send=document.getElementById('whySend');
-  if(send)send.onclick=function(){ askWhyPip(kind, st, whyCurrentQuestion(kind, st), topicById(st.topicId)); };
-  var skip=document.getElementById('whySkip');
-  if(skip)skip.onclick=function(){ st.whyState='skipped'; render(); };
-  var inp=document.getElementById('whyInput');
-  if(inp)inp.oninput=function(){ st.whyText=inp.value; };
-}
-function askWhyPip(kind, st, q, t){
-  if(!q)return;
-  var inp=document.getElementById('whyInput');
-  var text=inp?inp.value:(st.whyText||'');
-  text=String(text||'').trim();
-  if(!text){ toast('Type a little thinking first — or tap Skip!'); return; }
-  if(text.length>280)text=text.slice(0,280);
-  st.whyText=text; st.whyState='thinking';
-  var key=kind+'|'+(st.topicId||'')+'|'+st.idx;
-  st.whyKey=key;
-  var e=ex();
-  var prompt=whyPrompt(q, whyIsCorrect(kind,st,q), whyPickedText(kind,st,q), text, questAnswerText(q), t?(t.name||''):'');
-  render();
-  askPipLive(prompt, [], e?e.name:'', {}).then(function(live){
-    if(!st||st.whyKey!==key||st.whyState!=='thinking')return;
-    if(kind==='quest'){ if(typeof cur==='undefined'||cur!==st)return; }
-    else { if(typeof warm==='undefined'||warm!==st)return; }
-    st.whyReply=(live&&live.reply)?live.reply:whyFallback(whyIsCorrect(kind,st,q), q.c||'');
-    st.whyState='done';
-    render();
-  }).catch(function(){
-    if(!st||st.whyKey!==key||st.whyState!=='thinking')return;
-    if(kind==='quest'){ if(typeof cur==='undefined'||cur!==st)return; }
-    else { if(typeof warm==='undefined'||warm!==st)return; }
-    st.whyReply=whyFallback(whyIsCorrect(kind,st,q), q.c||'');
-    st.whyState='done';
-    try{ render(); }catch(err){}
-  });
-}
 function quizHTML(){
   var e=ex(), t=topicById(cur.topicId);
   var list=questListFor(t, cur, levelNum(e));
@@ -11052,7 +10954,6 @@ function quizHTML(){
     if(_ok) fb='<div class="feedback ok">'+PRAISE[(cur.idx+e.stars)%PRAISE.length]+'</div>';
     else if(cur.phase==='quest') fb='<div class="feedback no"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div>'+esc(q.j||'Oops!')+'<br>💡 Tiny clue: '+esc(q.c)+'<br><span class="small">The right answer is “'+esc(questAnswerText(q))+'”. Read the clue once more — it will stick!</span></div></div></div>';
     else fb='<div class="feedback no">Good brave try! The right answer is “'+esc(questAnswerText(q))+'”. '+(q.c?('Clue: '+esc(q.c)):'')+'</div>';
-    fb+=whyBoxHTML('quest',cur);
     fb+='<button class="btn" id="qNext">'+(cur.idx+1>=list.length?'See my results 🏁':'Next question ▶')+'</button>';
   }
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
@@ -11137,13 +11038,12 @@ function bindQuiz(){
     try{ fibIn.focus(); }catch(err){}
   }
   var nx=document.getElementById('qNext'); if(nx)nx.onclick=function(){
-    cur.idx++; cur.picked=null; cur.answered=false; cur.fibTyped=''; cur.fibCorrect=false; cur.whyText=''; cur.whyState='idle'; cur.whyReply=''; cur.whyKey='';
+    cur.idx++; cur.picked=null; cur.answered=false; cur.fibTyped=''; cur.fibCorrect=false;
     if(cur.idx<list.length)resumeLearnTimer();
     if(cur.idx>=list.length){ finishRound(t); }
     if(cur.phase==='quest'&&cur.idx<list.length)persistProgress();
     render();
   };
-  bindWhyBox('quest',cur);
   var qt=document.getElementById('qQuit'); if(qt)qt.onclick=function(){ if(cur.phase==='quest'){ persistProgress(); toast('Saved! This quest will resume right where you stopped.'); } else if(cur.phase==='boost'){ toast('No problem — Pip’s Boost will be here whenever you’re ready.'); } else { toast('Saved! This quest will resume right where you stopped.'); } cur=null; go('learn'); };
 }
 function finishRound(t){
@@ -12597,7 +12497,6 @@ function gameHTML(){
      +'<p class="muted" style="font-weight:700;margin:10px 0 0">👆 Tap a square to pick its word — tap the same square again to switch between Across and Down. The hint lights up too!</p>'
      +'<div class="xwclues">'+clues+'</div>'
      +'<p class="small muted" style="font-weight:700;margin:8px 0 0">Type with your keyboard — green means it fits! ✔ A correct word turns green and its hint greys out.</p>'
-     +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
      +'<button class="btn ghost" id="gBack" style="margin-top:8px">Back to Play 🎮</button><button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   if(gState.id==='parking'){
@@ -12653,7 +12552,6 @@ function gameHTML(){
      +'<p class="muted" style="font-weight:700;text-align:center">Tap a word to place it. Tap a placed word to send it back.</p>'
      +'<div style="text-align:center"><button class="btn ghost" id="sbReset">↺ Start over</button></div>'
      +fb
-     +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
      +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
   }
   var q=genRound(gState.id, gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
@@ -12670,7 +12568,6 @@ function gameHTML(){
    +'<div class="bigq">'+esc(q.q)+'</div>'
    +(gState.id==='race'&&typeof raceTrackHTML==='function'?raceTrackHTML(e):'')
    + gameOptsHTML(q)
-   +'<div style="margin-top:10px"><button class="btn ghost" id="gAskPip">🦦 Ask Pip about this question</button></div>'
    +(gState.answered?'<div class="feedback '+(gState.picked===q.a?'ok':'no')+'">'+(gState.picked===q.a?PRAISE[gState.idx%PRAISE.length]:(gState.timedOut?'⏰ Time’s up! ':'')+ENCOURAGE[gState.idx%ENCOURAGE.length]+' The answer is “'+esc(q.o[q.a])+'”.')+(gState.id==='number'&&gState.picked===q.a&&(gState.streak||0)>=2?' 🎈 Pop combo ×'+gState.streak+'!':'')+(q.c?'<br>💡 '+esc(q.c):'')+'</div><button class="btn" id="gNext">'+(gState.idx+1>=gState.rounds?'See results 🏁':'Next ▶')+'</button>':'')
    +'<button class="btn ghost" id="gQuit" style="margin-top:8px">Save &amp; quit — resume later</button></div>';
 }
@@ -12855,9 +12752,6 @@ function bindGame(){
     if(gState.idx>=gState.rounds)return;
     var input=document.getElementById('xwInput');
     var checkBtn=document.getElementById('xwCheck');
-    /* Ask Pip about the selected crossword clue: Pip explains it in
-       a new thread, and the answer-only clock pauses while away. */
-    var gaXw=document.getElementById('gAskPip'); if(gaXw)gaXw.onclick=function(){ var wd=XWORDS[gState.sel]; askPipAbout({src:'game', gameId:'crossword', label:'Crossword Quest', question:'Crossword clue '+wd.num+' '+wd.dir+': '+wd.clue+' ('+wd.w.length+' letters)', answer:wd.w, clue:''}); };
     /* Typing updates the grid cells in place — a full re-render
        here would drop the input's focus on every keystroke. */
     function paintCells(){
@@ -12965,9 +12859,6 @@ function bindGame(){
     if(gState.idx>=gState.rounds)return;
     var s=gState.sbSent||sentFor(gState.seed, gState.idx, gState.tier, (gState.keys||[])[gState.idx]);
     var bank=gState.sentBank||sentBank(s, gState.seed, gState.idx);
-    /* Ask Pip about this sentence: Pip explains it in a new thread,
-       and the answer-only clock pauses while the child is away. */
-    var gaSen=document.getElementById('gAskPip'); if(gaSen)gaSen.onclick=function(){ askPipAbout({src:'game', gameId:'sentence', label:'Sentence Builder', question:'Put these words in the right order: '+bank.map(function(wi){ return s.w[wi]; }).join(', ')+'.', answer:s.w.join(' ')+(s.p||'.'), clue:s.c}); };
     /* Scoring a finished sentence: one star, streak up, the
        pitch-ladder correct jingle, and the answer-only clock
        freezes — exactly like the generic answer tap. */
@@ -13043,9 +12934,6 @@ function bindGame(){
   if(gState.id==='scramble'){
     if(gState.idx>=gState.rounds)return;
     var sq=genRound('scramble', gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
-    /* Ask Pip about this scramble: Pip explains the word in a new thread,
-       and the answer-only clock pauses while the child is away. */
-    var gaScr=document.getElementById('gAskPip'); if(gaScr)gaScr.onclick=function(){ askPipAbout({src:'game', gameId:'scramble', label:'Word Scramble', question:'Unscramble these letters to make a word: '+sq.scr.split('').join(' ')+'. Hint: '+sq.c, answer:sq.word, clue:sq.c}); };
     /* Tapping a letter drops it into the first empty slot, with a
        rising celesta tick per letter placed — the deeper into the
        word, the higher the note. */
@@ -13121,9 +13009,6 @@ function bindGame(){
      into this round — a re-render re-arms it below. */
   if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
   var q=genRound(gState.id, gState.idx, gState.seed, gState.tier, (gState.keys||[])[gState.idx]);
-  /* Ask Pip about this question: Pip explains it in a new thread,
-     and the answer-only clock pauses while the child is away. */
-  var ga=document.getElementById('gAskPip'); if(ga)ga.onclick=function(){ askPipAbout({src:'game', gameId:gState.id, label:(GAMES.find(function(x){return x.id===gState.id;})||{}).name||gState.id, question:q.q, options:q.o.slice(), answer:q.o[q.a], clue:q.c||''}); };
   document.querySelectorAll('[data-gopt]').forEach(function(b){ b.onclick=function(){
     var i=parseInt(b.getAttribute('data-gopt'),10); gState.picked=i; gState.answered=true;
     if(gState.escapeTimer){ clearTimeout(gState.escapeTimer); gState.escapeTimer=null; }
