@@ -373,6 +373,7 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 @media (min-width:900px){
   .homegrid{grid-template-columns:3fr 2fr}
   .cardrow{grid-template-columns:repeat(3,1fr)}
+  .cardrow.two{grid-template-columns:repeat(2,1fr)}
 }
 .heroT{position:relative;border-radius:20px;overflow:hidden;box-shadow:var(--shadow);min-height:340px;display:flex;flex-direction:column;justify-content:flex-end;color:#fff}
 .heroT img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -5558,7 +5559,7 @@ function homeHTML(){
   } else if(todayEvent&&todayEvent.kind==='closure'){
     questCard=questCard.replace('🍃 Today’s quest','🍃 Today’s quest — school is closed today, so this one is gentle & optional');
   }
-  var critterCard='<button type="button" data-go2="critter" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink)"><img class="cardimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">Your companion critter</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'</div></button>';
+  var critterHeroCard='<button type="button" data-go2="critter" style="display:block;width:100%;text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink);margin-top:20px;cursor:pointer"><img src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'" style="width:100%;height:220px;object-fit:contain;display:block;background:linear-gradient(180deg,#e8f5e9,#c8e6c9);padding:12px 0"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">🐸 Your companion critter — tap to visit Critter Lab!</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.5rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'<p style="font-weight:800;margin:12px 0 0;color:#2f7a3d">👉 Tap to feed, clean &amp; play with '+esc(e.critterName)+' in Critter Lab!</p></div></button>';
   var treasureCard='<button type="button" data-go2="treasure" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;color:var(--ink)"><div class="themeslabel" style="color:var(--ink-soft)">Treasure Realm</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+e.treasures.length+' of '+TREASURES.length+' collected</div>'
    +(nextTreasure? '<p class="small muted" style="font-weight:600;margin:6px 0 0">Next: <b style="color:var(--ink)">'+nextTreasure.e+' '+esc(nextTreasure.name)+'</b> — '+esc(nextTreasure.purpose)+' Unlocks at '+nextTreasure.cost+' stars — you have '+e.stars+'. '+(e.stars>=nextTreasure.cost?'You can unlock it now!':'Just '+(nextTreasure.cost-e.stars)+' more to go!')+'</p>' : '<p class="small muted" style="font-weight:600;margin:6px 0 0">You collected every treasure. Amazing exploring!</p>')
    +'<div class="progressbar" style="margin-top:12px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div></button>';
@@ -5584,9 +5585,10 @@ function homeHTML(){
   var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; var _can=(t.sub==='math'||(((r&&r.lastBoost)||{}).day||'')!==todayKey()); return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p>'+(_can?'<button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>':'<p class="small muted" style="font-weight:700;margin:6px 0">Boost done for today — Pip will have fresh questions tomorrow! 🌙</p>'); }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
   return lvlPrompt+'<div class="homegrid">'+hero+questCard+'</div>'
    + streakStripHTML(e, quest?quest.id:null)
+   + critterHeroCard
    + boostCard
    + planSectionHTML(e, todayPlan, todayEvent)
-   +'<div class="cardrow">'+critterCard+treasureCard+creativeCard+'</div>'
+   +'<div class="cardrow two">'+treasureCard+creativeCard+'</div>'
    + jokeLine;
 }
 function bindHome(){
@@ -13624,7 +13626,7 @@ function critterHTML(){
 }
 function bindCritter(){
   var e=ex(); if(!e.visitedStages)e.visitedStages=[]; if(!e.discoveredCritters)e.discoveredCritters=[];
-  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); critterView=i; /* Looking at a stage never rewinds growth: the frog only ever grows forward, to the furthest stage explored. */ if(i>e.critterStage)e.critterStage=i; if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
+  document.querySelectorAll('[data-stage]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-stage'),10); critterView=i; /* Looking at a stage never changes growth: the frog grows ONLY by care (applyCareDay). The view (critterView) is UI state only — it shows the stage in the pond, and visiting records the Critter Friend badge. */ if(e.visitedStages.indexOf(i)<0)e.visitedStages.push(i); if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend'); save(); sndPop(); render(); }; });
   document.querySelectorAll('[data-critter]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-critter'); var c=CRITTERS.find(function(x){return x.id===id;}); selCritter=id;
     if(e.discoveredCritters.indexOf(id)<0){ e.discoveredCritters.push(id); sndCorrect(); toast('Discovered: '+c.name+'! '+c.e);
       if(e.discoveredCritters.length>=5)awardBadge('spotter','🔍 Critter Spotter');
