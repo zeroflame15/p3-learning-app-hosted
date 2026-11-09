@@ -7,7 +7,13 @@
 // 502 (the client silently uses the bank instead).
 // Body: { code, explorerId, topicId, level, count?, day? }
 // Reply (200): { source:'server', topicId, level, day,
-//   questions:[{id,q,o,a,c,j}], served, due, fresh }
+//   questions:[{id,q,o,a,c,j,k,...}], served, due, fresh }
+//   each question carries k:'mcq' or k:'fib' (the FIB encoding is
+//   in lib/server-bank.js); a FIB question also carries ans (the
+//   expected typed answer) and accept (alternate answers), with
+//   o:[] and a:0 as unused sentinels. Malformed rows are filtered
+//   out of the pool, so one bad row never sinks a set. A set mixes
+//   formats: pickSet interleaves FIB/MCQ in the fresh draw.
 //   served = picked questions that were already 'served' (played but
 //     never reported — e.g. a quit mid-quest); due = picked questions
 //     that were due; fresh = picked questions never served before
@@ -23,6 +29,7 @@ const {
   SB_SERVABLE_KINDS,
   sbDaySeed,
   pickSet,
+  sbClientQuestion,
 } = require('../lib/server-bank');
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -73,7 +80,7 @@ module.exports = async (req, res) => {
   try {
     const r = await sb(`sb_questions?topic=eq.${encodeURIComponent(topicId)}&level=eq.${level}&select=id,stem,options,answer,explanation,joke,sub_topic`);
     if (!r.ok) return json(res, 502, { error: 'supabase_read_failed', fallback: true });
-    pool = (await r.json()).filter((q) => SB_SERVABLE_KINDS.indexOf(q.sub_topic) >= 0);
+    pool = (await r.json()).filter((q) => SB_SERVABLE_KINDS.indexOf(q.sub_topic) >= 0 && sbClientQuestion(q));
   } catch (e) {
     return json(res, 502, { error: 'supabase_read_failed', fallback: true });
   }
@@ -103,9 +110,7 @@ module.exports = async (req, res) => {
   // shuffle — the same seed inputs as the page's daily rotation, so
   // a lost client cache re-serves the same set for the day.
   const picked = pickSet({ due, fresh, count, seed: sbDaySeed(explorerId, topicId, day) });
-  const questions = picked.questions.map((q) => ({
-    id: q.id, q: q.stem, o: q.options, a: q.answer, c: q.explanation || '', j: q.joke || '',
-  }));
+  const questions = picked.questions.map((q) => sbClientQuestion(q)).filter(Boolean);
   const dueCount = picked.dueCount;
   const freshCount = picked.questions.filter((q) => !byId[q.id]).length;
   const servedCount = picked.questions.length - dueCount - freshCount;
