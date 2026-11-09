@@ -56,11 +56,15 @@ test('the stage viewer is separate from the growth stage', () => {
   assert.ok(page.includes("(view===i?'sel':'')"), 'the selected thumbnail follows the viewed stage');
   const bind = html.slice(html.indexOf('function bindCritter(){'), html.indexOf('function bindCritter(){') + 2000);
   assert.ok(bind.includes('critterView=i'), 'tapping a stage sets the view');
-  // The only write to the growth stage in the handler is the guarded
-  // forward-only one — never a plain "e.critterStage=i".
-  const withoutGuard = bind.replace('if(i>e.critterStage)e.critterStage=i;', '');
-  assert.ok(!withoutGuard.includes('e.critterStage=i'), 'tapping a stage must never overwrite the growth stage outright');
-  assert.ok(bind.includes('if(i>e.critterStage)e.critterStage=i'), 'exploring a later stage still grows the frog forward, never backwards');
+  // Viewing must NEVER write the growth stage: the frog grows ONLY
+  // by care (applyCareDay). The old guarded forward-only advance
+  // (if(i>e.critterStage)e.critterStage=i) was a live bug — a new
+  // explorer who tapped Adult Frog to look at it became an Adult
+  // Frog forever (Bryan 2026-11-10). The growth stage is not
+  // mentioned in the tap handler at all now.
+  const stageHandler = bind.slice(bind.indexOf("querySelectorAll('[data-stage]')"), bind.indexOf("querySelectorAll('[data-critter]')"));
+  assert.ok(!stageHandler.includes('critterStage'), 'tapping a stage must not touch the growth stage at all');
+  assert.ok(stageHandler.includes('visitedStages.push(i)'), 'viewing a stage still records it for the Critter Friend badge');
 });
 
 /* --- Simple care: feed, clean, play (no hunger) --- */
