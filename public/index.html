@@ -3844,6 +3844,33 @@ function mergeExplorer(a,b){
     e.care=JSON.parse(JSON.stringify(_cr.care||{})); e.careGrewDay=_cr.careGrewDay||null;
     e.discoveredCritters=(_cr.discoveredCritters||[]).slice(); e.critterResetAt=_cr.critterResetAt||null;
   }
+  /* Daily streak (Phase 1, 2026-11-10): the streak group only ever
+     moves forward in time, so the side with the LATER streakLastDate
+     wins the group whole (streak, lost, repair, freeze-used day). On
+     a tie the higher streak wins - a stale high streak is re-derived
+     down by the next streakTick anyway, while a reset must never win
+     over a freeze-preserved streak. Longest is a max. Freezes follow
+     the later freeze week; within the same week the LOWER count wins,
+     so a consumed freeze can never be resurrected by a stale device.
+     Legacy explorers carry no streak fields at all: when neither side
+     has any, the block is skipped entirely, so a sync merge never
+     invents streak fields and a no-change pull stays no-change. A
+     legacy explorer gets its fields lazily from streakTick on first
+     render. */
+  var _sHas=(a.streak!==undefined)||(a.streakLongest!==undefined)||(a.streakLastDate!==undefined)||(a.streakFreezes!==undefined)||(a.streakFreezeWeek!==undefined)||(a.streakLost!==undefined)||(a.streakRepairUntil!==undefined)||(a.streakFreezeUsedDay!==undefined)||(b.streak!==undefined)||(b.streakLongest!==undefined)||(b.streakLastDate!==undefined)||(b.streakFreezes!==undefined)||(b.streakFreezeWeek!==undefined)||(b.streakLost!==undefined)||(b.streakRepairUntil!==undefined)||(b.streakFreezeUsedDay!==undefined);
+  if(_sHas){
+    var _sLastA=a.streakLastDate||'', _sLastB=b.streakLastDate||'';
+    if(_sLastB>_sLastA||(_sLastB===_sLastA&&(b.streak||0)>(a.streak||0))){
+      e.streak=b.streak||0; e.streakLastDate=b.streakLastDate||null; e.streakLost=b.streakLost||0; e.streakRepairUntil=b.streakRepairUntil||null; e.streakFreezeUsedDay=b.streakFreezeUsedDay||null;
+    } else {
+      e.streak=a.streak||0; e.streakLastDate=a.streakLastDate||null; e.streakLost=a.streakLost||0; e.streakRepairUntil=a.streakRepairUntil||null; e.streakFreezeUsedDay=a.streakFreezeUsedDay||null;
+    }
+    e.streakLongest=Math.max(a.streakLongest||0,b.streakLongest||0);
+    var _sWkA=a.streakFreezeWeek||'', _sWkB=b.streakFreezeWeek||'';
+    if(_sWkB>_sWkA){ e.streakFreezes=b.streakFreezes||0; e.streakFreezeWeek=b.streakFreezeWeek||null; }
+    else if(_sWkA>_sWkB){ e.streakFreezes=a.streakFreezes||0; e.streakFreezeWeek=a.streakFreezeWeek||null; }
+    else { e.streakFreezes=Math.min((a.streakFreezes==null?1:a.streakFreezes),(b.streakFreezes==null?1:b.streakFreezes)); e.streakFreezeWeek=a.streakFreezeWeek||b.streakFreezeWeek||null; }
+  }
   return e;
 }
 function mergeFamilyDB(local, server){
@@ -4143,7 +4170,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[],
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
@@ -4154,6 +4181,113 @@ function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMo
    the ISO string shows the UTC date, which is a day early for an
    evening flag in Singapore (seen live 2026-11-07). */
 function dateKey(iso){ var d=new Date(iso); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+/* ---------- Daily streak (Phase 1, 2026-11-10) ----------
+   The forgiving daily loop. Any ONE quest finished on a new day
+   (Singapore date, todayKey()) keeps the streak alive. Evidence:
+   Duolingo - a 7-day streak makes a learner 2.4x more likely to
+   return the next day; Lally et al. (2010) - median 66 days to
+   automaticity, and missing a single day does not derail a habit.
+   Fields on the explorer (see newExplorer + mergeExplorer):
+   streak / streakLongest / streakLastDate, streakFreezes /
+   streakFreezeWeek (1 freeze granted each Monday, max 1 banked),
+   streakLost / streakRepairUntil (a reset keeps the lost value for
+   one day so a quest that day repairs it), streakFreezeUsedDay
+   (the date a freeze was consumed, so the frog can show relief).
+   streakTick is idempotent: it derives state from (streakLastDate,
+   today, freezes), so running it twice, or losing an unsaved tick
+   on reload, re-derives the same state. That is why render() can
+   call it without saving. All functions take an explicit today
+   (YYYY-MM-DD) so standalone test harnesses can drive them. */
+function addDaysKey(k, n){ var d=parseDateKey(k); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function mondayOfKey(k){ var d=parseDateKey(k); var dow=(d.getDay()+6)%7; return addDaysKey(k, -dow); }
+function daysBetweenKeys(a, b){ return Math.round((parseDateKey(b)-parseDateKey(a))/86400000); }
+function streakTick(e, today){
+  if(!e) return null;
+  if(!today) today=(typeof todayKey==='function')?todayKey():null;
+  if(!today) return null;
+  var out={granted:false, freezeUsed:false, reset:false, repairExpired:false};
+  var mon=mondayOfKey(today);
+  if(e.streakFreezeWeek!==mon){ e.streakFreezes=1; e.streakFreezeWeek=mon; out.granted=true; }
+  if(e.streakRepairUntil&&e.streakRepairUntil<today){ e.streakLost=0; e.streakRepairUntil=null; out.repairExpired=true; }
+  if(!e.streakLastDate) return out;
+  var gap=daysBetweenKeys(e.streakLastDate, today);
+  if(gap<=1) return out;
+  if(gap===2){
+    if((e.streak||0)>0&&(e.streakFreezes||0)>0){
+      e.streakFreezes=(e.streakFreezes||0)-1;
+      e.streakLastDate=addDaysKey(e.streakLastDate, 1);
+      e.streakFreezeUsedDay=today;
+      out.freezeUsed=true;
+    } else if((e.streak||0)>0){
+      e.streakLost=e.streak; e.streak=0; e.streakRepairUntil=today; out.reset=true;
+    }
+    return out;
+  }
+  if((e.streak||0)>0){ e.streak=0; out.reset=true; }
+  e.streakLost=0; e.streakRepairUntil=null;
+  return out;
+}
+function recordStreak(e, today){
+  if(!e) return null;
+  if(!today) today=(typeof todayKey==='function')?todayKey():null;
+  if(!today) return null;
+  var out={incremented:false, repaired:false, celebrate:0, streak:e.streak||0};
+  if(e.streakLastDate===today) return out;
+  if((e.streakLost||0)>0&&e.streakRepairUntil===today){
+    e.streak=(e.streakLost||0)+1; e.streakLost=0; e.streakRepairUntil=null;
+    out.repaired=true; out.incremented=true;
+  } else if(e.streakLastDate&&daysBetweenKeys(e.streakLastDate, today)===1){
+    e.streak=(e.streak||0)+1; out.incremented=true;
+  } else {
+    e.streak=1; out.incremented=true;
+  }
+  e.streakLastDate=today;
+  if(e.streak>(e.streakLongest||0))e.streakLongest=e.streak;
+  out.streak=e.streak;
+  if(e.streak===7||e.streak===14||e.streak===30||e.streak===100)out.celebrate=e.streak;
+  return out;
+}
+function streakDaysThisWeek(e, today){
+  if(!e) return 0;
+  if(!today) today=(typeof todayKey==='function')?todayKey():null;
+  if(!today) return 0;
+  var mon=mondayOfKey(today), sun=addDaysKey(mon, 6), seen={};
+  var days=e.completedDay||{};
+  Object.keys(days).forEach(function(k){ var d=days[k]; if(d&&d>=mon&&d<=sun)seen[d]=1; });
+  return Object.keys(seen).length;
+}
+function streakFrogMood(e, today){
+  if(!e) return {emoji:'🐸', line:''};
+  if(!today) today=(typeof todayKey==='function')?todayKey():null;
+  var name=((e.critterName||'Greg')+'').split(' ')[0];
+  if(today&&e.streakFreezeUsedDay===today)return {emoji:'😌', line:'Phew — a Streak Freeze saved the streak! '+name+' is so relieved.'};
+  if(today&&e.streakLastDate===today)return {emoji:'😊', line:name+' is delighted — today’s quest is done and the streak is safe!'};
+  return {emoji:'💤', line:name+' is waiting for today’s quest — keep the streak alive!'};
+}
+function streakFrogMoodHTML(e){
+  var m=streakFrogMood(e); if(!m||!m.line)return '';
+  return '<p class="small" style="font-weight:800;margin:8px 0 0">'+m.emoji+' '+esc(m.line)+'</p>';
+}
+function streakStripHTML(e, questId){
+  if(!e) return '';
+  var today=(typeof todayKey==='function')?todayKey():'';
+  var st=e.streak||0;
+  var repair=(e.streakLost||0)>0&&e.streakRepairUntil===today;
+  var doneToday=!!(today&&e.streakLastDate===today);
+  var freezes=e.streakFreezes||0;
+  var h='<div class="card" style="margin-bottom:16px;background:#fff7e6;border:2px solid #f5c04e"><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="font-size:2rem;line-height:1">🔥</div><div style="flex:1;min-width:200px"><div style="font-weight:900;font-size:1.35rem">'+(st>0?st+'-day streak!':'Start your streak today!')+'</div><div class="small" style="font-weight:700;color:#6d6899">'+(doneToday?'Today’s quest is done — the streak is safe. Come back tomorrow!':repair?'Yesterday slipped away — repair it by finishing a quest today!':st>0?'One quest a day keeps the streak alive.':'Finish any quest today to light the flame — then keep it going!')+'</div></div><div style="text-align:right"><div style="font-weight:900">❄️ '+freezes+' freeze'+(freezes===1?'':'s')+'</div><div class="small muted" style="font-weight:700">Longest: '+(e.streakLongest||0)+' days</div></div></div>';
+  if(repair){
+    h+='<div style="margin-top:12px">'+(questId?'<button class="btn" data-quest="'+questId+'">🔧 Repair my streak — do today’s quest</button>':'<button class="btn" data-go2="learn">🔧 Repair my streak — pick a quest in Learn</button>')+'<p class="small muted" style="font-weight:700;margin:8px 0 0">Your '+e.streakLost+'-day streak is waiting — finish a quest today and it comes back, plus one more day.</p></div>';
+  }
+  h+='</div>';
+  return h;
+}
+function streakParentCardHTML(e){
+  if(!e) return '';
+  var today=(typeof todayKey==='function')?todayKey():'';
+  var days=streakDaysThisWeek(e, today);
+  return '<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🔥 Daily streak — '+esc(e.name)+'</h3><p style="font-weight:800;font-size:1.15rem;margin:6px 0">Current streak: <b>'+(e.streak||0)+' day'+((e.streak||0)===1?'':'s')+'</b> · Longest: <b>'+(e.streakLongest||0)+' days</b> · Quests this week: <b>'+days+' / 7</b></p><p class="small muted" style="font-weight:700;margin:6px 0 0">One quest a day keeps the streak alive. A missed day uses the weekly Streak Freeze automatically; without a freeze, the streak can be repaired the same day by finishing a quest. This is the habit to watch — the goal is 5 quest days a week.</p></div>';
+}
 /* One state rule for every quest and quiz (Learn quests and Play
    games alike):
      not-started     — nothing attempted yet: "Start quest" / "Play"
@@ -4255,6 +4389,7 @@ function render(){
      still captures 0 and lands at the top. */
   var _sy=(typeof window!=='undefined'&&typeof window.scrollY==='number')?window.scrollY:0;
   ensureFriendCode();
+  if(typeof streakTick==='function'){ var _stk=ex(); if(_stk)streakTick(_stk); }
   var root=document.getElementById('root');
   /* Admin page (Bryan only): a standalone page — no sidebar, no
      explorer needed — reachable only by a direct link (#admin). */
@@ -4284,6 +4419,7 @@ function render(){
    + navBtns
    +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices':'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span class="tbPip" style="line-height:0">'+pipSVG(34,ex().glow)+'</span><span class="tbChar" id="tbChar" style="display:none;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,43)+'</span><span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
+   +'<span class="chip" id="tbStreak" title="Daily quest streak — one quest a day keeps it alive">🔥 '+(ex().streak||0)+'</span>'
    +'<button class="chip" id="tbStars" title="See your stars in the Treasure Realm" aria-label="Open the Treasure Realm">⭐ '+ex().stars+'</button>'
    +'<button class="chip" id="tbMute" title="Sound on or off" aria-label="Toggle sound">'+(isMuted()?'🔇':'🔊')+'</button>'
    +'<button class="iconbtn '+(vibeId?'on':'')+'" id="tbMusic" title="Background music" aria-label="Toggle background music">🎵</button>'
@@ -5403,10 +5539,10 @@ function homeHTML(){
   var questCard='<section class="questcard'+(qdone?' done':'')+'"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest</div>'
    +(quest? '<h2 style="margin:8px 0 2px;font-size:1.55rem">'+ic(quest.img,quest.icon,'ic-sm')+' '+esc(quest.name)+'</h2>'
     +'<p style="font-weight:800;margin:2px 0 0;color:#2f7a3d">🐸 Frog Quest — quest '+(doneCount+1)+' of 14: we\'re saving a frog tonight, one question at a time!</p>'
-    +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
+    +'<p class="muted" style="font-weight:700;margin:0">'+esc(quest.subName)+' · 5 questions · about 15 minutes'+((todayPlan.subs.indexOf(quest.sub)>=0||todayPlan.review)?' · <span class="pill done">📅 In today’s plan: '+esc(todayPlan.label)+'</span>':'')+'</p>'
     +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.92rem"><span>Quest progress</span><span>'+(qdone?5:qprog)+' / 5</span></div>'
     +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round((qdone?5:qprog)/5*100)+'%"></div></div></div>'
-    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">✔ Quest complete — amazing exploring!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">A fresh set of questions returns tomorrow morning — or replay today’s set right now if you like!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Replay this quest</button>'
+    +(qdone? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">✔ Quest complete — amazing exploring!</p><p style="font-weight:800;margin:10px 0 0;color:#d97706">🔥 Streak: '+(e.streak||0)+' day'+((e.streak||0)===1?'':'s')+' in a row — come back tomorrow to keep it alive!</p><p style="font-weight:700;color:#2f7a3d;margin:10px 0 0">A fresh set of questions returns tomorrow morning — or replay today’s set right now if you like!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">↻ Replay this quest</button>'
       : qfresh? '<p style="margin-top:14px;background:#e5f4e3;border-radius:16px;padding:12px 14px;font-weight:700;color:#2f7a3d">🏆 You finished this one before — today’s fresh set is ready!</p><button class="btn" data-quest="'+quest.id+'" style="margin-top:10px">▶ Start today’s fresh set</button>'
       : '<button class="btn" data-quest="'+quest.id+'" style="margin-top:14px">'+(qprog>0?'Continue the quest':'Start today’s quest')+'</button>')
     +'<p style="margin-top:12px;color:#5b5785;font-weight:600">'+esc(quest.blurb)+'</p>'
@@ -5422,7 +5558,7 @@ function homeHTML(){
   } else if(todayEvent&&todayEvent.kind==='closure'){
     questCard=questCard.replace('🍃 Today’s quest','🍃 Today’s quest — school is closed today, so this one is gentle & optional');
   }
-  var critterCard='<button type="button" data-go2="critter" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink)"><img class="cardimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">Your companion critter</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p><p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'</div></button>';
+  var critterCard='<button type="button" data-go2="critter" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink)"><img class="cardimg" src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">Your companion critter</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'</div></button>';
   var treasureCard='<button type="button" data-go2="treasure" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;color:var(--ink)"><div class="themeslabel" style="color:var(--ink-soft)">Treasure Realm</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+e.treasures.length+' of '+TREASURES.length+' collected</div>'
    +(nextTreasure? '<p class="small muted" style="font-weight:600;margin:6px 0 0">Next: <b style="color:var(--ink)">'+nextTreasure.e+' '+esc(nextTreasure.name)+'</b> — '+esc(nextTreasure.purpose)+' Unlocks at '+nextTreasure.cost+' stars — you have '+e.stars+'. '+(e.stars>=nextTreasure.cost?'You can unlock it now!':'Just '+(nextTreasure.cost-e.stars)+' more to go!')+'</p>' : '<p class="small muted" style="font-weight:600;margin:6px 0 0">You collected every treasure. Amazing exploring!</p>')
    +'<div class="progressbar" style="margin-top:12px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div></button>';
@@ -5447,6 +5583,7 @@ function homeHTML(){
      stay self-contained for the standalone test harnesses. */
   var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; var _can=(t.sub==='math'||(((r&&r.lastBoost)||{}).day||'')!==todayKey()); return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p>'+(_can?'<button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>':'<p class="small muted" style="font-weight:700;margin:6px 0">Boost done for today — Pip will have fresh questions tomorrow! 🌙</p>'); }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
   return lvlPrompt+'<div class="homegrid">'+hero+questCard+'</div>'
+   + streakStripHTML(e, quest?quest.id:null)
    + boostCard
    + planSectionHTML(e, todayPlan, todayEvent)
    +'<div class="cardrow">'+critterCard+treasureCard+creativeCard+'</div>'
@@ -9794,7 +9931,7 @@ function learnHTML(){
      +'</div>'
      +(typeof learnBoardHTML==='function'?learnBoardHTML():'');
   }
-  return pageHero('icons/nav-learn.webp','📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars+' · 🎒 P'+lvl)
+  return pageHero('icons/nav-learn.webp','📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars+' · 🔥 '+(e.streak||0)+'-day streak · 🎒 P'+lvl)
    + learnPlanBannerHTML(e)
    + spellTestsEntryHTML(e)
    + '<div class="grid c2">'
@@ -10986,7 +11123,7 @@ function quizDoneHTML(t){
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
   var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
   var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' and earned ⭐ '+earned+' stars!':(cur.firstToday===false?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — a replay, so no extra stars this time. You already earned them today!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — no stars this time, but finishing the whole quest takes courage! Have another go — the stars will come.');
-  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2><div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2>'+(cur.streakCelebrate?'<p style="font-weight:900;font-size:1.3rem;color:#d97706;margin:12px 0 0">🔥 '+cur.streakCelebrate+' days in a row! '+(cur.streakCelebrate===7?'One whole week — Pip is so proud!':cur.streakCelebrate===14?'Two whole weeks — unstoppable!':cur.streakCelebrate===30?'A whole month — legendary!':'100 days — a true streak legend!')+'</p>':'')+(cur.streakRepaired?'<p style="font-weight:800;color:#2f7a3d;margin:8px 0 0">🔧 Streak repaired — welcome back! Your '+e.streak+'-day streak is safe.</p>':'')+'<div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
 }
 function bindQuiz(){
   var e=ex(), t=topicById(cur.topicId);
@@ -11090,6 +11227,13 @@ function finishRound(t){
        server can mark correct ones mastered and wrong ones due. A
        failed report never blocks the child. */
     if(cur.liveGenSource==='server')reportServerBankAnswers(cur.topicId, questListFor(t,cur,levelNum(e)), cur.wrong);
+    /* Streak (Phase 1): any quest finished on a new day keeps the
+       streak alive; a Day 7/14/30/100 streak gets a celebration on
+       the results screen. The tick runs first, so a quest finished
+       after a missed day repairs (or restarts) from a current state. */
+    if(typeof streakTick==='function')streakTick(e);
+    var _st=(typeof recordStreak==='function')?recordStreak(e):null;
+    if(_st){ cur.streakCelebrate=_st.celebrate||0; cur.streakRepaired=!!_st.repaired; cur.streakNow=_st.streak; }
     save(); sndFanfare(); confettiStars();
   } else if(cur.phase==='boost'){
     /* Boost drill finished: stars once per topic per day (a replay
@@ -13884,6 +14028,7 @@ function parentHTML(){
   if(!sel)return '<div class="card"><p style="font-weight:800">No explorers yet. Create one at the Grand Door first.</p></div>';
   parentSel=sel.id;
   ensureFriendCode(sel);
+  if(typeof streakTick==='function')streakTick(sel);
   var tk=todayKey(); var todayMin=sel.daily[tk]||0;
   var days=[]; for(var i=6;i>=0;i--){ var d=new Date(); d.setDate(d.getDate()-i); var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); days.push({label:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()], v:sel.daily[k]||0}); }
   var maxV=Math.max(DB.dailyLimit, Math.max.apply(null,days.map(function(d){return d.v;})) ,1);
@@ -13912,6 +14057,7 @@ function parentHTML(){
    +'<p style="font-weight:700;margin:6px 0">Family sync code: <b style="font-size:1.4rem;letter-spacing:3px">'+esc(DB.syncCode||'—')+'</b></p>'
    +'<p class="small muted" style="font-weight:700">On any other device, open this app, tap “Link this device with a family code” at the Grand Door, and type this code. That device pulls down this family’s progress and keeps in sync. Keep the code in the family — anyone with it can see the progress.</p>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="syncCopy">📋 Copy code</button><button class="btn ghost" id="syncRefresh">↻ Refresh from server now</button><span class="small muted" id="syncStatus" style="align-self:center;font-weight:700"></span></div></div>'
+   +streakParentCardHTML(sel)
    +familyScheduleHTML()
    +'<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🧪 Every flag becomes a test</h3>'
    +'<p style="font-weight:700;margin:6px 0">'+((DB.flags||[]).length?('Flagged answers so far: <b>'+DB.flags.length+'</b> — each one made a regression test, so tomorrow’s Pip beats today’s.'):'No flags yet. When anyone taps 🚩 Flag this on a Pip answer, the flag and its test appear here.')+'</p>'
