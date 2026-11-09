@@ -78,6 +78,12 @@ function clientEngine() {
   const optsShuffled = eval('(' + fnText('function optsShuffled(q, seed){') + ')'); // eslint-disable-line no-unused-vars
   const liveGenLSGet = eval('(' + fnText('function liveGenLSGet(k){') + ')'); // eslint-disable-line no-unused-vars
   const liveGenLSSet = eval('(' + fnText('function liveGenLSSet(k,v){') + ')'); // eslint-disable-line no-unused-vars
+  // FIB helpers (public/index.html): sbShapeOk / saveSbCache call
+  // these, so this harness must extract them too.
+  const isFibQuestion = eval('(' + fnText('function isFibQuestion(q){') + ')'); // eslint-disable-line no-unused-vars
+  const fibExpected = eval('(' + fnText('function fibExpected(q){') + ')'); // eslint-disable-line no-unused-vars
+  const fibAccepts = eval('(' + fnText('function fibAccepts(q){') + ')'); // eslint-disable-line no-unused-vars
+  const sbNormalizeQuestion = eval('(' + fnText('function sbNormalizeQuestion(q){') + ')'); // eslint-disable-line no-unused-vars
   const sbCacheKey = eval('(' + fnText('function sbCacheKey(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars
   const loadSbCache = eval('(' + fnText('function loadSbCache(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars
   const sbShapeOk = eval('(' + fnText('function sbShapeOk(questions){') + ')'); // eslint-disable-line no-unused-vars
