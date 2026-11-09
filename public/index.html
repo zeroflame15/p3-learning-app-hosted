@@ -4127,7 +4127,7 @@ function render(){
      Realm stays a purple crystal cave. The 'game' route is arcade. */
   var routeCls=(route==='play'||route==='game')?'play':route;
   root.innerHTML='<div class="app route-'+routeCls+'">'
-   +'<aside class="sidebar"><div class="brand" style="flex-direction:column;align-items:center;text-align:center;padding:6px 4px 14px;gap:6px"><div id="sideAvatar" style="width:130px;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,130)+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary 3 · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
+   +'<aside class="sidebar"><div class="brand" style="flex-direction:column;align-items:center;text-align:center;padding:6px 4px 14px;gap:6px"><div id="sideAvatar" style="width:130px;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,130)+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary '+levelNum(ex())+' · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
    +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices':'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span class="tbPip" style="line-height:0">'+pipSVG(34,ex().glow)+'</span><span class="tbChar" id="tbChar" style="display:none;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,43)+'</span><span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
@@ -4170,7 +4170,7 @@ function toggleMenu(){
   var e=ex();
   if(e&&!e.friendCode){ e.friendCode=genFriendCode(); save(); }
   h.innerHTML='<div class="menu"><div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">'+pipSVG(52,e.glow)
-   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+' '+(e.badge||'⭐')+'</div><div class="small" style="font-weight:800;margin-top:2px">🔑 Friend code: <span id="mFriendCode" style="cursor:pointer;text-decoration:underline">'+esc(e.friendCode||'—')+'</span> <span class="muted" style="font-weight:600">· tap code to copy</span></div><div class="small muted">Primary 3 explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
+   +'<div><div style="font-family:\'Fredoka\';font-weight:800;font-size:1.1rem">'+esc(e.name)+' '+(e.badge||'⭐')+'</div><div class="small" style="font-weight:800;margin-top:2px">🔑 Friend code: <span id="mFriendCode" style="cursor:pointer;text-decoration:underline">'+esc(e.friendCode||'—')+'</span> <span class="muted" style="font-weight:600">· tap code to copy</span></div><div class="small muted">Primary '+levelNum(e)+' explorer · Sound: '+(vibeName()||'Quiet')+'</div></div></div>'
    +'<button class="mitem" id="mLook">🎨 Change my name &amp; look</button>'
    +'<button class="mitem" id="mSwitch">🔀 Switch explorer</button>'
    +'<button class="mitem" id="mAdd">➕ Add another explorer</button>'
