@@ -4316,6 +4316,71 @@ function streakStripHTML(e, questId){
   h+='</div>';
   return h;
 }
+/* App usage against the free caps (2026-11-10): figures are read from
+   the Vercel, Supabase and Gemini dashboards by the Monday usage check
+   and updated here by editing + deploying. The Monday check updates
+   ONLY the "current" values and "asOf" — the "baseline" (9 Nov 2026)
+   never changes. See the usage log in the learning-app goal notes.
+   Do not edit the baseline. */
+var APP_USAGE = {
+  asOf: '10 Nov 2026',
+  baselineDate: '9 Nov 2026',
+  services: [
+    { name: 'Vercel', plan: 'Hobby', window: 'Last 30 days · 10 Oct – 9 Nov 2026', metrics: [
+      { label: 'Fast Data Transfer', current: 5.25, baseline: 4.12, cap: 100, unit: 'GB' },
+      { label: 'Fast Origin Transfer', current: 2.86, baseline: 1.98, cap: 10, unit: 'GB' },
+      { label: 'Function Invocations', current: 129995, baseline: 94883, cap: 1000000, unit: '', note: '11 timeouts' },
+      { label: 'CDN Requests', current: 141643, baseline: 103592, cap: 1000000, unit: '' }
+    ]},
+    { name: 'Supabase', plan: 'Free', window: 'Billing period · 5 Nov – 5 Dec 2026', metrics: [
+      { label: 'Database size', current: 26.73, baseline: 25.84, cap: 500, unit: 'MB' },
+      { label: 'Egress', current: 0.532, baseline: 0.287, cap: 5, unit: 'GB' },
+      { label: 'Monthly Active Users', current: 0, baseline: 0, cap: 50000, unit: '' },
+      { label: 'Storage', current: 0, baseline: 0, cap: 1, unit: 'GB' },
+      { label: 'Log Ingestion', current: 0.159, baseline: 0.118, cap: 1, unit: 'GB' }
+    ]},
+    { name: 'Gemini (AI Studio)', plan: 'Free', window: 'Default Gemini Project · peaks over last 28 days · 13 Oct – 10 Nov 2026', metrics: [
+      { label: 'Requests / min (peak)', current: 9, baseline: 9, cap: 15, unit: '' },
+      { label: 'Tokens / min (peak)', current: 5300, baseline: 5300, cap: 250000, unit: '' },
+      { label: 'Requests / day (peak)', current: 139, baseline: 139, cap: 500, unit: '' }
+    ]}
+  ]
+};
+/* Format a usage number: thousands get commas (129,995), small decimals
+   stay as written (5.25, 0.532). */
+function fmtUsageNum(v){
+  if(v==null||isNaN(v)) return '—';
+  if(Math.abs(v)>=1000) return Math.round(v).toLocaleString('en-SG');
+  return String(v);
+}
+/* 📊 App usage — parent page only (PIN-protected). Renders APP_USAGE:
+   each service with every metric's current use, free cap, share used
+   (percentage + bar) and the 9 Nov baseline beside it. Never called
+   from a child-facing page. */
+function appUsageHTML(){
+  var u = (typeof APP_USAGE !== 'undefined') ? APP_USAGE : null;
+  if(!u || !u.services) return '';
+  var barColor = function(pct){ return pct>=90 ? '#e05252' : (pct>=70 ? '#e8a13a' : '#57b06a'); };
+  var rows = u.services.map(function(s){
+    var ms = s.metrics.map(function(m){
+      var pct = (m.cap>0) ? Math.round(m.current/m.cap*100) : 0;
+      var w = Math.max(0, Math.min(100, pct));
+      var unit = m.unit ? ' '+m.unit : '';
+      var note = m.note ? ' · '+esc(m.note) : '';
+      return '<div style="padding:8px 0;border-bottom:2px solid var(--line)">'
+        + '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b>'+esc(m.label)+'</b>'
+        + '<span style="font-weight:700">'+fmtUsageNum(m.current)+unit+' of '+fmtUsageNum(m.cap)+unit+' · '+pct+'%'+note+'</span></div>'
+        + '<div style="height:10px;background:var(--line);border-radius:6px;margin-top:6px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+barColor(pct)+';border-radius:6px"></div></div>'
+        + '<div class="small muted" style="font-weight:700;margin-top:4px">'+fmtUsageNum(m.baseline)+unit+' on '+esc(u.baselineDate)+'</div>'
+        + '</div>';
+    }).join('');
+    return '<h4 style="margin:16px 0 4px">'+esc(s.name)+' <span class="small muted">· '+esc(s.plan)+' · '+esc(s.window)+'</span></h4>' + ms;
+  }).join('');
+  return '<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">📊 App usage — against the free caps</h3>'
+    + '<p style="font-weight:700;margin:6px 0">As of <b>'+esc(u.asOf)+'</b>. Each figure shows what the app has used, the free-plan cap, and the share used — with the 9 Nov 2026 baseline beside it so change is easy to see.</p>'
+    + rows
+    + '<p class="small muted" style="font-weight:700;margin:10px 0 0">Figures refresh weekly (Mondays) from the Vercel, Supabase and Gemini dashboards. These are the free-plan caps — nothing here changes billing, and there is nothing to upgrade.</p></div>';
+}
 function streakParentCardHTML(e){
   if(!e) return '';
   var today=(typeof todayKey==='function')?todayKey():'';
@@ -14354,6 +14419,7 @@ function parentHTML(){
    +'<p class="small muted" style="font-weight:700">Marks and rewards are plain code rules (lib/rules.js) — Pip explains, code decides. Skills pack: '+esc(SKILL_PACK.version)+' · 19 specialist agents (11 live, 2 ready, 6 placeholders: Muse Voice Transcribe, Muse Image + SAM 3.1, Muse Spark – vision, SAM 3.1, Muse Spark web search, Muse Spark files).</p></div>'
    +boostSection
    +liveGenExperimentHTML(sel)
+   +appUsageHTML()
    +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
    +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
