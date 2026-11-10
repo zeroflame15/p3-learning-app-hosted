@@ -643,12 +643,21 @@ function stopVibe(silent){
   vibeId=null;
   if(!silent)renderTop();
 }
-/* Auto-play background music on entry (Bryan 2026-11-09): whenever
-   an explorer gains access through the Grand Door, the Background
-   Music starts (looping), unless it is already playing. The child
-   can stop it anytime from the Vibe page; it starts again on the
-   next entry. */
-function autoVibe(){ if(vibeId!=='bg-music')startVibe('bg-music'); }
+/* Auto-play the active explorer's saved music choice on entry
+   (2026-11-10): Background Music, Jungle Birds, or mute. The child
+   picks it on the Vibe page or with the 🎵 button; it is stored on
+   the explorer (musicPref) and survives reloads and sync. Legacy
+   explorers without musicPref default to Background Music, so the
+   old behaviour is unchanged until the child picks something else.
+   'mute' plays nothing (and stops anything still playing from a
+   previous explorer). If there is no active explorer, Background
+   Music is the fallback. */
+function autoVibe(){
+  var e=(typeof ex==='function')?ex():null;
+  var pref=(e&&e.musicPref)||'bg-music';
+  if(pref==='mute'){ if(vibeId)stopVibe(true); return; }
+  if(vibeId!==pref)startVibe(pref);
+}
 /* Pip read-aloud: warmest available voice, sentence by sentence.
    iPhone Chrome was silent — three iOS quirks, all fixed here:
    1. getVoices() can stay empty and voiceschanged may never fire,
@@ -3689,6 +3698,18 @@ function mergeExplorer(a,b){
     else if(_dAtA&&_dAtB&&_dAtB===_dAtA){ e.diffPref=(b.diffPref==null?0:b.diffPref); e.diffPrefAt=b.diffPrefAt; }
     else { e.diffPref=((a.diffPref!=null)?a.diffPref:((b.diffPref!=null)?b.diffPref:0)); if(a.diffPrefAt||b.diffPrefAt)e.diffPrefAt=a.diffPrefAt||b.diffPrefAt; }
   }
+  /* Music preference (2026-11-10): 'bg-music' | 'jungle-birds' |
+     'mute', with a timestamp — later wins, same rule as diffPref /
+     theme / code. A stale device must never resurrect an old track
+     choice the child has since changed. Guarded like diffPref so a
+     merge never invents musicPref/musicPrefAt on a legacy explorer. */
+  if((a&&(a.musicPref!==undefined||a.musicPrefAt!==undefined))||(b&&(b.musicPref!==undefined||b.musicPrefAt!==undefined))){
+    var _mAtA=Date.parse((a&&a.musicPrefAt)||'')||0, _mAtB=Date.parse((b&&b.musicPrefAt)||'')||0;
+    if(_mAtB>_mAtA){ e.musicPref=b.musicPref||'bg-music'; e.musicPrefAt=b.musicPrefAt; }
+    else if(_mAtA>_mAtB){ e.musicPref=a.musicPref||'bg-music'; e.musicPrefAt=a.musicPrefAt; }
+    else if(_mAtA&&_mAtB&&_mAtB===_mAtA){ e.musicPref=b.musicPref||'bg-music'; e.musicPrefAt=b.musicPrefAt; }
+    else { e.musicPref=((a.musicPref!=null)?a.musicPref:((b.musicPref!=null)?b.musicPref:'bg-music')); if(a.musicPrefAt||b.musicPrefAt)e.musicPrefAt=a.musicPrefAt||b.musicPrefAt; }
+  }
   e.completed=unionObjMax(a.completed,b.completed);
   e.completedDay=unionObjLatest(a.completedDay,b.completedDay);
   e.playDoneDay=unionObjLatest(a.playDoneDay,b.playDoneDay);
@@ -3909,7 +3930,18 @@ function mergeExplorer(a,b){
 }
 function mergeFamilyDB(local, server){
   if(!server||!server.explorers)return local;
-  if(!local||!local.explorers||!local.explorers.length)return JSON.parse(JSON.stringify(server));
+  if(!local||!local.explorers||!local.explorers.length){
+    /* Explorer removal tombstone (2026-11-10): the local copy has
+       no explorers — usually because the parent removed them all.
+       The server copy must still be filtered by the tombstone, or
+       the removal is resurrected on the next sync. The tombstone is
+       unioned too, so the removal reaches every linked device. */
+    var _l=JSON.parse(JSON.stringify(server));
+    _l.deletedExplorers=unionArr(server.deletedExplorers||[], (local&&local.deletedExplorers)||[]);
+    _l.explorers=(_l.explorers||[]).filter(function(e){ return _l.deletedExplorers.indexOf(e.id)<0; });
+    if(!_l.explorers.length)_l.activeId=null;
+    return _l;
+  }
   var merged=JSON.parse(JSON.stringify(server));
   merged.syncCode=server.syncCode||local.syncCode||null;
   /* Parent PIN (2026-11-09): the PIN takes the later updatedAt, so a
@@ -3952,18 +3984,27 @@ function mergeFamilyDB(local, server){
   if(_fpLocalWins){ merged.familyPlan=local.familyPlan?JSON.parse(JSON.stringify(local.familyPlan)):null; merged.familyPlanUpdatedAt=local.familyPlanUpdatedAt; merged.familyPlanRev=_fpRevL; }
   else if(_fpServerWins){ merged.familyPlan=server.familyPlan?JSON.parse(JSON.stringify(server.familyPlan)):null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt; merged.familyPlanRev=_fpRevS; }
   else { merged.familyPlan=server.familyPlan||local.familyPlan||null; merged.familyPlanUpdatedAt=server.familyPlanUpdatedAt||local.familyPlanUpdatedAt||null; merged.familyPlanRev=Math.max(_fpRevL,_fpRevS); }
+  /* Explorer removal tombstone (2026-11-10): a removed explorer
+     must never come back from the server or another device. Union
+     the tombstone from both sides, skip tombstoned ids in the
+     union, and filter any tombstoned explorer already in the list —
+     the same pattern as the deleted-family-events tombstone above. */
+  merged.deletedExplorers=unionArr(server.deletedExplorers||[], local.deletedExplorers||[]);
   var byId={}; merged.explorers.forEach(function(e){ byId[e.id]=e; });
   (local.explorers||[]).forEach(function(e){
+    if(merged.deletedExplorers.indexOf(e.id)>=0)return;
     if(byId[e.id]){ var i=merged.explorers.indexOf(byId[e.id]); merged.explorers[i]=mergeExplorer(byId[e.id], e); }
     else merged.explorers.push(JSON.parse(JSON.stringify(e)));
   });
+  merged.explorers=merged.explorers.filter(function(e){ return merged.deletedExplorers.indexOf(e.id)<0; });
   /* The active explorer is DEVICE state, not family state: which
      explorer this device is signed in as must never change because
      another device uploaded. (Seen live: entering Ask Pip switched
      the greeting to the first explorer on the family after a sync
      pull, because the merged record started as the server's copy.) */
   if(local.activeId&&merged.explorers.some(function(e){return e.id===local.activeId;}))merged.activeId=local.activeId;
-  else if(!merged.explorers.some(function(e){return e.id===merged.activeId;}))merged.activeId=merged.explorers[0].id;
+  else if(merged.explorers.length&&!merged.explorers.some(function(e){return e.id===merged.activeId;}))merged.activeId=merged.explorers[0].id;
+  else if(!merged.explorers.length)merged.activeId=null;
   return merged;
 }
 function syncFromServer(opts){
@@ -4151,21 +4192,30 @@ function mergeStoredIntoDB(){
        the sync-live test). Only the schedule is converged from the
        store, because that is the field a stale tab's save was wiping. */
   }
+  /* Explorer removal tombstone (2026-11-10): a removed explorer
+     must never come back from localStorage. Union the tombstone
+     from the stored copy, skip tombstoned ids in the union, and
+     filter any tombstoned explorer already in the list — the same
+     pattern as the deleted-family-events tombstone above. */
+  var _delEx=unionArr(DB.deletedExplorers||[], stored.deletedExplorers||[]);
+  if(_delEx.length!==(DB.deletedExplorers||[]).length){ DB.deletedExplorers=_delEx; changed=true; }
   if(stored.explorers&&stored.explorers.length){
     var before=JSON.stringify(DB.explorers);
     var byId={}; DB.explorers.forEach(function(e){ byId[e.id]=e; });
     stored.explorers.forEach(function(se){
+      if(_delEx.indexOf(se.id)>=0)return;
       if(byId[se.id]){ var i=DB.explorers.indexOf(byId[se.id]); DB.explorers[i]=mergeExplorer(se,byId[se.id]); }
       else DB.explorers.push(JSON.parse(JSON.stringify(se)));
     });
+    DB.explorers=DB.explorers.filter(function(e){ return _delEx.indexOf(e.id)<0; });
     if(JSON.stringify(DB.explorers)!==before)changed=true;
   }
   return changed;
 }
 function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); if(typeof stripNulDeep==='function')stripNulDeep(DB); saveLocal(); syncToServer(); }
 function load(){
-  try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!DB.flags)DB.flags=[]; if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
-  DB={explorers:[], parentPin:null, dailyLimit:90, playLimit:20, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
+  try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!DB.flags)DB.flags=[]; if(!DB.deletedExplorers)DB.deletedExplorers=[]; if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
+  DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:90, playLimit:20, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
   save();
 }
 /* One-time, in-place remap: the Critter Lab now uses the Muse version's
@@ -4204,7 +4254,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, musicPref:'bg-music', musicPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
@@ -4531,7 +4581,7 @@ function render(){
      (requested 2026-11-07) — tapping your stars shows what they buy. */
   var tbStars=document.getElementById('tbStars'); if(tbStars)tbStars.addEventListener('click',function(){ sndPop(); go('treasure'); });
   var tbMute=document.getElementById('tbMute'); if(tbMute)tbMute.addEventListener('click',function(){ toggleMute(); renderTop(); });
-  document.getElementById('tbMusic').addEventListener('click',function(){ if(vibeId){ stopVibe(); } else { startVibe(lastVibeId); } renderTop(); });
+  document.getElementById('tbMusic').addEventListener('click',function(){ var e=ex(); if(vibeId){ stopVibe(); if(e){ e.musicPref='mute'; e.musicPrefAt=new Date().toISOString(); save(); } } else { var pref=(e&&e.musicPref)||'bg-music'; var id=(pref==='mute')?lastVibeId:pref; startVibe(id); if(e){ e.musicPref=id; e.musicPrefAt=new Date().toISOString(); save(); } } renderTop(); });
   document.getElementById('tbProfile').addEventListener('click',toggleMenu);
   var c=document.getElementById('content');
   if(route==='home')c.innerHTML=homeHTML(),bindHome();
@@ -14175,20 +14225,29 @@ function bindTreasure(){
 function vibeHTML(){
   var e=ex(); var hasLantern=e.treasures.indexOf('lantern')>=0;
   var playing=vibeById(vibeId);
+  /* Saved music pick (2026-11-10): the explorer's musicPref —
+     Background Music, Jungle Birds, or mute. The page shows which
+     one is picked, so the child can see what will play on entry. */
+  var pref=(e&&e.musicPref)||'bg-music';
+  var prefLabel=pref==='mute'?'🔇 Quiet (no music on entry)':(pref==='jungle-birds'?'🐦 Jungle Birds':'🎵 Background Music');
   return pageHero('icons/nav-vibe.webp','🎵','Vibe Zone','Your calm corner of the terrarium — pick a sound, and a breathing bubble when you need a pause.', playing?('🎶 '+playing.name+' is playing'):'Quiet right now')
+   +'<p class="small" style="text-align:center;font-weight:800">Your pick: '+prefLabel+'</p>'
    +'<div class="grid c2">'+VIBES.map(function(v){
      var on=vibeId===v.id;
+     var picked=pref===v.id;
      return '<div class="card" style="text-align:center"><div style="font-size:3rem">'+v.icon+'</div><h3>'+v.name+'</h3>'
      +'<p class="muted" style="font-weight:700">'+v.blurb+'</p>'
      +'<div style="margin:16px"><button class="btn" data-vibe="'+v.id+'">'+(on?'⏸ Pause '+v.name:'▶ Play '+v.name)+'</button></div>'
+     +(picked?'<p class="small" style="font-weight:800">✓ Your pick — plays when you come in.</p>':'')
      +(on?'<p class="small muted">🎶 Playing now — it follows you around the app. Use the 🎵 button at the top to pause.</p>':'')
      +'</div>';
    }).join('')+'</div>'
+   +(pref==='mute'?'<p class="small" style="text-align:center;font-weight:800">🔇 Quiet is your pick — no music plays when you come in. Tap a track above to change it.</p>':'')
    +'<p class="small muted" style="text-align:center">Music also follows you around the app — use the 🎵 button at the top anytime.</p>'
    +(hasLantern?'<div class="card" style="text-align:center;margin-top:16px"><h3>🏮 Focus Lantern — calm breathing</h3><p class="muted" style="font-weight:700">Breathe in as the circle grows, out as it shrinks. Two quiet minutes.</p><div class="breathe" id="breathCircle"></div><button class="btn teal" id="breathBtn">Start breathing break</button><p class="small muted" id="breathMsg"></p></div>':'<div class="card" style="margin-top:16px"><h3>🏮 Focus Lantern</h3><p class="muted" style="font-weight:700">Unlock the Focus Lantern in the Treasure Realm to get a 2-minute calm breathing break here.</p></div>');
 }
 function bindVibe(){
-  document.querySelectorAll('[data-vibe]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-vibe'); if(vibeId===id)stopVibe(); else startVibe(id); render(); }; });
+  document.querySelectorAll('[data-vibe]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-vibe'); var e=ex(); if(vibeId===id){ stopVibe(); if(e){ e.musicPref='mute'; e.musicPrefAt=new Date().toISOString(); save(); } } else { startVibe(id); if(e){ e.musicPref=id; e.musicPrefAt=new Date().toISOString(); save(); } } render(); }; });
   var bb=document.getElementById('breathBtn');
   if(bb)bb.onclick=function(){
     var c=document.getElementById('breathCircle'), m=document.getElementById('breathMsg'); var n=0; bb.disabled=true;
@@ -14487,7 +14546,7 @@ function bindParent(){
   document.querySelectorAll('[data-remove]').forEach(function(b){ b.onclick=function(){
     var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-remove');});
     openModal('<h3 style="margin-top:0">Remove '+esc(target.name)+'?</h3><p style="font-weight:700">This deletes this explorer and all their progress <b>everywhere, on every linked device</b>. This cannot be undone.</p><div style="display:flex;gap:10px"><button class="btn coral" id="rmYes">Yes, remove</button><button class="btn ghost" onclick="closeModal()">Keep explorer</button></div>');
-    document.getElementById('rmYes').onclick=function(){ DB.explorers=DB.explorers.filter(function(x){return x.id!==target.id;}); if(DB.activeId===target.id)DB.activeId=DB.explorers.length?DB.explorers[0].id:null; save(); closeModal(); if(!DB.explorers.length){ parentUnlocked=false; go('door'); } else render(); };
+    document.getElementById('rmYes').onclick=function(){ if(!DB.deletedExplorers)DB.deletedExplorers=[]; if(DB.deletedExplorers.indexOf(target.id)<0)DB.deletedExplorers.push(target.id); DB.explorers=DB.explorers.filter(function(x){return x.id!==target.id;}); if(DB.activeId===target.id)DB.activeId=DB.explorers.length?DB.explorers[0].id:null; save(); closeModal(); if(!DB.explorers.length){ parentUnlocked=false; go('door'); } else render(); };
   }; });
   /* Change PIN (2026-11-09): the form lives in parentHTML (rendered
      while pinChangeOpen) instead of being injected by innerHTML, so
