@@ -42,7 +42,13 @@ test('vibe player loops the track and switches cleanly', () => {
   const vibe = html.slice(html.indexOf('function startVibe'));
   assert.ok(vibe.includes('a.loop=true'), 'track loops');
   assert.ok(vibe.includes('stopVibe(true)'), 'starting one vibe stops the other first');
-  assert.ok(html.includes("if(vibeId===id)stopVibe(); else startVibe(id)"), 'tapping the playing track pauses it');
+  // Tapping the playing track pauses it (and saves mute as the
+  // preference, 2026-11-10); tapping another track plays it (and
+  // saves that track as the preference).
+  assert.ok(html.includes("if(vibeId===id){ stopVibe();"), 'tapping the playing track pauses it');
+  assert.ok(html.includes('} else { startVibe(id);'), 'tapping another track plays it');
+  assert.ok(html.includes("e.musicPref='mute'"), 'pausing saves mute as the preference');
+  assert.ok(html.includes('e.musicPref=id'), 'playing a track saves it as the preference');
 });
 
 test('Grand Door entry auto-plays Background Music', () => {

@@ -184,7 +184,7 @@ test('scrollToScheduleCard is a no-op when the card is gone (defensive)', () => 
 function makeSyncCode() { return 'ABCDEF'; } // stub for the new-family literal below
 
 test('new-family defaults are Play 20 / Daily 90 (real load() literal)', () => {
-  const start = html.indexOf('DB={explorers:[], parentPin:null, dailyLimit:');
+  const start = html.indexOf('DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:');
   assert.ok(start >= 0, 'the new-family DB literal is present');
   const end = html.indexOf('};', start) + 1;
   const fresh = eval('(' + html.slice(start + 3, end) + ')');
