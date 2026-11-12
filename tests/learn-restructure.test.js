@@ -336,13 +336,19 @@ test('expanded topic: plain sub-topic list (not links) + Practise quest cards', 
   assert.ok(!subList.includes('<button'), 'sub-topic rows are not buttons');
 });
 
-test('every MOE topic has exactly one Practise quest (its own server-bank id)', () => {
+test('every MOE topic Practises its own quest first; Reading also Practises 看图选词', () => {
   // MOE rebuild (2026-11-09): replaces the myKx version — every MOE
   // topic at every level Practises, including 0-questions-ready ones.
+  // The one exception: chi-reading lists chi-picword as a second
+  // Practise quest (2026-11-12) — 看图选词 has no skill of its own
+  // in the per-level MOE list, so it lives under Reading as
+  // vocabulary practice.
   for (let lv = 1; lv <= 6; lv++) {
     for (const s of MOE_SUBJECTS_BY_LEVEL[String(lv)]) {
       for (const t of s.topics) {
-        assert.deepEqual(t.quests, [t.id], t.id + ' has exactly one quest: itself');
+        assert.equal(t.quests[0], t.id, t.id + ' first quest is itself');
+        if (t.id === 'chi-reading') assert.deepEqual(t.quests, ['chi-reading', 'chi-picword'], t.id + ' also Practises 看图选词');
+        else assert.equal(t.quests.length, 1, t.id + ' has exactly one quest');
         const out = renderSubject(explorer({ level: 'P' + lv }), s.id, t.id);
         assert.ok(out.includes('Practise ' + t.name + ':'), t.id + ' shows its Practise heading');
         assert.ok(out.includes('data-quest="' + t.id + '"'), t.id + ' has a quest button');

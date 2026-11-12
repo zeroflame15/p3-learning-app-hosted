@@ -134,7 +134,18 @@ test('MOE data: 4 subjects per level in order, 154 topic-levels', () => {
       for (const t of s.topics) {
         assert.ok(t.id && t.name, 'P' + lv + ' topic has id + name');
         assert.ok(t.subs.length >= 1, t.id + ' has sub-topics');
-        assert.deepEqual(t.quests, [t.id], t.id + ' quests to itself (its server-bank topic)');
+        // A topic's first quest is itself (its server-bank topic); a
+        // topic may list extra Practise quests. The one exception:
+        // chi-reading also lists chi-picword (看图选词), which has no
+        // skill of its own in the per-level MOE list — it is
+        // vocabulary practice, so it lives under Reading.
+        assert.equal(t.quests[0], t.id, t.id + ' first quest is itself');
+        // Extra quests (beyond the first) must be real local banks —
+        // the first quest is the topic's own server-bank id, which
+        // may be virtual (resolved via its fallback).
+        for (const qid of t.quests.slice(1)) assert.ok(REAL_IDS.includes(qid), t.id + ' extra quest ' + qid + ' is a real local quest');
+        if (t.id === 'chi-reading') assert.deepEqual(t.quests, ['chi-reading', 'chi-picword'], 'Reading also Practises 看图选词');
+        else assert.equal(t.quests.length, 1, t.id + ' has exactly one quest');
         const seen = new Set();
         for (const sb of t.subs) { assert.ok(sb.id && sb.name, 'sub has id + name'); assert.ok(!seen.has(sb.id), sb.id + ' once'); seen.add(sb.id); }
         if (t.fallback) assert.ok(REAL_IDS.includes(t.fallback), t.id + ' fallback is a real local quest');
@@ -236,6 +247,25 @@ test('Chinese: same 5 skills at every level, sub-topics deepen by phase; Higher 
   assert.ok(p5.includes('\u6210\u8bed'), 'Orientation writing uses idioms');
   const out = renderSubject(explorer({ level: 'P1' }), 'chi');
   assert.ok(out.includes('Foundation Phase, Stage 1 (P1\u2013P2)'), 'P1 page names its phase');
+});
+
+test('看图选词 is reachable: Reading lists chi-picword at every level and its card renders', () => {
+  // 2026-11-12: chi-picword was orphaned — in the bank and the
+  // syllabus map, but in no per-level topic, so no Learn page ever
+  // showed it. It lives under Reading (vocabulary application) at
+  // every level, as a second Practise quest.
+  for (let lv = 1; lv <= 6; lv++) {
+    assert.deepEqual(moeTopic('chi', 'chi-reading', lv).quests, ['chi-reading', 'chi-picword'], 'P' + lv + ' Reading lists 看图选词');
+  }
+  const t = topicById('chi-picword');
+  assert.ok(t, 'chi-picword resolves to a real topic');
+  assert.equal(poolQuestions(t, 3).length, 15, '看图选词 has a 15-question pool (5 quest + 10 fresh)');
+  const out = renderSubject(explorer({ level: 'P3' }), 'chi', 'chi-reading');
+  assert.ok(out.includes('data-quest="chi-picword"'), 'expanded Reading shows a 看图选词 quest card');
+  // The real topic definition (not the harness fake) carries the name
+  // and blurb the child sees.
+  assert.ok(html.includes("name:'看图选词'"), 'real chi-picword topic is named 看图选词');
+  assert.ok(html.includes("blurb:'Read the scene, pick the right word.'"), 'real chi-picword blurb describes the scene, not a picture');
 });
 
 /* --- syllabus guardrails --------------------------------------------------- */
