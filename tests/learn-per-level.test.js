@@ -135,16 +135,18 @@ test('MOE data: 4 subjects per level in order, 154 topic-levels', () => {
         assert.ok(t.id && t.name, 'P' + lv + ' topic has id + name');
         assert.ok(t.subs.length >= 1, t.id + ' has sub-topics');
         // A topic's first quest is itself (its server-bank topic); a
-        // topic may list extra Practise quests. The one exception:
-        // chi-reading also lists chi-picword (看图选词), which has no
-        // skill of its own in the per-level MOE list — it is
-        // vocabulary practice, so it lives under Reading.
+        // topic may list extra Practise quests. The exceptions:
+        // chi-reading also lists chi-picword (看图选词) and
+        // chi-collocation (词语搭配) — vocabulary practice — and
+        // chi-writing also lists chi-sequencing (组句成段) and
+        // chi-sentence (句子加工厂) — sentence practice (2026-11-12).
         assert.equal(t.quests[0], t.id, t.id + ' first quest is itself');
         // Extra quests (beyond the first) must be real local banks —
         // the first quest is the topic's own server-bank id, which
         // may be virtual (resolved via its fallback).
         for (const qid of t.quests.slice(1)) assert.ok(REAL_IDS.includes(qid), t.id + ' extra quest ' + qid + ' is a real local quest');
-        if (t.id === 'chi-reading') assert.deepEqual(t.quests, ['chi-reading', 'chi-picword'], 'Reading also Practises 看图选词');
+        if (t.id === 'chi-reading') assert.deepEqual(t.quests, ['chi-reading', 'chi-picword', 'chi-collocation'], 'Reading also Practises 看图选词 and 词语搭配');
+        else if (t.id === 'chi-writing') assert.deepEqual(t.quests, ['chi-writing', 'chi-sequencing', 'chi-sentence'], 'Writing also Practises 组句成段 and 句子加工厂');
         else assert.equal(t.quests.length, 1, t.id + ' has exactly one quest');
         const seen = new Set();
         for (const sb of t.subs) { assert.ok(sb.id && sb.name, 'sub has id + name'); assert.ok(!seen.has(sb.id), sb.id + ' once'); seen.add(sb.id); }
@@ -255,7 +257,7 @@ test('看图选词 is reachable: Reading lists chi-picword at every level and it
   // showed it. It lives under Reading (vocabulary application) at
   // every level, as a second Practise quest.
   for (let lv = 1; lv <= 6; lv++) {
-    assert.deepEqual(moeTopic('chi', 'chi-reading', lv).quests, ['chi-reading', 'chi-picword'], 'P' + lv + ' Reading lists 看图选词');
+    assert.deepEqual(moeTopic('chi', 'chi-reading', lv).quests, ['chi-reading', 'chi-picword', 'chi-collocation'], 'P' + lv + ' Reading lists 看图选词 and 词语搭配');
   }
   const t = topicById('chi-picword');
   assert.ok(t, 'chi-picword resolves to a real topic');
@@ -266,6 +268,32 @@ test('看图选词 is reachable: Reading lists chi-picword at every level and it
   // and blurb the child sees.
   assert.ok(html.includes("name:'看图选词'"), 'real chi-picword topic is named 看图选词');
   assert.ok(html.includes("blurb:'Read the scene, pick the right word.'"), 'real chi-picword blurb describes the scene, not a picture');
+});
+
+test('three more orphaned Chinese topics are reachable as Practise cards', () => {
+  // 2026-11-12: chi-collocation, chi-sequencing and chi-sentence
+  // were orphaned like chi-picword — banks and syllabus-map entries
+  // but no per-level topic, so Learn never served them. They live
+  // under Reading (collocation, vocabulary) and Writing (sequencing
+  // and sentence work) at every level.
+  for (let lv = 1; lv <= 6; lv++) {
+    assert.deepEqual(moeTopic('chi', 'chi-writing', lv).quests, ['chi-writing', 'chi-sequencing', 'chi-sentence'], 'P' + lv + ' Writing lists 组句成段 and 句子加工厂');
+  }
+  for (const qid of ['chi-collocation', 'chi-sequencing', 'chi-sentence']) {
+    const t = topicById(qid);
+    assert.ok(t, qid + ' resolves to a real topic');
+    assert.equal(poolQuestions(t, 3).length, 15, qid + ' has a 15-question pool (5 quest + 10 fresh)');
+  }
+  const reading = renderSubject(explorer({ level: 'P3' }), 'chi', 'chi-reading');
+  assert.ok(reading.includes('data-quest="chi-collocation"'), 'expanded Reading shows a 词语搭配 quest card');
+  const writing = renderSubject(explorer({ level: 'P3' }), 'chi', 'chi-writing');
+  assert.ok(writing.includes('data-quest="chi-sequencing"'), 'expanded Writing shows a 组句成段 quest card');
+  assert.ok(writing.includes('data-quest="chi-sentence"'), 'expanded Writing shows a 句子加工厂 quest card');
+  // The real topic definitions (not the harness fakes) carry the
+  // names the child sees.
+  assert.ok(html.includes("name:'词语搭配'"), 'real chi-collocation topic is named 词语搭配');
+  assert.ok(html.includes("name:'组句成段'"), 'real chi-sequencing topic is named 组句成段');
+  assert.ok(html.includes("name:'句子加工厂'"), 'real chi-sentence topic is named 句子加工厂');
 });
 
 /* --- syllabus guardrails --------------------------------------------------- */
