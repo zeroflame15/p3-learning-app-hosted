@@ -166,6 +166,22 @@ test('spellStepFor: custom routine with no days ticked behaves like Recommended'
   assert.equal(s.key, 'learn', 'no days means every day is a practice day');
 });
 
+test('spellStepFor: Chinese tests say "read", English tests say "listen"', () => {
+  // 2026-11-12: Listen was removed from Chinese learning (silent on
+  // Bryan's iPhone) but stays for English spelling, where it works.
+  const chiLearn = spellFns.spellStepFor(spellTest({ lang: 'chi', testDate: '2026-11-16', practised: [] }), '2026-11-09');
+  assert.equal(chiLearn.key, 'learn', 'Chinese first practice is learn');
+  assert.ok(chiLearn.text.includes('Read each word'), 'Chinese learn says read');
+  assert.ok(!chiLearn.text.includes('Listen'), 'Chinese learn never says listen');
+  const engLearn = spellFns.spellStepFor(spellTest({ lang: 'eng', testDate: '2026-11-16', practised: [] }), '2026-11-09');
+  assert.ok(engLearn.text.includes('Listen to each word'), 'English learn still says listen');
+  const chiPractise = spellFns.spellStepFor(spellTest({ lang: 'chi', testDate: '2026-11-16', practised: ['2026-11-09'] }), '2026-11-12');
+  assert.equal(chiPractise.key, 'practise', 'Chinese later practice is a self-test');
+  assert.ok(chiPractise.text.includes('read each word'), 'Chinese self-test says read');
+  const engPractise = spellFns.spellStepFor(spellTest({ lang: 'eng', testDate: '2026-11-16', practised: ['2026-11-09'] }), '2026-11-12');
+  assert.ok(engPractise.text.includes('hear each word'), 'English self-test still says hear');
+});
+
 /* ---------------- words parsing: parseSpellWords ---------------- */
 
 const parseSpellWords = eval(grabFn('parseSpellWords') + '\n; parseSpellWords;');
@@ -206,7 +222,13 @@ test('the add form has language, words, date and routine choice', () => {
 
 test('the practice view is a self-test', () => {
   const view = fnBody('function spellTestHTML(');
-  assert.ok(view.includes('data-spelllisten'), 'a Listen button per word');
+  // Listen survives only for English tests (2026-11-12: removed from
+  // Chinese learning, where it stayed silent on Bryan's iPhone).
+  // Chinese tests show the word, say it, write it — no Listen button.
+  assert.ok(view.includes('data-spelllisten'), 'a Listen button per word (English tests)');
+  assert.ok(view.includes("t.lang==='chi'"), 'Chinese tests hide the Listen button');
+  assert.ok(view.includes('say it out loud, write it down, then be honest'), 'Chinese prompt drops "listen"');
+  assert.ok(view.includes('listen, say it out loud, write it down'), 'English prompt keeps "listen"');
   assert.ok(view.includes('id="spStart"'), 'a Start the self-test button');
   assert.ok(view.includes('id="spGot"') && view.includes('id="spMiss"'), 'Got it / Missed it');
   assert.ok(view.includes('id="spDone"'), 'a Done button when finished');

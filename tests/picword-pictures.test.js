@@ -46,7 +46,7 @@ test('picture-question banks never mention a picture', () => {
 });
 
 test('picture-topic blurbs do not promise a picture on screen', () => {
-  assert.ok(html.includes("blurb:'Tap Listen, hear the word, pick the right meaning.'"), 'chi-listen blurb');
+  assert.ok(html.includes("blurb:'Read the word, pick the right meaning.'"), 'chi-listen blurb (Listen removed 2026-11-12)');
   assert.ok(html.includes("blurb:'Read the scene, pick the right word.'"), 'chi-picword blurb');
   assert.ok(html.includes("blurb:'Tell the story of the scene.'"), 'chi-composition blurb');
   assert.ok(html.includes("blurb:'Reading aloud, scene talk and conversation.'"), 'chi-oral blurb');

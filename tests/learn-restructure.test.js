@@ -391,7 +391,7 @@ test('weak-boost badge and Pip shelf line survive on the new layout', () => {
   const math = renderSubject(explorer(), 'math', 'math-mult-div-6789');
   assert.ok(math.includes('📚 Pip’s shelf'), 'server-bank line stays on a MOE Maths card');
   const chi = renderSubject(explorer(), 'chi', 'chi-listening');
-  assert.ok(chi.includes('🔊 This quest has a Listen button'), 'Chinese Listen line stays');
+  assert.ok(!chi.includes('🔊 This quest has a Listen button'), 'Chinese Listen line is gone (Listen removed from Chinese learning 2026-11-12)');
   assert.ok(chi.includes('data-quest="chi-listening"'), 'Listening Practises its MOE quest id');
 });
 

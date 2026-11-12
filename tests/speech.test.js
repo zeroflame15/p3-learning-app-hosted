@@ -65,10 +65,17 @@ test('speakPip refuses to speak Chinese — and says so — when the phone lists
   assert.ok(fn.includes('return true;'), 'speakPip reports speech will happen otherwise');
 });
 
-test('the Listen buttons only toast "say it out loud" when speakPip will speak', () => {
-  assert.ok(html.includes('if(speakPip(m?m[0]:q.q))'), 'quest Listen toasts only when speech will happen');
+test('Chinese quests have no Listen button any more; the English spelling Listen still gates its toast', () => {
+  // 2026-11-12: Bryan asked for Listen to go from Chinese learning
+  // after it stayed silent on his iPhone. The quest Listen button
+  // and its handler are gone, and so is the note on Chinese quest
+  // cards; spelling Listen survives only for English tests (Chinese
+  // tests render no Listen button at all).
+  assert.ok(!html.includes('id="qListen"'), 'no quest Listen button');
+  assert.ok(!html.includes('🔊 Listen — then say it out loud!'), 'no quest Listen label');
+  assert.ok(!html.includes('speakPip(m?m[0]:q.q)'), 'no quest Listen handler');
+  assert.ok(!html.includes('🔊 This quest has a Listen button'), 'no Listen note on Chinese quest cards');
   assert.ok(html.includes("if(speakPip(b.getAttribute('data-spelllisten')))"), 'spelling Listen toasts only when speech will happen');
-  assert.ok(!html.includes('speakPip(m?m[0]:q.q); toast('), 'no unguarded toast after the quest Listen call');
   assert.ok(!html.includes("speakPip(b.getAttribute('data-spelllisten')); toast("), 'no unguarded toast after the spelling Listen call');
 });
 

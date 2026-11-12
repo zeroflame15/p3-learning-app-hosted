@@ -188,5 +188,5 @@ test('Ask Pip replies have no Listen button (the device voice does not sound nic
   assert.ok(!ask.includes('data-listen'), 'no Listen button is rendered under Pip replies');
   assert.ok(!ask.includes('🔊 Listen'), 'no Listen label in the chat view');
   assert.ok(ask.includes('data-flag'), 'Flag this is still there');
-  assert.ok(clientSrc.includes('function speakPip'), 'speakPip still exists for the spelling Listen buttons in Learn');
+  assert.ok(clientSrc.includes('function speakPip'), 'speakPip still exists for the English spelling Listen buttons in Learn');
 });
