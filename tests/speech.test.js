@@ -46,8 +46,30 @@ test('Chinese never gets an English voice when no Chinese voice is installed', (
   // listed, pickVoice fell back to all voices and handed an English
   // voice a Chinese sentence with lang zh-CN — iOS swallows that
   // with no sound and no error. Now it returns null instead.
-  assert.ok(fn.includes("if(isChi){ noChiVoice=true; return null; }"), 'no zh voice means no voice for Chinese, not an English one');
+  // An EMPTY voice list means the voices have not loaded yet, not
+  // that none is installed — only a loaded list without zh counts.
+  assert.ok(fn.includes("if(isChi){ if(voices.length)noChiVoice=true; return null; }"), 'no zh voice in a loaded list means no voice for Chinese, not an English one');
   assert.ok(fn.includes('noChiVoice'), 'the missing-voice case is tracked');
+});
+
+test('speakPip refuses to speak Chinese — and says so — when the phone lists voices but no Chinese one', () => {
+  // 2026-11-12: the button's own "say it out loud" toast fired right
+  // after speakPip and overwrote the install-path guidance in the
+  // same tick (one toast element), so Bryan only ever saw the
+  // encouragement and heard nothing. Now speakPip probes first and
+  // returns false when it cannot speak, so the button stays quiet
+  // and the guidance stays visible.
+  assert.ok(fn.includes('var probeVoice=pickVoice();'), 'the voice is probed before speaking');
+  assert.ok(fn.includes('if(isChi&&noChiVoice){'), 'the probe gates on the missing-voice flag');
+  assert.ok(fn.includes('return false;'), 'speakPip reports it cannot speak');
+  assert.ok(fn.includes('return true;'), 'speakPip reports speech will happen otherwise');
+});
+
+test('the Listen buttons only toast "say it out loud" when speakPip will speak', () => {
+  assert.ok(html.includes('if(speakPip(m?m[0]:q.q))'), 'quest Listen toasts only when speech will happen');
+  assert.ok(html.includes("if(speakPip(b.getAttribute('data-spelllisten')))"), 'spelling Listen toasts only when speech will happen');
+  assert.ok(!html.includes('speakPip(m?m[0]:q.q); toast('), 'no unguarded toast after the quest Listen call');
+  assert.ok(!html.includes("speakPip(b.getAttribute('data-spelllisten')); toast("), 'no unguarded toast after the spelling Listen call');
 });
 
 test('a stalled utterance surfaces the silent-switch hint instead of staying silent', () => {
