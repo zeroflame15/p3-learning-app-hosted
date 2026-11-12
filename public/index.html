@@ -674,9 +674,13 @@ function autoVibe(){
       told how to add a Chinese voice on the phone.
    5. A stalled utterance never fires onend/onerror on iOS, so
       silence used to look like nothing happened. Now: a 3s
-      watchdog cancels it and says to check the silent switch. */
+      watchdog cancels it and says to check the silent switch.
+   6. A toast fired by the button right after speakPip() overwrites
+      the guidance toast in the same tick (one toast element).
+      Now: speakPip returns false when it cannot speak, and the
+      button only toasts "say it out loud" when speech will happen. */
 function speakPip(text){
-  if(!('speechSynthesis' in window)){ toast('Sorry — this device has no read-aloud voice.'); return; }
+  if(!('speechSynthesis' in window)){ toast('Sorry — this device has no read-aloud voice.'); return false; }
   var isChi=/[\u4e00-\u9fff]/.test(text);
   var parts=(text.match(/[^.!?。！？]+[.!?。！？]*/g)||[text]).map(function(p){ return p.trim(); }).filter(Boolean);
   if(!parts.length)parts=[text];
@@ -688,8 +692,11 @@ function speakPip(text){
       /* Chinese with no Chinese voice on the phone: never hand an
          English voice a Chinese sentence — iPhone Chrome swallows
          it with no sound and no error. Leave the voice unset (the
-         system default for zh-CN) and tell the user how to add one. */
-      if(isChi){ noChiVoice=true; return null; }
+         system default for zh-CN) and tell the user how to add one.
+         An EMPTY voice list means the voices have not loaded yet,
+         not that none is installed — do not claim the phone lacks
+         one in that case. */
+      if(isChi){ if(voices.length)noChiVoice=true; return null; }
       vs=voices;
     }
     var good=isChi?['xiaoxiao','tingting','meijia','google']:['natural','neural','google','samantha','zira','jenny','aria'];
@@ -697,6 +704,16 @@ function speakPip(text){
     var bad=['fred','albert','bad news','organ','cellos','zarvox','trinoids','robot'];
     var ok=vs.filter(function(v){ var n=v.name.toLowerCase(); return !bad.some(function(b){ return n.indexOf(b)>=0; }); });
     return ok[0]||vs[0]||null;
+  }
+  /* Probe BEFORE speaking: if this phone lists voices but none is
+     Chinese, say so and stop — speaking anyway would be silent, and
+     the button's own "say it out loud" toast would overwrite this
+     guidance before it can be read. Returns false so the button
+     knows not to toast either. */
+  var probeVoice=pickVoice();
+  if(isChi&&noChiVoice){
+    if(!warnedVoice){ warnedVoice=true; toast('No Chinese voice on this phone yet — add one in Settings → Accessibility → Spoken Content → Voices → Chinese, then tap Listen again.'); }
+    return false;
   }
   function say(i){
     if(i>=parts.length)return;
@@ -729,6 +746,7 @@ function speakPip(text){
   }
   if(speechSynthesis.speaking||speechSynthesis.pending){ speechSynthesis.cancel(); setTimeout(function(){ say(0); },150); }
   else say(0);
+  return true;
 }
 if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged=function(){ speechSynthesis.getVoices(); }; }
 </script>
@@ -3174,7 +3192,7 @@ function deleteSpellTest(id){
 function bindSpellTest(){
   var e=ex(); if(!e)return;
   if(!e.spellingTests)e.spellingTests=[];
-  document.querySelectorAll('[data-spelllisten]').forEach(function(b){ b.onclick=function(){ speakPip(b.getAttribute('data-spelllisten')); toast('Listen… now say it out loud like Pip!'); }; });
+  document.querySelectorAll('[data-spelllisten]').forEach(function(b){ b.onclick=function(){ if(speakPip(b.getAttribute('data-spelllisten')))toast('Listen… now say it out loud like Pip!'); }; });
   var bk=document.getElementById('spBack'); if(bk)bk.onclick=function(){ spellTest=null; go('learn'); };
 var t=spellLiveTest();
   if(!t)return;
@@ -11592,7 +11610,7 @@ function bindQuiz(){
     quizTimer=setInterval(tickQuizTime,1000);
   }
   var q=list[cur.idx];
-  var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); speakPip(m?m[0]:q.q); toast('Listen… now say it out loud like Pip!'); };
+  var lb=document.getElementById('qListen'); if(lb)lb.onclick=function(){ var m=q.q.match(/[\u4e00-\u9fff][\u4e00-\u9fff·（）() ，、]*/); if(speakPip(m?m[0]:q.q))toast('Listen… now say it out loud like Pip!'); };
   /* Ask Pip about this quest question: Pip explains it in a new
      thread, and the answer-only clock pauses while the child is away. */
   var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:(Array.isArray(q.o)?q.o.slice():[]), answer:questAnswerText(q), clue:q.c||''}); };
