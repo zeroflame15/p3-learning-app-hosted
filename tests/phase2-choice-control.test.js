@@ -187,6 +187,8 @@ function diffContext() {
   loadInto(ctx, 'function isFibQuestion(q){');
   loadInto(ctx, 'function fibExpected(q){');
   loadInto(ctx, 'function fibAccepts(q){');
+  // depicText: sbNormalizeQuestion calls it, so load it too.
+  loadInto(ctx, 'function depicText(s){');
   loadInto(ctx, 'function sbNormalizeQuestion(q){');
   loadInto(ctx, 'function sbShapeOk(questions){');
   loadInto(ctx, 'function diffQuestionId(q){');

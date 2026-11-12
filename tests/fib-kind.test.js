@@ -93,6 +93,9 @@ function clientEngine() {
   const fibParseNumber = eval('(' + fnText('function fibParseNumber(s, stem){') + ')'); // eslint-disable-line no-unused-vars
   const checkFibAnswer = eval('(' + fnText('function checkFibAnswer(q, typed){') + ')'); // eslint-disable-line no-unused-vars
   const questAnswerText = eval('(' + fnText('function questAnswerText(q){') + ')'); // eslint-disable-line no-unused-vars
+  // depicText: sbNormalizeQuestion / saveSbCache call it, so this
+  // harness must extract it too.
+  const depicText = eval('(' + fnText('function depicText(s){') + ')'); // eslint-disable-line no-unused-vars
   const sbNormalizeQuestion = eval('(' + fnText('function sbNormalizeQuestion(q){') + ')'); // eslint-disable-line no-unused-vars
   const sbCacheKey = eval('(' + fnText('function sbCacheKey(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars
   const loadSbCache = eval('(' + fnText('function loadSbCache(eid, topicId){') + ')'); // eslint-disable-line no-unused-vars

@@ -27,7 +27,7 @@ test('speakPip never cancels and speaks in the same tick', () => {
 });
 
 test('speakPip chains sentences via onend instead of queueing them all at once', () => {
-  assert.ok(fn.includes('u.onend=function(){ say(i+1); };'), 'next sentence starts when the previous ends');
+  assert.ok(fn.includes('u.onend=function(){ clearTimeout(stallTimer); say(i+1); };'), 'next sentence starts when the previous ends');
   assert.ok(!fn.includes('parts.forEach(function(p){'), 'sentences are not all queued in a loop');
 });
 
@@ -39,4 +39,26 @@ test('speakPip tells the user to check volume and the silent switch when speech 
 test('Chinese picks a Chinese voice first', () => {
   assert.ok(fn.includes("isChi?['xiaoxiao','tingting','meijia','google']"), 'Chinese voice list first for Chinese text');
   assert.ok(fn.includes("u.lang=isChi?'zh-CN':'en-SG'"), 'utterance language matches the text');
+});
+
+test('Chinese never gets an English voice when no Chinese voice is installed', () => {
+  // Bryan's iPhone Chrome was silent on Listen: with no zh voice
+  // listed, pickVoice fell back to all voices and handed an English
+  // voice a Chinese sentence with lang zh-CN — iOS swallows that
+  // with no sound and no error. Now it returns null instead.
+  assert.ok(fn.includes("if(isChi){ noChiVoice=true; return null; }"), 'no zh voice means no voice for Chinese, not an English one');
+  assert.ok(fn.includes('noChiVoice'), 'the missing-voice case is tracked');
+});
+
+test('a stalled utterance surfaces the silent-switch hint instead of staying silent', () => {
+  // A stalled utterance never fires onend/onerror on iOS. The
+  // watchdog cancels it after 3s and says why it may be silent.
+  assert.ok(fn.includes('stallTimer=setTimeout(function(){'), 'a start watchdog exists');
+  assert.ok(fn.includes('},3000)'), 'the watchdog waits 3s');
+  assert.ok(fn.includes('u.onstart=function(){ started=true; clearTimeout(stallTimer); };'), 'a started utterance clears the watchdog');
+  assert.ok(fn.includes('iPhones mute read-aloud when silent mode is on'), 'the stall hint names the silent switch');
+});
+
+test('a missing Chinese voice tells the user how to add one', () => {
+  assert.ok(fn.includes('Settings → Accessibility → Spoken Content → Voices → Chinese'), 'the hint gives the install path');
 });
