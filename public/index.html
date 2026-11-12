@@ -659,7 +659,7 @@ function autoVibe(){
   if(vibeId!==pref)startVibe(pref);
 }
 /* Pip read-aloud: warmest available voice, sentence by sentence.
-   iPhone Chrome was silent — three iOS quirks, all fixed here:
+   iPhone Chrome was silent — five iOS quirks, all fixed here:
    1. getVoices() can stay empty and voiceschanged may never fire,
       so the old code waited forever for voices and never spoke.
       Now: speak anyway with the system default voice if none are
@@ -667,17 +667,31 @@ function autoVibe(){
    2. cancel() then speak() in the same tick swallows the utterance
       on iOS. Now: speak starts a beat after a cancel.
    3. Queued utterances stall on iOS. Now: sentences are chained
-      one at a time — the next starts only when the previous ends. */
+      one at a time — the next starts only when the previous ends.
+   4. No Chinese voice installed + an English voice forced onto
+      Chinese text = silence with no error on iOS Chrome. Now:
+      Chinese never gets a non-Chinese voice, and the user is
+      told how to add a Chinese voice on the phone.
+   5. A stalled utterance never fires onend/onerror on iOS, so
+      silence used to look like nothing happened. Now: a 3s
+      watchdog cancels it and says to check the silent switch. */
 function speakPip(text){
   if(!('speechSynthesis' in window)){ toast('Sorry — this device has no read-aloud voice.'); return; }
   var isChi=/[\u4e00-\u9fff]/.test(text);
   var parts=(text.match(/[^.!?。！？]+[.!?。！？]*/g)||[text]).map(function(p){ return p.trim(); }).filter(Boolean);
   if(!parts.length)parts=[text];
-  var warned=false;
+  var warned=false, warnedVoice=false, warnedStall=false, noChiVoice=false;
   function pickVoice(){
     var voices=speechSynthesis.getVoices()||[];
     var vs=voices.filter(function(v){ return v.lang&&v.lang.toLowerCase().indexOf(isChi?'zh':'en')===0; });
-    if(!vs.length)vs=voices;
+    if(!vs.length){
+      /* Chinese with no Chinese voice on the phone: never hand an
+         English voice a Chinese sentence — iPhone Chrome swallows
+         it with no sound and no error. Leave the voice unset (the
+         system default for zh-CN) and tell the user how to add one. */
+      if(isChi){ noChiVoice=true; return null; }
+      vs=voices;
+    }
     var good=isChi?['xiaoxiao','tingting','meijia','google']:['natural','neural','google','samantha','zira','jenny','aria'];
     for(var i=0;i<good.length;i++){ var m=vs.filter(function(v){ return v.name.toLowerCase().indexOf(good[i])>=0; }); if(m.length)return m[0]; }
     var bad=['fred','albert','bad news','organ','cellos','zarvox','trinoids','robot'];
@@ -689,13 +703,28 @@ function speakPip(text){
     var u=new SpeechSynthesisUtterance(parts[i]);
     var v=pickVoice(); if(v)u.voice=v;
     u.lang=isChi?'zh-CN':'en-SG'; u.rate=0.98; u.pitch=1.12;
-    u.onend=function(){ say(i+1); };
+    var started=false;
+    /* A stalled utterance never fires onend/onerror on iOS — it
+       just sits there, silent, forever. If nothing starts within
+       3s, cancel it and say so: on an iPhone the usual cause is
+       the silent switch, which mutes read-aloud. */
+    var stallTimer=setTimeout(function(){
+      if(!started){
+        try{ speechSynthesis.cancel(); }catch(err){}
+        if(!warnedStall){ warnedStall=true; toast('Still no sound? Check the silent switch on the side of the phone and the volume — iPhones mute read-aloud when silent mode is on.'); }
+        say(i+1);
+      }
+    },3000);
+    u.onstart=function(){ started=true; clearTimeout(stallTimer); };
+    u.onend=function(){ clearTimeout(stallTimer); say(i+1); };
     u.onerror=function(ev){
+      clearTimeout(stallTimer);
       if(ev&&ev.error&&ev.error!=='canceled'&&ev.error!=='interrupted'){
         if(!warned){ warned=true; toast('No sound? Check the volume and the silent switch on the side of the phone.'); }
         say(i+1);
       }
     };
+    if(noChiVoice&&!warnedVoice){ warnedVoice=true; toast('No Chinese voice on this phone yet — add one in Settings → Accessibility → Spoken Content → Voices → Chinese, then tap Listen again.'); }
     speechSynthesis.speak(u);
   }
   if(speechSynthesis.speaking||speechSynthesis.pending){ speechSynthesis.cancel(); setTimeout(function(){ say(0); },150); }
@@ -1311,7 +1340,7 @@ Q('How do seeds with hooks travel?',['They stick to animal fur and drop off far 
 Q('Which stage comes right after the flower in a plant’s life cycle?',['Seed','Fruit','Seedling','Root'],1,'The flower becomes a fruit with seeds inside!',''),
 Q('Why do most plants have green leaves?',['Chlorophyll in the leaves traps sunlight','Leaves are painted green','Green leaves keep insects away','Green leaves drink more water'],0,'Chlorophyll is green and catches light energy!',''),
 Q('What will happen to a leaf if you cover it with black paper for a week?',['It will turn yellow because it cannot make food','It will turn darker green','It will grow bigger','It will make more food'],0,'No light means no photosynthesis in that leaf!',''),Q('A car moves, uses fuel and makes noise. Why is it not a living thing?',['It cannot grow or reproduce','It is too big','It is made of metal','It moves too fast'],0,'Living things grow and reproduce. A car cannot do either.','Cars zoom, but they never grow up!'),Q('Which pair shows one living and one non-living thing?',['Butterfly and kite','Butterfly and bee','Kite and stone','Bee and butterfly'],0,'A butterfly is living, a kite is not. The other pairs are both living or both non-living.','Butterflies fly — kites fly too, but only one is alive!'),Q('Why do living things in a desert need water most of all?',['Without water they cannot live','Water makes them colourful','Water helps them fly','Water makes them bigger'],0,'All living things need water to stay alive.','Desert life is thirsty work!'),Q('A plant\'s life cycle goes seed → seedling → adult plant → flower → fruit → seed. Why does it go in a circle?',['Because the seeds grow into new plants and the cycle starts again','Because plants like circles','Because the sun moves in a circle','Because flowers are round'],0,'The seeds from the fruit grow into new plants, so the cycle repeats.','Life cycles go round and round!')]},
-{id:'chi-listen',img:'icons/topic-chi-listen.webp',sub:'chi',subName:'Chinese',icon:'👂',name:'听一听 Listening',blurb:'Tap Listen, hear the word, pick the right picture word.',
+{id:'chi-listen',img:'icons/topic-chi-listen.webp',sub:'chi',subName:'Chinese',icon:'👂',name:'听一听 Listening',blurb:'Tap Listen, hear the word, pick the right meaning.',
  quest:[Q('Listen: mā ma（妈妈）means…',['father','mother','teacher','friend'],1,'“Mā ma” — the first word many babies say!','妈妈 is the warmest word!'),
  Q('Listen: píng guǒ（苹果）is a…',['banana 香蕉','apple 苹果','orange 橙子','grape 葡萄'],1,'Red, round and crunchy!','An apple a day keeps Pip playful!'),
  Q('Listen: xiè xie（谢谢）means…',['hello','goodbye','thank you','sorry'],2,'We say it when someone helps us!','Say 谢谢 with a big smile!'),
@@ -1961,55 +1990,55 @@ Q('因为我每天都认真做功课，所以我的成绩很好。Question: 我�
  Q('我们要养成早___早起的好习惯。',['睡','垂','捶','谁'],0,'早睡早起 means early to bed, early to rise — 睡 means to sleep, with 目 (eye).','早睡早起，身体棒棒！'),
  Q('妈妈___我去超市买东西。',['培','陪','赔','倍'],1,'陪 means to go along with someone — 陪 has 阝on the left.','妈妈陪我去买东西！'),
  Q('小明___心地把花瓶打碎了。',['布','否','杯','不'],3,'不小心 means carelessly, by accident — 不 is the not word.','不小心，下次要小心哦！')]},
-{id:'chi-picword',img:'icons/topic-chi-picword.webp',sub:'chi',subName:'Chinese',icon:'🖼️',name:'看图选词',blurb:'Look at the picture, pick the word.',
- quest:[Q('图上画着一只小猫，它跑得很快，前面有一只蝴蝶在飞。哪个词语最合适？',['睡觉','追逐','游泳','吃饭'],1,'追逐 means to chase — the cat is running after the butterfly!','小猫追呀追，蝴蝶飞呀飞！'),
- Q('图上画着一个小男孩，他举着一把东西，雨点落在上面。哪个词语最合适？',['晴天','晒太阳','打伞','堆雪人'],2,'打伞 means to hold an umbrella — it is raining in the picture!','雨天打伞，干干净净！'),
- Q('图上画着一棵大树，树上挂满了红红的果子。哪个词语最合适？',['结果','开花','落叶','发芽'],0,'结果 means to bear fruit — the red fruits are ripe on the tree!','红苹果，甜又香！'),
- Q('图上画着小明坐在书桌前，眼睛盯着书本，一动不动。哪个词语最合适？',['马虎','着急','伤心','认真'],3,'认真 means serious and focused — 小明 is reading carefully!','认真读书，越读越聪明！'),
- Q('图上画着一只小鸟，它张开翅膀，在蓝天白云之间。哪个词语最合适？',['游泳','飞翔','爬行','跳跃'],1,'飞翔 means to fly — the bird is flying in the sky!','小鸟飞翔，自由自在！')],
- warm:[Q('图上画着太阳公公从东方升起来，天亮了。哪个词语最合适？',['日落','下雨','日出','下雪'],2,'',''),
- Q('图上画着小鱼在水里摆动尾巴，到处转圈。哪个词语最合适？',['飞翔','游泳','爬行','奔跑'],1,'',''),
- Q('图上画着几个小朋友在草地上，你追我赶，脚下有个圆圆的球。哪个词语最合适？',['画画','唱歌','踢球','睡觉'],2,'',''),
- Q('图上画着一朵红花，花瓣张开了，香香的。哪个词语最合适？',['枯萎','开放','落叶','结冰'],1,'',''),
- Q('图上画着妈妈拿着水壶，往花盆里洒东西。哪个词语最合适？',['摘花','种树','浇水','扫地'],2,'',''),
- Q('图上画着一只小白兔，它正啃着一根橙色的东西。哪个词语最合适？',['喝水','吃胡萝卜','睡觉','跑步'],1,'',''),
- Q('图上画着小朋友们排着队，一个一个走进教室。哪个词语最合适？',['睡觉','跑步','唱歌','排队'],3,'',''),
- Q('图上画着一只小狗，它的尾巴摆来摆去，向主人跑去。哪个词语最合适？',['睡觉','游泳','摇尾巴','看书'],2,'','')],
- retry:[Q('图上画着小明把课本、铅笔都放得整整齐齐，准备去上学。哪个词语最合适？',['乱扔东西','丢三落四','整理书包','马马虎虎'],2,'整理书包 means to tidy up the school bag — everything is neat and ready!','书包整整齐齐，上学去！'),
- Q('图上画着小花给奶奶倒了一杯热茶。哪个词语最合适？',['调皮捣蛋','孝敬长辈','不懂礼貌','自私自利'],1,'孝敬长辈 means to respect and care for elders — 小花 pours tea for grandma!','孝敬奶奶，真乖！'),
- Q('图上画着雨停了，天边出现了一道五颜六色的桥。哪个词语最合适？',['乌云','太阳','月亮','彩虹'],3,'彩虹 means a rainbow — the colourful bridge in the sky after rain!','彩虹彩虹，五颜六色！'),
- Q('图上画着小狗汪汪地叫着，好像在欢迎主人回家。哪个词语最合适？',['欢迎主人','害怕主人','讨厌主人','不理主人'],0,'欢迎主人 means to welcome the owner home — the dog is barking happily!','汪汪，主人回来啦！'),
- Q('图上画着小朋友们在图书馆里轻轻地走路，小声地说话。哪个词语最合适？',['大声喧哗','保持安静','跑来跑去','追逐打闹'],1,'保持安静 means to stay quiet — in the library we walk softly and speak softly!','图书馆里请安静！'),
- Q('图上画着秋天到了，黄色的叶子从树上掉了下来，铺了一地。哪个词语最合适？',['开花','发芽','落叶','结果'],2,'落叶 means fallen leaves — the yellow leaves cover the ground!','落叶铺满地，金黄金黄！')],
- p4quest:[Q('图上画着两个人面对面坐着，你一句我一句，说得眉飞色舞。哪个词语最合适？',['鸦雀无声','愁眉苦脸','谈笑风生','怒气冲冲'],2,'谈笑风生 means chatting happily and lively — they are talking and laughing!','谈笑风生，好开心！'),
- Q('图上画着一个小男孩站在山顶上，望着远处的美景，脸上带着笑容。哪个词语最合适？',['胆小如鼠','心旷神怡','垂头丧气','提心吊胆'],1,'心旷神怡 means feeling relaxed and happy at a beautiful view!','站在山顶，心情真好！'),
- Q('图上画着一群小朋友围成一圈，认真地听爷爷讲过去的故事。哪个词语最合适？',['聚精会神','心不在焉','东张西望','交头接耳'],0,'聚精会神 means listening with full attention — the children are all ears!','听爷爷讲故事，真入迷！'),
- Q('图上画着一只小猫悄悄地走近一只小老鼠，眼睛盯着它，身体压得很低。哪个词语最合适？',['大摇大摆','横冲直撞','东奔西跑','蹑手蹑脚'],3,'蹑手蹑脚 means walking softly and quietly — the cat is sneaking up!','小猫悄悄走，别吓跑老鼠！'),
- Q('图上画着刚才还下着雨，现在太阳出来了，天边挂着一道彩色的桥，孩子们指着它笑。哪个词语最合适？',['乌云密布','电闪雷鸣','雨过天晴','大雨倾盆'],2,'雨过天晴 means the rain is over and the sky is clear — the sun is out and a rainbow is in the sky!','雨过天晴，彩虹出来了！')],
- p4warm:[Q('图上画着小朋友们在教室里举手发言，一个比一个积极。哪个词语最合适？',['鸦雀无声','踊跃发言','垂头丧气','东张西望'],1,'',''),
- Q('图上画着一个小女孩扶着一位老奶奶过马路。哪个词语最合适？',['调皮捣蛋','自私自利','不懂礼貌','尊老爱幼'],3,'',''),
- Q('图上画着小明把地上的香蕉皮捡起来，扔进垃圾桶。哪个词语最合适？',['爱护环境','乱扔垃圾','不讲卫生','浪费时间'],0,'',''),
- Q('图上画着夜晚的星星一闪一闪，像小眼睛一样眨呀眨。哪个词语最合适？',['乌云密布','大雨倾盆','星光闪烁','烈日当空'],2,'',''),
- Q('图上画着小朋友们在操场上拔河，大家一起用力拉绳子。哪个词语最合适？',['各自为政','齐心协力','袖手旁观','无动于衷'],1,'',''),
- Q('图上画着小华看到同学跌倒了，立刻跑过去帮忙。哪个词语最合适？',['袖手旁观','幸灾乐祸','置之不理','乐于助人'],3,'',''),
- Q('图上画着春天到了，公园里的花都开了，蝴蝶在花丛中飞来飞去。哪个词语最合适？',['春暖花开','秋高气爽','寒风刺骨','大雪纷飞'],0,'',''),
- Q('图上画着小明考试得了满分，他笑得合不拢嘴。哪个词语最合适？',['愁眉苦脸','垂头丧气','眉开眼笑','提心吊胆'],2,'','')],
- p4retry:[Q('图上画着小明把自己的零花钱都存进了存钱罐里，一分也不乱花。哪个词语最合适？',['大手大脚','铺张浪费','勤俭节约','挥金如土'],2,'勤俭节约 means being thrifty — 小明 saves every coin!','存钱罐，越存越多！'),
- Q('图上画着小朋友们排着整齐的队伍，一个接一个地走进礼堂。哪个词语最合适？',['井然有序','乱七八糟','东倒西歪','横七竖八'],0,'井然有序 means neat and orderly — the children walk in one by one!','排队整齐，真好看！'),
- Q('图上画着一只小猫蜷缩在角落里，瑟瑟发抖，眼睛里满是害怕。哪个词语最合适？',['胆大包天','胆小如鼠','威风凛凛','神气十足'],1,'胆小如鼠 means as timid as a mouse — the kitten is shaking with fear!','小猫别怕，乖乖！'),
- Q('图上画着小红把作业本上的错字一一改正，写得工工整整。哪个词语最合适？',['马马虎虎','粗心大意','敷衍了事','一丝不苟'],3,'一丝不苟 means careful in every detail — 小红 corrects every mistake neatly!','一丝不苟，字写得真漂亮！'),
- Q('图上画着春天的小草从土里探出头来，嫩绿嫩绿的。哪个词语最合适？',['生机勃勃','死气沉沉','枯枝败叶','冰天雪地'],0,'生机勃勃 means full of life — the spring grass is sprouting!','春天的小草，绿油油！'),
- Q('图上画着小朋友们在海边堆沙堡、捡贝壳，玩得不亦乐乎。哪个词语最合适？',['愁眉苦脸','不亦乐乎','垂头丧气','闷闷不乐'],1,'不亦乐乎 means having so much fun — building sandcastles and collecting shells!','海边玩沙，真开心！')],
- p4fresh:[Q('图上画着一个小男孩在河边钓鱼，他一动不动地坐着，等了很久。哪个词语最合适？',['三心二意','专心致志','心不在焉','东张西望'],1,'专心致志 means fully focused — the boy sits still, waiting patiently to fish!','钓鱼要有耐心！'),
- Q('图上画着小朋友们把教室打扫得干干净净，桌椅排得整整齐齐。哪个词语最合适？',['乱七八糟','脏兮兮','破破烂烂','一尘不染'],3,'一尘不染 means spotlessly clean — not a speck of dust!','教室干净得发亮！'),
- Q('图上画着一只小狗看到陌生人，汪汪大叫，守在门口不让人进来。哪个词语最合适？',['忠心耿耿','胆小如鼠','懒懒散散','无精打采'],0,'忠心耿耿 means loyal and faithful — the dog guards the door!','小狗守门，真忠心！'),
- Q('图上画着小红每天放学回家，第一件事就是做作业，从不拖拉。哪个词语最合适？',['拖拖拉拉','马马虎虎','自觉自律','游手好闲'],2,'自觉自律 means doing the right thing on your own — 小红 does her homework first!','自觉的孩子最棒！'),
- Q('图上画着冬天的大雪过后，整个世界都变白了，树上、屋顶上都是白雪。哪个词语最合适？',['绿树成荫','银装素裹','骄阳似火','春意盎然'],1,'银装素裹 means the world dressed in silver white — snow covers everything!','雪后的世界，白茫茫一片！'),
- Q('图上画着小明和小华一起搭积木，你一块我一块，搭了一座高高的城堡。哪个词语最合适？',['齐心合力','各自为政','争先恐后','互不相让'],0,'齐心合力 means working together with one heart — they built a tall castle together!','一起搭积木，城堡高高的！'),
- Q('图上画着一位老爷爷坐在树下，慢慢地给小朋友们讲故事，孩子们听得入了迷。哪个词语最合适？',['索然无味','心不在焉','垂头丧气','津津有味'],3,'津津有味 means listening with great delight — the children are lost in the story!','爷爷讲故事，真好听！'),
- Q('图上画着小鸟妈妈一次又一次地把食物送到巢里，喂给嗷嗷待哺的小鸟。哪个词语最合适？',['置之不理','袖手旁观','无微不至','冷若冰霜'],2,'无微不至 means caring in every little way — mum bird feeds her babies again and again!','鸟妈妈真细心！'),
- Q('图上画着小朋友们在草地上放风筝，风筝越飞越高，大家高兴极了。哪个词语最合适？',['愁眉苦脸','兴高采烈','垂头丧气','提心吊胆'],1,'兴高采烈 means full of joy — the kites are flying high and everyone is happy!','风筝飞得高高的！'),
- Q('图上画着小华在跑步比赛中摔倒了，但他爬起来继续跑，坚持到了终点。哪个词语最合适？',['坚持不懈','半途而废','知难而退','望而却步'],0,'坚持不懈 means never giving up — 小华 fell but got up and finished the race!','坚持到底，就是胜利！')]},
+{id:'chi-picword',img:'icons/topic-chi-picword.webp',sub:'chi',subName:'Chinese',icon:'🖼️',name:'看图选词',blurb:'Read the scene, pick the right word.',
+ quest:[Q('一只小猫，它跑得很快，前面有一只蝴蝶在飞。哪个词语最合适？',['睡觉','追逐','游泳','吃饭'],1,'追逐 means to chase — the cat is running after the butterfly!','小猫追呀追，蝴蝶飞呀飞！'),
+ Q('一个小男孩，他举着一把东西，雨点落在上面。哪个词语最合适？',['晴天','晒太阳','打伞','堆雪人'],2,'打伞 means to hold an umbrella — it is raining!','雨天打伞，干干净净！'),
+ Q('一棵大树，树上挂满了红红的果子。哪个词语最合适？',['结果','开花','落叶','发芽'],0,'结果 means to bear fruit — the red fruits are ripe on the tree!','红苹果，甜又香！'),
+ Q('小明坐在书桌前，眼睛盯着书本，一动不动。哪个词语最合适？',['马虎','着急','伤心','认真'],3,'认真 means serious and focused — 小明 is reading carefully!','认真读书，越读越聪明！'),
+ Q('一只小鸟，它张开翅膀，在蓝天白云之间。哪个词语最合适？',['游泳','飞翔','爬行','跳跃'],1,'飞翔 means to fly — the bird is flying in the sky!','小鸟飞翔，自由自在！')],
+ warm:[Q('太阳公公从东方升起来，天亮了。哪个词语最合适？',['日落','下雨','日出','下雪'],2,'',''),
+ Q('小鱼在水里摆动尾巴，到处转圈。哪个词语最合适？',['飞翔','游泳','爬行','奔跑'],1,'',''),
+ Q('几个小朋友在草地上，你追我赶，脚下有个圆圆的球。哪个词语最合适？',['画画','唱歌','踢球','睡觉'],2,'',''),
+ Q('一朵红花，花瓣张开了，香香的。哪个词语最合适？',['枯萎','开放','落叶','结冰'],1,'',''),
+ Q('妈妈拿着水壶，往花盆里洒东西。哪个词语最合适？',['摘花','种树','浇水','扫地'],2,'',''),
+ Q('一只小白兔，它正啃着一根橙色的东西。哪个词语最合适？',['喝水','吃胡萝卜','睡觉','跑步'],1,'',''),
+ Q('小朋友们排着队，一个一个走进教室。哪个词语最合适？',['睡觉','跑步','唱歌','排队'],3,'',''),
+ Q('一只小狗，它的尾巴摆来摆去，向主人跑去。哪个词语最合适？',['睡觉','游泳','摇尾巴','看书'],2,'','')],
+ retry:[Q('小明把课本、铅笔都放得整整齐齐，准备去上学。哪个词语最合适？',['乱扔东西','丢三落四','整理书包','马马虎虎'],2,'整理书包 means to tidy up the school bag — everything is neat and ready!','书包整整齐齐，上学去！'),
+ Q('小花给奶奶倒了一杯热茶。哪个词语最合适？',['调皮捣蛋','孝敬长辈','不懂礼貌','自私自利'],1,'孝敬长辈 means to respect and care for elders — 小花 pours tea for grandma!','孝敬奶奶，真乖！'),
+ Q('雨停了，天边出现了一道五颜六色的桥。哪个词语最合适？',['乌云','太阳','月亮','彩虹'],3,'彩虹 means a rainbow — the colourful bridge in the sky after rain!','彩虹彩虹，五颜六色！'),
+ Q('小狗汪汪地叫着，好像在欢迎主人回家。哪个词语最合适？',['欢迎主人','害怕主人','讨厌主人','不理主人'],0,'欢迎主人 means to welcome the owner home — the dog is barking happily!','汪汪，主人回来啦！'),
+ Q('小朋友们在图书馆里轻轻地走路，小声地说话。哪个词语最合适？',['大声喧哗','保持安静','跑来跑去','追逐打闹'],1,'保持安静 means to stay quiet — in the library we walk softly and speak softly!','图书馆里请安静！'),
+ Q('秋天到了，黄色的叶子从树上掉了下来，铺了一地。哪个词语最合适？',['开花','发芽','落叶','结果'],2,'落叶 means fallen leaves — the yellow leaves cover the ground!','落叶铺满地，金黄金黄！')],
+ p4quest:[Q('两个人面对面坐着，你一句我一句，说得眉飞色舞。哪个词语最合适？',['鸦雀无声','愁眉苦脸','谈笑风生','怒气冲冲'],2,'谈笑风生 means chatting happily and lively — they are talking and laughing!','谈笑风生，好开心！'),
+ Q('一个小男孩站在山顶上，望着远处的美景，脸上带着笑容。哪个词语最合适？',['胆小如鼠','心旷神怡','垂头丧气','提心吊胆'],1,'心旷神怡 means feeling relaxed and happy at a beautiful view!','站在山顶，心情真好！'),
+ Q('一群小朋友围成一圈，认真地听爷爷讲过去的故事。哪个词语最合适？',['聚精会神','心不在焉','东张西望','交头接耳'],0,'聚精会神 means listening with full attention — the children are all ears!','听爷爷讲故事，真入迷！'),
+ Q('一只小猫悄悄地走近一只小老鼠，眼睛盯着它，身体压得很低。哪个词语最合适？',['大摇大摆','横冲直撞','东奔西跑','蹑手蹑脚'],3,'蹑手蹑脚 means walking softly and quietly — the cat is sneaking up!','小猫悄悄走，别吓跑老鼠！'),
+ Q('刚才还下着雨，现在太阳出来了，天边挂着一道彩色的桥，孩子们指着它笑。哪个词语最合适？',['乌云密布','电闪雷鸣','雨过天晴','大雨倾盆'],2,'雨过天晴 means the rain is over and the sky is clear — the sun is out and a rainbow is in the sky!','雨过天晴，彩虹出来了！')],
+ p4warm:[Q('小朋友们在教室里举手发言，一个比一个积极。哪个词语最合适？',['鸦雀无声','踊跃发言','垂头丧气','东张西望'],1,'',''),
+ Q('一个小女孩扶着一位老奶奶过马路。哪个词语最合适？',['调皮捣蛋','自私自利','不懂礼貌','尊老爱幼'],3,'',''),
+ Q('小明把地上的香蕉皮捡起来，扔进垃圾桶。哪个词语最合适？',['爱护环境','乱扔垃圾','不讲卫生','浪费时间'],0,'',''),
+ Q('夜晚的星星一闪一闪，像小眼睛一样眨呀眨。哪个词语最合适？',['乌云密布','大雨倾盆','星光闪烁','烈日当空'],2,'',''),
+ Q('小朋友们在操场上拔河，大家一起用力拉绳子。哪个词语最合适？',['各自为政','齐心协力','袖手旁观','无动于衷'],1,'',''),
+ Q('小华看到同学跌倒了，立刻跑过去帮忙。哪个词语最合适？',['袖手旁观','幸灾乐祸','置之不理','乐于助人'],3,'',''),
+ Q('春天到了，公园里的花都开了，蝴蝶在花丛中飞来飞去。哪个词语最合适？',['春暖花开','秋高气爽','寒风刺骨','大雪纷飞'],0,'',''),
+ Q('小明考试得了满分，他笑得合不拢嘴。哪个词语最合适？',['愁眉苦脸','垂头丧气','眉开眼笑','提心吊胆'],2,'','')],
+ p4retry:[Q('小明把自己的零花钱都存进了存钱罐里，一分也不乱花。哪个词语最合适？',['大手大脚','铺张浪费','勤俭节约','挥金如土'],2,'勤俭节约 means being thrifty — 小明 saves every coin!','存钱罐，越存越多！'),
+ Q('小朋友们排着整齐的队伍，一个接一个地走进礼堂。哪个词语最合适？',['井然有序','乱七八糟','东倒西歪','横七竖八'],0,'井然有序 means neat and orderly — the children walk in one by one!','排队整齐，真好看！'),
+ Q('一只小猫蜷缩在角落里，瑟瑟发抖，眼睛里满是害怕。哪个词语最合适？',['胆大包天','胆小如鼠','威风凛凛','神气十足'],1,'胆小如鼠 means as timid as a mouse — the kitten is shaking with fear!','小猫别怕，乖乖！'),
+ Q('小红把作业本上的错字一一改正，写得工工整整。哪个词语最合适？',['马马虎虎','粗心大意','敷衍了事','一丝不苟'],3,'一丝不苟 means careful in every detail — 小红 corrects every mistake neatly!','一丝不苟，字写得真漂亮！'),
+ Q('春天的小草从土里探出头来，嫩绿嫩绿的。哪个词语最合适？',['生机勃勃','死气沉沉','枯枝败叶','冰天雪地'],0,'生机勃勃 means full of life — the spring grass is sprouting!','春天的小草，绿油油！'),
+ Q('小朋友们在海边堆沙堡、捡贝壳，玩得不亦乐乎。哪个词语最合适？',['愁眉苦脸','不亦乐乎','垂头丧气','闷闷不乐'],1,'不亦乐乎 means having so much fun — building sandcastles and collecting shells!','海边玩沙，真开心！')],
+ p4fresh:[Q('一个小男孩在河边钓鱼，他一动不动地坐着，等了很久。哪个词语最合适？',['三心二意','专心致志','心不在焉','东张西望'],1,'专心致志 means fully focused — the boy sits still, waiting patiently to fish!','钓鱼要有耐心！'),
+ Q('小朋友们把教室打扫得干干净净，桌椅排得整整齐齐。哪个词语最合适？',['乱七八糟','脏兮兮','破破烂烂','一尘不染'],3,'一尘不染 means spotlessly clean — not a speck of dust!','教室干净得发亮！'),
+ Q('一只小狗看到陌生人，汪汪大叫，守在门口不让人进来。哪个词语最合适？',['忠心耿耿','胆小如鼠','懒懒散散','无精打采'],0,'忠心耿耿 means loyal and faithful — the dog guards the door!','小狗守门，真忠心！'),
+ Q('小红每天放学回家，第一件事就是做作业，从不拖拉。哪个词语最合适？',['拖拖拉拉','马马虎虎','自觉自律','游手好闲'],2,'自觉自律 means doing the right thing on your own — 小红 does her homework first!','自觉的孩子最棒！'),
+ Q('冬天的大雪过后，整个世界都变白了，树上、屋顶上都是白雪。哪个词语最合适？',['绿树成荫','银装素裹','骄阳似火','春意盎然'],1,'银装素裹 means the world dressed in silver white — snow covers everything!','雪后的世界，白茫茫一片！'),
+ Q('小明和小华一起搭积木，你一块我一块，搭了一座高高的城堡。哪个词语最合适？',['齐心合力','各自为政','争先恐后','互不相让'],0,'齐心合力 means working together with one heart — they built a tall castle together!','一起搭积木，城堡高高的！'),
+ Q('一位老爷爷坐在树下，慢慢地给小朋友们讲故事，孩子们听得入了迷。哪个词语最合适？',['索然无味','心不在焉','垂头丧气','津津有味'],3,'津津有味 means listening with great delight — the children are lost in the story!','爷爷讲故事，真好听！'),
+ Q('小鸟妈妈一次又一次地把食物送到巢里，喂给嗷嗷待哺的小鸟。哪个词语最合适？',['置之不理','袖手旁观','无微不至','冷若冰霜'],2,'无微不至 means caring in every little way — mum bird feeds her babies again and again!','鸟妈妈真细心！'),
+ Q('小朋友们在草地上放风筝，风筝越飞越高，大家高兴极了。哪个词语最合适？',['愁眉苦脸','兴高采烈','垂头丧气','提心吊胆'],1,'兴高采烈 means full of joy — the kites are flying high and everyone is happy!','风筝飞得高高的！'),
+ Q('小华在跑步比赛中摔倒了，但他爬起来继续跑，坚持到了终点。哪个词语最合适？',['坚持不懈','半途而废','知难而退','望而却步'],0,'坚持不懈 means never giving up — 小华 fell but got up and finished the race!','坚持到底，就是胜利！')]},
 {id:'chi-collocation',img:'icons/topic-chi-collocation.webp',sub:'chi',subName:'Chinese',icon:'🧩',name:'词语搭配',blurb:'Words that go together.',
  quest:[Q('一___书',['只','条','本','朵'],2,'一本书 — 本 is the measure word for books.','一本书，打开知识的大门！'),
  Q('___作业',['做','看','听','玩'],0,'做作业 means to do homework — 做 goes with 作业.','做完作业再玩，心里更踏实！'),
@@ -2206,101 +2235,101 @@ Q('因为我每天都认真做功课，所以我的成绩很好。Question: 我�
  Q('秋天，农民伯伯丰收了。金黄的稻谷笑弯了腰，红红的苹果挂满了枝头。大家的脸上都洋溢着丰收的喜悦。Question: 这段话主要写了什么？',['秋天丰收的景象。','稻谷笑弯了腰。','苹果挂满枝头。','大家很高兴。'],0,'整段话主要写秋天丰收的景象。','Autumn harvest — golden and happy!'),
  Q('小明有一只小闹钟。每天早上六点，小闹钟就叮铃铃地响起来，叫小明起床。小明再也不迟到了。Question: 哪一句话最适合做这段话的结尾？',['小闹钟真是我的好帮手！','小闹钟每天六点响。','小明每天六点起床。','小明以前常常迟到。'],0,'“小闹钟真是我的好帮手！”最适合做结尾。','A little alarm clock, a big helper!'),
  Q('小狗是人类的好朋友。它会看家，还会陪小朋友玩。小朋友们都很喜欢它。Question: 这段话主要讲了什么？',['小狗是人类的好朋友。','小狗会看家。','小狗会陪小朋友玩。','小朋友们喜欢小狗。'],0,'整段话主要讲小狗是人类的好朋友。','Dogs are our best friends!')]},
-{id:'chi-composition',img:'icons/topic-chi-composition.webp',sub:'chi',subName:'Chinese',icon:'🎨',name:'看图写段',blurb:'Tell the story of the picture.',
- quest:[Q('看图写段：图片上，一只小白兔在草地上吃胡萝卜。哪一句最适合做这段话的开头？',['有一只可爱的小白兔。','胡萝卜很好吃。','草地是绿色的。','小白兔的耳朵很长。'],0,'开头先介绍图片上的主要人物：有一只可爱的小白兔。','A cute bunny to start the story!'),
- Q('看图写段：图片上，小明在公园里放风筝，风筝飞得高高的。哪一句最适合做开头？',['星期天，小明去公园放风筝。','风筝飞得很高。','公园里有很多人。','小明的风筝是红色的。'],0,'开头要说清楚时间、人物和事情：星期天，小明去公园放风筝。','Sunday in the park — kite time!'),
- Q('看图写段：图片上，妈妈在厨房做饭，香味飘满了整个屋子。哪一句最适合做开头？',['妈妈做的饭菜真香啊！','厨房里有锅和碗。','香味飘满了屋子。','妈妈在厨房做饭。'],3,'开头先说图片上的主要事情：妈妈在厨房做饭。','Mum is cooking — yum!'),
- Q('看图写段：图片上，下雨了，小红撑着一把红雨伞走在回家的路上。哪一句最适合做开头？',['下雨了。','小红的雨伞是红色的。','小红走在回家的路上。','雨下得很大。'],0,'开头先说天气和事情：下雨了。','Rain, rain — don\'t forget your umbrella!'),
- Q('看图写段：图片上，两个小朋友在沙滩上堆沙堡。哪一句最适合做开头？',['夏天，两个小朋友在沙滩上堆沙堡。','沙堡很高。','沙滩上有贝壳。','小朋友们很开心。'],0,'开头要说清楚时间、人物和事情：夏天，两个小朋友在沙滩上堆沙堡。','Summer at the beach — sandcastle time!')],
- warm:[Q('看图写段：图片上，一只小鸟站在枝头唱歌。哪一句最适合接在“早上，小鸟站在枝头上。”后面？',['它快乐地唱着歌，歌声真好听。','枝头是绿色的。','早上很早。','小鸟有翅膀。'],0,'',''),
- Q('看图写段：图片上，小狗在草地上追蝴蝶。哪一句最适合做这段话的结尾？',['小狗玩得真开心啊！','小狗有四条腿。','草地是绿色的。','蝴蝶飞走了。'],0,'',''),
- Q('看图写段：图片上，爷爷在院子里浇花。哪一句最适合做开头？',['爷爷每天早上都在院子里浇花。','花儿很美丽。','院子里有很多花。','爷爷年纪大了。'],0,'',''),
- Q('看图写段：图片上，小明把捡到的钱包还给失主。哪一句最适合做结尾？',['小明真是个拾金不昧的好孩子！','钱包里有钱。','失主很高兴。','小明在路上走。'],0,'',''),
- Q('看图写段：图片上，三个小朋友在操场上踢足球。哪一句最适合做开头？',['放学后，三个小朋友在操场上踢足球。','足球是圆的。','操场很大。','小朋友们穿着运动鞋。'],0,'',''),
- Q('看图写段：图片上，小猫在晒太阳，眯着眼睛，很舒服的样子。哪一句最适合做开头？',['一只小猫懒洋洋地躺在阳光下晒太阳。','小猫的眼睛眯着。','太阳很大。','小猫很舒服。'],0,'',''),
- Q('看图写段：图片上，妈妈给小明讲故事，小明听得津津有味。哪一句最适合接在“每天晚上，妈妈都给小明讲故事。”后面？',['小明听得津津有味，眼睛都不眨一下。','妈妈会讲故事。','晚上很安静。','小明要睡觉了。'],0,'',''),
- Q('看图写段：图片上，小朋友们在教室里认真地画画。哪一句最适合做结尾？',['大家的画都画得真好啊！','教室里有桌子。','小朋友们在画画。','画画课很有趣。'],0,'','')],
- retry:[Q('看图写段：图片上，小明在给小鸟喂食。哪一句最适合接在“小明养了一只小鸟。”后面？',['每天早上，他都给小鸟喂食，还和小鸟说话。','小鸟很可爱。','小明喜欢小鸟。','小鸟会唱歌。'],0,'这句话接在前面最自然，写出小明每天给小鸟喂食。','Feeding the bird every morning!'),
- Q('看图写段：图片上，同学们在操场上做早操。哪一句最适合做开头？',['每天早上，同学们都在操场上做早操。','操场很大。','同学们穿着校服。','早操很有用。'],0,'开头要说清楚时间、人物和事情：每天早上，同学们在操场上做早操。','Morning exercises — stretch and move!'),
- Q('看图写段：图片上，小红在给妈妈捶背，妈妈笑了。哪一句最适合做结尾？',['妈妈笑着说：“我的女儿真懂事！”','小红的手很小。','妈妈很累。','小红在捶背。'],0,'结尾要写出妈妈说的话，表达妈妈的开心。','Mum smiles — my daughter is so thoughtful!'),
- Q('看图写段：图片上，小明在河边钓鱼，钓到了一条大鱼。哪一句最适合做开头？',['星期天，小明去河边钓鱼。','鱼很大。','河边很安静。','小明很高兴。'],0,'开头要说清楚时间、人物和事情：星期天，小明去河边钓鱼。','Sunday fishing — what a catch!'),
- Q('看图写段：图片上，秋天，树叶飘落，铺满了小路。哪一句最适合做结尾？',['秋天的小路真美啊！','树叶是黄色的。','小路很长。','秋天到了。'],0,'结尾要赞美秋天的小路：秋天的小路真美啊！','Golden leaves on the path — beautiful autumn!'),
- Q('看图写段：图片上，小朋友们在公园里放风筝，笑声不断。哪一句最适合接在“公园里真热闹啊！”后面？',['小朋友们在放风筝，笑声一阵阵传来。','公园很大。','风筝飞得很高。','小朋友们很开心。'],0,'这句话接在前面最自然，写出小朋友们放风筝的样子。','Kites flying, laughter ringing!')],
- p4quest:[Q('看图写段：图片上，清晨，太阳升起来了，小鸟在枝头唱歌，小朋友们背着书包去上学。哪一句最适合做开头？',['清晨，太阳升起来了，新的一天开始了。','小鸟在唱歌。','小朋友们去上学。','太阳很红。'],0,'开头先说时间、太阳和新的一天开始了。','A new day begins with the sunrise!'),
- Q('看图写段：图片上，小明不小心打翻了墨水，他马上拿来抹布擦干净。哪一句最适合做结尾？',['从那以后，小明做事更加小心了。','墨水是黑色的。','桌子脏了。','小明拿来抹布。'],0,'结尾要写出小明的改变：从那以后，他做事更加小心了。','Careful from now on — lesson learned!'),
- Q('看图写段：图片上，雨后，彩虹挂在天边，小朋友们跑出家门看彩虹。哪一句最适合做开头？',['雨停了，一道美丽的彩虹挂在天边。','彩虹有七种颜色。','小朋友们跑出家门。','雨下得很大。'],0,'开头先说雨停了和天边的彩虹。','After the rain comes a rainbow!'),
- Q('看图写段：图片上，小红把自己的伞借给没带伞的同学，自己淋着雨回家。哪一句最适合做结尾？',['小红真是个乐于助人的好孩子，大家都很喜欢她。','雨下得很大。','同学没带伞。','小红淋着雨回家。'],0,'结尾要赞美小红：她是个乐于助人的好孩子。','Sharing her umbrella — kind girl!'),
- Q('看图写段：图片上，农民伯伯在烈日下收割稻谷，汗水湿透了衣服。哪一句最适合做开头？',['烈日当空，农民伯伯正在田里忙着收割稻谷。','稻谷是金黄的。','农民伯伯很辛苦。','太阳很大。'],0,'开头先说烈日和农民伯伯在收割。','Harvest under the hot sun!')],
- p4warm:[Q('看图写段：图片上，小明种的小树长大了，开出了美丽的花。哪一句最适合接在“去年春天，小明种下了一棵小树。”后面？',['他每天给小树浇水、施肥，小树一天天长大。','小树很小。','花儿很美丽。','小明很喜欢小树。'],0,'',''),
- Q('看图写段：图片上，夜晚，月亮升起来了，星星一闪一闪的。哪一句最适合做开头？',['夜幕降临，弯弯的月亮升起来了。','星星一闪一闪的。','夜晚很安静。','月亮很亮。'],0,'',''),
- Q('看图写段：图片上，小华在图书馆里认真地读书，忘记了时间。哪一句最适合做结尾？',['小华真是个爱读书的好孩子啊！','图书馆里很安静。','小华在读书。','书很好看。'],0,'',''),
- Q('看图写段：图片上，冬天，小朋友们在雪地里堆雪人、打雪仗。哪一句最适合做开头？',['冬天到了，雪花纷纷扬扬地飘下来，大地一片雪白。','雪人堆得很大。','小朋友们穿着棉衣。','雪地很白。'],0,'',''),
- Q('看图写段：图片上，小明和小刚一起抬着一桶水，给小树浇水。哪一句最适合做开头？',['植树节到了，小明和小刚一起给小树浇水。','水桶很重。','小树需要水。','他们抬着水桶。'],0,'',''),
- Q('看图写段：图片上，妈妈生病了，小红给妈妈倒水，还给妈妈盖被子。哪一句最适合做结尾？',['妈妈感动地说：“我的女儿长大了，懂得关心妈妈了。”','妈妈生病了。','小红倒了一杯水。','被子很暖和。'],0,'',''),
- Q('看图写段：图片上，小鸟在枝头唱歌，花儿在微风中点头。哪一句最适合做开头？',['春天来了，公园里一片生机勃勃的景象。','小鸟在唱歌。','花儿在点头。','微风吹过。'],0,'',''),
- Q('看图写段：图片上，小明把捡到的书包交给老师，老师夸他是个好孩子。哪一句最适合做结尾？',['老师笑着说：“小明，你真是个拾金不昧的好孩子！”','书包是黑色的。','小明捡到书包。','老师很高兴。'],0,'','')],
- p4retry:[Q('看图写段：图片上，小明和小刚在操场上踢足球，踢得满头大汗。哪一句最适合做开头？',['放学后，小明和小刚在操场上踢足球，玩得满头大汗。','足球是圆的。','操场很大。','他们踢得很开心。'],0,'开头要说清楚时间、人物和事情：放学后，小明和小刚在操场上踢足球。','After-school football — sweaty and happy!'),
- Q('看图写段：图片上，小鸟妈妈给小鸟喂食，小鸟张大了嘴巴。哪一句最适合做开头？',['鸟窝里，鸟妈妈正在给小鸟喂食，小鸟张大了嘴巴。','小鸟的嘴巴很大。','鸟妈妈很辛苦。','鸟窝在树上。'],0,'开头先说鸟窝里鸟妈妈给小鸟喂食。','Mummy bird feeding her babies!'),
- Q('看图写段：图片上，同学们在植树节种树，大家干得热火朝天。哪一句最适合做结尾？',['大家看着种好的小树，心里充满了希望。','小树很小。','同学们在种树。','植树节在春天。'],0,'结尾要写出大家的希望：心里充满了希望。','Little trees, big hopes!'),
- Q('看图写段：图片上，小明在书桌前认真地写作业，台灯亮亮的。哪一句最适合做开头？',['晚上，小明坐在书桌前，认真地写作业。','台灯很亮。','书桌上有书。','小明写字很认真。'],0,'开头先说晚上、小明和认真写作业。','Evening homework under the lamp!'),
- Q('看图写段：图片上，春雨过后，笋芽儿从土里钻出来，越长越高。哪一句最适合做结尾？',['笋芽儿越长越高，好像在说：“我要快快长大！”','春雨下得很大。','笋芽儿很小。','土里有笋芽儿。'],0,'结尾要写出笋芽儿的话：我要快快长大！','Grow fast, little bamboo shoot!'),
- Q('看图写段：图片上，小朋友们在操场上举行拔河比赛，大家齐心协力。哪一句最适合做开头？',['运动会上，一场激烈的拔河比赛开始了。','拔河很好玩。','操场上有很多人。','大家齐心协力。'],0,'开头先说运动会和拔河比赛开始了。','Tug-of-war — pull together!')],
- p4fresh:[Q('看图写段：图片上，秋天，果园里的苹果红了，梨黄了，果农们忙着摘果子。哪一句最适合做开头？',['秋天到了，果园里瓜果飘香，丰收的景象真美！','苹果是红色的。','梨是黄色的。','果农们在摘果子。'],0,'开头先说秋天、果园和丰收的景象。','Autumn in the orchard — a sweet harvest!'),
- Q('看图写段：图片上，小猫追着蝴蝶，在花丛中跑来跑去。哪一句最适合做开头？',['花园里，一只可爱的小猫追着蝴蝶跑来跑去。','蝴蝶飞得很快。','花丛很美丽。','小猫很调皮。'],0,'开头先说花园里的小猫在追蝴蝶。','A cat chasing butterflies in the garden!'),
- Q('看图写段：图片上，小明在给小鸟喂食，小鸟吃得津津有味。哪一句最适合接在“小明养了一只可爱的小鸟。”后面？',['每天早上，他都给小鸟喂食，小鸟吃得津津有味。','小鸟很可爱。','小明喜欢小鸟。','小鸟会唱歌。'],0,'这句话接在前面最自然，写出小明每天给小鸟喂食。','Feeding the bird every morning!'),
- Q('看图写段：图片上，下雨了，小明把伞借给小红，自己跑回家。哪一句最适合做结尾？',['小红望着小明远去的身影，心里暖暖的。','雨下得很大。','小明跑回家。','小红有伞了。'],0,'结尾要写出小红的心情：心里暖暖的。','A warm heart on a rainy day!'),
- Q('看图写段：图片上，小朋友们在海边捡贝壳、堆沙堡，玩得不亦乐乎。哪一句最适合做开头？',['夏天，爸爸妈妈带我去海边玩，真是太开心了！','贝壳很漂亮。','沙堡堆得很高。','海边很好玩。'],0,'开头先说夏天、爸爸妈妈带我去海边玩。','Summer at the seaside — so much fun!'),
- Q('看图写段：图片上，爷爷在院子里种花，花儿开得五颜六色。哪一句最适合做开头？',['爷爷家的院子里种满了花，五颜六色，美丽极了。','花儿是红色的。','院子很大。','爷爷喜欢种花。'],0,'开头先说爷爷家的院子和五颜六色的花。','Grandpa\'s garden — flowers everywhere!'),
- Q('看图写段：图片上，小明第一次骑自行车，摔倒了又爬起来，终于学会了。哪一句最适合做结尾？',['小明高兴地说：“只要不放弃，就一定能成功！”','自行车有两个轮子。','小明摔倒了。','小明学会了骑车。'],0,'结尾要写出小明的感悟：只要不放弃，就一定能成功！','Never give up — you can do it!'),
- Q('看图写段：图片上，同学们在教室里认真地做手工，老师在旁边指导。哪一句最适合做开头？',['手工课上，同学们认真地做着手工，教室里安安静静的。','手工很有趣。','老师在指导。','同学们很认真。'],0,'开头先说手工课、同学们和安安静静的教室。','Craft class — quiet and focused!'),
- Q('看图写段：图片上，月亮像小船一样挂在天上，星星眨着眼睛。哪一句最适合做开头？',['夜空中，弯弯的月亮像一只小船，星星一闪一闪地眨着眼睛。','月亮是弯的。','星星很多。','夜空很美。'],0,'开头先说夜空、月亮和星星。','The moon like a boat in the night sky!'),
- Q('看图写段：图片上，小红在给花浇水，小花好像在对她微笑。哪一句最适合做结尾？',['小红看着盛开的花儿，心里比吃了蜜还甜。','花儿很美丽。','小红在浇水。','水壶是绿色的。'],0,'结尾要写出小红的心情：心里比吃了蜜还甜。','Sweeter than honey — happy heart!')]},
-{id:'chi-oral',img:'icons/topic-chi-oral.webp',sub:'chi',subName:'Chinese',icon:'🎤',name:'口试小达人',blurb:'Reading aloud, picture talk and conversation.',
+{id:'chi-composition',img:'icons/topic-chi-composition.webp',sub:'chi',subName:'Chinese',icon:'🎨',name:'看图写段',blurb:'Tell the story of the scene.',
+ quest:[Q('一只小白兔在草地上吃胡萝卜。哪一句最适合做这段话的开头？',['有一只可爱的小白兔。','胡萝卜很好吃。','草地是绿色的。','小白兔的耳朵很长。'],0,'开头先介绍主要人物：有一只可爱的小白兔。','A cute bunny to start the story!'),
+ Q('小明在公园里放风筝，风筝飞得高高的。哪一句最适合做开头？',['星期天，小明去公园放风筝。','风筝飞得很高。','公园里有很多人。','小明的风筝是红色的。'],0,'开头要说清楚时间、人物和事情：星期天，小明去公园放风筝。','Sunday in the park — kite time!'),
+ Q('妈妈在厨房做饭，香味飘满了整个屋子。哪一句最适合做开头？',['妈妈做的饭菜真香啊！','厨房里有锅和碗。','香味飘满了屋子。','妈妈在厨房做饭。'],3,'开头先说主要事情：妈妈在厨房做饭。','Mum is cooking — yum!'),
+ Q('下雨了，小红撑着一把红雨伞走在回家的路上。哪一句最适合做开头？',['下雨了。','小红的雨伞是红色的。','小红走在回家的路上。','雨下得很大。'],0,'开头先说天气和事情：下雨了。','Rain, rain — don\'t forget your umbrella!'),
+ Q('两个小朋友在沙滩上堆沙堡。哪一句最适合做开头？',['夏天，两个小朋友在沙滩上堆沙堡。','沙堡很高。','沙滩上有贝壳。','小朋友们很开心。'],0,'开头要说清楚时间、人物和事情：夏天，两个小朋友在沙滩上堆沙堡。','Summer at the beach — sandcastle time!')],
+ warm:[Q('一只小鸟站在枝头唱歌。哪一句最适合接在“早上，小鸟站在枝头上。”后面？',['它快乐地唱着歌，歌声真好听。','枝头是绿色的。','早上很早。','小鸟有翅膀。'],0,'',''),
+ Q('小狗在草地上追蝴蝶。哪一句最适合做这段话的结尾？',['小狗玩得真开心啊！','小狗有四条腿。','草地是绿色的。','蝴蝶飞走了。'],0,'',''),
+ Q('爷爷在院子里浇花。哪一句最适合做开头？',['爷爷每天早上都在院子里浇花。','花儿很美丽。','院子里有很多花。','爷爷年纪大了。'],0,'',''),
+ Q('小明把捡到的钱包还给失主。哪一句最适合做结尾？',['小明真是个拾金不昧的好孩子！','钱包里有钱。','失主很高兴。','小明在路上走。'],0,'',''),
+ Q('三个小朋友在操场上踢足球。哪一句最适合做开头？',['放学后，三个小朋友在操场上踢足球。','足球是圆的。','操场很大。','小朋友们穿着运动鞋。'],0,'',''),
+ Q('小猫在晒太阳，眯着眼睛，很舒服的样子。哪一句最适合做开头？',['一只小猫懒洋洋地躺在阳光下晒太阳。','小猫的眼睛眯着。','太阳很大。','小猫很舒服。'],0,'',''),
+ Q('妈妈给小明讲故事，小明听得津津有味。哪一句最适合接在“每天晚上，妈妈都给小明讲故事。”后面？',['小明听得津津有味，眼睛都不眨一下。','妈妈会讲故事。','晚上很安静。','小明要睡觉了。'],0,'',''),
+ Q('小朋友们在教室里认真地画画。哪一句最适合做结尾？',['大家的画都画得真好啊！','教室里有桌子。','小朋友们在画画。','画画课很有趣。'],0,'','')],
+ retry:[Q('小明在给小鸟喂食。哪一句最适合接在“小明养了一只小鸟。”后面？',['每天早上，他都给小鸟喂食，还和小鸟说话。','小鸟很可爱。','小明喜欢小鸟。','小鸟会唱歌。'],0,'这句话接在前面最自然，写出小明每天给小鸟喂食。','Feeding the bird every morning!'),
+ Q('同学们在操场上做早操。哪一句最适合做开头？',['每天早上，同学们都在操场上做早操。','操场很大。','同学们穿着校服。','早操很有用。'],0,'开头要说清楚时间、人物和事情：每天早上，同学们在操场上做早操。','Morning exercises — stretch and move!'),
+ Q('小红在给妈妈捶背，妈妈笑了。哪一句最适合做结尾？',['妈妈笑着说：“我的女儿真懂事！”','小红的手很小。','妈妈很累。','小红在捶背。'],0,'结尾要写出妈妈说的话，表达妈妈的开心。','Mum smiles — my daughter is so thoughtful!'),
+ Q('小明在河边钓鱼，钓到了一条大鱼。哪一句最适合做开头？',['星期天，小明去河边钓鱼。','鱼很大。','河边很安静。','小明很高兴。'],0,'开头要说清楚时间、人物和事情：星期天，小明去河边钓鱼。','Sunday fishing — what a catch!'),
+ Q('秋天，树叶飘落，铺满了小路。哪一句最适合做结尾？',['秋天的小路真美啊！','树叶是黄色的。','小路很长。','秋天到了。'],0,'结尾要赞美秋天的小路：秋天的小路真美啊！','Golden leaves on the path — beautiful autumn!'),
+ Q('小朋友们在公园里放风筝，笑声不断。哪一句最适合接在“公园里真热闹啊！”后面？',['小朋友们在放风筝，笑声一阵阵传来。','公园很大。','风筝飞得很高。','小朋友们很开心。'],0,'这句话接在前面最自然，写出小朋友们放风筝的样子。','Kites flying, laughter ringing!')],
+ p4quest:[Q('清晨，太阳升起来了，小鸟在枝头唱歌，小朋友们背着书包去上学。哪一句最适合做开头？',['清晨，太阳升起来了，新的一天开始了。','小鸟在唱歌。','小朋友们去上学。','太阳很红。'],0,'开头先说时间、太阳和新的一天开始了。','A new day begins with the sunrise!'),
+ Q('小明不小心打翻了墨水，他马上拿来抹布擦干净。哪一句最适合做结尾？',['从那以后，小明做事更加小心了。','墨水是黑色的。','桌子脏了。','小明拿来抹布。'],0,'结尾要写出小明的改变：从那以后，他做事更加小心了。','Careful from now on — lesson learned!'),
+ Q('雨后，彩虹挂在天边，小朋友们跑出家门看彩虹。哪一句最适合做开头？',['雨停了，一道美丽的彩虹挂在天边。','彩虹有七种颜色。','小朋友们跑出家门。','雨下得很大。'],0,'开头先说雨停了和天边的彩虹。','After the rain comes a rainbow!'),
+ Q('小红把自己的伞借给没带伞的同学，自己淋着雨回家。哪一句最适合做结尾？',['小红真是个乐于助人的好孩子，大家都很喜欢她。','雨下得很大。','同学没带伞。','小红淋着雨回家。'],0,'结尾要赞美小红：她是个乐于助人的好孩子。','Sharing her umbrella — kind girl!'),
+ Q('农民伯伯在烈日下收割稻谷，汗水湿透了衣服。哪一句最适合做开头？',['烈日当空，农民伯伯正在田里忙着收割稻谷。','稻谷是金黄的。','农民伯伯很辛苦。','太阳很大。'],0,'开头先说烈日和农民伯伯在收割。','Harvest under the hot sun!')],
+ p4warm:[Q('小明种的小树长大了，开出了美丽的花。哪一句最适合接在“去年春天，小明种下了一棵小树。”后面？',['他每天给小树浇水、施肥，小树一天天长大。','小树很小。','花儿很美丽。','小明很喜欢小树。'],0,'',''),
+ Q('夜晚，月亮升起来了，星星一闪一闪的。哪一句最适合做开头？',['夜幕降临，弯弯的月亮升起来了。','星星一闪一闪的。','夜晚很安静。','月亮很亮。'],0,'',''),
+ Q('小华在图书馆里认真地读书，忘记了时间。哪一句最适合做结尾？',['小华真是个爱读书的好孩子啊！','图书馆里很安静。','小华在读书。','书很好看。'],0,'',''),
+ Q('冬天，小朋友们在雪地里堆雪人、打雪仗。哪一句最适合做开头？',['冬天到了，雪花纷纷扬扬地飘下来，大地一片雪白。','雪人堆得很大。','小朋友们穿着棉衣。','雪地很白。'],0,'',''),
+ Q('小明和小刚一起抬着一桶水，给小树浇水。哪一句最适合做开头？',['植树节到了，小明和小刚一起给小树浇水。','水桶很重。','小树需要水。','他们抬着水桶。'],0,'',''),
+ Q('妈妈生病了，小红给妈妈倒水，还给妈妈盖被子。哪一句最适合做结尾？',['妈妈感动地说：“我的女儿长大了，懂得关心妈妈了。”','妈妈生病了。','小红倒了一杯水。','被子很暖和。'],0,'',''),
+ Q('小鸟在枝头唱歌，花儿在微风中点头。哪一句最适合做开头？',['春天来了，公园里一片生机勃勃的景象。','小鸟在唱歌。','花儿在点头。','微风吹过。'],0,'',''),
+ Q('小明把捡到的书包交给老师，老师夸他是个好孩子。哪一句最适合做结尾？',['老师笑着说：“小明，你真是个拾金不昧的好孩子！”','书包是黑色的。','小明捡到书包。','老师很高兴。'],0,'','')],
+ p4retry:[Q('小明和小刚在操场上踢足球，踢得满头大汗。哪一句最适合做开头？',['放学后，小明和小刚在操场上踢足球，玩得满头大汗。','足球是圆的。','操场很大。','他们踢得很开心。'],0,'开头要说清楚时间、人物和事情：放学后，小明和小刚在操场上踢足球。','After-school football — sweaty and happy!'),
+ Q('小鸟妈妈给小鸟喂食，小鸟张大了嘴巴。哪一句最适合做开头？',['鸟窝里，鸟妈妈正在给小鸟喂食，小鸟张大了嘴巴。','小鸟的嘴巴很大。','鸟妈妈很辛苦。','鸟窝在树上。'],0,'开头先说鸟窝里鸟妈妈给小鸟喂食。','Mummy bird feeding her babies!'),
+ Q('同学们在植树节种树，大家干得热火朝天。哪一句最适合做结尾？',['大家看着种好的小树，心里充满了希望。','小树很小。','同学们在种树。','植树节在春天。'],0,'结尾要写出大家的希望：心里充满了希望。','Little trees, big hopes!'),
+ Q('小明在书桌前认真地写作业，台灯亮亮的。哪一句最适合做开头？',['晚上，小明坐在书桌前，认真地写作业。','台灯很亮。','书桌上有书。','小明写字很认真。'],0,'开头先说晚上、小明和认真写作业。','Evening homework under the lamp!'),
+ Q('春雨过后，笋芽儿从土里钻出来，越长越高。哪一句最适合做结尾？',['笋芽儿越长越高，好像在说：“我要快快长大！”','春雨下得很大。','笋芽儿很小。','土里有笋芽儿。'],0,'结尾要写出笋芽儿的话：我要快快长大！','Grow fast, little bamboo shoot!'),
+ Q('小朋友们在操场上举行拔河比赛，大家齐心协力。哪一句最适合做开头？',['运动会上，一场激烈的拔河比赛开始了。','拔河很好玩。','操场上有很多人。','大家齐心协力。'],0,'开头先说运动会和拔河比赛开始了。','Tug-of-war — pull together!')],
+ p4fresh:[Q('秋天，果园里的苹果红了，梨黄了，果农们忙着摘果子。哪一句最适合做开头？',['秋天到了，果园里瓜果飘香，丰收的景象真美！','苹果是红色的。','梨是黄色的。','果农们在摘果子。'],0,'开头先说秋天、果园和丰收的景象。','Autumn in the orchard — a sweet harvest!'),
+ Q('小猫追着蝴蝶，在花丛中跑来跑去。哪一句最适合做开头？',['花园里，一只可爱的小猫追着蝴蝶跑来跑去。','蝴蝶飞得很快。','花丛很美丽。','小猫很调皮。'],0,'开头先说花园里的小猫在追蝴蝶。','A cat chasing butterflies in the garden!'),
+ Q('小明在给小鸟喂食，小鸟吃得津津有味。哪一句最适合接在“小明养了一只可爱的小鸟。”后面？',['每天早上，他都给小鸟喂食，小鸟吃得津津有味。','小鸟很可爱。','小明喜欢小鸟。','小鸟会唱歌。'],0,'这句话接在前面最自然，写出小明每天给小鸟喂食。','Feeding the bird every morning!'),
+ Q('下雨了，小明把伞借给小红，自己跑回家。哪一句最适合做结尾？',['小红望着小明远去的身影，心里暖暖的。','雨下得很大。','小明跑回家。','小红有伞了。'],0,'结尾要写出小红的心情：心里暖暖的。','A warm heart on a rainy day!'),
+ Q('小朋友们在海边捡贝壳、堆沙堡，玩得不亦乐乎。哪一句最适合做开头？',['夏天，爸爸妈妈带我去海边玩，真是太开心了！','贝壳很漂亮。','沙堡堆得很高。','海边很好玩。'],0,'开头先说夏天、爸爸妈妈带我去海边玩。','Summer at the seaside — so much fun!'),
+ Q('爷爷在院子里种花，花儿开得五颜六色。哪一句最适合做开头？',['爷爷家的院子里种满了花，五颜六色，美丽极了。','花儿是红色的。','院子很大。','爷爷喜欢种花。'],0,'开头先说爷爷家的院子和五颜六色的花。','Grandpa\'s garden — flowers everywhere!'),
+ Q('小明第一次骑自行车，摔倒了又爬起来，终于学会了。哪一句最适合做结尾？',['小明高兴地说：“只要不放弃，就一定能成功！”','自行车有两个轮子。','小明摔倒了。','小明学会了骑车。'],0,'结尾要写出小明的感悟：只要不放弃，就一定能成功！','Never give up — you can do it!'),
+ Q('同学们在教室里认真地做手工，老师在旁边指导。哪一句最适合做开头？',['手工课上，同学们认真地做着手工，教室里安安静静的。','手工很有趣。','老师在指导。','同学们很认真。'],0,'开头先说手工课、同学们和安安静静的教室。','Craft class — quiet and focused!'),
+ Q('月亮像小船一样挂在天上，星星眨着眼睛。哪一句最适合做开头？',['夜空中，弯弯的月亮像一只小船，星星一闪一闪地眨着眼睛。','月亮是弯的。','星星很多。','夜空很美。'],0,'开头先说夜空、月亮和星星。','The moon like a boat in the night sky!'),
+ Q('小红在给花浇水，小花好像在对她微笑。哪一句最适合做结尾？',['小红看着盛开的花儿，心里比吃了蜜还甜。','花儿很美丽。','小红在浇水。','水壶是绿色的。'],0,'结尾要写出小红的心情：心里比吃了蜜还甜。','Sweeter than honey — happy heart!')]},
+{id:'chi-oral',img:'icons/topic-chi-oral.webp',sub:'chi',subName:'Chinese',icon:'🎤',name:'口试小达人',blurb:'Reading aloud, scene talk and conversation.',
  quest:[Q('朗读时，“妈妈”的“妈”读第几声？',['第一声','第二声','第三声','第四声'],0,'“妈”读第一声 mā。','Mā ma — the first word babies say!'),
  Q('朗读时，“高兴”的“兴”读第几声？',['第一声','第二声','第三声','第四声'],3,'“高兴”的“兴”读第四声 xìng。','高兴 — say it with a smile!'),
- Q('看图说话：图片上，一只小猫在草地上玩球。第一句说什么最合适？',['图片上有一只小猫在草地上玩球。','球是圆的。','小猫很可爱。','草地是绿色的。'],0,'看图说话先说图片上有什么：有一只小猫在草地上玩球。','First, tell us what you see!'),
- Q('看图说话：图片上，小明在公园里放风筝。说完“图片上，小明在公园里放风筝”，接下来最适合说什么？',['风筝飞得高高的，小明笑得很开心。','公园很大。','风筝是红色的。','小明穿着红衣服。'],0,'说完图片内容，再说小明的样子和心情。','Then tell us more — how happy he is!'),
+ Q('一只小猫在草地上玩球。第一句说什么最合适？',['有一只小猫在草地上玩球。','球是圆的。','小猫很可爱。','草地是绿色的。'],0,'先说有什么：有一只小猫在草地上玩球。','First, tell us what you see!'),
+ Q('小明在公园里放风筝。说完“小明在公园里放风筝”，接下来最适合说什么？',['风筝飞得高高的，小明笑得很开心。','公园很大。','风筝是红色的。','小明穿着红衣服。'],0,'说完内容，再说小明的样子和心情。','Then tell us more — how happy he is!'),
  Q('老师问：“你叫什么名字？”最合适的回答是：',['我叫小明。','我不知道。','你是谁？','我不告诉你。'],0,'回答名字要说“我叫小明”，清楚又有礼貌。','My name is 小明 — nice to meet you!')],
  warm:[Q('朗读时，“小明”的“明”读第几声？',['第一声','第二声','第三声','第四声'],1,'',''),
  Q('朗读“我爱我的祖国”时，哪个词要读得重一些？',['爱','我','的','祖国'],0,'',''),
  Q('朗读时，“学校”的“校”读第几声？',['第一声','第二声','第三声','第四声'],3,'',''),
- Q('看图说话：图片上，妈妈在厨房做饭。应该先说什么？',['先说图片上有什么，再说他们在做什么。','先说自己的名字。','先说天气。','先说做饭很难。'],0,'',''),
- Q('看图说话：图片上，两个小朋友在沙滩上堆沙堡。哪一句说得最完整？',['两个小朋友在沙滩上开心地堆沙堡。','沙堡。','小朋友们。','沙滩上。'],0,'',''),
- Q('看图说话：图片上，下雨了，小红打着伞回家。哪一句说得最好？',['下雨了，小红打着一把红伞走在回家的路上。','小红回家。','雨伞是红色的。','下雨了，回家。'],0,'',''),
+ Q('妈妈在厨房做饭。应该先说什么？',['先说有什么，再说他们在做什么。','先说自己的名字。','先说天气。','先说做饭很难。'],0,'',''),
+ Q('两个小朋友在沙滩上堆沙堡。哪一句说得最完整？',['两个小朋友在沙滩上开心地堆沙堡。','沙堡。','小朋友们。','沙滩上。'],0,'',''),
+ Q('下雨了，小红打着伞回家。哪一句说得最好？',['下雨了，小红打着一把红伞走在回家的路上。','小红回家。','雨伞是红色的。','下雨了，回家。'],0,'',''),
  Q('同学说：“谢谢你帮我捡铅笔。”你应该说：',['不用谢。','这是我的铅笔。','你真笨。','走开。'],0,'',''),
  Q('妈妈问：“你今天在学校过得怎么样？”最合适的回答是：',['今天过得很好，我学了很多新知识。','不知道。','我不想说。','学校。'],0,'','')],
  retry:[Q('朗读时，“太阳”的“阳”读第几声？',['第一声','第二声','第三声','第四声'],1,'“阳”读第二声 yáng。','太阳 — yáng, second tone, warm and bright!'),
  Q('朗读时，遇到“？” （问号）应该怎么读？',['语调上扬，像在问问题','语调下降','不停顿','读得很快'],0,'读到问号，语调要往上扬，像在问问题。','Question mark — voice goes up!'),
- Q('看图说话：图片上，三个小朋友在操场上踢足球。说完图片上的内容，最后可以说什么？',['小朋友们玩得真开心啊！','足球是圆的。','操场很大。','小朋友们穿着鞋。'],0,'说完图片内容，最后可以说出自己的感受。','End with how you feel!'),
- Q('看图说话：图片上，小明把钱包还给失主。哪一句说得最好？',['小明捡到钱包后，马上把钱包还给了失主。','小明捡到钱包。','失主很高兴。','钱包里有钱。'],0,'“小明捡到钱包后，马上把钱包还给了失主”说得最好。','An honest boy — tell his story well!'),
+ Q('三个小朋友在操场上踢足球。说完内容，最后可以说什么？',['小朋友们玩得真开心啊！','足球是圆的。','操场很大。','小朋友们穿着鞋。'],0,'说完内容，最后可以说出自己的感受。','End with how you feel!'),
+ Q('小明把钱包还给失主。哪一句说得最好？',['小明捡到钱包后，马上把钱包还给了失主。','小明捡到钱包。','失主很高兴。','钱包里有钱。'],0,'“小明捡到钱包后，马上把钱包还给了失主”说得最好。','An honest boy — tell his story well!'),
  Q('同学问：“你能借我一支笔吗？”你应该怎么回答？',['当然可以，给你。','不行。','你自己没有吗？','走开。'],0,'同学借笔，要大方地说“当然可以，给你”。','Sharing is caring!'),
  Q('早上见到老师，你应该说什么？',['老师，早上好！','老师，你来了。','老师，再见。','老师，我走了。'],0,'早上见到老师，要说“老师，早上好！”','Good morning, teacher!')],
  p4quest:[Q('朗读“一个苹果”时，“一”读第几声？',['第一声','第二声','第三声','第四声'],1,'“一”在第四声“个”前面读第二声 yí。','一会变声，真调皮！'),
  Q('朗读“一天”时，“一”读第几声？',['第一声','第二声','第三声','第四声'],3,'“一”在第一声“天”前面读第四声 yì。','一天 — yì, fourth tone!'),
- Q('看图说话：图片上，秋天，果园里瓜果飘香，果农们忙着摘果子。第一句说什么最合适？',['秋天到了，果园里瓜果飘香，丰收的景象真美！','苹果是红色的。','果农们在摘果子。','秋天很凉爽。'],0,'看图说话先说时间、地点和丰收的景象。','Autumn harvest — start with the season!'),
- Q('看图说话：图片上，小明第一次骑自行车，摔倒了又爬起来。哪一句说得最好？',['小明第一次学骑自行车，虽然摔倒了，但是他没有放弃，又爬起来继续练习。','小明摔倒了。','自行车有两个轮子。','小明学骑车。'],0,'这句话最完整，写出了小明摔倒了也不放弃。','Fall down, get up — keep going!'),
+ Q('秋天，果园里瓜果飘香，果农们忙着摘果子。第一句说什么最合适？',['秋天到了，果园里瓜果飘香，丰收的景象真美！','苹果是红色的。','果农们在摘果子。','秋天很凉爽。'],0,'先说时间、地点和丰收的景象。','Autumn harvest — start with the season!'),
+ Q('小明第一次骑自行车，摔倒了又爬起来。哪一句说得最好？',['小明第一次学骑自行车，虽然摔倒了，但是他没有放弃，又爬起来继续练习。','小明摔倒了。','自行车有两个轮子。','小明学骑车。'],0,'这句话最完整，写出了小明摔倒了也不放弃。','Fall down, get up — keep going!'),
  Q('老师问：“你为什么迟到了？”你应该怎么回答？',['对不起，老师，我今天起晚了，以后我会早点起床。','我不知道。','路上堵车。','我不想说。'],0,'迟到了要先说“对不起”，说出原因，并保证以后早起。','Sorry I\'m late — I\'ll be early tomorrow!')],
  p4warm:[Q('朗读“不是”时，“不”读第几声？',['第一声','第二声','第三声','第四声'],1,'',''),
  Q('朗读“不好”时，“不”读第几声？',['第一声','第二声','第三声','第四声'],3,'',''),
  Q('朗读“一起”时，“一”读第几声？',['第一声','第二声','第三声','第四声'],3,'',''),
- Q('看图说话：图片上，雨后，彩虹挂在天边，小朋友们跑出家门。说完“雨停了，一道彩虹挂在天边”，接下来最适合说什么？',['小朋友们高兴地跑出家门，抬头看着美丽的彩虹。','彩虹有七种颜色。','雨下得很大。','小朋友们回家了。'],0,'',''),
- Q('看图说话：图片上，同学们在植树节种树，大家干得热火朝天。应该按照什么顺序说？',['先说时间、地点，再说人物在做什么，最后说自己的感受。','先说自己的感受。','随便说，想说什么就说什么。','先说树的名字。'],0,'',''),
- Q('看图说话：图片上，小红把伞借给同学，自己淋着雨回家。哪一句说得最完整？',['下雨了，小红把自己的伞借给没带伞的同学，自己淋着雨回家。','小红借伞给同学。','雨下得很大。','同学没带伞。'],0,'',''),
+ Q('雨后，彩虹挂在天边，小朋友们跑出家门。说完“雨停了，一道彩虹挂在天边”，接下来最适合说什么？',['小朋友们高兴地跑出家门，抬头看着美丽的彩虹。','彩虹有七种颜色。','雨下得很大。','小朋友们回家了。'],0,'',''),
+ Q('同学们在植树节种树，大家干得热火朝天。应该按照什么顺序说？',['先说时间、地点，再说人物在做什么，最后说自己的感受。','先说自己的感受。','随便说，想说什么就说什么。','先说树的名字。'],0,'',''),
+ Q('小红把伞借给同学，自己淋着雨回家。哪一句说得最完整？',['下雨了，小红把自己的伞借给没带伞的同学，自己淋着雨回家。','小红借伞给同学。','雨下得很大。','同学没带伞。'],0,'',''),
  Q('同学不小心把你的书弄湿了，他向你道歉。你应该说：',['没关系，下次小心一点就好了。','你赔我的书！','我再也不理你了。','你真讨厌。'],0,'',''),
  Q('妈妈问：“你长大了想做什么？”最合适的回答是：',['我想当一名老师，因为我想帮助更多的小朋友学习。','不知道。','我想玩游戏。','我不想长大。'],0,'','')],
  p4retry:[Q('朗读“我们一定要好好学习！”时，哪个词要读得重一些？',['一定','我们','要','学习'],0,'朗读时要重读“一定”，读出决心。','一定 — read it with determination!'),
  Q('朗读时，遇到“ ” （引号）里面的话，应该怎么读？',['像那个人说话一样读','读得很轻','跳过去不读','读得很快'],0,'引号里面的话要像那个人说话一样读。','Read the words as if you are that person!'),
- Q('看图说话：图片上，小朋友们在操场上举行拔河比赛。第一句说什么最合适？',['运动会上，一场激烈的拔河比赛开始了。','拔河很好玩。','操场上有很多人。','大家齐心协力。'],0,'看图说话先说运动会和拔河比赛开始了。','Start with the big event!'),
- Q('看图说话：图片上，小狗和小猫一起玩球，玩得真开心。哪一句说得最生动？',['小狗和小猫在草地上玩球，你追我赶，玩得真开心。','小狗和小猫在玩球。','球是圆的。','草地是绿色的。'],0,'这句话最生动，写出了小狗和小猫玩的样子。','Chasing and playing — so much fun!'),
+ Q('小朋友们在操场上举行拔河比赛。第一句说什么最合适？',['运动会上，一场激烈的拔河比赛开始了。','拔河很好玩。','操场上有很多人。','大家齐心协力。'],0,'先说运动会和拔河比赛开始了。','Start with the big event!'),
+ Q('小狗和小猫一起玩球，玩得真开心。哪一句说得最生动？',['小狗和小猫在草地上玩球，你追我赶，玩得真开心。','小狗和小猫在玩球。','球是圆的。','草地是绿色的。'],0,'这句话最生动，写出了小狗和小猫玩的样子。','Chasing and playing — so much fun!'),
  Q('你看到一位老奶奶提着很重的东西，你想帮助她。你应该说什么？',['奶奶，我来帮您提吧。','奶奶，你的东西很重。','奶奶，你自己提吧。','奶奶，你走得真慢。'],0,'想帮助别人，要主动说“我来帮您”。','Let me help you, Grandma!'),
  Q('老师夸你的作文写得很好，你应该说什么？',['谢谢老师，我会继续努力的。','那当然，我最厉害了。','老师，你真有眼光。','这没什么。'],0,'被夸奖了，要说“谢谢老师，我会继续努力的”。','Thank you, teacher — I\'ll keep trying!')],
  p4fresh:[Q('朗读“小鸟唱歌，唱得真好听”时，哪个词要读得重一些？',['真好听','小鸟','唱歌','唱得'],0,'朗读时要重读“真好听”，读出赞美的语气。','Read the praise loud and clear!'),
  Q('朗读时，遇到“……” （省略号）应该怎么做？',['停顿较长，表示话还没有说完','读得很快','不停顿','跳过去不读'],0,'读到省略号要停顿较长，表示话还没有说完。','Dot dot dot — the story goes on!'),
  Q('朗读“妈妈，您辛苦了！”时，应该用什么语气？',['感激、亲切的语气','生气的语气','害怕的语气','冷淡的语气'],0,'对妈妈说话要用感激、亲切的语气。','Thank you, Mum — read it with love!'),
  Q('朗读时，“兴奋”的“兴”读第几声？',['第一声','第二声','第三声','第四声'],0,'“兴奋”的“兴”读第一声 xīng，和“高兴”的“兴”读音不一样。','同一个字，不同的音——中文真有趣！'),
- Q('看图说话：图片上，夜晚，月亮升起来了，星星一闪一闪的。哪一句说得最生动？',['夜空中，弯弯的月亮升起来了，星星一闪一闪地眨着眼睛。','月亮升起来了。','星星很多。','夜晚很黑。'],0,'这句话最生动，写出了月亮和星星的样子。','The moon and stars — a lively picture!'),
- Q('看图说话：图片上，小明在图书馆里认真地读书，忘记了时间。下面哪一句应该最后说？',['小明真是个爱读书的好孩子啊！','小明在图书馆读书。','图书馆里很安静。','小明忘了时间。'],0,'看图说话最后可以说出自己的感受或赞美。','End with a happy thought!'),
- Q('看图说话：图片上，妈妈生病了，小红给妈妈倒水、盖被子。哪一句说得最好？',['妈妈生病了，小红细心地照顾妈妈，给她倒水，还给她盖上被子。','妈妈生病了。','小红倒水。','被子很暖和。'],0,'“妈妈生病了，小红细心地照顾妈妈”说得最好。','A caring daughter — tell it well!'),
+ Q('夜晚，月亮升起来了，星星一闪一闪的。哪一句说得最生动？',['夜空中，弯弯的月亮升起来了，星星一闪一闪地眨着眼睛。','月亮升起来了。','星星很多。','夜晚很黑。'],0,'这句话最生动，写出了月亮和星星的样子。','The moon and stars — a lively picture!'),
+ Q('小明在图书馆里认真地读书，忘记了时间。下面哪一句应该最后说？',['小明真是个爱读书的好孩子啊！','小明在图书馆读书。','图书馆里很安静。','小明忘了时间。'],0,'最后可以说出自己的感受或赞美。','End with a happy thought!'),
+ Q('妈妈生病了，小红给妈妈倒水、盖被子。哪一句说得最好？',['妈妈生病了，小红细心地照顾妈妈，给她倒水，还给她盖上被子。','妈妈生病了。','小红倒水。','被子很暖和。'],0,'“妈妈生病了，小红细心地照顾妈妈”说得最好。','A caring daughter — tell it well!'),
  Q('小明想请小红帮忙，但是小红很忙。小明应该怎么说？',['小红，你现在忙吗？如果你有空，能帮我一个忙吗？','你必须帮我！','你不帮我，我就不理你了。','快帮我！'],0,'请别人帮忙要先问对方忙不忙，要有礼貌。','Polite asking gets a happy yes!'),
  Q('你在图书馆里，说话声音太大了，管理员提醒你。你应该说：',['对不起，我会小声一点。','我说话不大声。','你管得着吗？','我不说话了。'],0,'被提醒了，要马上说“对不起”，并小声说话。','Sorry — I\'ll whisper!'),
  Q('同学邀请你去他家玩，但是你今天要去上兴趣班。你应该怎么说？',['谢谢你的邀请，但是我今天要去上兴趣班，我们改天再约吧。','不去！','我不想去你家。','你自己去玩吧。'],0,'不能去也要谢谢邀请，说出原因，并约好下次。','Thank you — let\'s meet another day!')]}];
@@ -2575,13 +2604,13 @@ FRESH_BANK['eng-visual']=[Q('Read this poster:\n\n🐶 PET ADOPTION DAY!\nMeet o
 FRESH_BANK['sci-classification']=[Q('Which of these plants makes flowers?',['Hibiscus','Fern','Moss','Mushroom'],0,'Hibiscus makes flowers. Ferns and mosses do not, and a mushroom is not a plant.','Hibiscus flowers are big and bright!'),Q('Ferns make new plants using…',['spores','seeds','flowers','fruits'],0,'Ferns do not make seeds. They make tiny spores.','Spores are so tiny they float away on the wind!'),Q('Why is a mushroom NOT a plant?',['It cannot make its own food','It grows in soil','It has a stem','It is brown'],0,'Plants make their own food using sunlight. Mushrooms cannot, so they are fungi.','Mushrooms feed on dead leaves — nature\'s recyclers!'),Q('Which of these can bacteria do?',['Help make yoghurt','Make food from sunlight','Grow flowers','Swim like fish'],0,'Some bacteria are useful — they help turn milk into yoghurt.','Tiny bacteria, big job in your yoghurt!'),Q('Which animal is a reptile?',['Crocodile','Frog','Bat','Penguin'],0,'A crocodile has scales and lays eggs on land, so it is a reptile.','Crocodiles have been around since dinosaur days!'),Q('Which group do whales belong to?',['Mammals','Fish','Reptiles','Amphibians'],0,'Whales give birth to live young and feed them milk, so they are mammals.','Whales are mammals that never leave the water!'),Q('A spider has eight legs and two body parts. Is it an insect?',['No, it is not an insect','Yes, it is an insect','Yes, it is a mammal','No, it is a plant'],0,'Insects have six legs and three body parts. A spider has eight legs, so it is not an insect.','Spiders are arachnids — eight-legged wonders!'),Q('Which of these has three body parts and six legs?',['Ant','Snail','Crab','Spider'],0,'An ant has a head, a thorax and an abdomen, and six legs. It is an insect.','Ants can lift things 50 times their own weight!'),Q('Tom groups sea animals by \'Has fins\' and \'Has no fins\'. A shark goes into…',['Has fins','Has no fins','Can fly','Lives on land'],0,'Sharks have fins, so they belong in the \'Has fins\' group.','Sharks have been swimming for millions of years!'),Q('Which headings best sort a bat, a bird and a fish?',['Has fur / Has feathers / Has scales','Can fly / Cannot fly','Big / Small','Lives in water / Lives on land'],0,'Fur, feathers and scales are body coverings that put each animal in its own group.','Fur, feathers, scales — each animal wears its own coat!')];
 FRESH_BANK['sci-materials']=[Q('Which of these is NOT a material?',['Sunlight','Metal','Glass','Fabric'],0,'Sunlight is not a material. Metal, glass and fabric are materials used to make things.','You can\'t build a chair out of sunlight!'),Q('A chair can be made of wood, metal or plastic. What do we call wood, metal and plastic?',['Materials','Tools','Machines','Liquids'],0,'Things we use to make objects are called materials.','Materials are the ingredients of everything!'),Q('Why are bridges made of steel and not paper?',['Steel is strong and paper is weak','Steel is colourful','Paper is waterproof','Steel is light'],0,'Steel is strong enough to hold heavy loads. Paper would tear.','Paper bridges would be a soggy disaster!'),Q('A fishing rod must bend without breaking. Which property does it need?',['Flexibility','Transparency','Absorbency','Hardness'],0,'A fishing rod must bend, so it needs to be flexible.','Bendy rods catch big fish!'),Q('Which pair of materials is waterproof?',['Plastic and rubber','Paper and cloth','Wood and paper','Cotton and tissue'],0,'Plastic and rubber do not let water through.','Rubber ducks love the rain!'),Q('A towel dries your hands because it is…',['absorbent','waterproof','transparent','strong'],0,'An absorbent towel soaks up water from your hands.','Towels drink up water like thirsty sponges!'),Q('Which material is opaque — you cannot see through it at all?',['Wood','Clear glass','Clean water','Plastic wrap'],0,'Wood does not let light through, so it is opaque.','Wood keeps secrets — no peeking through!'),Q('A wooden boat floats, but a metal boat can float too. What helps the metal boat float?',['Its shape traps air inside','The metal is light','The water pushes it up only','Metal floats by itself'],0,'A metal boat\'s shape traps air, making it light enough for its size to float.','Big ships float — clever shapes beat heavy metal!'),Q('A farmer needs a bucket that will not break when dropped and will not let water out. Which material is best?',['Strong plastic','Paper','Glass','Cloth'],0,'Strong plastic is tough and waterproof, so it is best for a bucket.','Plastic buckets are farm heroes!'),Q('Mei tests which paper towel is most absorbent. She pours the same amount of water on each towel and waits one minute. Why does she wait the same time for each?',['So the test is fair','So the towels dry out','So the water gets cold','So the towels change colour'],0,'Keeping the time the same makes the test fair — only the towel type changes.','Same time, same water — fair and square!')];
 FRESH_BANK['chi-char']=[Q('请你认___听老师讲课。',['直','具','真','且'],2,'认真 means serious and focused — 真 is the real, true one.','认真听讲，知识跑进脑子里！'),Q('我___在家里看书。',['在','再','载','栽'],0,'在 means at / in a place — 我在家里，我在家。','我在家里看书，真舒服！'),Q('小丽___了三遍，才把这篇课文背下来。',['渎','读','犊','续'],1,'读 means to read aloud — 读 has 言 (words) on the left.','读三遍，背得牢牢的！'),Q('中秋节的晚上，月亮又大又___。',['园','元','原','圆'],3,'又大又圆 — 圆 means round, with 囗 (an enclosure) around 员。','月亮圆圆，像一个月饼！'),Q('我们要爱护___园里的花草树木。',['较','校','咬','胶'],1,'校园 means the school grounds — 校 has 木 (wood) on the left.','校园里的花草真美！'),Q('小明___跑步比赛得了第一名。',['常','张','长','帐'],2,'长跑 means long-distance running — 长 means long.','长跑第一名，真厉害！'),Q('妈妈给弟弟买了一___新书包。',['个','各','哥','歌'],0,'一个书包 — 个 is the measure word for one thing.','新书包，真漂亮！'),Q('妹妹有一双水汪汪的大___睛。',['跟','恨','很','眼'],3,'眼睛 means eyes — 眼 has 目 (eye) on the left.','大眼睛，亮晶晶！'),Q('小鸟___在枝头唱歌。',['占','站','点','战'],1,'站在枝头 — 站 means to stand, with 立 (stand) on top.','小鸟站在枝头唱歌！'),Q('我们每天都要___时到校，不能迟到。',['安','岸','按','案'],2,'按时 means on time — 按 means according to.','按时到校，好孩子！')];
-FRESH_BANK['chi-picword']=[Q('图上画着小明把地上的纸屑捡起来，扔进垃圾桶。哪个词语最合适？',['乱扔垃圾','爱护环境','大声说话','浪费时间'],1,'爱护环境 means to care for our surroundings — 小明 keeps the place clean!','爱护环境，人人有责！'),Q('图上画着一群小鸭子跟着鸭妈妈，排成一行走路。哪个词语最合适？',['排队行走','东倒西歪','横冲直撞','各自乱跑'],0,'排队行走 means to walk in a line — the ducklings follow mum one by one!','小鸭子排队走，真可爱！'),Q('图上画着小华跌倒了，小明伸出手把他扶起来。哪个词语最合适？',['互相争吵','互不理睬','互相帮助','互相嘲笑'],2,'互相帮助 means to help each other — 小明 helps 小华 up!','好朋友，互相帮助！'),Q('图上画着夜晚的天空挂着一个又大又圆的东西，亮亮的。哪个词语最合适？',['太阳很大','星星很多','乌云很多','月亮很圆'],3,'月亮很圆 means the moon is round and big — that bright round thing is the moon!','月亮圆圆，像一个月饼！'),Q('图上画着小朋友们在操场上跑步，一个比一个快。哪个词语最合适？',['你追我赶','慢慢吞吞','东张西望','垂头丧气'],0,'你追我赶 means chasing each other to be first — they are racing!','跑步比赛，加油加油！'),Q('图上画着一棵小树苗，旁边放着水壶和铲子。哪个词语最合适？',['砍树','摘果','种树','赏花'],2,'种树 means to plant a tree — there is a young tree, a watering can and a spade!','小树苗，快快长大！'),Q('图上画着小红把自己的铅笔借给了同桌。哪个词语最合适？',['自私自利','乐于助人','斤斤计较','袖手旁观'],1,'乐于助人 means glad to help others — 小红 shares her pencil!','帮助别人，自己也开心！'),Q('图上画着冬天到了，小朋友们穿着厚厚的衣服，在雪地里做了一个白白胖胖的东西。哪个词语最合适？',['游泳','种花','放风筝','堆雪人'],3,'堆雪人 means to build a snowman — the white fat thing is a snowman!','雪人雪人，圆圆胖胖！'),Q('图上画着小鸟妈妈叼着一条小虫子，送到张着嘴的小鸟嘴边。哪个词语最合适？',['洗澡','睡觉','喂食','飞翔'],2,'喂食 means to feed — mum bird is giving the baby bird a worm!','小鸟吃得香香的！'),Q('图上画着小朋友们坐在座位上，一动不动地听老师讲故事。哪个词语最合适？',['安静听讲','大声喧哗','跑来跑去','交头接耳'],0,'安静听讲 means to listen quietly — they are sitting still, listening to the story!','安静听讲，故事真好听！')];
+FRESH_BANK['chi-picword']=[Q('小明把地上的纸屑捡起来，扔进垃圾桶。哪个词语最合适？',['乱扔垃圾','爱护环境','大声说话','浪费时间'],1,'爱护环境 means to care for our surroundings — 小明 keeps the place clean!','爱护环境，人人有责！'),Q('一群小鸭子跟着鸭妈妈，排成一行走路。哪个词语最合适？',['排队行走','东倒西歪','横冲直撞','各自乱跑'],0,'排队行走 means to walk in a line — the ducklings follow mum one by one!','小鸭子排队走，真可爱！'),Q('小华跌倒了，小明伸出手把他扶起来。哪个词语最合适？',['互相争吵','互不理睬','互相帮助','互相嘲笑'],2,'互相帮助 means to help each other — 小明 helps 小华 up!','好朋友，互相帮助！'),Q('夜晚的天空挂着一个又大又圆的东西，亮亮的。哪个词语最合适？',['太阳很大','星星很多','乌云很多','月亮很圆'],3,'月亮很圆 means the moon is round and big — that bright round thing is the moon!','月亮圆圆，像一个月饼！'),Q('小朋友们在操场上跑步，一个比一个快。哪个词语最合适？',['你追我赶','慢慢吞吞','东张西望','垂头丧气'],0,'你追我赶 means chasing each other to be first — they are racing!','跑步比赛，加油加油！'),Q('一棵小树苗，旁边放着水壶和铲子。哪个词语最合适？',['砍树','摘果','种树','赏花'],2,'种树 means to plant a tree — there is a young tree, a watering can and a spade!','小树苗，快快长大！'),Q('小红把自己的铅笔借给了同桌。哪个词语最合适？',['自私自利','乐于助人','斤斤计较','袖手旁观'],1,'乐于助人 means glad to help others — 小红 shares her pencil!','帮助别人，自己也开心！'),Q('冬天到了，小朋友们穿着厚厚的衣服，在雪地里做了一个白白胖胖的东西。哪个词语最合适？',['游泳','种花','放风筝','堆雪人'],3,'堆雪人 means to build a snowman — the white fat thing is a snowman!','雪人雪人，圆圆胖胖！'),Q('小鸟妈妈叼着一条小虫子，送到张着嘴的小鸟嘴边。哪个词语最合适？',['洗澡','睡觉','喂食','飞翔'],2,'喂食 means to feed — mum bird is giving the baby bird a worm!','小鸟吃得香香的！'),Q('小朋友们坐在座位上，一动不动地听老师讲故事。哪个词语最合适？',['安静听讲','大声喧哗','跑来跑去','交头接耳'],0,'安静听讲 means to listen quietly — they are sitting still, listening to the story!','安静听讲，故事真好听！')];
 FRESH_BANK['chi-collocation']=[Q('一___车',['辆','只','条','本'],0,'一辆车 — 辆 is the measure word for cars.','小汽车，嘟嘟嘟！'),Q('一___鞋',['只','双','条','本'],1,'一双鞋 — 双 is for a pair, like two shoes.','一双新鞋，真好看！'),Q('___歌',['唱','做','打','踢'],0,'唱歌 means to sing — 唱 goes with 歌.','唱歌唱歌，真好听！'),Q('___画',['唱','画','打','踢'],1,'画画 means to draw — 画 goes with 画.','画画画画，真有趣！'),Q('___水',['喝','吃','看','打'],0,'喝水 means to drink water — 喝 goes with 水.','喝水喝水，身体棒棒！'),Q('___饭',['喝','吃','看','打'],1,'吃饭 means to eat a meal — 吃 goes with 饭.','吃饭吃饭，香喷喷！'),Q('干净的___',['声音','味道','衣服','时间'],2,'干净的衣服 — 干净 describes clean things like clothes.','干净的衣服，穿着舒服！'),Q('温暖的___',['阳光','声音','味道','时间'],0,'温暖的阳光 — 温暖 describes warm things like sunshine.','温暖的阳光，照在身上真舒服！'),Q('轻轻地___',['扔掉','放下','砸碎','猛推'],1,'轻轻地放下 — 放下 goes gently with 轻轻地.','轻轻地放下，别弄出声音！'),Q('___教室',['打扫','弄脏','破坏','涂画'],0,'打扫教室 means to clean the classroom — 打扫 goes with 教室.','打扫教室，干干净净！')];
 FRESH_BANK['chi-sequencing']=[Q('把下面的句子排成一段通顺的话：①小明把画贴在墙上。②小明画了一幅美丽的画。③大家都夸小明画得好。',['①②③','②①③','③①②','③②①'],1,'先画画（②），再贴在墙上（①），最后大家夸他（③）。','画得真漂亮！'),Q('把下面的句子排成一段通顺的话：①小鸟妈妈飞回来了。②小鸟张开嘴巴，等着吃虫子。③小鸟妈妈把虫子喂给小鸟。',['②③①','③②①','①②③','①③②'],2,'先妈妈飞回来（①），再小鸟张开嘴（②），最后妈妈喂虫子（③）。','小鸟吃得香香的！'),Q('把下面的句子排成一段通顺的话：①雨停了，太阳出来了。②天边出现了一道彩虹。③小朋友们跑出家门看彩虹。',['①②③','②①③','③①②','③②①'],0,'先雨停出太阳（①），再出现彩虹（②），最后小朋友们跑出来看（③）。','彩虹出来了，快来看！'),Q('把下面的句子排成一段通顺的话：①小花把花插进花瓶里。②花瓶里的花真漂亮。③小花从花园里摘了几朵花。',['①②③','②③①','③②①','③①②'],3,'先摘花（③），再插进花瓶（①），最后花真漂亮（②）。','花儿真美！'),Q('把下面的句子排成一段通顺的话：①小明把球踢进了球门。②小明和小伙伴们在踢足球。③大家高兴地欢呼起来。',['①②③','②①③','③②①','②③①'],1,'先踢足球（②），再把球踢进门（①），最后大家欢呼（③）。','进球啦！大家欢呼！'),Q('把下面的句子排成一段通顺的话：①秋天到了，树叶变黄了。②一阵风吹来，树叶落了下来。③地上铺满了金黄的叶子。',['①②③','②①③','③②①','①③②'],0,'先树叶变黄（①），再风吹落叶（②），最后地上铺满叶子（③）。','秋天真美，金黄金黄！'),Q('把下面的句子排成一段通顺的话：①小红把牛奶倒进杯子里。②小红喝了一口牛奶。③妈妈把牛奶递给小红。',['①②③','②③①','③①②','③②①'],2,'先妈妈递牛奶（③），再倒进杯子（①），最后喝一口（②）。','牛奶真好喝！'),Q('把下面的句子排成一段通顺的话：①小明把风筝放上了天。②小明拿着风筝来到草地上。③风筝在天上飞得高高的。',['①②③','③②①','②③①','②①③'],3,'先来到草地（②），再放上风筝（①），最后风筝飞得高高的（③）。','风筝飞上天，真高！'),Q('把下面的句子排成一段通顺的话：①小华把作业交给了老师。②小华认真地做完了作业。③老师夸小华的字写得很漂亮。',['①②③','②①③','③②①','②③①'],1,'先做完作业（②），再交给老师（①），最后老师夸他（③）。','字写得真漂亮！'),Q('把下面的句子排成一段通顺的话：①小朋友们排好队。②老师带着小朋友们走进教室。③小朋友们坐到座位上。',['①②③','②①③','③②①','①③②'],0,'先排好队（①），再走进教室（②），最后坐到座位上（③）。','排队整齐，真棒！')];
 FRESH_BANK['chi-sentence']=[Q('我读书。Which sentence adds the most detail?',['我读书。','我坐在书桌前认真地读一本有趣的故事书。','我读读书。','书桌前的我。'],1,'加上在哪里、怎么样读、读什么书，句子就详细了。','A good sentence tells us more!'),Q('太阳升起来了。Expand it:',['太阳升起来了升起来了。','太阳。','早上，红红的太阳从东方慢慢地升起来了。','升起来的太阳。'],2,'加上时间、颜色、方向和快慢，句子更生动了。','The sun rises slowly — and so does a good sentence!'),Q('小猫睡觉。Choose the best expansion:',['小猫在软软的垫子上睡得香香的。','小猫睡觉睡觉。','小猫睡。','睡觉的小猫。'],0,'加上在哪里睡、睡得怎么样，句子就完整了。','Sleep tight, little cat — and write tight too!'),Q('小朋友们在操场上玩。Expand with WHAT they play:',['小朋友们在操场上玩滑梯、荡秋千和捉迷藏，玩得真开心。','小朋友们玩玩玩。','操场上的小朋友们。','小朋友们玩。'],0,'写出玩什么、玩得怎么样，句子就丰富了。','Slides, swings and hide-and-seek — what a day!'),Q('仿照句子“我爱爸爸，我爱妈妈”，选出写法一样的句子。',['我爱老师，我爱同学。','爸爸妈妈爱我。','我爱我的家。','老师爱我们。'],0,'两个小句子结构一样，都说“我爱……”。','Love repeats — and so does a good pattern!'),Q('仿照句子“小明跑得快，小红跑得慢”，选出写法一样的句子。',['小狗走得快，小猫走得慢。','小明跑步很快。','小红跑得不快。','快跑的小明。'],0,'两个小句子都用“……得快，……得慢”，一快一慢相对。','Fast and slow — a perfect pair!'),Q('仿照句子“天黑了，星星出来了”，选出写法一样的句子。',['天亮了，太阳出来了。','星星在天上。','天黑了很可怕。','我看到星星。'],0,'两个小句子都写时间变了、东西出来了。','Night falls, stars appear — morning too!'),Q('“下雨了。我们不能出去玩。”合成一句：',['因为下雨了，所以我们不能出去玩。','下雨了我们不能出去玩。','我们不能出去玩下雨了。','下雨不能玩我们。'],0,'用“因为……所以……”把原因和结果连起来。','Because it rains, so we stay in — cause and effect!'),Q('“妈妈在做饭。爸爸在看报纸。”合成一句：',['妈妈在做饭，爸爸在看报纸。','妈妈做饭爸爸看报纸。','做饭看报纸妈妈爸爸。','妈妈爸爸做饭看报纸。'],0,'用逗号把两个人的动作连成一句话。','Mum cooks, Dad reads — one sentence, two people!'),Q('“小狗很可爱。小狗很听话。”合成一句：',['小狗很可爱，也很听话。','小狗可爱听话很。','可爱听话小狗。','小狗的听话可爱。'],0,'用“也”把两个特点连起来，句子更通顺。','Cute AND well-behaved — what a good dog!')];
 FRESH_BANK['chi-reading']=[Q('秋天，树叶变黄了。一片片黄叶从树上飘下来，像一只只黄蝴蝶。地上铺满了金黄的树叶。Question: 树叶像什么？',['黄蝴蝶','小鸟','白云','雪花'],0,'短文说：树叶像一只只黄蝴蝶。','Leaves like butterflies — autumn magic!'),Q('小明生病了，不能去上学。他躺在床上，妈妈给他倒了一杯温水。妈妈说：“你要多喝水，好好休息。”Question: 妈妈让小明做什么？',['多喝水，好好休息','去上学','出去玩','看电视'],0,'短文说：妈妈说“你要多喝水，好好休息。”','Drink water, rest well — Mum knows best!'),Q('星期天，爸爸带我去动物园。我们看到了大象、猴子和长颈鹿。我最喜欢看猴子，因为它们很调皮。Question: 我最喜欢看什么动物？',['猴子','大象','长颈鹿','老虎'],0,'短文说：我最喜欢看猴子，因为它们很调皮。','Naughty monkeys are the best show!'),Q('小丽有一支漂亮的铅笔。铅笔是粉红色的，上面画着一只小兔子。她每天都用它写字。Question: 小丽的铅笔是什么颜色的？',['粉红色','蓝色','绿色','黄色'],0,'短文说：铅笔是粉红色的。','A pink pencil with a bunny — cute!'),Q('冬天到了，天气很冷。小朋友们穿上厚厚的棉衣，戴上帽子和手套。他们在雪地里堆雪人，玩得真开心。Question: 小朋友们在雪地里做什么？',['堆雪人','游泳','放风筝','踢足球'],0,'短文说：他们在雪地里堆雪人。','Snowmen in winter — so much fun!'),Q('小狗看到陌生人就汪汪叫。它是家里的好帮手，主人很喜欢它。Question: 给这段话选一个最合适的题目。',['看家的小狗','小狗的叫声','陌生人来了','主人喜欢狗'],0,'整段话都在写小狗看家，所以题目是“看家的小狗”最合适。','A good watchdog on duty!'),Q('冬天，雪花飘下来，大地白了。小朋友们穿上棉衣，戴上手套，到雪地里堆雪人、打雪仗。Question: 这段话主要写了什么？',['冬天，小朋友们在雪地里玩。','雪花飘下来。','大地白了。','小朋友们穿棉衣。'],0,'整段话主要写冬天小朋友们在雪地里玩。','Winter fun in the snow!'),Q('小丽的书包里有很多书，有语文书、数学书，还有图画书。她每天背着书包去上学。Question: 哪一句话最适合做这段话的结尾？',['小丽真爱学习啊！','小丽的书包很重。','小丽不喜欢上学。','小丽把书包丢了。'],0,'“小丽真爱学习啊！”最能总结这段话。','Love learning, love books!'),Q('小华的妈妈每天很早就起床。她做好早饭，叫小华起床，然后送小华去上学。Question: 这段话主要讲了什么？',['妈妈每天早起照顾小华。','妈妈做早饭。','妈妈叫小华起床。','妈妈送小华上学。'],0,'整段话主要讲妈妈每天早起照顾小华。','Mum wakes up early for us!'),Q('公园里有一棵大树。夏天，大树为人们遮挡阳光。人们在大树下乘凉、聊天，真舒服。Question: 给这段话选一个最合适的题目。',['公园里的大树','夏天真热','人们在聊天','大树的叶子'],0,'整段话都在写公园里的大树，所以题目是“公园里的大树”最合适。','A big tree gives cool shade!')];
-FRESH_BANK['chi-composition']=[Q('看图写段：图片上，小鸟在天上自由地飞翔。哪一句最适合做开头？',['蓝天上，小鸟自由自在地飞翔。','小鸟有翅膀。','天空是蓝色的。','小鸟飞得很高。'],0,'开头先介绍蓝天上的小鸟。','Birds flying free in the blue sky!'),Q('看图写段：图片上，农民伯伯在田里收割稻谷。哪一句最适合做开头？',['秋天到了，农民伯伯在田里忙着收割稻谷。','稻谷是金黄色的。','田里有很多稻谷。','农民伯伯很辛苦。'],0,'开头要说清楚时间、人物和事情：秋天到了，农民伯伯在收割稻谷。','Autumn harvest — golden fields!'),Q('看图写段：图片上，小红扶着老奶奶过马路。哪一句最适合做结尾？',['小红真是个乐于助人的好孩子！','老奶奶年纪大了。','马路上有车。','小红扶着老奶奶。'],0,'结尾要赞美小红：她是个乐于助人的好孩子！','Helping Grandma cross the road — kind girl!'),Q('看图写段：图片上，小明在图书馆里安静地看书。哪一句最适合做开头？',['星期六上午，小明在图书馆里安静地看书。','图书馆里有很多书。','小明喜欢看书。','书很好看。'],0,'开头要说清楚时间、地点和事情：星期六上午，小明在图书馆看书。','Saturday in the library — quiet reading!'),Q('看图写段：图片上，小鱼在清清的河水里游来游去。哪一句最适合接在“一条小河清清的。”后面？',['小鱼在水里自由自在地游来游去。','河水是清的。','小鱼有尾巴。','河边有小草。'],0,'这句话接在前面最自然，写出小鱼在水里游的样子。','Fish swimming happily in the clear river!'),Q('看图写段：图片上，雪花飘下来，小朋友们在堆雪人。哪一句最适合做开头？',['冬天到了，雪花纷纷飘下来。','雪人很可爱。','小朋友们穿着棉衣。','雪是白色的。'],0,'开头先说季节和天气：冬天到了，雪花纷纷飘下来。','Winter snow — time to build a snowman!'),Q('看图写段：图片上，小明和小红一起种树。哪一句最适合做结尾？',['他们希望小树快快长大。','小树很小。','他们拿着铁锹。','种树很好玩。'],0,'结尾要说出他们的希望：希望小树快快长大。','Grow, little tree, grow!'),Q('看图写段：图片上，妈妈在给花浇水，花儿开得真艳。哪一句最适合做开头？',['早上，妈妈在阳台上给花浇水。','花儿开得真艳。','阳台上有花。','妈妈喜欢花。'],0,'开头先说时间、地点和人物：早上，妈妈在阳台上给花浇水。','Morning watering — flowers love it!'),Q('看图写段：图片上，小狗和小猫一起玩球。哪一句最适合做开头？',['小狗和小猫是一对好朋友。','球是圆的。','小狗很可爱。','小猫很调皮。'],0,'开头先介绍小狗和小猫的关系：它们是一对好朋友。','A dog and a cat — best friends!'),Q('看图写段：图片上，小朋友们在海边捡贝壳。哪一句最适合做结尾？',['大家捡了满满一篮贝壳，开心极了！','贝壳很漂亮。','海边有沙子。','小朋友们在海边。'],0,'结尾要说出大家的心情：开心极了！','A basket full of shells — so happy!')];
-FRESH_BANK['chi-oral']=[Q('朗读时，遇到“，” （逗号）应该怎么做？',['停顿一下','停很久','不停顿','读得很快'],0,'读到逗号要停顿一下，换一口气。','Comma — take a little breath!'),Q('朗读时，遇到“。” （句号）应该怎么做？',['停顿较长，语气下降','不停顿','读得很快','跳过去'],0,'读到句号要停顿较长，语气往下降。','Full stop — a longer pause!'),Q('朗读时，“快乐”的“乐”读第几声？',['第一声','第二声','第三声','第四声'],3,'“快乐”的“乐”读第四声 lè。','快乐 — lè, fourth tone, happy sound!'),Q('朗读“小红跑得快”时，“快”字应该怎么读？',['读得重一些，读出跑得快的感觉','读得很轻','读得很慢','不读'],0,'读“快”字要重一些，读出跑得快的感觉。','Run fast — read it fast!'),Q('看图说话：图片上，小鸟在枝头唱歌。哪一句说得最生动？',['小鸟站在枝头上，快乐地唱着歌，歌声真好听。','小鸟在唱歌。','枝头上有小鸟。','小鸟有翅膀。'],0,'这句话最生动，写出了小鸟唱歌的样子和歌声。','A lively sentence makes the bird sing!'),Q('看图说话：图片上，爷爷在院子里浇花。下面哪一句应该先说？',['图片上，爷爷在院子里浇花。','爷爷很喜欢花。','花儿开得很美。','爷爷年纪大了。'],0,'看图说话先说图片上的主要内容：爷爷在院子里浇花。','Start with the main thing you see!'),Q('看图说话：图片上，小狗在追蝴蝶。哪一句说得最完整？',['一只小狗在草地上追着蝴蝶跑，玩得真开心。','小狗追蝴蝶。','蝴蝶飞走了。','草地上有小狗。'],0,'“一只小狗在草地上追着蝴蝶跑，玩得真开心”说得最完整。','A full sentence, a happy dog!'),Q('小红说：“我们一起去公园玩吧！”你不想去，应该怎么说？',['对不起，我今天要写作业，下次再去吧。','不去！','我不喜欢你。','走开，别烦我。'],0,'不想去也要有礼貌地说原因，并说下次再去。','Polite words keep friends!'),Q('客人来家里，你应该说什么？',['请进，请坐。','你来干什么？','快走吧。','我不认识你。'],0,'客人来了，要请客人进来、请坐。','Welcome, please come in!'),Q('你不小心踩到了同学的脚，应该说什么？',['对不起，我不是故意的。','是你自己不小心。','活该。','没看到。'],0,'不小心踩到别人，要马上说“对不起”。','Oops — 对不起！')];
+FRESH_BANK['chi-composition']=[Q('小鸟在天上自由地飞翔。哪一句最适合做开头？',['蓝天上，小鸟自由自在地飞翔。','小鸟有翅膀。','天空是蓝色的。','小鸟飞得很高。'],0,'开头先介绍蓝天上的小鸟。','Birds flying free in the blue sky!'),Q('农民伯伯在田里收割稻谷。哪一句最适合做开头？',['秋天到了，农民伯伯在田里忙着收割稻谷。','稻谷是金黄色的。','田里有很多稻谷。','农民伯伯很辛苦。'],0,'开头要说清楚时间、人物和事情：秋天到了，农民伯伯在收割稻谷。','Autumn harvest — golden fields!'),Q('小红扶着老奶奶过马路。哪一句最适合做结尾？',['小红真是个乐于助人的好孩子！','老奶奶年纪大了。','马路上有车。','小红扶着老奶奶。'],0,'结尾要赞美小红：她是个乐于助人的好孩子！','Helping Grandma cross the road — kind girl!'),Q('小明在图书馆里安静地看书。哪一句最适合做开头？',['星期六上午，小明在图书馆里安静地看书。','图书馆里有很多书。','小明喜欢看书。','书很好看。'],0,'开头要说清楚时间、地点和事情：星期六上午，小明在图书馆看书。','Saturday in the library — quiet reading!'),Q('小鱼在清清的河水里游来游去。哪一句最适合接在“一条小河清清的。”后面？',['小鱼在水里自由自在地游来游去。','河水是清的。','小鱼有尾巴。','河边有小草。'],0,'这句话接在前面最自然，写出小鱼在水里游的样子。','Fish swimming happily in the clear river!'),Q('雪花飘下来，小朋友们在堆雪人。哪一句最适合做开头？',['冬天到了，雪花纷纷飘下来。','雪人很可爱。','小朋友们穿着棉衣。','雪是白色的。'],0,'开头先说季节和天气：冬天到了，雪花纷纷飘下来。','Winter snow — time to build a snowman!'),Q('小明和小红一起种树。哪一句最适合做结尾？',['他们希望小树快快长大。','小树很小。','他们拿着铁锹。','种树很好玩。'],0,'结尾要说出他们的希望：希望小树快快长大。','Grow, little tree, grow!'),Q('妈妈在给花浇水，花儿开得真艳。哪一句最适合做开头？',['早上，妈妈在阳台上给花浇水。','花儿开得真艳。','阳台上有花。','妈妈喜欢花。'],0,'开头先说时间、地点和人物：早上，妈妈在阳台上给花浇水。','Morning watering — flowers love it!'),Q('小狗和小猫一起玩球。哪一句最适合做开头？',['小狗和小猫是一对好朋友。','球是圆的。','小狗很可爱。','小猫很调皮。'],0,'开头先介绍小狗和小猫的关系：它们是一对好朋友。','A dog and a cat — best friends!'),Q('小朋友们在海边捡贝壳。哪一句最适合做结尾？',['大家捡了满满一篮贝壳，开心极了！','贝壳很漂亮。','海边有沙子。','小朋友们在海边。'],0,'结尾要说出大家的心情：开心极了！','A basket full of shells — so happy!')];
+FRESH_BANK['chi-oral']=[Q('朗读时，遇到“，” （逗号）应该怎么做？',['停顿一下','停很久','不停顿','读得很快'],0,'读到逗号要停顿一下，换一口气。','Comma — take a little breath!'),Q('朗读时，遇到“。” （句号）应该怎么做？',['停顿较长，语气下降','不停顿','读得很快','跳过去'],0,'读到句号要停顿较长，语气往下降。','Full stop — a longer pause!'),Q('朗读时，“快乐”的“乐”读第几声？',['第一声','第二声','第三声','第四声'],3,'“快乐”的“乐”读第四声 lè。','快乐 — lè, fourth tone, happy sound!'),Q('朗读“小红跑得快”时，“快”字应该怎么读？',['读得重一些，读出跑得快的感觉','读得很轻','读得很慢','不读'],0,'读“快”字要重一些，读出跑得快的感觉。','Run fast — read it fast!'),Q('小鸟在枝头唱歌。哪一句说得最生动？',['小鸟站在枝头上，快乐地唱着歌，歌声真好听。','小鸟在唱歌。','枝头上有小鸟。','小鸟有翅膀。'],0,'这句话最生动，写出了小鸟唱歌的样子和歌声。','A lively sentence makes the bird sing!'),Q('爷爷在院子里浇花。下面哪一句应该先说？',['爷爷在院子里浇花。','爷爷很喜欢花。','花儿开得很美。','爷爷年纪大了。'],0,'先说主要内容：爷爷在院子里浇花。','Start with the main thing you see!'),Q('小狗在追蝴蝶。哪一句说得最完整？',['一只小狗在草地上追着蝴蝶跑，玩得真开心。','小狗追蝴蝶。','蝴蝶飞走了。','草地上有小狗。'],0,'“一只小狗在草地上追着蝴蝶跑，玩得真开心”说得最完整。','A full sentence, a happy dog!'),Q('小红说：“我们一起去公园玩吧！”你不想去，应该怎么说？',['对不起，我今天要写作业，下次再去吧。','不去！','我不喜欢你。','走开，别烦我。'],0,'不想去也要有礼貌地说原因，并说下次再去。','Polite words keep friends!'),Q('客人来家里，你应该说什么？',['请进，请坐。','你来干什么？','快走吧。','我不认识你。'],0,'客人来了，要请客人进来、请坐。','Welcome, please come in!'),Q('你不小心踩到了同学的脚，应该说什么？',['对不起，我不是故意的。','是你自己不小心。','活该。','没看到。'],0,'不小心踩到别人，要马上说“对不起”。','Oops — 对不起！')];
 TOPICS.forEach(function(t){ t.fresh=FRESH_BANK[t.id]||[]; });
 var SUBJECTS={eng:'English',math:'Maths',sci:'Science',chi:'Chinese'};
 var PRAISE=['Brilliant work, superstar! 🌟','You did it! Pip is doing a happy otter wiggle!','Fantastic! Your brain just levelled up!','Woohoo! High-five from Pip! ✋','Amazing effort — I am so proud of you!','You are on fire (the good, learning kind)! 🔥'];
@@ -11112,6 +11141,34 @@ function questAnswerText(q){
   if(q&&Array.isArray(q.o)&&typeof q.a==='number')return q.o[q.a]||'';
   return '';
 }
+/* depicText(s): the picture-question topics (看图选词 / 看图写段 /
+   口试看图说话) were written as if a picture were on screen —
+   "图上画着…" / "图片上，…" — but the app never showed one, so
+   the child was asked about a picture that did not exist. The
+   local bank is rewritten at source; this normaliser does the
+   same rewrite for server-bank rows at ingestion, so every
+   question the child sees reads as a scene in words. */
+function depicText(s){
+  if(typeof s!=='string'||!s)return s;
+  var out=s;
+  out=out.replace(/看图写段：图片上，/g,'');
+  out=out.replace(/看图说话：图片上，/g,'');
+  out=out.replace(/看图说话先说图片上有什么/g,'先说有什么');
+  out=out.replace(/看图说话先说图片上的主要内容/g,'先说主要内容');
+  out=out.replace(/看图说话先说/g,'先说');
+  out=out.replace(/看图说话最后/g,'最后');
+  out=out.replace(/说完图片上的内容/g,'说完内容');
+  out=out.replace(/说完图片内容/g,'说完内容');
+  out=out.replace(/图上画着/g,'');
+  out=out.replace(/图片上的/g,'');
+  out=out.replace(/图片上，/g,'');
+  out=out.replace(/图片上/g,'');
+  out=out.replace(/看图写段：/g,'写一段话：');
+  out=out.replace(/看图说话：/g,'');
+  out=out.replace(/看图说话/g,'');
+  out=out.replace(/ in the picture/g,'');
+  return out;
+}
 /* sbNormalizeQuestion(q): a server-bank question in either shape
    (a daily-set client object, or a raw sb_questions row with
    .options/.stem/.answer) -> the canonical cached client shape,
@@ -11119,7 +11176,7 @@ function questAnswerText(q){
    FIB keeps ans/accept and o:[], a:0. */
 function sbNormalizeQuestion(q){
   if(!q||typeof q!=='object')return null;
-  var stem=q.q||q.stem, c=q.c||q.explanation||'', j=q.j||q.joke||'';
+  var stem=depicText(q.q||q.stem), c=depicText(q.c||q.explanation||''), j=depicText(q.j||q.joke||'');
   if(typeof q.id!=='string'||!q.id.length)return null;
   if(typeof stem!=='string'||stem.trim().length<12)return null;
   if(typeof c!=='string')return null;
@@ -11156,10 +11213,10 @@ function saveSbCache(eid, topicId, day, questions){
   var shuffled=questions.map(function(q, qi){
     if(isFibQuestion(q)){
       var n=sbNormalizeQuestion(q);
-      return n||{id:q.id, q:q.q, o:[], a:0, c:q.c||'', j:q.j||'', k:'fib', ans:fibExpected(q)||'', accept:fibAccepts(q)};
+      return n||{id:q.id, q:depicText(q.q), o:[], a:0, c:depicText(q.c||''), j:depicText(q.j||''), k:'fib', ans:fibExpected(q)||'', accept:fibAccepts(q)};
     }
     var order=seededShuffle(q.o.map(function(_,i){ return i; }), seed+qi*7919);
-    return {id:q.id, q:q.q, o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:q.c, j:q.j||'', k:'mcq'};
+    return {id:q.id, q:depicText(q.q), o:order.map(function(i){ return q.o[i]; }), a:order.indexOf(q.a), c:depicText(q.c||''), j:depicText(q.j||''), k:'mcq'};
   });
   var rec={topicId:topicId, day:day, questions:shuffled, savedAt:Date.now()};
   liveGenLSSet(sbCacheKey(eid, topicId), rec);
