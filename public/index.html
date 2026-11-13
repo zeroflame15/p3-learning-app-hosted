@@ -2801,7 +2801,11 @@ var DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 function fmtDate(d){ return DOWS[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]; }
 function nextSchoolEvents(n){
   var out=[], now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-  Object.keys(SCHOOL_EVENTS).forEach(function(k){ var p=k.split('-'); var occ=new Date(now.getFullYear(),+p[0]-1,+p[1]); if(occ<today)occ=new Date(now.getFullYear()+1,+p[0]-1,+p[1]); out.push({date:occ,ev:SCHOOL_EVENTS[k]}); });
+  /* Built-in events are 2026 dates (Deepavali, Admin Day …): once one
+     is past it drops out of "what's coming" — it does NOT roll to
+     next year, because these dates move year to year. Custom family
+     events below already behave the same way. */
+  Object.keys(SCHOOL_EVENTS).forEach(function(k){ var p=k.split('-'); var occ=new Date(now.getFullYear(),+p[0]-1,+p[1]); if(occ<today)return; out.push({date:occ,ev:SCHOOL_EVENTS[k]}); });
   /* Family events (2026-11-09): custom dates, today or future only,
      merged with the built-in ones and sorted by date. */
   ((typeof DB!=='undefined'&&DB&&DB.familyEvents)||[]).forEach(function(fe){
@@ -3062,6 +3066,7 @@ function schoolScheduleHTML(e){
   var ups=nextSchoolEvents(5);
   return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">🗓️ School schedule — what’s coming</h3>'
    +'<p class="muted" style="font-weight:700;margin:0 0 10px">School dates live here in your planner, so the app knows what is coming — a closure means a gentle day, and an SLS due date means Pip nudges a short revision game the day before, not a full quiz.</p>'
+   +(ups.length?'':'<p style="font-weight:700">Nothing coming up on the school calendar right now.</p>')
    + ups.map(function(u){ var txt=fmtDate(u.date)+' — '+u.ev.name; var added=e.planner.some(function(p){ return p.t===txt; });
      return '<div class="plannerow"><span style="font-size:1.3rem">'+u.ev.e+'</span><span class="ptext">'+esc(fmtDate(u.date))+' — '+esc(u.ev.name)+'<span class="small muted" style="display:block;font-weight:700">'+esc(u.ev.note)+'</span></span>'+(added?'<span class="pill done">In planner ✔</span>':'<button type="button" class="btn" data-addplan="'+esc(txt)+'" style="padding:7px 14px;font-size:.85rem;flex:0 0 auto">Add to planner</button>')+'</div>'; }).join('')
    +'<p class="small" style="font-weight:800;margin:10px 0 0">'+esc(enrichmentLine())+'</p></div>';
