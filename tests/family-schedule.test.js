@@ -134,6 +134,28 @@ test('nextSchoolEvents: custom events join the list, sorted by date', () => {
   assert.ok(!past.nextSchoolEvents(10).some(function (u) { return u.ev.name === 'Old Day'; }), 'a past custom event is not listed');
 });
 
+test('nextSchoolEvents: past built-in events drop out instead of rolling to next year', () => {
+  // Built-ins are 2026 dates: once one is past it must leave the
+  // "what's coming" list, not reappear as a next-year date (the old
+  // code rolled Deepavali / Admin Day to 2027, so they never left).
+  const e = nextEngine({ familyEvents: [] });
+  const list = e.nextSchoolEvents(10);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  list.forEach(function (u) {
+    assert.ok(u.date >= today, u.ev.name + ' is today or in the future, never past');
+    assert.equal(u.date.getFullYear(), now.getFullYear(), u.ev.name + ' stays in this year — it does not roll forward to next year');
+  });
+  assert.ok(!list.some(function (u) { return u.ev.name === 'Deepavali — school closed'; }), 'Deepavali (9 Nov) is gone once past');
+  assert.ok(!list.some(function (u) { return u.ev.name === 'Admin Day — school closed'; }), 'Admin Day (11 Nov) is gone once past');
+});
+
+test('schoolScheduleHTML: an empty "what\'s coming" list shows a nothing-coming-up line', () => {
+  const sched = fnBody('function schoolScheduleHTML(');
+  assert.ok(sched.includes('ups.length?'), 'the card branches on an empty list');
+  assert.ok(sched.includes('Nothing coming up on the school calendar right now'), 'an empty list renders a nothing-coming-up line instead of a blank card');
+});
+
 /* ---------------- mergeFamilyDB: events by id, plan by later updatedAt ---------------- */
 
 const mergeFamilyDB = eval([
