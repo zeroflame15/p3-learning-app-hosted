@@ -1,14 +1,12 @@
 // Dress-up + frog facts (requested 2026-11-08):
 //  1. "Change my name & look" grows a full-body avatar builder —
-//     ROUND 5 (flat kawaii, sheet-exact, 2026-11-08): all 25
-//     animals from the parent's reference sheet, redrawn to match
-//     it exactly as closely as SVG allows — thick dark-brown
-//     outlines, flat fills, big glossy black eyes with white
-//     highlights, small simple mouths, pink blush cheeks. This is
-//     a STYLE RESET from the round-3/4 shaded 3D plush look: no
-//     gradients for shading, no fur texture, no grain. The parent
-//     asked for it directly: "Change them to these characters.
-//     exactly the same. No need change color option."
+//     ROUND 6 (copied pictures, 2026-11-14): all 25 animals
+//     are the parent's reference-sheet pictures, cropped straight
+//     from the sheet he provided — no SVG redraw. The parent asked
+//     for it directly: "can change the animal friends selection
+//     list by directly copy the image i provided? ... Just copy
+//     over. No need animation on the animal. Background remains."
+//     Chick first as a sample (approved 2026-11-14), then the rest.
 //       • NO COLOUR OPTION: animals keep their own colours from
 //         the sheet. A stored look.color is ignored, like stored
 //         hair in round 2. The look is now
@@ -26,10 +24,9 @@
 //         bubbles, petals) alongside plain / glitter / glow /
 //         shine, all respecting reduced motion. The petals are
 //         soft pink at 0.6, in the margins, so they read.
-//       • TAP TO PLAY: tapping the animal makes it do a happy
-//         jump with squash-and-stretch plus a tiny sparkle burst
-//         (the frog hops higher, the rabbit wiggles its ears
-//         faster). The idle bob/blink keep running underneath.
+//       • TAP TO PLAY: tapping the animal bursts a tiny sparkle
+//         around it. The animal itself never moves — the pictures
+//         are static, as the parent asked.
 //       • A soft ground shadow under the feet, so the character
 //         lifts off the background and pops.
 //     Same data model (e.look, lookAt), same draft editor —
@@ -66,6 +63,13 @@ function grabVar(name) {
   assert.ok(start >= 0, name + ' found');
   const end = html.indexOf('];', start);
   assert.ok(end > start, name + ' ends with ];');
+  return html.slice(start, end + 2);
+}
+function grabObj(name) {
+  const start = html.indexOf('var ' + name + '=');
+  assert.ok(start >= 0, name + ' found');
+  const end = html.indexOf('};', start);
+  assert.ok(end > start, name + ' ends with };');
   return html.slice(start, end + 2);
 }
 
@@ -188,45 +192,50 @@ test('the look modal renders a full-body preview, a 25-animal grid and a backgro
   assert.deepEqual(effects, ['plain', 'glitter', 'glow', 'shine', 'twinkle', 'bubbles', 'petals'], 'seven background effects — the three animated ones joined the four static ones');
 });
 
-test('avatarLookHTML: 25 flat kawaii characters, no colour, no accessories, backgrounds, ground shadow', () => {
+test('avatarLookHTML: 25 copied pictures, no colour, no accessories, backgrounds, ground shadow', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const render = (face, look, glow) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look === undefined ? { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } } : look) + ',' + JSON.stringify(glow || '#ffb020') + ')');
-  // Flat kawaii structure: one svg, class av5, a defs block with the
-  // ground-shadow gradient ONLY — no shading gradients, no grain.
+  // A copied picture, not a redraw: one svg, class av5, a defs
+  // block with the ground-shadow gradient ONLY.
   const chick = render('🐤', { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
-  assert.ok(chick.includes('data-animal="chick"'), 'the animal is drawn, not pasted: the chick renders');
-  assert.ok(chick.includes('<svg class="av5" viewBox="0 0 200 260"'), 'the whole character is one flat svg on the shared grid');
+  assert.ok(chick.includes('data-animal="chick"'), 'the animal is the copied picture: the chick renders');
+  assert.ok(chick.includes('<svg class="av5" viewBox="0 0 200 260"'), 'the whole character is one svg on the shared grid');
   assert.ok(chick.includes('<defs>'), 'the defs block holds the ground shadow');
   assert.ok(chick.includes('id="gSh'), 'the ground shadow is a radial gradient');
-  assert.ok(!chick.includes('url(#gB'), 'no body gradient: the animals are flat, not shaded');
-  assert.ok(!chick.includes('feTurbulence'), 'no grain: the flat style has no texture');
+  assert.ok(chick.includes('<image href="animals/chick.png"'), 'the chick is the copied picture, not a redraw');
+  assert.ok(chick.includes('preserveAspectRatio="xMidYMax meet"'), 'the picture scales to fit and sits on the ground shadow');
+  assert.ok(!chick.includes('fill="#ffd94a"'), 'no SVG chick yellow: the old redraw is gone');
+  assert.ok(chick.includes('fill="#bfe8d8"'), 'the mint background still renders behind the picture');
+  assert.ok(!html.includes('AVATAR_ANIMALS'), 'the SVG draw object is gone from the page');
   assert.ok(!html.includes('AVATAR_3D_CSS'), 'the 3D CSS variable is gone');
   assert.ok(!html.includes('class="av3d"'), 'the 3D class is gone');
   assert.ok(!html.includes('FULL-BODY LOOK — ROUND 4'), 'the round-4 block is gone');
-  // Flat fills: the chick is its own yellow, flat, with a thick
-  // dark-brown outline — exactly like the sheet.
-  assert.ok(chick.includes('fill="#ffd94a"'), 'the chick is flat yellow');
-  assert.ok(chick.includes('stroke="#4a3226"'), 'the outlines are thick dark brown');
+  // The animal never moves: no bob group, no blink group, no
+  // jump group, no stagger delay anywhere in the render.
+  assert.ok(!chick.includes('av-bob'), 'the picture never bobs');
+  assert.ok(!chick.includes('av-blink'), 'the picture never blinks');
+  assert.ok(!chick.includes('av-jump'), 'the picture never jumps');
+  assert.ok(!chick.includes('animation-delay:'), 'no staggered motion on the animal');
+  assert.ok(!fn.includes('AVATAR_ANIMALS'), 'the renderer never draws an SVG animal');
   // No colour option: a stored colour value changes nothing and
   // never appears in the render.
   const withColor = render('🐤', { color: '#ff0000' });
   const plain = render('🐤', {});
   assert.ok(!withColor.includes('#ff0000'), 'a stored colour value never appears in the render');
-  const norm = function (s) { return s.replace(/a\d+/g, 'aUID').replace(/animation-delay:[-0-9.]+s/g, 'animation-delay:X'); };
+  const norm = function (s) { return s.replace(/a\d+/g, 'aUID'); };
   assert.equal(norm(withColor), norm(plain), 'a stored colour changes nothing else either');
   assert.ok(!fn.includes('look.color'), 'the renderer never reads look.color');
   assert.ok(!html.includes('LOOK_HAIR'), 'no hair code remains in the page');
   // No accessories: a stored accessory value changes nothing and
-  // never appears in the render — the necklace beads, the bow,
-  // the crown and the hat are all gone.
+  // never appears in the render.
   const withAcc = render('🐤', { accessory: 'necklace', background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } });
-  assert.ok(!withAcc.includes('M84,118 Q100,136'), 'a stored necklace never renders its beads');
   assert.equal(norm(withAcc), norm(plain), 'a stored accessory changes nothing else either');
   assert.ok(!fn.includes('look.accessory'), 'the renderer never reads look.accessory');
   assert.ok(!fn.includes('AVATAR_ACCS'), 'the renderer never draws an accessory');
   // Unknown values degrade gracefully.
   assert.ok(render('👽', {}).includes('data-animal="chick"'), 'an unknown face falls back to the chick');
+  assert.ok(render('👽', {}).includes('animals/chick.png'), 'the fallback renders the chick picture');
   assert.ok(render('🦦', {}).includes('data-animal="chick"'), 'a stored otter falls back to the chick');
   assert.ok(render('🦋', {}).includes('data-animal="chick"'), 'a stored butterfly falls back to the chick');
   assert.ok(render('🐤', null).includes('<svg'), 'a legacy explorer without a look still renders');
@@ -236,48 +245,22 @@ test('avatarLookHTML: 25 flat kawaii characters, no colour, no accessories, back
   // carries it — in the app it is one module-level counter.)
   const two = eval(consts + '\n' + fn + '\n;[avatarLookHTML("🐤",{},"#ffb020"),avatarLookHTML("🐤",{},"#ffb020")]');
   assert.notEqual(two[0].match(/id="gSh([^"]+)"/)[1], two[1].match(/id="gSh([^"]+)"/)[1], 'each render gets its own shadow gradient id');
-  // Every animal is itself at a glance — its own recognition marker.
-  const markers = [
-    ['🐤', 'Q92,82 88,78', 'the chick has a little tuft on its head'],
-    ['🐴', 'M58,66 C56,34 78,20 100,20', 'the horse has a brown mane over its head'],
-    ['🐧', 'cy="188" rx="32" ry="38"', 'the penguin has a white belly'],
-    ['🐻', 'fill="#c98a4b"', 'the bear is brown with a lighter muzzle'],
-    ['🐢', 'fill="#a67c52"', 'the turtle has a brown shell'],
-    ['🐢', 'M100,124 L124,140 L112,172', 'the turtle shell has a scute pattern'],
-    ['🐼', 'rx="11" ry="16"', 'the panda has big black eye patches'],
-    ['🦁', 'fill="#e08a2e"', 'the lion has a big orange mane'],
-    ['🐱', 'M56,80 L40,76', 'the cat has whiskers'],
-    ['🐷', 'cy="90" rx="16" ry="11"', 'the pig has a snout'],
-    ['🦊', 'M146,182 C174,172 188,142', 'the fox has a big bushy tail'],
-    ['🐸', 'cy="46" r="17"', 'the frog has big eye bumps'],
-    ['🐘', 'M92,86 C90,110 88,130', 'the elephant has a trunk'],
-    ['🦒', 'M86,80 L86,150 Q86,162', 'the giraffe has a long neck'],
-    ['🐰', 'cy="35" rx="9" ry="32"', 'the rabbit has long upright ears'],
-    ['🐰', 'y="95" width="5.5" height="9"', 'the rabbit has buck teeth'],
-    ['🦉', 'cy="72" r="13"', 'the owl has big white eyes'],
-    ['🦝', 'M62,66 Q100,52 138,66', 'the raccoon has a dark eye mask'],
-    ['🐵', 'cy="80" rx="34" ry="32"', 'the monkey has a tan face patch'],
-    ['🐯', 'M88,44 Q90,50 88,56', 'the tiger has forehead stripes'],
-    ['🐊', 'M26,180 L31,180 L29,188 Z', 'the crocodile has a toothy grin'],
-    ['🐊', 'M14,170 C30,160 50,156 70,156', 'the crocodile is long and low — a long flat snout and a horizontal body, not a round dome head'],
-    ['🐊', 'M164,182 C178,180 190,188 193,200', 'the crocodile has a tail to the side'],
-    ['🐊', 'M110,172 L116,150 L122,172 Z', 'the crocodile has back spikes'],
-    ['🐶', 'cy="72" rx="13" ry="15"', 'the dog has a brown patch over one eye'],
-    ['🦥', 'M44,212 L42,218', 'the sloth has tiny claws'],
-    ['🦆', 'cy="88" rx="14" ry="8"', 'the duck has a flat orange beak'],
-    ['🦛', 'cy="96" rx="30" ry="16"', 'the hippo has a big pink snout'],
-    ['🐑', 'M148,178 A24,24', 'the sheep has a fluffy scalloped wool body'],
-    ['🐨', 'cy="88" rx="10" ry="14"', 'the koala has a big black nose'],
-  ];
-  for (const [face, marker, msg] of markers) {
-    assert.ok(render(face, {}).includes(marker), msg);
+  // Every animal renders its own copied picture — its own
+  // recognition marker is the picture itself.
+  const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
+  const faceEmoji = eval(grabObj('AVATAR_FACE_EMOJI') + '\n;AVATAR_FACE_EMOJI');
+  assert.equal(faces.length, 25, '25 animals');
+  for (const face of faces) {
+    const key = faceEmoji[face];
+    assert.ok(key, face + ' maps to an animal key');
+    assert.ok(render(face, {}).includes('<image href="animals/' + key + '.png"'), face + ' renders its own copied picture');
   }
   // The ground shadow: a soft ellipse under the feet, drawn between
   // the background and the animal, so the character lifts off.
   const heart = render('🐤', { background: { shape: 'heart', color: 'pink', effect: 'plain', pattern: '' } });
   assert.ok(heart.includes('cy="246"'), 'the ground shadow sits under the feet');
-  const iBg = heart.indexOf('M100,246'), iSh = heart.indexOf('cy="246"'), iBob = heart.indexOf('av-bob');
-  assert.ok(iBg >= 0 && iSh > iBg && iBob > iSh, 'the shadow is drawn after the background and before the animal');
+  const iBg = heart.indexOf('M100,246'), iSh = heart.indexOf('cy="246"'), iImg = heart.indexOf('<image href="animals/chick.png"');
+  assert.ok(iBg >= 0 && iSh > iBg && iImg > iSh, 'the shadow is drawn after the background and before the animal picture');
   // Width param: the same character at the sizes the app uses.
   const big = render('🐤', {});
   assert.ok(big.includes('width="190" height="247"'), 'the modal preview defaults to 190px wide');
@@ -401,35 +384,32 @@ test('animated background effects: twinkle, bubbles and petals render, clipped, 
   const glitter = render({ background: { shape: 'circle', color: 'sky', effect: 'glitter', pattern: '' } });
   assert.ok(glitter.includes('class="av-twinkle"'), 'glitter still twinkles');
   assert.ok(!glitter.includes('av-twinklebg'), 'glitter is not the twinkle effect');
-  // Reduced motion switches the animated backgrounds off, exactly
-  // like the bob and the blink.
-  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-bob,.av5 .av-blink,.av5 .av-earwig,.av5 .av-sway,.av5 .av-hop,.av5 .av-nod,.av5 .av-twinkle,.av5 .av-twinklebg,.av5 .av-bub,.av5 .av-pet{animation:none}'), 'the reduced-motion rule switches the animated backgrounds off');
+  // Reduced motion switches the animated backgrounds off. The
+  // animal never moves, so there is no bob or blink to switch off.
+  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-twinkle,.av5 .av-twinklebg,.av5 .av-bub,.av5 .av-pet{animation:none}'), 'the reduced-motion rule switches the animated backgrounds off');
 });
 
-test('tap to play: tapping the animal adds the play class, jumps it and bursts sparkles', () => {
+test('tap to play: tapping the animal bursts sparkles and never moves it', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const render = (face, look) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look || {}) + ',"#ffb020")');
   const chick = render('🐤');
   assert.ok(chick.includes('onclick="avatarPlay(this)"'), 'the svg is the tap target — every avatar renders through here, so the sidebar, the preview and the Grand Door tile all play');
-  assert.ok(chick.includes('class="av-jump"'), 'the animal sits in a jump group, so the trick moves the animal only — the background and ground shadow stay put');
+  assert.ok(!chick.includes('class="av-jump"'), 'there is no jump group: the tap never moves the animal');
   assert.ok(chick.includes('class="av-sparkles"'), 'the sparkle burst group is in every render');
-  assert.ok(chick.includes('class="av-bob"'), 'the idle bob is still there underneath the trick');
-  // The CSS: the play animation, the frog's higher hop, the
-  // rabbit's faster ear wiggle, and the sparkle burst.
-  assert.ok(html.includes('.av5.av-play .av-jump{animation:av5Play .8s'), 'tapping adds the play jump');
-  assert.ok(html.includes('.av5[data-animal="frog"].av-play .av-jump{animation:av5PlayHop .8s'), 'the frog hops higher than the rest');
-  assert.ok(html.includes('.av5[data-animal="rabbit"].av-play .av-earwig{animation:av5EarWig .8s'), 'the rabbit wiggles its ears faster while it plays');
+  assert.ok(!chick.includes('class="av-bob"'), 'there is no idle bob underneath the trick');
+  // The CSS: the sparkle burst only — no jump, no hop, no bob.
+  assert.ok(!html.includes('.av5.av-play .av-jump'), 'no play jump rule');
+  assert.ok(!html.includes('@keyframes av5Play'), 'no play jump keyframes');
+  assert.ok(!html.includes('.av5 .av-bob'), 'no bob rule');
   assert.ok(html.includes('.av5.av-play .av-sparkles{animation:av5Spark .8s'), 'tapping bursts the sparkles');
-  for (const k of ['@keyframes av5Play', '@keyframes av5PlayHop', '@keyframes av5Spark']) {
-    assert.ok(html.includes(k), 'the page style contains ' + k);
-  }
-  // Reduced motion switches the trick off — tapping does nothing
-  // visible, like the bob and the blink.
-  assert.ok(html.includes('.av5.av-play .av-jump,.av5.av-play .av-sparkles{animation:none!important}'), 'the reduced-motion rule switches the tap trick off');
+  assert.ok(html.includes('@keyframes av5Spark'), 'the page style contains the sparkle keyframes');
+  // Reduced motion switches the burst off — tapping does nothing
+  // visible.
+  assert.ok(html.includes('.av5.av-play .av-sparkles{animation:none!important}'), 'the reduced-motion rule switches the tap burst off');
   // Functional: avatarPlay adds the class, ignores a second tap
-  // while it is playing, and takes the class off when the jump
-  // ends — but not when the sparkles finish on their own.
+  // while it is playing, and takes the class off when the burst
+  // ends.
   const playStart = html.indexOf('function avatarPlay(svg){');
   assert.ok(playStart >= 0, 'avatarPlay found');
   const playEnd = html.indexOf('\n}', playStart);
@@ -449,21 +429,17 @@ test('tap to play: tapping the animal adds the play class, jumps it and bursts s
   const svg = fakeSvg();
   avatarPlay(svg);
   assert.ok(svg._classes.has('av-play'), 'a tap adds the play class');
-  assert.ok(svg._listeners.animationend, 'a tap listens for the end of the jump');
+  assert.ok(svg._listeners.animationend, 'a tap listens for the end of the burst');
   avatarPlay(svg);
   assert.equal(Object.keys(svg._listeners).length, 1, 'a second tap while it is playing does nothing — no duplicate listener');
-  svg.fire('animationend', { animationName: 'av5Spark' });
-  assert.ok(svg._classes.has('av-play'), 'the sparkles finishing on their own must not end the trick early');
   svg.fire('animationend', { animationName: 'av5Play' });
-  assert.ok(!svg._classes.has('av-play'), 'the jump ending takes the class off, so the idle life resumes');
+  assert.ok(svg._classes.has('av-play'), 'an animation that no longer exists must not end the trick');
+  svg.fire('animationend', { animationName: 'av5Spark' });
+  assert.ok(!svg._classes.has('av-play'), 'the burst ending takes the class off');
   assert.ok(!svg._listeners.animationend, 'the listener is removed when the trick ends');
-  const frog = fakeSvg();
-  avatarPlay(frog);
-  frog.fire('animationend', { animationName: 'av5PlayHop' });
-  assert.ok(!frog._classes.has('av-play'), 'the frog\'s higher hop ends the trick the same way');
 });
 
-test('idle life: every animal bobs and blinks, each with its own signature motion', () => {
+test('still life: the animals are static pictures — no bob, no blink, no signature motion', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const render = (face) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',{},"#ffb020")');
@@ -471,37 +447,37 @@ test('idle life: every animal bobs and blinks, each with its own signature motio
   assert.equal(faces.length, 25, '25 animals');
   for (const face of faces) {
     const s = render(face);
-    assert.ok(s.includes('class="av-blink"'), face + ' blinks');
-    assert.ok(s.includes('av-bob'), face + ' bobs');
-    assert.ok(s.includes('animation-delay:'), face + ' staggers its motion so a page of animals never moves in lockstep');
+    assert.ok(!s.includes('av-bob'), face + ' never bobs');
+    assert.ok(!s.includes('av-blink'), face + ' never blinks');
+    assert.ok(!s.includes('av-jump'), face + ' never jumps');
+    assert.ok(!s.includes('animation-delay:'), face + ' has no staggered motion');
   }
-  const sig = { '🐸': 'av-hop', '🐘': 'av-sway', '🦒': 'av-nod', '🐰': 'av-earwig', '🐶': 'av-earwig' };
-  for (const [face, motion] of Object.entries(sig)) {
-    assert.ok(render(face).includes(motion), face + ' has its signature motion ' + motion);
-  }
-  // The frog's eyes are green, like the live frog's.
-  assert.ok(render('🐸').includes('fill="#3a7d2c"') || render('🐸').includes('fill="#2f7a3d"'), 'the frog keeps a green eye area, like the live frog');
   // The CSS itself is in the page's <style>, next to Pip's own
   // animation rules — not only in the AVATAR_5_CSS variable.
-  for (const k of ['@keyframes av5Bob', '@keyframes av5Blink', '@keyframes av5Hop', '@keyframes av5EarWig', '@keyframes av5Nod', '@keyframes av5Sway', '@keyframes av5Twinkle']) {
+  for (const k of ['@keyframes av5Twinkle', '@keyframes av5Spark', '@keyframes av5TwinkleBg', '@keyframes av5Bub', '@keyframes av5Pet']) {
     assert.ok(html.includes(k), 'the page style contains ' + k);
   }
-  assert.ok(html.includes('.av5 .av-bob'), 'the bob rule is scoped to avatar svgs');
-  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-bob'), 'the reduced-motion rule switches the avatar motion off');
+  for (const k of ['@keyframes av5Bob', '@keyframes av5Blink', '@keyframes av5Hop', '@keyframes av5EarWig', '@keyframes av5Nod', '@keyframes av5Sway', '@keyframes av5Play', '@keyframes av5PlayHop']) {
+    assert.ok(!html.includes(k), 'the page style no longer contains ' + k);
+  }
+  assert.ok(!html.includes('.av5 .av-bob'), 'no bob rule is scoped to avatar svgs');
+  assert.ok(html.includes('@media (prefers-reduced-motion: reduce){.av5 .av-twinkle'), 'the reduced-motion rule switches the background motion off');
   assert.ok(html.includes('var AVATAR_5_CSS='), 'the CSS also lives in the AVATAR_5_CSS variable (single source for the preview)');
 });
 
-test('all 25 animals render a flat character with the tap-to-play groups', () => {
+test('all 25 animals render their copied picture, static, with the tap-to-play sparkles', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
+  const faceEmoji = eval(grabObj('AVATAR_FACE_EMOJI') + '\n;AVATAR_FACE_EMOJI');
   let n = 0;
   for (const f of faces) {
     const s = eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(f) + ',{},"#ffb020")');
-    assert.ok(s.includes('class="av5"'), 'every animal renders a flat svg: ' + f);
+    assert.ok(s.includes('class="av5"'), 'every animal renders an svg: ' + f);
     assert.ok(s.includes('data-animal="'), 'every animal names itself: ' + f);
+    assert.ok(s.includes('<image href="animals/' + faceEmoji[f] + '.png"'), 'every animal renders its copied picture: ' + f);
     assert.ok(s.includes('cy="246"'), 'every animal has the ground shadow: ' + f);
-    assert.ok(s.includes('class="av-jump"'), 'every animal has the tap-to-play jump group: ' + f);
+    assert.ok(!s.includes('class="av-jump"'), 'no animal has a jump group: ' + f);
     assert.ok(s.includes('class="av-sparkles"'), 'every animal has the tap-to-play sparkles: ' + f);
     assert.ok(s.includes('onclick="avatarPlay(this)"'), 'every animal is tappable: ' + f);
     n++;
