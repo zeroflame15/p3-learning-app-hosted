@@ -319,6 +319,22 @@ function grabFn(name) {
 var adminPw = null, adminResults = [], adminMsg = '', adminOk = '', adminResetCode = null, adminCrittersCode = null;
 const esc = eval('(' + grabFn('esc(') + ')');
 const adminHTML = eval('(' + grabFn('adminHTML(') + ')');
+// adminHTML calls the real usage renderer once unlocked, so load it
+// (with its data + number helper) into this harness too.
+function grabObj(marker) {
+  const start = html.indexOf(marker);
+  assert.ok(start >= 0, marker + ' found in index.html');
+  const open = html.indexOf('{', start);
+  let depth = 0;
+  for (let k = open; k < html.length; k++) {
+    if (html[k] === '{') depth++;
+    else if (html[k] === '}') { depth--; if (depth === 0) return html.slice(open, k + 1); }
+  }
+  assert.fail(marker + ' braces never balanced');
+}
+const APP_USAGE = eval('(' + grabObj('var APP_USAGE = {') + ')');
+const fmtUsageNum = eval('(' + grabFn('fmtUsageNum(') + ')');
+const appUsageHTML = eval('(' + grabFn('appUsageHTML(') + ')');
 
 test('adminHTML: each family row has a Reset critters to Egg button next to Reset PIN', () => {
   adminPw = 'master-123';

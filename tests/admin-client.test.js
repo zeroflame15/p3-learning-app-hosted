@@ -42,6 +42,22 @@ function grabLiteral(marker) {
 var adminPw = null, adminResults = [], adminMsg = '', adminOk = '', adminResetCode = null, adminCrittersCode = null;
 const esc = eval('(' + grabFn('esc(') + ')');
 const adminHTML = eval('(' + grabFn('adminHTML(') + ')');
+// adminHTML calls the real usage renderer once unlocked, so load it
+// (with its data + number helper) into this harness too.
+function grabObj(marker) {
+  const start = html.indexOf(marker);
+  assert.ok(start >= 0, marker + ' found in index.html');
+  const open = html.indexOf('{', start);
+  let depth = 0;
+  for (let k = open; k < html.length; k++) {
+    if (html[k] === '{') depth++;
+    else if (html[k] === '}') { depth--; if (depth === 0) return html.slice(open, k + 1); }
+  }
+  assert.fail(marker + ' braces never balanced');
+}
+const APP_USAGE = eval('(' + grabObj('var APP_USAGE = {') + ')');
+const fmtUsageNum = eval('(' + grabFn('fmtUsageNum(') + ')');
+const appUsageHTML = eval('(' + grabFn('appUsageHTML(') + ')');
 
 test('sidebar: the child-facing sidebar shows a sync indicator but NOT the family code', () => {
   const renderSrc = grabFn('render(');
@@ -84,6 +100,7 @@ test('adminHTML: locked state asks for the password and shows no search UI', () 
   assert.ok(!out.includes('Family code or explorer name'), 'no search box before unlock');
   assert.ok(!out.includes('id="admSearch"'), 'no search button before unlock');
   assert.ok(!out.includes('Matching families'), 'no results before unlock');
+  assert.ok(!out.includes('App usage'), 'no usage card before unlock');
 });
 
 test('adminHTML: unlocked state shows search, results, and the reset form for a picked family', () => {
@@ -101,6 +118,8 @@ test('adminHTML: unlocked state shows search, results, and the reset form for a 
   assert.ok(out.includes('FGH3JK'), 'second matching family listed');
   assert.ok(out.includes('data-admreset="ABC2DE"'), 'reset action per family');
   assert.ok(!out.includes('New PIN for family'), 'no reset form until a family is picked');
+  assert.ok(out.includes('📊 App usage — against the free caps'), 'usage card shows once unlocked');
+  assert.ok(out.includes('Vercel'), 'usage card lists the services');
 
   adminResetCode = 'ABC2DE';
   out = adminHTML();

@@ -1,4 +1,6 @@
-// App usage view on the PIN-protected parent page (2026-11-10).
+// App usage view on the admin page (2026-11-10; moved from the parent
+// page 2026-11-14 — it now shows only once unlocked with the master
+// admin password).
 //   (1) APP_USAGE holds the exact current + 9 Nov baseline figures read
 //       from the Vercel, Supabase and Gemini dashboards (current as of
 //       10 Nov 2026). The Monday usage check updates ONLY the "current"
@@ -7,8 +9,9 @@
 //       percentage (and bar) and baseline for every metric, plus the
 //       as-of date and the weekly-refresh note. No billing change, no
 //       paid-tier suggestion, no upgrade prompt.
-//   (3) The usage section is wired into parentHTML only — it never
-//       renders on a child-facing page (Home / Learn).
+//   (3) The usage section is wired into adminHTML only (unlocked
+//       branch) — it never renders on the parent page or a
+//       child-facing page (Home / Learn).
 // The real data object and functions are extracted from
 // public/index.html and run in a vm — nothing here re-implements the app.
 'use strict';
@@ -206,12 +209,15 @@ test('appUsageHTML returns empty when APP_USAGE is missing', function () {
 
 /* ================= (3) parent-only wiring ================= */
 
-test('usage section is wired into parentHTML only, never a child page', function () {
+test('usage section is wired into the unlocked admin page only, never the parent page or a child page', function () {
   // Exactly two mentions of the function name in the whole file: the
-  // definition and the single call site inside parentHTML.
+  // definition and the single call site inside adminHTML.
   assert.equal(html.split('appUsageHTML').length - 1, 2, 'appUsageHTML must appear exactly twice');
+  const adminSrc = extractBlock('function adminHTML(){');
+  assert.ok(adminSrc.includes('appUsageHTML()'), 'adminHTML calls appUsageHTML()');
+  assert.ok(adminSrc.includes('adminPw?appUsageHTML()'), 'the usage card renders only once unlocked');
   const parentSrc = extractBlock('function parentHTML(){');
-  assert.ok(parentSrc.includes('+appUsageHTML()'), 'parentHTML calls appUsageHTML()');
+  assert.ok(!parentSrc.includes('appUsageHTML') && !parentSrc.includes('App usage'), 'the parent page must not render usage');
   const homeSrc = extractBlock('function homeHTML(){');
   assert.ok(!homeSrc.includes('appUsageHTML') && !homeSrc.includes('App usage'), 'Home must not render usage');
   const learnSrc = extractBlock('function learnHTML(){');
