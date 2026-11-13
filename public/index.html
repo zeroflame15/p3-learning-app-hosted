@@ -4456,10 +4456,11 @@ function fmtUsageNum(v){
   if(Math.abs(v)>=1000) return Math.round(v).toLocaleString('en-SG');
   return String(v);
 }
-/* 📊 App usage — parent page only (PIN-protected). Renders APP_USAGE:
-   each service with every metric's current use, free cap, share used
-   (percentage + bar) and the 9 Nov baseline beside it. Never called
-   from a child-facing page. */
+/* 📊 App usage — admin page only (master-password protected).
+   Renders APP_USAGE: each service with every metric's current use,
+   free cap, share used (percentage + bar) and the 9 Nov baseline
+   beside it. Called only from the unlocked admin page — never from
+   the parent page and never from a child-facing page. */
 function appUsageHTML(){
   var u = (typeof APP_USAGE !== 'undefined') ? APP_USAGE : null;
   if(!u || !u.services) return '';
@@ -14580,7 +14581,6 @@ function parentHTML(){
    +'<p class="small muted" style="font-weight:700">Marks and rewards are plain code rules (lib/rules.js) — Pip explains, code decides. Skills pack: '+esc(SKILL_PACK.version)+' · 19 specialist agents (11 live, 2 ready, 6 placeholders: Muse Voice Transcribe, Muse Image + SAM 3.1, Muse Spark – vision, SAM 3.1, Muse Spark web search, Muse Spark files).</p></div>'
    +boostSection
    +liveGenExperimentHTML(sel)
-   +appUsageHTML()
    +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
    +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
@@ -14800,7 +14800,11 @@ function adminHTML(){
       h+='<div class="card" style="margin-top:14px"><h4 style="margin-top:0">Reset critters to Egg for family '+esc(adminCrittersCode)+'</h4><p class="small muted" style="font-weight:700">This resets ALL explorers in this family back to Egg (Stage 1 of 4). It clears discovered critters and care progress, and the frog’s name goes back to ‘Splash’. Stars, quests, badges, treasures, spelling tests, the schedule and the parent PIN are not touched. This cannot be undone.</p><div style="margin-top:12px;display:flex;gap:8px"><button class="btn" id="admDoCritters">Yes, reset critters to Egg</button><button class="btn ghost" id="admCancelCritters">Cancel</button></div></div>';
     }
   }
-  return h+'</div></div>';
+  /* App usage lives here, on the admin page only (2026-11-14): it
+     shows only once unlocked with the master admin password, as a
+     sibling card under the admin tools — never on the parent page
+     and never on a child-facing page. */
+  return h+'</div>'+(adminPw?appUsageHTML():'')+'</div>';
 }
 function bindAdmin(){
   function postAdmin(path, body){
