@@ -64,6 +64,10 @@ load('mergeThreads', 'function mergeThreads(aThreads,bThreads){');
 load('pickCritterName', 'function pickCritterName(a,b){');
 load('mergeCare', 'function mergeCare(a,b){');
 load('mergeLetters', 'function mergeLetters(a,b){');
+load('hashStr', 'function hashStr(s){');
+load('flashcardId', 'function flashcardId(f, b, n){');
+load('stampFlashcardIds', 'function stampFlashcardIds(e){');
+load('bridgeFlashcardTombstones', 'function bridgeFlashcardTombstones(e){');
 load('mergeExplorer', 'function mergeExplorer(a,b){');
 
 const {

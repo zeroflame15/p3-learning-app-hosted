@@ -211,7 +211,7 @@ test('boost drill: a tiny retry bank tops up from fresh so the drill still has 5
 /* --- mergeExplorer: boost records ------------------------------------ */
 const mergeExplorer = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer',
 ].map(grabFn).join('\n') + '\n; mergeExplorer;');
 
 function mergeBase(over) {

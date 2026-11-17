@@ -173,7 +173,7 @@ test('learnBoardHTML has one board per quest, family and friends together, ranke
 test('merge keeps the fastest quest time and the banked quest seconds', () => {
   const mergeExplorer = eval([
     'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-    'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeExplorer',
+    'mergeThreads', 'pickCritterName', 'mergeCare', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer',
   ].map(grabFn).join('\n') + '\n; mergeExplorer;');
   function explorer(overrides) {
     const base = {

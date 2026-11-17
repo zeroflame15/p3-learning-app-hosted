@@ -93,6 +93,10 @@ function spellEngine() {
     grabFn('pickCritterName'),
     grabFn('mergeCare'),
     grabFn('mergeLetters'),
+    grabFn('hashStr'),
+    grabFn('flashcardId'),
+    grabFn('stampFlashcardIds'),
+    grabFn('bridgeFlashcardTombstones'),
     grabFn('mergeExplorer'),
     grabFn('saveLocal'),
     grabFn('mergeStoredIntoDB'),
@@ -210,6 +214,8 @@ function scheduleEngine(db, drafts) {
     + grabFn('hasCustomPlan') + '\n'
     + grabFn('studyPlanFor') + '\n'
     + grabFn('planDayLabel') + '\n'
+    + grabFn('levelNum') + '\n'
+    + grabFn('planFor') + '\n'
     + grabFn('familyEventEmoji') + '\n'
     + grabFn('familyScheduleSummaryHTML') + '\n'
     + grabFn('familyScheduleHTML') + '\n'
@@ -286,7 +292,7 @@ test('(c) safeToRender defers while the schedule form has focus, and the parent 
 
 const mergeFamilyDB = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer', 'mergeFamilyDB',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer', 'mergeFamilyDB',
 ].map(grabFn).join('\n') + '\n; mergeFamilyDB;');
 
 function explorerBase(overrides) {

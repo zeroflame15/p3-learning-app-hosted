@@ -152,6 +152,10 @@ test('rename after a glow change still wins by timestamp in the merge', () => {
     fnText('function mergeThreads(aThreads,bThreads){') + '\n' +
     fnText('function pickCritterName(a,b){') + '\n' +
     fnText('function mergeCare(a,b){') + '\n' +
+    fnText('function hashStr(s){') + '\n' +
+    fnText('function flashcardId(f, b, n){') + '\n' +
+    fnText('function stampFlashcardIds(e){') + '\n' +
+    fnText('function bridgeFlashcardTombstones(e){') + '\n' +
     '(' + fnText('function mergeExplorer(a,b){') + ')'
   );
   function explorer(over) {

@@ -144,7 +144,7 @@ test('opening a subject page / going back to All subjects lands at the top (new 
 
 test('the schedule card carries id="fsSchedCard" exactly once', () => {
   assert.equal(countIn(html, 'id="fsSchedCard"'), 1, 'one scroll target on the page');
-  const schedSrc = fnBody('function familyScheduleHTML(){');
+  const schedSrc = fnBody('function familyScheduleHTML(e){');
   assert.ok(schedSrc.includes('id="fsSchedCard"'), 'familyScheduleHTML renders the card with that id');
 });
 
@@ -194,7 +194,7 @@ test('new-family defaults are Play 20 / Daily 90 (real load() literal)', () => {
 
 const mergeFamilyDB = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer', 'mergeFamilyDB',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer', 'mergeFamilyDB',
 ].map(grabFn).join('\n') + '\n; mergeFamilyDB;');
 
 function explorer(overrides) {

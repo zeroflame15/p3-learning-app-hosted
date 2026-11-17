@@ -415,6 +415,10 @@ test('mergeExplorer: a later critterResetAt makes the reset win over a stale gro
   const mergeLetters = eval('(' + grabFn('mergeLetters(') + ')');
   const isThinkingMsg = eval('(' + grabFn('isThinkingMsg(') + ')');
   const mergeThreads = eval('(' + grabFn('mergeThreads(') + ')');
+  const hashStr = eval('(' + grabFn('hashStr(') + ')');
+  const flashcardId = eval('(' + grabFn('flashcardId(') + ')');
+  const stampFlashcardIds = eval('(' + grabFn('stampFlashcardIds(') + ')');
+  const bridgeFlashcardTombstones = eval('(' + grabFn('bridgeFlashcardTombstones(') + ')');
   const mergeExplorer = eval('(' + grabFn('mergeExplorer(') + ')');
   const reset = baseExplorer({ critterResetAt: '2026-11-09T12:00:00.000Z' });
   const stale = baseExplorer({
@@ -455,6 +459,10 @@ test('mergeExplorer: without a reset, the old max-stage and union-discovered rul
   const mergeLetters = eval('(' + grabFn('mergeLetters(') + ')');
   const isThinkingMsg = eval('(' + grabFn('isThinkingMsg(') + ')');
   const mergeThreads = eval('(' + grabFn('mergeThreads(') + ')');
+  const hashStr = eval('(' + grabFn('hashStr(') + ')');
+  const flashcardId = eval('(' + grabFn('flashcardId(') + ')');
+  const stampFlashcardIds = eval('(' + grabFn('stampFlashcardIds(') + ')');
+  const bridgeFlashcardTombstones = eval('(' + grabFn('bridgeFlashcardTombstones(') + ')');
   const mergeExplorer = eval('(' + grabFn('mergeExplorer(') + ')');
   const a = baseExplorer({ critterStage: 1, critterStageDays: 10, discoveredCritters: ['duck'] });
   const b = baseExplorer({ critterStage: 2, critterStageDays: 4, discoveredCritters: ['butterfly'] });

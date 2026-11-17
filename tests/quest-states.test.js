@@ -132,6 +132,10 @@ const mergeExplorer = eval(
   fnText('function pickCritterName(a,b){') + '\n' +
   fnText('function mergeCare(a,b){') + '\n' +
   fnText('function mergeLetters(a,b){') + '\n' +
+  fnText('function hashStr(s){') + '\n' +
+  fnText('function flashcardId(f, b, n){') + '\n' +
+  fnText('function stampFlashcardIds(e){') + '\n' +
+  fnText('function bridgeFlashcardTombstones(e){') + '\n' +
   '(' + fnText('function mergeExplorer(a,b){') + ')'
 );
 

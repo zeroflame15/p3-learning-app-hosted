@@ -698,7 +698,7 @@ test('finish: a non-Maths boost records the same way (the gate, not the finish, 
 const mergeExplorer = eval([
   'function unionArr(a,b){', 'function unionObjMax(a,b){', 'function unionObjLatest(a,b){',
   'function isThinkingMsg(m){', 'function mergeThreads(aThreads,bThreads){', 'function pickCritterName(a,b){',
-  'function mergeCare(a,b){', 'function mergeLetters(a,b){', 'function mergeExplorer(a,b){',
+  'function mergeCare(a,b){', 'function mergeLetters(a,b){', 'function hashStr(s){', 'function flashcardId(f, b, n){', 'function stampFlashcardIds(e){', 'function bridgeFlashcardTombstones(e){', 'function mergeExplorer(a,b){',
 ].map(fnExact).join('\n') + '\n; mergeExplorer;');
 
 function mergeBase(over) {

@@ -88,7 +88,13 @@ function pageHero(art, emo, title, sub, stat) { return '<section class="pagehero
 function learnPlanBannerHTML() { return '<!--PLAN-BANNER-->'; }
 function spellTestsEntryHTML() { return '<!--SPELL-TESTS-->'; }
 function learnBoardHTML() { return '<!--QUEST-BOARD-->'; }
-function studyPlanFor() { return { subs: [] }; }
+// --- plan helpers: learnHTML's quest cards tag "Today's study plan"
+// via planFor (2026-11-17) — the real functions from the page.
+const SUBJECTS = eval('(' + grabLiteral('var SUBJECTS=') + ')');
+const STUDY_PLAN = eval('(' + grabLiteral('var STUDY_PLAN=') + ')');
+const studyPlanFor = eval('(' + grabFn('studyPlanFor(') + ')');
+const planDayLabel = eval('(' + grabFn('planDayLabel(') + ')');
+const planFor = eval('(' + grabFn('planFor(') + ')');
 function fmtPlaySecs(s) { return s + 's'; }
 const LIVE_GEN_TOPIC = 'math-ntuc';
 let learnView = { subject: null, openTopic: null };

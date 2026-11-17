@@ -55,7 +55,7 @@ const SYNC_FNS = [
   'function postToServer(key){', 'function syncToServer(){', 'function uploadAfterPull(){',
   'function unionArr(a,b){', 'function unionObjMax(a,b){', 'function unionObjLatest(a,b){',
   'function isThinkingMsg(m){', 'function mergeThreads(aThreads,bThreads){',
-  'function pickCritterName(a,b){', 'function mergeCare(a,b){', 'function mergeExplorer(a,b){',
+  'function pickCritterName(a,b){', 'function mergeCare(a,b){', 'function hashStr(s){', 'function flashcardId(f, b, n){', 'function stampFlashcardIds(e){', 'function bridgeFlashcardTombstones(e){', 'function mergeExplorer(a,b){',
   'function mergeFamilyDB(local, server){', 'function syncFromServer(opts){',
   'function mergeStoredIntoDB(){', 'function save(){', 'function load(){',
   'function migrateStages(){', 'function isModalOpen(){', 'function safeToRender(){',

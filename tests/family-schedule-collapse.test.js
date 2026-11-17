@@ -53,7 +53,7 @@ function grabVar(name, nextMarker) {
 
 const mergeFamilyDB = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer', 'mergeFamilyDB',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer', 'mergeFamilyDB',
 ].map(grabFn).join('\n') + '\n; mergeFamilyDB;');
 
 function explorer(overrides) {
@@ -175,6 +175,8 @@ function scheduleEngine(db, state) {
     + grabFn('hasCustomPlan') + '\n'
     + grabFn('studyPlanFor') + '\n'
     + grabFn('planDayLabel') + '\n'
+    + grabFn('levelNum') + '\n'
+    + grabFn('planFor') + '\n'
     + grabFn('familyEventEmoji') + '\n'
     + grabFn('familyScheduleSummaryHTML') + '\n'
     + grabFn('familyScheduleHTML') + '\n'

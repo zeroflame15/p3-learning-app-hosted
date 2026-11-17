@@ -195,6 +195,8 @@ function weekStripEngine() {
     + grabVar('STUDY_PLAN', 'function studyPlanFor') + '\n'
     + grabFn('studyPlanFor') + '\n'
     + grabFn('planDayLabel') + '\n'
+    + grabFn('levelNum') + '\n'
+    + grabFn('planFor') + '\n'
     + grabVar('MOE_SCHOOL_HOLIDAYS', 'var MOE_SCHOOL_HOLIDAY_DAYS') + '\n'
     + grabVar('MOE_SCHOOL_HOLIDAY_DAYS', 'var SG_PUBLIC_HOLIDAYS') + '\n'
     + grabVar('SG_PUBLIC_HOLIDAYS', '/* Returns the school-holiday name') + '\n'

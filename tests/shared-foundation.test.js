@@ -222,7 +222,7 @@ function explorer(overrides) {
 test('levelAt merge: the later level change wins, like themeAt and codeAt', () => {
   const mergeExplorer = eval([
     'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-    'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer',
+    'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer',
   ].map(grabFn).join('\n') + '\n; mergeExplorer;');
   const server = explorer({ level: 'P3', levelAt: 1000 });
   const local = explorer({ level: 'P4', levelAt: 2000 });
@@ -321,7 +321,7 @@ test('startGame refuses when the cap is hit, before any game state is built', ()
 test('playDaily merges per day by max, like e.daily', () => {
   const mergeExplorer = eval([
     'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-    'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer',
+    'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer',
   ].map(grabFn).join('\n') + '\n; mergeExplorer;');
   const server = explorer({ playDaily: { '2026-11-07': 12, '2026-11-06': 5 } });
   const local = explorer({ playDaily: { '2026-11-07': 18, '2026-11-05': 9 } });

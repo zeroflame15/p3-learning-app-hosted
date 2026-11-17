@@ -86,6 +86,7 @@ function askFlow() {
     grab('learnElapsedSecs'), grab('pauseLearnTimer'), grab('resumeLearnTimer'),
     grab('playElapsedSecs'), grab('pausePlayTimer'), grab('resumePlayTimer'), grab('persistProgress'),
     grab('askThreadTitle'), grab('askKidText'), grab('newAskQuestionThread'), grab('pipExplainFallback'),
+    grab('hashStr'), grab('flashcardId'), grab('stampFlashcardIds'), grab('bridgeFlashcardTombstones'),
     fnBody('function mergeExplorer('), fnBody('function mergeFamilyDB('),
     fnBody('function askPipAbout('), fnBody('function pipExplainSend('), fnBody('function returnFromAskPip('),
   ].join('\n');

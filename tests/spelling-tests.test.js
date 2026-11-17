@@ -38,7 +38,7 @@ function grabFn(name) {
 
 const mergeExplorer = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer',
 ].map(grabFn).join('\n') + '\n; mergeExplorer;');
 
 function explorer(overrides) {

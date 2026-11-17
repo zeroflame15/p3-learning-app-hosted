@@ -160,7 +160,7 @@ test('schoolScheduleHTML: an empty "what\'s coming" list shows a nothing-coming-
 
 const mergeFamilyDB = eval([
   'unionArr', 'unionObjMax', 'unionObjLatest', 'isThinkingMsg',
-  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer', 'mergeFamilyDB',
+  'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer', 'mergeFamilyDB',
 ].map(grabFn).join('\n') + '\n; mergeFamilyDB;');
 
 function explorer(overrides) {
@@ -238,7 +238,7 @@ test('parent page has an Our school & study schedule section', () => {
   assert.ok(section.includes('id="fsPlanSave"'), 'a Save timetable button');
   assert.ok(section.includes('id="fsPlanReset"'), 'a Reset to the default timetable button');
   const parent = fnBody('function parentHTML(');
-  assert.ok(parent.includes('familyScheduleHTML()'), 'the section renders on the parent page');
+  assert.ok(parent.includes('familyScheduleHTML(sel)'), 'the section renders on the parent page');
   const bind = fnBody('function bindParent(');
   assert.ok(bind.includes("getElementById('fsEvAdd')"), 'adding an event is wired');
   assert.ok(bind.includes("getElementById('fsPlanSave')"), 'saving the timetable is wired');
