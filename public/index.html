@@ -138,6 +138,8 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 @keyframes fxFloatUp{0%{opacity:0;transform:translateY(8px) scale(.6)}25%{opacity:1}100%{opacity:0;transform:translateY(-74px) scale(1.2)}}
 .fx-hop{animation:fxHop .95s ease}
 .fx-wiggle{animation:fxWiggle .9s ease-in-out}
+@keyframes eggwiggle{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-6deg) scale(1.04)}50%{transform:rotate(5deg) scale(1.04)}75%{transform:rotate(-3deg) scale(1.02)}}
+.eggwiggle{animation:eggwiggle .35s ease-in-out}
 .fx-float{position:absolute;bottom:12px;animation:fxFloatUp 1.4s ease-out forwards;pointer-events:none;font-size:1.7rem;z-index:2}
 /* ---------- Live frog pond: the frog is layered SVG art that
    lives in its pond — it wanders, blinks, breathes and can be
@@ -306,6 +308,16 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .menu{position:absolute;top:64px;right:16px;width:290px;background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;z-index:60}
 .menu button.mitem{display:flex;gap:10px;align-items:center;width:100%;background:var(--panel2);border:0;border-radius:12px;padding:13px;font-weight:900;font-size:.98rem;color:var(--ink);margin-bottom:8px;text-align:left}
 .overlay{position:fixed;inset:0;background:rgba(8,10,30,.55);display:none;align-items:center;justify-content:center;z-index:80;padding:16px}
+/* Wind-down cue (2026-11-17): a translucent dark wash over whatever
+   theme is active — it is a fixed overlay, not a theme colour, so it
+   dims Frog Pond, Ocean Deep or any other theme the same way. It
+   never intercepts clicks (pointer-events:none), and the cue card
+   sits above it (z-index 51) so it stays bright. */
+.winddown-dim{position:fixed;inset:0;background:rgba(20,16,40,.38);z-index:50;pointer-events:none}
+.winddown-card{position:relative;z-index:51}
+.pip-sleepy{display:inline-block;animation:pipYawn 2.4s ease-in-out infinite}
+@keyframes pipYawn{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(-2deg) scale(1.02,.98)}}
+.pip-zzz{position:absolute;top:-6px;right:-14px;font-size:1.6rem;animation:fxFloatUp 2.4s ease-in-out infinite}
 .overlay.open{display:flex}
 .modal{background:var(--panel);border-radius:20px;max-width:480px;width:100%;padding:22px;max-height:90vh;overflow-y:auto;border:2px solid var(--line)}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--nav);color:#fff;padding:11px 20px;border-radius:999px;font-weight:900;z-index:95;display:none;box-shadow:var(--shadow)}
@@ -349,7 +361,7 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 
 /* ---------- Home: terrarium hero + weekly theme (mirrors the Muse version) ---------- */
 .disc{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
-.sidecritter{background:var(--panel);border-radius:var(--radius);padding:14px}
+.sidecritter{background:var(--panel);border-radius:var(--radius);padding:14px;border:0;text-align:left;cursor:pointer;font:inherit;color:inherit;width:100%}
 .homegrid{display:grid;gap:20px}
 .cardrow{display:grid;gap:16px;margin-top:20px}
 @media (min-width:900px){
@@ -576,6 +588,10 @@ function sndFanfare(){ [523,659,784,1047,784,1047,1319].forEach(function(f,i){ t
 function sndPop(){ tone(880,0,0.09,'square',0.06); }
 function sndThunk(){ slide(160,70,0.12,'triangle',0.3); }
 function sndSlide(){ slide(300,700,0.18,'sine',0.08); }
+/* Egg wiggle bubble (2026-11-17): a soft rising blip, like a bubble
+   escaping the frogspawn — built on slide()/tone(), so isMuted() is
+   respected the same way as every other sound. */
+function sndBubble(){ slide(280,720,0.22,'sine',0.10); tone(1200,0.16,0.12,'sine',0.05); }
 /* A music-box celesta note: a pure sine plus a faint 4th harmonic
    that dies away quickly — the twinkling, magical-movie feel.
    The tune itself is original, written for Pip; it is not the
@@ -2825,6 +2841,27 @@ function planTopics(plan){
   if(plan.review||!plan.subs.length)return TOPICS.slice();
   return TOPICS.filter(function(t){ return plan.subs.indexOf(t.sub)>=0; });
 }
+/* Level-aware plan day (2026-11-17): Science is not taught in
+   P1/P2, so for a P1/P2 explorer the day's subjects drop 'sci'
+   and the label is re-derived — Tue 'Science + Chinese' becomes
+   'Chinese', Thu 'Maths + Science' becomes 'Maths', and a day
+   left with no subjects becomes a review day. The label is only
+   re-derived when 'sci' was actually dropped, so rest and review
+   days keep their own labels ('Dance & art day', 'Sunday
+   review'). The built-in plan and studyPlanFor are never changed:
+   a filtered day is a fresh copy, and P3+ (or no explorer) sees
+   the day exactly as stored. */
+function planFor(e, dow){
+  var day=studyPlanFor(dow);
+  if(!e||levelNum(e)>2)return day;
+  if(!day||!day.subs||day.subs.indexOf('sci')<0)return day;
+  var out={};
+  Object.keys(day).forEach(function(k){ out[k]=day[k]; });
+  out.subs=day.subs.filter(function(s){ return s!=='sci'; });
+  out.label=planDayLabel(out);
+  if(!out.rest&&!out.subs.length)out.review=true;
+  return out;
+}
 /* ---------- My spelling tests (2026-11-09) ----------
    A per-explorer list of upcoming English / Chinese spelling tests,
    each with its own words, test date and routine. The routine step
@@ -3028,7 +3065,7 @@ function planSectionHTML(e, plan, ev){
   var tmr=new Date(); tmr.setDate(tmr.getDate()+1); var tEv=schoolEventFor(tmr);
   var monday=new Date(); monday.setDate(monday.getDate()-((monday.getDay()+6)%7)); monday.setHours(0,0,0,0);
   var weekCells='';
-  for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); var p=studyPlanFor(d.getDay()); var wev=schoolEventFor(d); var isToday=d.toDateString()===new Date().toDateString();
+  for(var i=0;i<7;i++){ var d=new Date(monday); d.setDate(monday.getDate()+i); var p=planFor(e, d.getDay()); var wev=schoolEventFor(d); var isToday=d.toDateString()===new Date().toDateString();
     var dk=dateKeyOf(d), sh=isSchoolHoliday(dk), ph=isPublicHoliday(dk), sp=spellDayLinesHTML(e, dk);
     weekCells+='<div style="flex:1;min-width:86px;background:'+(isToday?'var(--panel2)':'var(--panel)')+';border:2px solid '+(isToday?'var(--amber)':'var(--line)')+';border-radius:14px;padding:9px 10px"><div style="font-weight:900;font-size:.8rem">'+DOWS[d.getDay()]+' '+d.getDate()+(isToday?' · today':'')+'</div><div class="small" style="font-weight:700;margin-top:3px">'+esc(p.rest?restDayStripText(p):p.label)+'</div>'+(wev?'<div class="small" style="font-weight:800;color:var(--amber);margin-top:3px">'+wev.e+' '+esc(wev.name)+'</div>':'')+(sh?'<div class="small" style="font-weight:800;color:var(--teal);margin-top:3px">🏖️ '+esc(sh)+'</div>':'')+(ph?'<div class="small" style="font-weight:800;color:var(--coral);margin-top:3px">🎉 '+esc(ph)+'</div>':'')+sp+'</div>';
   }
@@ -3054,7 +3091,7 @@ function schoolScheduleHTML(e){
    +'<p class="small" style="font-weight:800;margin:10px 0 0">'+esc(enrichmentLine())+'</p></div>';
 }
 function learnPlanBannerHTML(e){
-  var plan=studyPlanFor(new Date().getDay()); var ev=schoolEventFor(new Date());
+  var plan=planFor(e, new Date().getDay()); var ev=schoolEventFor(new Date());
   var tmr=new Date(); tmr.setDate(tmr.getDate()+1); var tEv=schoolEventFor(tmr);
   return '<div class="card" style="margin-bottom:16px"><h3 style="margin-top:0">📅 Today’s study plan — '+esc(plan.label)+'</h3>'
    +'<p style="font-weight:700;margin:0">'+esc(plan.study)+'. Quests in today’s subjects wear a <span class="pill done">Today’s plan</span> tag — start with those, they ARE today’s study block.</p>'
@@ -3686,6 +3723,49 @@ function ensureStarsLedger(e){
 }
 function earnStars(e,n){ ensureStarsLedger(e); e.starsEarned=(e.starsEarned||0)+n; e.stars=Math.max(0,e.starsEarned-(e.starsSpent||0)); }
 function spendStars(e,n){ ensureStarsLedger(e); e.starsSpent=(e.starsSpent||0)+n; e.stars=Math.max(0,e.starsEarned-(e.starsSpent||0)); }
+/* Flashcards have real ids (2026-11-17): deleting used to tombstone
+   front+'\u0000'+back, but save() strips every \u0000 (Postgres text
+   rejects NUL), so the stored tombstone never matched the filter and
+   a stale copy of the card resurrected it on the next merge — Bryan
+   could not delete any card. New cards get a unique id on creation;
+   older cards get a deterministic one from their content (hashStr
+   over front+back), so every device agrees. Identical cards get an
+   occurrence suffix, so deleting one of two identical cards leaves
+   the other standing. */
+function flashcardId(f, b, n){
+  var id='fc-mig-'+hashStr(f+'\u0000'+b).toString(36);
+  return n>0?id+'-'+n:id;
+}
+function stampFlashcardIds(e){
+  if(!e||!e.flashcards)return;
+  var seen={};
+  e.flashcards.forEach(function(c){
+    if(!c||c.id)return;
+    var key=c.f+'\u0000'+c.b;
+    var n=seen[key]||0; seen[key]=n+1;
+    c.id=flashcardId(c.f, c.b, n);
+  });
+}
+/* Bridge pre-id tombstones at merge time: a card deleted before ids
+   existed was tombstoned by its content — the NUL-joined key, or the
+   stripped front+back form save() left behind. Such a card stays
+   deleted: drop it and swap the content tombstone for its id, so the
+   delete sticks across devices. */
+function bridgeFlashcardTombstones(e){
+  if(!e||!e.flashcards||!e.deletedFlashcards)return;
+  for(var i=e.flashcards.length-1;i>=0;i--){
+    var c=e.flashcards[i];
+    if(!c||!c.id)continue;
+    var nul=c.f+'\u0000'+c.b, stripped=c.f+c.b;
+    var li=e.deletedFlashcards.indexOf(nul);
+    if(li<0)li=e.deletedFlashcards.indexOf(stripped);
+    if(li>=0){
+      e.flashcards.splice(i,1);
+      e.deletedFlashcards.splice(li,1);
+      if(e.deletedFlashcards.indexOf(c.id)<0)e.deletedFlashcards.push(c.id);
+    }
+  }
+}
 function mergeExplorer(a,b){
   var e=JSON.parse(JSON.stringify(a||b));
   if(!a)return JSON.parse(JSON.stringify(b)); if(!b)return JSON.parse(JSON.stringify(a));
@@ -3850,13 +3930,35 @@ function mergeExplorer(a,b){
   e.threads=mergeThreads(a.threads,b.threads);
   if(e.deletedThreadIds.length)e.threads=e.threads.filter(function(t){ return e.deletedThreadIds.indexOf(t.id)<0; });
   if(clearedAt)e.threads=e.threads.filter(function(t){ var ts=parseInt(String(t.id||'').slice(1),10); return !(ts&&ts<=clearedAt-10000); });
-  /* Flashcards merge by front+back: the old check compared a field
-     cards never had ({f,b}), so both sides were undefined and every
-     local card after the first was dropped on sync. Deleted cards are
-     tombstoned so the server copy cannot resurrect them. */
+  /* Flashcards merge by id (2026-11-17): the old check compared a
+     field cards never had ({f,b}), so both sides were undefined and
+     every local card after the first was dropped on sync — that was
+     fixed by merging on front+back, but the delete tombstone was
+     front+'\u0000'+back and save() strips every \u0000, so the
+     stored tombstone never matched and a stale copy resurrected the
+     card. Cards now carry a real id (see flashcardId /
+     stampFlashcardIds above); the union dedupes by id when both
+     sides have one and falls back to front+back for cards that
+     predate ids, and the filter matches the id tombstone. A
+     pre-id content tombstone (NUL-joined or stripped) still
+     suppresses its card via bridgeFlashcardTombstones. */
   e.deletedFlashcards=unionArr(a.deletedFlashcards,b.deletedFlashcards);
-  e.flashcards=(a.flashcards||[]).concat((b.flashcards||[]).filter(function(f){ return !(a.flashcards||[]).some(function(x){ return x.f===f.f && x.b===f.b; }); }));
-  if(e.deletedFlashcards.length)e.flashcards=e.flashcards.filter(function(f){ return e.deletedFlashcards.indexOf(f.f+'\u0000'+f.b)<0; });
+  /* Union by id when both sides have one, else by front+back — and an
+     id-bearing copy replaces an id-less one for the same content, so
+     a card re-added after a delete (fresh id) is not collapsed back
+     into a stale id-less copy and re-stamped with the tombstoned
+     migrated id. */
+  var _fc=(a.flashcards||[]).slice();
+  (b.flashcards||[]).forEach(function(f){
+    var _di=-1;
+    _fc.forEach(function(x,i){ if((x.id&&f.id)?x.id===f.id:(x.f===f.f && x.b===f.b)){ if(_di<0)_di=i; } });
+    if(_di<0)_fc.push(f);
+    else if(f.id&&!_fc[_di].id)_fc[_di]=f;
+  });
+  e.flashcards=_fc;
+  stampFlashcardIds(e);
+  bridgeFlashcardTombstones(e);
+  if(e.deletedFlashcards.length)e.flashcards=e.flashcards.filter(function(f){ return e.deletedFlashcards.indexOf(f.id)<0; });
   /* Planner merges by title with done = either side done: the old
      keep-server-only rule reverted a local tick (server d:false beat
      local d:true). Deleted plans are tombstoned so the server copy
@@ -3960,6 +4062,15 @@ function mergeExplorer(a,b){
     if(_sWkB>_sWkA){ e.streakFreezes=b.streakFreezes||0; e.streakFreezeWeek=b.streakFreezeWeek||null; }
     else if(_sWkA>_sWkB){ e.streakFreezes=a.streakFreezes||0; e.streakFreezeWeek=a.streakFreezeWeek||null; }
     else { e.streakFreezes=Math.min((a.streakFreezes==null?1:a.streakFreezes),(b.streakFreezes==null?1:b.streakFreezes)); e.streakFreezeWeek=a.streakFreezeWeek||b.streakFreezeWeek||null; }
+  }
+  /* Wind-down cue (2026-11-17): the date the cue last showed. Later
+     date wins, so a cue shown on another device today is not shown
+     again here. Guarded like the streak fields: when neither side
+     has the field (a legacy explorer), it is left alone, so a merge
+     never invents it and a no-change pull stays no-change. */
+  if(a.windDownDay!==undefined||b.windDownDay!==undefined){
+    var _wA=a.windDownDay||'', _wB=b.windDownDay||'';
+    e.windDownDay=_wB>_wA?_wB:(_wA||null);
   }
   return e;
 }
@@ -4289,7 +4400,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, musicPref:'bg-music', musicPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null,
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, musicPref:'bg-music', musicPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null, windDownDay:null,
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
@@ -4386,6 +4497,23 @@ function streakFrogMood(e, today){
 function streakFrogMoodHTML(e){
   var m=streakFrogMood(e); if(!m||!m.line)return '';
   return '<p class="small" style="font-weight:800;margin:8px 0 0">'+m.emoji+' '+esc(m.line)+'</p>';
+}
+/* Wind-down cue (2026-11-17): after the daily quest, Pip winds the
+   day down. The critter's REAL name — never a hardcoded one — and
+   "full" only when the critter was actually fed today
+   (care.feed.day, set by recordCare), so Pip never says something
+   untrue. Takes an explicit today like the other streak helpers so
+   tests can drive it. */
+function windDownLine(e, today){
+  if(!e)return '';
+  if(!today)today=(typeof todayKey==='function')?todayKey():null;
+  var name=e.critterName||'Splash';
+  var fed=e.care&&e.care.feed&&e.care.feed.day===today;
+  return name+' is '+(fed?'full and sleepy':'sleepy')+'! Great job today — see you tomorrow!';
+}
+function windDownHTML(e){
+  return '<div class="winddown-dim"></div>'
+  +'<div class="card winddown-card" style="text-align:center"><span style="display:inline-block;position:relative"><span class="pip-sleepy">'+pipSVG(96,e.glow)+'</span><span class="pip-zzz">💤</span></span><div class="speech" style="max-width:420px;margin:8px auto">😴 '+esc(windDownLine(e))+'</div><button class="btn" id="windDownDismiss">Got it — see you tomorrow! 🌙</button></div>';
 }
 function streakStripHTML(e, questId){
   if(!e) return '';
@@ -4574,6 +4702,14 @@ function render(){
      still captures 0 and lands at the top. */
   var _sy=(typeof window!=='undefined'&&typeof window.scrollY==='number')?window.scrollY:0;
   ensureFriendCode();
+  /* Theme backstop (2026-11-17): the theme follows the ACTIVE
+     explorer, and the active explorer can change without a boot or a
+     theme-chip tap (Grand Door sign-in, new explorer, switching in
+     the menu) — the old theme stuck until the next boot. render()
+     runs on every navigation, so re-apply here; applyTheme() returns
+     early when no explorer is active yet (Grand Door), so this is
+     safe before the door early-return below. */
+  if(typeof applyTheme==='function')applyTheme();
   if(typeof streakTick==='function'){ var _stk=ex(); if(_stk)streakTick(_stk); }
   var root=document.getElementById('root');
   /* Admin page (Bryan only): a standalone page — no sidebar, no
@@ -4602,7 +4738,7 @@ function render(){
   root.innerHTML='<div class="app route-'+routeCls+'">'
    +'<aside class="sidebar"><div class="brand" style="flex-direction:column;align-items:center;text-align:center;padding:6px 4px 14px;gap:6px"><div id="sideAvatar" style="width:130px;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,130)+'</div><div><div class="bname">My Terrarium</div><div class="bsub">Primary '+levelNum(ex())+' · '+esc(ex().name)+' '+(ex().badge||'⭐')+'</div></div></div>'
    + navBtns
-   +'<div class="spacer"></div><div class="sidecritter"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div></div><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices':'Progress is saved on this device only.')+'</div></aside>'
+   +'<div class="spacer"></div><button type="button" class="sidecritter" id="sideCritterBtn" data-go2="critter" aria-label="Visit Critter Lab"><div class="small" style="color:var(--ink);font-weight:800">Critter stage</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.12rem;margin-top:2px;color:var(--ink)">'+esc(ex().critterName)+' the '+STAGES[ex().critterStage][1]+'</div><div class="progressbar" style="margin-top:8px"><div style="width:'+Math.round(ex().critterStage/3*100)+'%"></div></div><div class="small" style="color:var(--ink);font-weight:700;margin-top:4px">Stage '+(ex().critterStage+1)+' of 4</div><div class="small" style="color:var(--ink);font-weight:700;margin-top:6px">👉 Tap to visit Critter Lab</div></button><div class="doorlink">'+(DB.syncCode?'🔗 Synced across linked devices':'Progress is saved on this device only.')+'</div></aside>'
    +'<div class="main"><div class="topbar"><div style="display:flex;align-items:center;gap:8px"><span class="tbPip" style="line-height:0">'+pipSVG(34,ex().glow)+'</span><span class="tbChar" id="tbChar" style="display:none;line-height:0">'+avatarLookHTML(ex().face,ex().look,ex().glow,43)+'</span><span class="page-title">'+(PAGE_TITLES[route]||'My Terrarium')+'</span></div><div style="flex:1"></div>'
    +'<span class="chip" id="tbStreak" title="Daily quest streak — one quest a day keeps it alive">🔥 '+(ex().streak||0)+'</span>'
    +'<button class="chip" id="tbStars" title="See your stars in the Treasure Realm" aria-label="Open the Treasure Realm">⭐ '+ex().stars+'</button>'
@@ -4613,6 +4749,13 @@ function render(){
    +'<div class="content" id="content"></div></div></div>'
    +'<nav class="bottomnav">'+btm+'</nav>';
   document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndMystery(); go(b.getAttribute('data-go')); }); });
+  /* Sidebar critter card (2026-11-17): the card is a button that
+     jumps to Critter Lab. It lives in the shell, so it is bound here
+     on every render — the [data-go2] binding in bindHome only runs
+     on the Home route. onclick (not addEventListener) so bindHome's
+     document-wide [data-go2] pass on Home overwrites it with the
+     identical handler instead of firing twice. */
+  var sc=document.getElementById('sideCritterBtn'); if(sc)sc.onclick=function(){ sndPop(); go('critter'); };
   /* The star count in the top bar jumps to the Treasure Realm
      (requested 2026-11-07) — tapping your stars shows what they buy. */
   var tbStars=document.getElementById('tbStars'); if(tbStars)tbStars.addEventListener('click',function(){ sndPop(); go('treasure'); });
@@ -5119,7 +5262,7 @@ function bindDoor(){
       if(!name){ toast('Pick a magic name first!'); return; }
       if(doorCode.length!==3){ toast('Pick exactly 3 pictures for your code!'); return; }
       var e=newExplorer(name, doorCode.slice(), doorLevel);
-      DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; doorLevel='P3'; save();
+      DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; doorLevel='P3'; save(); applyTheme();
       sndEntrance(); autoVibe(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
     };
   } else {
@@ -5138,7 +5281,7 @@ function showDoorCode(){
     sndMystery(); doorCode.push(b.getAttribute('data-lpic'));
     renderBubbles(document.getElementById('loginBubbles'), doorCode);
     if(doorCode.length===3){
-      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); doorSel=null; doorCode=[]; sndEntrance(); autoVibe(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
+      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); applyTheme(); doorSel=null; doorCode=[]; sndEntrance(); autoVibe(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
       else { sndWrong(); toast('Hmm, those pictures don’t match. Try again!'); doorCode=[]; setTimeout(showDoorCode,600); }
     }
   }; });
@@ -5209,18 +5352,38 @@ function pageHero(art, emo, title, sub, stat){
    Home shows THREE quest choices a day instead of one suggested
    quest, so she picks the subject and the order (autonomy is the
    top thing children asked for in the research). The picks come
-   from today's study plan (the same pool as the old single pick),
-   unfinished first, and are spread across subjects where possible
-   — a board of three Maths quests teaches her nothing about
-   choosing. Out-of-season topics never appear (they show the
-   hold-back note in Learn, never a Start button). Completing ANY
-   one counts for the streak (the streak rule is unchanged — any 1
-   quest/day). swapIdx rotates the board, so "Show me different
-   quests" deals a fresh hand. */
+   from today's study plan at the explorer's own level — the same
+   MOE topics Learn shows, not the fixed legacy list — unfinished
+   first, and are spread across subjects where possible — a board
+   of three Maths quests teaches her nothing about choosing.
+   Out-of-season topics never appear (they show the hold-back note
+   in Learn, never a Start button). Completing ANY one counts for
+   the streak (the streak rule is unchanged — any 1 quest/day).
+   swapIdx rotates the board, so "Show me different quests" deals
+   a fresh hand. */
 function boardInSeason(t){
   if(!t)return false;
   if(t.moe)return moeInSeason(t);
   return true;
+}
+/* The board's pool for one explorer: in-season MOE topics for
+   today's plan subjects (all subjects on a review/rest day), as
+   quest-flow topics via moeQuestTopic. A topic with no local bank
+   still counts — the server bank serves it (Learn shows "0
+   questions ready" for those, never a substitute). */
+function moeBoardPool(e, todayPlan){
+  var subs=(todayPlan&&todayPlan.subs)||[];
+  var review=!!(todayPlan&&todayPlan.review);
+  var out=[];
+  moeSubjects(levelNum(e)).forEach(function(s){
+    if(!review&&subs.length&&subs.indexOf(s.id)<0)return;
+    s.topics.forEach(function(tp){
+      if(!moeInSeason(tp))return;
+      var t=moeQuestTopic(tp.id);
+      if(t)out.push(t);
+    });
+  });
+  return out;
 }
 function boardPicks(e, todayPlan){
   /* A quest finished today stays on the board as a done card (greyed,
@@ -5235,10 +5398,25 @@ function boardPicks(e, todayPlan){
   var today=todayKey();
   function doneBefore(x){ return e.completed[x.id] && !(e.completedDay&&e.completedDay[x.id]===today); }
   function doneToday(x){ return e.completedDay&&e.completedDay[x.id]===today; }
-  var unfinished=TOPICS.filter(function(x){return !doneBefore(x);});
-  var pool=planTopics(todayPlan).filter(function(x){return !doneBefore(x);});
-  if(!pool.length)pool=unfinished.slice();
-  if(!pool.length)pool=TOPICS.slice();
+  /* Level MOE pool (2026-11-17): the board offers the explorer's
+     own level MOE topics — the same topics Learn shows — not the
+     fixed legacy list. A P6 explorer is never offered Magnet Lab
+     (a P3 topic); a P1/P2 explorer never sees Science (moeSubjects
+     has none for those levels). Fallbacks, in order: (1) in-season
+     MOE topics for today's subjects not finished before; (2) the
+     same set allowing replays of topics finished on a previous day
+     (they show as a fresh set, as the board already does); (3) the
+     legacy planTopics pool, for a subject with no MOE topics at
+     this level. */
+  var moePool=moeBoardPool(e, todayPlan);
+  var pool=moePool.filter(function(x){return !doneBefore(x);});
+  if(!pool.length)pool=moePool.slice();
+  if(!pool.length){
+    var unfinished=TOPICS.filter(function(x){return !doneBefore(x);});
+    pool=planTopics(todayPlan).filter(function(x){return !doneBefore(x);});
+    if(!pool.length)pool=unfinished.slice();
+    if(!pool.length)pool=TOPICS.slice();
+  }
   pool=pool.filter(boardInSeason);
   /* Science is not taught in P1/P2 (2026-11-17): a P1/P2 explorer
      never sees a Science quest on the board — not on a Science plan
@@ -5288,7 +5466,7 @@ function homeHTML(){
      Chinese, Wed light/Chinese, Thu Maths+Science, Fri English+
      Chinese+review). Sunday reviews anything unfinished — or, if
      all is done, a finished quest's fresh set. Saturday is rest. */
-  var todayPlan=studyPlanFor(new Date().getDay());
+  var todayPlan=planFor(e, new Date().getDay());
   var todayEvent=schoolEventFor(new Date());
   var board=boardPicks(e, todayPlan);
   var quest=board[0];
@@ -5334,7 +5512,7 @@ function homeHTML(){
      +'</section>';
     if(todayEvent&&todayEvent.kind==='closure'){ boardSection=boardSection.replace('🍃 Today’s quest board','🍃 Today’s quest board — school is closed today, so these are gentle & optional'); }
   }
-  var critterHeroCard='<button type="button" data-go2="critter" style="display:block;width:100%;text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink);margin-top:20px;cursor:pointer"><img src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'" style="width:100%;height:220px;object-fit:contain;display:block;background:linear-gradient(180deg,#e8f5e9,#c8e6c9);padding:12px 0"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">🐸 Your companion critter — tap to visit Critter Lab!</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.5rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'<p style="font-weight:800;margin:12px 0 0;color:#2f7a3d">👉 Tap to feed, clean &amp; play with '+esc(e.critterName)+' in Critter Lab!</p></div></button>';
+  var critterHeroCard='<button type="button" data-go2="critter" style="display:block;width:100%;text-align:left;background:var(--panel);border:0;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);padding:0;color:var(--ink);margin-top:20px;cursor:pointer"><img '+(e.critterStage===0?'id="heroEggImg" ':'')+'src="'+STAGE_IMGS[e.critterStage]+'" alt="Your critter, a '+esc(st[1])+'" style="width:100%;height:220px;object-fit:contain;display:block;background:linear-gradient(180deg,#e8f5e9,#c8e6c9);padding:12px 0"><div style="padding:16px"><div class="themeslabel" style="color:var(--ink-soft)">🐸 Your companion critter — tap to visit Critter Lab!</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.5rem;margin-top:4px">'+esc(e.critterName)+' the '+esc(st[1])+'</div><p class="small muted" style="font-weight:600;margin:6px 0 0">'+esc(st[2])+'</p>'+streakFrogMoodHTML(e)+'<p class="small" style="font-weight:800;margin:8px 0 0">🔍 Critters discovered: '+((e.discoveredCritters||[]).length)+' of '+CRITTERS.length+' — new visitors every week in Critter Lab!</p>'+(badgeHTML?'<div style="margin-top:10px">'+badgeHTML+'</div>':'')+'<p style="font-weight:800;margin:12px 0 0;color:#2f7a3d">👉 Tap to feed, clean &amp; play with '+esc(e.critterName)+' in Critter Lab!</p></div></button>';
   var treasureCard='<button type="button" data-go2="treasure" style="text-align:left;background:var(--panel);border:0;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;color:var(--ink)"><div class="themeslabel" style="color:var(--ink-soft)">Treasure Realm</div><div style="font-family:\'Fredoka\';font-weight:600;font-size:1.25rem;margin-top:4px">'+e.treasures.length+' of '+TREASURES.length+' collected</div>'
    +(nextTreasure? '<p class="small muted" style="font-weight:600;margin:6px 0 0">Next: <b style="color:var(--ink)">'+nextTreasure.e+' '+esc(nextTreasure.name)+'</b> — '+esc(nextTreasure.purpose)+' Unlocks at '+nextTreasure.cost+' stars — you have '+e.stars+'. '+(e.stars>=nextTreasure.cost?'You can unlock it now!':'Just '+(nextTreasure.cost-e.stars)+' more to go!')+'</p>' : '<p class="small muted" style="font-weight:600;margin:6px 0 0">You collected every treasure. Amazing exploring!</p>')
    +'<div class="progressbar" style="margin-top:12px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div></button>';
@@ -5377,6 +5555,14 @@ function bindHome(){
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
   document.querySelectorAll('[data-boost]').forEach(function(b){ b.onclick=function(){ startBoostFlow(b.getAttribute('data-boost')); }; });
   document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ sndPop(); go(b.getAttribute('data-go2')); }; });
+  /* Egg wiggle (2026-11-17): at Egg stage only, tapping the hero card
+     wiggles the eggs and plays a bubble sound first, then opens
+     Critter Lab after a short delay so the wiggle is actually seen —
+     the plain [data-go2] navigation above would swallow it. This
+     onclick replaces the generic one for the hero card only; later
+     stages keep the plain navigation. No state is saved; re-tappable. */
+  var _egg=document.getElementById('heroEggImg');
+  if(_egg){ var _hero=_egg.closest('button'); if(_hero)_hero.onclick=function(){ _egg.classList.add('eggwiggle'); sndBubble(); setTimeout(function(){ _egg.classList.remove('eggwiggle'); },400); setTimeout(function(){ go('critter'); },350); }; }
   var sw=document.getElementById('boardShuffle'); if(sw)sw.onclick=function(){ ex().swapIdx+=1; save(); sndPop(); render(); };
   document.querySelectorAll('[data-mood]').forEach(function(b){ b.onclick=function(){ var e=ex(); if(!e.mood)e.mood={}; e.mood[todayKey()]=b.getAttribute('data-mood'); save(); sndCorrect(); toast('Pip noted how you feel today 💛'); render(); }; });
 }
@@ -9698,7 +9884,7 @@ function learnHTML(){
        +'<p class="small muted" style="font-weight:800;margin:6px 0 0">'+bestLine+'</p>'
        +'<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem;color:#6d6899"><span>'+label+'</span><span>'+count+'</span></div>'
        +'<div class="progressbar" style="margin-top:5px"><div style="width:'+pct+'%"></div></div></div>'
-       +(studyPlanFor(new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
+       +(planFor(e, new Date().getDay()).subs.indexOf(t.sub)>=0?'<p style="margin:10px 0 0"><span class="pill done">📅 Today’s study plan</span></p>':'')
        +(st==='in-progress'?'<p style="margin:10px 0 0"><span class="pill prog">In progress — tap to resume at question '+(prog.idx+1)+'</span></p>':'')
        +(t.id===LIVE_GEN_TOPIC?'<p class="small muted" style="margin:10px 0 0">📚 Pip’s shelf — questions from Pip’s bank.</p>':'')
        +(t.moe?'<p class="small muted" style="margin:10px 0 0">📚 Pip’s shelf — questions from Pip’s bank.</p>':'')
@@ -11142,7 +11328,7 @@ function quizDoneHTML(t){
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
   var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
   var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' and earned ⭐ '+earned+' stars!':(cur.firstToday===false?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — a replay, so no extra stars this time. You already earned them today!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — no stars this time, but finishing the whole quest takes courage! Have another go — the stars will come.');
-  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2>'+(cur.streakCelebrate?'<p style="font-weight:900;font-size:1.3rem;color:#d97706;margin:12px 0 0">🔥 '+cur.streakCelebrate+' days in a row! '+(cur.streakCelebrate===7?'One whole week — Pip is so proud!':cur.streakCelebrate===14?'Two whole weeks — unstoppable!':cur.streakCelebrate===30?'A whole month — legendary!':'100 days — a true streak legend!')+'</p>':'')+(cur.streakRepaired?'<p style="font-weight:800;color:#2f7a3d;margin:8px 0 0">🔧 Streak repaired — welcome back! Your '+e.streak+'-day streak is safe.</p>':'')+'<div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>';
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2>'+(cur.streakCelebrate?'<p style="font-weight:900;font-size:1.3rem;color:#d97706;margin:12px 0 0">🔥 '+cur.streakCelebrate+' days in a row! '+(cur.streakCelebrate===7?'One whole week — Pip is so proud!':cur.streakCelebrate===14?'Two whole weeks — unstoppable!':cur.streakCelebrate===30?'A whole month — legendary!':'100 days — a true streak legend!')+'</p>':'')+(cur.streakRepaired?'<p style="font-weight:800;color:#2f7a3d;margin:8px 0 0">🔧 Streak repaired — welcome back! Your '+e.streak+'-day streak is safe.</p>':'')+'<div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>'+(cur.windDown?windDownHTML(e):'');
 }
 function bindQuiz(){
   var e=ex(), t=topicById(cur.topicId);
@@ -11150,6 +11336,7 @@ function bindQuiz(){
   var done=cur.idx>=list.length;
   if(done){
     var dh=document.getElementById('doneHome'); if(dh)dh.onclick=function(){ cur=null; go('learn'); };
+    var wd=document.getElementById('windDownDismiss'); if(wd)wd.onclick=function(){ cur.windDown=false; render(); };
     var br=document.getElementById('boostRetry'); if(br)br.onclick=function(){ startBoostFlow(cur.topicId); };
     var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ var rIdx=seededShuffle(bankFor(t,'retry',levelNum(e)).map(function(_,i){ return i; }), Date.now()>>>0).slice(0,3); cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong, retryPool:rIdx, answerSecs:0, startedAt:Date.now()}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
     return;
@@ -11261,6 +11448,12 @@ function finishRound(t){
     if(typeof streakTick==='function')streakTick(e);
     var _st=(typeof recordStreak==='function')?recordStreak(e):null;
     if(_st){ cur.streakCelebrate=_st.celebrate||0; cur.streakRepaired=!!_st.repaired; cur.streakNow=_st.streak; }
+    /* Wind-down cue (2026-11-17): the FIRST quest finished on a new
+       day is the daily quest — recordStreak only increments then, so
+       replays and later quests the same day never trigger it. Once
+       per day: e.windDownDay stamps the day it showed, so a
+       save/sync can never re-show it today. */
+    if(_st&&_st.incremented&&e.windDownDay!==todayKey()){ cur.windDown=true; e.windDownDay=todayKey(); }
     save(); sndFanfare(); confettiStars();
   } else if(cur.phase==='boost'){
     /* Boost drill finished: stars once per topic per day (a replay
@@ -11367,15 +11560,28 @@ var TRIVIA=[
  {cat:'gen',q:'Which instrument has 88 keys?',hint:'It is big, black and white, and you play it with both hands.',a:'The piano'}
 ];
 var triviaState=null;
+/* Science is not taught in P1/P2 (2026-11-17): Trivia hides the
+   Science category and its questions for a P1/P2 explorer. The
+   typeof guards are for the eval-based trivia tests, which load
+   triviaOrder/triviaHTML without this helper or the app globals. */
+function triviaP12(){ var _e=(typeof ex==='function')?ex():null; return !!(_e&&(typeof levelNum==='function')&&levelNum(_e)<=2); }
 function triviaOrder(cat){
+  var p12=(typeof triviaP12==='function')?triviaP12():false;
+  if(p12&&cat==='sci')cat='all';
   var idx=[];
-  TRIVIA.forEach(function(t,i){ if(cat==='all'||t.cat===cat)idx.push(i); });
+  TRIVIA.forEach(function(t,i){ if(p12&&t.cat==='sci')return; if(cat==='all'||t.cat===cat)idx.push(i); });
   return shuffle(idx);
 }
 function triviaHTML(){
   if(!triviaState)triviaState={cat:'all', order:triviaOrder('all'), idx:0, revealed:false, seen:0};
+  /* A P1/P2 explorer never sees Science trivia: a saved 'sci'
+     category falls back to All topics, and a deck built before a
+     level change is rebuilt the moment a Science question would
+     show. P3+ is untouched. */
+  var _p12=(typeof triviaP12==='function')?triviaP12():false;
+  if(_p12&&(triviaState.cat==='sci'||(TRIVIA[triviaState.order[triviaState.idx]]||{}).cat==='sci'))triviaState={cat:'all', order:triviaOrder('all'), idx:0, revealed:false, seen:0};
   var t=TRIVIA[triviaState.order[triviaState.idx]];
-  var cats=Object.keys(TRIVIA_CATS).map(function(c){
+  var cats=Object.keys(TRIVIA_CATS).filter(function(c){ return !(_p12&&c==='sci'); }).map(function(c){
     var cc=TRIVIA_CATS[c];
     return '<button class="btn'+(triviaState.cat===c?'':' ghost')+'" data-tcat="'+c+'" style="padding:8px 14px">'+cc[0]+' '+cc[1]+'</button>';
   }).join('');
@@ -11388,7 +11594,7 @@ function triviaHTML(){
    +(triviaState.revealed
      ?'<div class="feedback ok" style="font-size:1.15rem">🎉 '+esc(t.a)+'</div><button class="btn" id="tvNext" style="margin-top:14px">Next trivia 🎲</button>'
      :'<button class="btn" id="tvShow" style="margin-top:14px">Show the answer 👀</button>')
-   +'<p class="small muted" style="font-weight:700;margin-top:14px">Questions match primary school learning — English, Maths, Science and Chinese — plus General Knowledge from outside school. There is always another one!</p></div>';
+   +'<p class="small muted" style="font-weight:700;margin-top:14px">Questions match primary school learning — '+(_p12?'English, Maths and Chinese':'English, Maths, Science and Chinese')+' — plus General Knowledge from outside school. There is always another one!</p></div>';
 }
 function bindTrivia(){
   document.querySelectorAll('[data-tcat]').forEach(function(b){ b.onclick=function(){
@@ -13939,11 +14145,11 @@ function bindCreate(){
   if(!e.deletedPlanner)e.deletedPlanner=[];
   document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==txt; }); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
   document.querySelectorAll('[data-flip]').forEach(function(b){ b.onclick=function(){ var i=b.getAttribute('data-flip'); fcFlip[i]=!fcFlip[i]; sndPop(); render(); }; });
-  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); var _c=e.flashcards[i]; if(_c){ var _k=_c.f+'\u0000'+_c.b; if(e.deletedFlashcards.indexOf(_k)<0)e.deletedFlashcards.push(_k); } e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
+  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); stampFlashcardIds(e); var _c=e.flashcards[i]; if(_c&&_c.id&&e.deletedFlashcards.indexOf(_c.id)<0)e.deletedFlashcards.push(_c.id); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
   document.getElementById('fcAdd').onclick=function(){
     var f=document.getElementById('fcFront').value.trim(), bk=document.getElementById('fcBack').value.trim();
     if(!f||!bk){ toast('Write both sides of the card first!'); return; }
-    e.flashcards.push({f:f,b:bk}); e.deletedFlashcards=e.deletedFlashcards.filter(function(k){ return k!==f+'\u0000'+bk; }); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
+    e.flashcards.push({f:f,b:bk,id:'fc-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}); e.deletedFlashcards=e.deletedFlashcards.filter(function(k){ return k!==f+'\u0000'+bk && k!==f+bk && k!==flashcardId(f,bk,0); }); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
   };
   document.querySelectorAll('[data-plan]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-plan'),10); e.planner[i].d=!e.planner[i].d; if(e.planner[i].d)sndCorrect(); else sndPop(); save(); render(); }; });
   document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-pldel'),10); var _p=e.planner[i]; if(_p&&e.deletedPlanner.indexOf(_p.t)<0)e.deletedPlanner.push(_p.t); e.planner.splice(i,1); save(); render(); }; });
@@ -13978,7 +14184,7 @@ var pinChDraft=''; // the in-progress new PIN, restored into the form on every r
    parent can see what is set without opening the long editor. It
    reads the saved schedule (studyPlanFor / DB.familyEvents), never
    the draft, so it always shows what is actually in use. */
-function familyScheduleSummaryHTML(){
+function familyScheduleSummaryHTML(e){
   var evs=(DB.familyEvents||[]).slice().sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
   var custom=!!(DB.familyPlan)||evs.length>0;
   if(!custom)return '<div style="font-weight:700">Using the built-in schedule. Tap \u201cChange schedule\u201d to set your own school events and weekly timetable.</div>';
@@ -13986,10 +14192,10 @@ function familyScheduleSummaryHTML(){
   if(evs.length){
     h+='School events:<br>'+evs.map(function(ev){ return '\u00b7 '+esc(fmtDateStr(ev.date))+' \u2014 '+esc(ev.name)+(ev.kind==='closure'?' (school closed)':(ev.kind==='due'?' (due date)':'')); }).join('<br>')+'<br>';
   }
-  h+='Timetable:<br>'+[1,2,3,4,5,6,0].map(function(dow){ var day=studyPlanFor(dow); return '\u00b7 <b>'+DOWS[dow]+'</b> '+esc(day.label)+(day.study?' \u00b7 '+esc(day.study):''); }).join('<br>');
+  h+='Timetable:<br>'+[1,2,3,4,5,6,0].map(function(dow){ var day=planFor(e, dow); return '\u00b7 <b>'+DOWS[dow]+'</b> '+esc(day.label)+(day.study?' \u00b7 '+esc(day.study):''); }).join('<br>');
   return h+'</div>';
 }
-function familyScheduleHTML(){
+function familyScheduleHTML(e){
   var evs=(DB.familyEvents||[]).slice().sort(function(a,b){ return a.date<b.date?-1:(a.date>b.date?1:0); });
   var evKind=(fsEvDraft&&fsEvDraft.kind)||'closure';
   var evRows=evs.map(function(ev){
@@ -14018,7 +14224,7 @@ function familyScheduleHTML(){
    +'<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap"><button class="btn" id="fsPlanSave">Save timetable</button><button class="btn ghost" id="fsPlanReset">Reset to the default timetable</button></div>';
   return '<div class="card" id="fsSchedCard" style="margin-bottom:14px"><h3 style="margin-top:0">🗓️ Our school &amp; study schedule</h3>'
    +'<p class="muted" style="font-weight:700;margin:6px 0 10px">Set your own school events and weekly study timetable. '+(usingCustom?'Your family’s own schedule is in use — the built-in one is only a fallback.':'No custom schedule set yet — the app is using its built-in schedule. Set yours below and it takes over.')+'</p>'
-   +familyScheduleSummaryHTML()
+   +familyScheduleSummaryHTML(e)
    +'<div style="margin:10px 0 0"><button class="btn ghost" id="fsSchedToggle">'+(fsSchedOpen?'▴ Hide editor':'✏️ Change schedule')+'</button></div>'
    +'<div id="fsSchedEditor"'+(fsSchedOpen?'':' style="display:none"')+'>'+editor+'</div></div>';
 }
@@ -14090,7 +14296,7 @@ function parentHTML(){
      finish rebuilds the record. */
   var boostRecs=TOPICS.map(function(t){ var r=(sel.boost||{})[t.id]; var act=!!(r&&r.lastScore<3&&r.prevScore!=null&&r.prevScore<3&&!(r.dismissedAt&&r.at&&r.dismissedAt>=r.at)&&!(r.clearedAt&&r.at&&r.clearedAt>=r.at)); if(!act&&!r&&sel.stuck&&sel.stuck.indexOf(t.id)>=0)act=true; return {t:t, r:r, act:act}; }).filter(function(x){ return x.act; });
   var stuckNames=boostRecs.map(function(x){ return x.t.name; });
-  var tmrD=new Date(); tmrD.setDate(tmrD.getDate()+1); var tPlan=studyPlanFor(tmrD.getDay()); var tEv=schoolEventFor(tmrD);
+  var tmrD=new Date(); tmrD.setDate(tmrD.getDate()+1); var tPlan=planFor(sel, tmrD.getDay()); var tEv=schoolEventFor(tmrD);
   var datD=new Date(); datD.setDate(datD.getDate()+2); var datEv=schoolEventFor(datD);
   var plan=(stuckNames.length? 'Weak spot (stuck twice): <b>'+esc(stuckNames[0])+'</b>. Tomorrow’s study block becomes a gentle one for it — start with a <b>3-minute Play warm-up game</b> on that topic, not a full quiz, then one short quest together if she is up for it.' : 'No weak spots right now (a topic only counts after she is stuck on it twice). Tomorrow, follow the timetable and let '+esc(sel.name)+' pick the quest within it — choice keeps motivation high.')
    +' Tomorrow is <b>'+esc(fmtDate(tmrD))+'</b>: <b>'+esc(tPlan.label)+'</b> · '+esc(tPlan.study)+'.'
@@ -14109,7 +14315,7 @@ function parentHTML(){
    +'<p class="small muted" style="font-weight:700">On any other device, open this app, tap “Link this device with a family code” at the Grand Door, and type this code. That device pulls down this family’s progress and keeps in sync. Keep the code in the family — anyone with it can see the progress.</p>'
    +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="syncCopy">📋 Copy code</button><button class="btn ghost" id="syncRefresh">↻ Refresh from server now</button><span class="small muted" id="syncStatus" style="align-self:center;font-weight:700"></span></div></div>'
    +streakParentCardHTML(sel)
-   +familyScheduleHTML()
+   +familyScheduleHTML(sel)
    +'<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🧪 Every flag becomes a test</h3>'
    +'<p style="font-weight:700;margin:6px 0">'+((DB.flags||[]).length?('Flagged answers so far: <b>'+DB.flags.length+'</b> — each one made a regression test, so tomorrow’s Pip beats today’s.'):'No flags yet. When anyone taps 🚩 Flag this on a Pip answer, the flag and its test appear here.')+'</p>'
    +((DB.flags||[]).slice(0,3).map(function(f){ return '<div class="feedback no" style="font-weight:700">“'+esc(f.question)+'” — Pip said “'+esc(String(f.pipAnswer).slice(0,60))+'” · Method: '+esc(f.skillId||'—')+' · '+esc(f.status)+'</div>'; }).join(''))
@@ -14117,7 +14323,7 @@ function parentHTML(){
    +boostSection
    +liveGenExperimentHTML(sel)
    +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
-   +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(studyPlanFor(new Date().getDay()).label)+'</b> · '+esc(studyPlanFor(new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
+   +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(planFor(sel, new Date().getDay()).label)+'</b> · '+esc(planFor(sel, new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
    +'<p style="font-weight:700">'+esc(spellParentLine(sel))+'</p>'
    +(doneList.length?'<p class="small" style="font-weight:700">Quests finished: '+doneList.map(esc).join(' · ')+'</p>':'<p class="small muted">No quests finished yet.</p>')
