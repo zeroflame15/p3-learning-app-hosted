@@ -324,6 +324,18 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .modal{background:var(--panel);border-radius:20px;max-width:480px;width:100%;padding:22px;max-height:90vh;overflow-y:auto;border:2px solid var(--line);box-shadow:var(--shadow)}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--nav);color:#fff;padding:11px 20px;border-radius:999px;font-weight:900;z-index:95;display:none;box-shadow:var(--shadow)}
 .bottomnav{display:none}
+/* Mobile "More" popup (2026-11-17): on phones the sidebar is hidden
+   and the bottom bar is the whole nav — the bar shows the core six
+   plus a More button, and the five More items live in this sheet
+   directly above the bar. z-index 45 sits above page content and
+   the bar itself (40) but below the modal overlay (80) and toasts
+   (95). The sheet is a child of the fixed bottom nav, so it is
+   hidden on desktop along with the bar. */
+.btmmore{position:absolute;left:8px;right:8px;bottom:calc(100% + 8px);background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:10px;z-index:45}
+.bottomnav .btmmore button{display:flex;flex-direction:row;gap:10px;align-items:center;width:100%;background:var(--panel2);border:0;border-radius:12px;padding:12px;font-weight:900;font-size:.95rem;color:var(--ink);margin-bottom:6px;text-align:left}
+.bottomnav .btmmore button:last-child{margin-bottom:0}
+.bottomnav .btmmore button .nic{font-size:1.4rem}
+.bottomnav .btmmore button.active{background:var(--amber);color:#231a02}
 .starsRow{font-size:1.6rem;letter-spacing:4px}
 
 /* ---------- Pip: 3D animated otter (Mira-style) ---------- */
@@ -4666,6 +4678,12 @@ var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','i
    Vibe stays last overall. Create is core — flashcards, planner and
    school schedule are daily study tools, never buried, never locked. */
 var NAV_CORE=6;
+/* Mobile bottom nav "More" (2026-11-17): btmMoreOpen is module
+   state, not per-render — the popup must survive re-renders (the
+   30s auto-pull re-renders the shell). Every navigation closes it
+   (go() clears it); tapping More toggles it; tapping outside it
+   closes it (document listener installed once at boot). */
+var btmMoreOpen=false;
 /* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
    replacing the flat emoji in the nav, game cards and quest cards.
    ic() renders the image, and falls back to the emoji if the file
@@ -4688,7 +4706,7 @@ function focusLocked(r){
   if((route==='play'||route==='game')&&(r==='play'||r==='game')) return false;
   return true;
 }
-function go(r){ if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
+function go(r){ if(typeof btmMoreOpen!=='undefined')btmMoreOpen=false; if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
      progress, not a stale copy from this device. */
@@ -4769,7 +4787,10 @@ function render(){
   if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); restoreScrollY(_sy); return; }
   function navBtnHTML(n, cls){ var locked=focusLocked(n[0]); return '<button class="'+cls+' '+(route===n[0]?'active':'')+(locked?' locked':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+(locked?'🔒 ':'')+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }
   var navBtns=NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('')+'<div class="navmore">More</div>'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('');
-  var btm=NAV.map(function(n){ return navBtnHTML(n,''); }).join('');
+  var moreActive=NAV.slice(NAV_CORE).some(function(n){ return n[0]===route; });
+  var btm=NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,''); }).join('')
+   +'<button type="button" id="btmMoreBtn" class="'+(moreActive?'active':'')+'"><span class="nic">⋯</span>More</button>'
+   +(btmMoreOpen?'<div class="btmmore" id="btmMorePop">'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,''); }).join('')+'</div>':'');
   /* Route class on the shell: the mint world has two departures (myKx
      review) — the Play Arcade stays dark navy/neon and the Treasure
      Realm stays a purple crystal cave. The 'game' route is arcade. */
@@ -4788,6 +4809,11 @@ function render(){
    +'<div class="content" id="content"></div></div></div>'
    +'<nav class="bottomnav">'+btm+'</nav>';
   document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndMystery(); go(b.getAttribute('data-go')); }); });
+  /* Mobile "More" button (2026-11-17): toggles the More sheet above
+     the bottom bar. onclick (not addEventListener) like the critter
+     card — render() rebuilds the button every time, so a fresh
+     element gets a fresh handler and nothing can double-fire. */
+  var mb=document.getElementById('btmMoreBtn'); if(mb)mb.onclick=function(){ sndPop(); btmMoreOpen=!btmMoreOpen; render(); };
   /* Sidebar critter card (2026-11-17): the card is a button that
      jumps to Critter Lab. It lives in the shell, so it is bound here
      on every render — the [data-go2] binding in bindHome only runs
@@ -14727,6 +14753,22 @@ window.addEventListener('storage',function(ev){
    (#admin). It is not linked from anywhere in the app. */
 if(typeof location!=='undefined'&&location.hash==='#admin'){ route='admin'; }
 if(typeof window!=='undefined')window.addEventListener('hashchange',function(){ if(location.hash==='#admin'&&route!=='admin'){ route='admin'; render(); } });
+/* Mobile "More" sheet (2026-11-17): tapping anywhere outside the
+   sheet or its button closes it. Installed once at boot — never in
+   render(), which rebuilds the DOM on every navigation. The More
+   button's own tap is excluded (its onclick already toggled and
+   re-rendered by the time this bubbles), as are taps inside the
+   sheet (those navigate via go(), which clears the flag). Never
+   re-renders mid-quiz/warmup/game or while a modal is open —
+   safeToRender() guards those; the flag still clears, so the sheet
+   is gone at the next render. */
+if(typeof document!=='undefined')document.addEventListener('click',function(ev){
+  if(!btmMoreOpen)return;
+  var t=ev.target;
+  if(t&&t.closest&&(t.closest('#btmMorePop')||t.closest('#btmMoreBtn')))return;
+  btmMoreOpen=false;
+  if(typeof safeToRender==='function'&&safeToRender())render();
+});
 render();
 </script>
 </body>
