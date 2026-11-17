@@ -4101,6 +4101,8 @@ function mergeFamilyDB(local, server){
     _l.explorers=(_l.explorers||[]).filter(function(e){ return _l.deletedExplorers.indexOf(e.id)<0; });
     if(!_l.explorers.length)_l.activeId=null;
     if(_l.focusMode==null)_l.focusMode=false;
+    if(_l.dailyLimit==null)_l.dailyLimit=90;
+    if(_l.playLimit==null)_l.playLimit=20;
     return _l;
   }
   var merged=JSON.parse(JSON.stringify(server));
@@ -4123,8 +4125,22 @@ function mergeFamilyDB(local, server){
   if(_fmAtL>_fmAtS||(_fmAtL===_fmAtS&&_fmAtL>0)){ merged.focusMode=!!local.focusMode; merged.focusModeUpdatedAt=local.focusModeUpdatedAt; }
   else if(_fmAtS>_fmAtL){ merged.focusMode=!!server.focusMode; merged.focusModeUpdatedAt=server.focusModeUpdatedAt; }
   else { merged.focusMode=!!(server.focusMode!=null?server.focusMode:local.focusMode); merged.focusModeUpdatedAt=server.focusModeUpdatedAt||local.focusModeUpdatedAt||null; }
-  merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:(local.dailyLimit!=null?local.dailyLimit:90));
-  merged.playLimit=(server.playLimit!=null?server.playLimit:(local.playLimit!=null?local.playLimit:20));
+  /* Daily / Play limits (2026-11-17): later timestamp wins, mirroring
+     the parent PIN / Focus mode rule. Without it, save()'s own
+     pull-then-upload fetched the server's still-old limit and
+     overwrote the just-saved one before the upload ran — the toast
+     said "saved" while the value reverted (seen live 2026-11-17:
+     the parent page could not save either timer). A change from
+     another device still propagates when its timestamp is newer;
+     untimestamped rows keep the old server-preference behaviour. */
+  var _dlAtS=Date.parse(server.dailyLimitUpdatedAt||'')||0, _dlAtL=Date.parse(local.dailyLimitUpdatedAt||'')||0;
+  if(_dlAtL>_dlAtS||(_dlAtL===_dlAtS&&_dlAtL>0)){ merged.dailyLimit=(local.dailyLimit!=null?local.dailyLimit:90); merged.dailyLimitUpdatedAt=local.dailyLimitUpdatedAt; }
+  else if(_dlAtS>_dlAtL){ merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:90); merged.dailyLimitUpdatedAt=server.dailyLimitUpdatedAt; }
+  else { merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:(local.dailyLimit!=null?local.dailyLimit:90)); merged.dailyLimitUpdatedAt=server.dailyLimitUpdatedAt||local.dailyLimitUpdatedAt||null; }
+  var _plAtS=Date.parse(server.playLimitUpdatedAt||'')||0, _plAtL=Date.parse(local.playLimitUpdatedAt||'')||0;
+  if(_plAtL>_plAtS||(_plAtL===_plAtS&&_plAtL>0)){ merged.playLimit=(local.playLimit!=null?local.playLimit:20); merged.playLimitUpdatedAt=local.playLimitUpdatedAt; }
+  else if(_plAtS>_plAtL){ merged.playLimit=(server.playLimit!=null?server.playLimit:20); merged.playLimitUpdatedAt=server.playLimitUpdatedAt; }
+  else { merged.playLimit=(server.playLimit!=null?server.playLimit:(local.playLimit!=null?local.playLimit:20)); merged.playLimitUpdatedAt=server.playLimitUpdatedAt||local.playLimitUpdatedAt||null; }
   merged.stageV=server.stageV||local.stageV||null;
   merged.updatedAt=(server.updatedAt&&local.updatedAt)?(server.updatedAt>local.updatedAt?server.updatedAt:local.updatedAt):(server.updatedAt||local.updatedAt||null);
   /* Family schedule (2026-11-09): custom school events + weekly study
@@ -4362,10 +4378,20 @@ function mergeStoredIntoDB(){
     if(_evIds(_newEvents)!==_evIds(DB.familyEvents)||_del.length!==(DB.deletedFamilyEvents||[]).length){
       DB.familyEvents=_newEvents; DB.deletedFamilyEvents=_del; changed=true;
     }
-    /* The parent PIN and the daily limit stay the local tab's own
-       values here — the server merge is the authority for those (see
-       the sync-live test). Only the schedule is converged from the
-       store, because that is the field a stale tab's save was wiping. */
+    /* Daily / Play limits (2026-11-17): converge from the store with
+       the same later-timestamp-wins rule as the server merge, so a
+       stale tab's routine save never wipes a limit change another tab
+       just made (the same wipe that bit the family timetable in
+       2026-11-09 and Focus mode in 2026-11-17). */
+    var _dlAtD=Date.parse(DB.dailyLimitUpdatedAt||'')||0, _dlAtS2=Date.parse(stored.dailyLimitUpdatedAt||'')||0;
+    if(_dlAtS2>_dlAtD){ DB.dailyLimit=(stored.dailyLimit!=null?stored.dailyLimit:90); DB.dailyLimitUpdatedAt=stored.dailyLimitUpdatedAt||null; changed=true; }
+    var _plAtD=Date.parse(DB.playLimitUpdatedAt||'')||0, _plAtS2=Date.parse(stored.playLimitUpdatedAt||'')||0;
+    if(_plAtS2>_plAtD){ DB.playLimit=(stored.playLimit!=null?stored.playLimit:20); DB.playLimitUpdatedAt=stored.playLimitUpdatedAt||null; changed=true; }
+    /* The parent PIN stays the local tab's own value here — the server
+       merge is the authority for it (see the sync-live test). Only the
+       schedule, Focus mode and the two timers are converged from the
+       store, because those are the fields a stale tab's save was
+       wiping. */
   }
   /* Explorer removal tombstone (2026-11-10): a removed explorer
      must never come back from localStorage. Union the tombstone
@@ -4390,7 +4416,7 @@ function mergeStoredIntoDB(){
 function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); if(typeof stripNulDeep==='function')stripNulDeep(DB); saveLocal(); syncToServer(); }
 function load(){
   try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!DB.flags)DB.flags=[]; if(!DB.deletedExplorers)DB.deletedExplorers=[]; if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
-  DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:90, playLimit:20, focusMode:false, focusModeUpdatedAt:null, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
+  DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:90, dailyLimitUpdatedAt:null, playLimit:20, playLimitUpdatedAt:null, focusMode:false, focusModeUpdatedAt:null, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
   save();
 }
 /* One-time, in-place remap: the Critter Lab now uses the Muse version's
@@ -5455,7 +5481,7 @@ function boardPicks(e, todayPlan){
      "✔ Done today — streak safe!" + ↻ Replay) instead of vanishing
      and pulling in the next unfinished topic (seen live: Frog Life
      Cycle disappeared after 5/5 and the board advanced to "quest 2
-     of 14"). Only quests finished on a PREVIOUS day leave the pool —
+     of N"). Only quests finished on a PREVIOUS day leave the pool —
      they have a fresh set waiting in Learn. Done-today quests are
      GUARANTEED a slot (they are appended after the rotated available
      quests), so the rotation can never push a just-finished quest off
@@ -5522,9 +5548,28 @@ function boardCardHTML(e, t, isPick, todayPlan){
    +'<p style="margin-top:10px;color:#5b5785;font-weight:600;font-size:.9rem">'+esc(t.blurb)+'</p>'
    +'</div>';
 }
+/* Quest counter (2026-11-17): the "N of M quests" total used to be a
+   hardcoded 14 from the old fixed quest list — Juhin's Home read
+   "30 of 14 quests". done counts distinct completed quest ids;
+   total is the explorer's current level quest set (every MOE topic
+   id at the level plus every quest id those topics map to in Learn),
+   unioned with the explorer's completed ids — so done can never
+   exceed total, the total is level-aware (P1/P2 have no Science),
+   and quests finished under the old Learn still count. */
+function questProgress(e){
+  var done=Object.keys((e&&e.completed)||{}).length;
+  var lvl=levelNum(e);
+  var set={};
+  moeSubjects(lvl).forEach(function(s){ s.topics.forEach(function(tp){
+    set[tp.id]=1;
+    (tp.quests||[]).forEach(function(qid){ set[qid]=1; });
+  }); });
+  Object.keys((e&&e.completed)||{}).forEach(function(id){ set[id]=1; });
+  return {done:done, total:Object.keys(set).length};
+}
 function homeHTML(){
   var e=ex(), t=themeOf(e), tname=themeName(e);
-  var doneCount=Object.keys(e.completed).length;
+  var qp=questProgress(e);
   var unfinished=TOPICS.filter(function(x){return !e.completed[x.id];});
   /* The study timetable IS the daily plan: Today's quest is picked
      from today's study subjects (Mon English+Maths, Tue Science+
@@ -5551,7 +5596,7 @@ function homeHTML(){
    +'<div style="flex:1;min-width:230px"><h1 style="margin:0;font-size:2rem;line-height:1.15;color:#fff">'+greeting()+', '+esc(e.name)+' '+(e.badge||'⭐')+'!</h1>'
    +'<div class="bubble" style="margin-top:8px">Pip says: “'+pipSays+'”</div>'
    +(memory?'<div class="memory">'+memory+'</div>':'')
-   +'<div class="bubble" style="margin-top:8px">You have finished <b>'+doneCount+' of 14 quests</b> and collected <b>⭐ '+e.stars+' stars</b>. '+(doneCount>=14?'You finished EVERYTHING — legendary explorer!':'Ready for today’s adventure?')+'</div>'
+   +'<div class="bubble" style="margin-top:8px">You have finished <b>'+qp.done+' of '+qp.total+' quests</b> and collected <b>⭐ '+e.stars+' stars</b>. '+((qp.total>0&&qp.done===qp.total)?'You finished EVERYTHING — legendary explorer!':'Ready for today’s adventure?')+'</div>'
    +'</div></div>'
    +'<div style="margin-top:18px"><div class="themeslabel">This week’s theme: '+esc(tname)+'</div>'
    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px" role="group" aria-label="Pick this week’s theme">'
@@ -5568,7 +5613,7 @@ function homeHTML(){
     boardSection='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest board</div><p style="margin-top:8px;font-weight:700">Today’s quests are being planted… check back in a moment.</p></section>';
   } else {
     boardSection='<section class="questcard"><div class="themeslabel" style="color:#8a6d1f">🍃 Today’s quest board — pick one!</div>'
-     +'<p style="font-weight:800;margin:8px 0 0">This is quest '+(doneCount+1)+' of 14 — every quest is one more hop on our Frog Quest! Finish any ONE to keep your streak alive. ⭐ Pip’s pick is first — or choose your own!</p>'
+     +'<p style="font-weight:800;margin:8px 0 0">This is quest '+Math.min(qp.done+1,qp.total)+' of '+qp.total+' — every quest is one more hop on our Frog Quest! Finish any ONE to keep your streak alive. ⭐ Pip’s pick is first — or choose your own!</p>'
      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">'
      +board.map(function(t,i){ return boardCardHTML(e,t,i===0,todayPlan); }).join('')
      +'</div>'
@@ -9924,7 +9969,7 @@ function mykxSessionFirst(e, subj, level){
 }
 function learnHTML(){
   var e=ex();
-  var doneCount=Object.keys(e.completed).length;
+  var qp=questProgress(e);
   var lvl=levelNum(e);
   var subj=learnView.subject?moeSubject(learnView.subject,lvl):null;
   /* myKx Learn restructure (2026-11-07): Learn is subject cards
@@ -9997,7 +10042,7 @@ function learnHTML(){
      +'</div>'
      +(typeof learnBoardHTML==='function'?learnBoardHTML():'');
   }
-  return pageHero('icons/nav-learn.webp','📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', doneCount+' of 14 quests finished · ⭐ '+e.stars+' · 🔥 '+(e.streak||0)+'-day streak · 🎒 P'+lvl)
+  return pageHero('icons/nav-learn.webp','📚','Learn — pick a quest','Every quest is just 5 questions, with a 60-second brain warm-up first. Finish quests to earn stars for the Treasure Realm. ✅ A quest you finish today greys out as completed — tap ↻ Replay to play it again, or come back tomorrow for a fresh set. Quests you have not finished stay exactly where you left them. 🐸 Every quest is one more hop on our Frog Quest — each one helps Pip\'s frog friends find their way home!', qp.done+' of '+qp.total+' quests finished · ⭐ '+e.stars+' · 🔥 '+(e.streak||0)+'-day streak · 🎒 P'+lvl)
    + learnPlanBannerHTML(e)
    + spellTestsEntryHTML(e)
    + '<div class="grid c2">'
@@ -14397,6 +14442,7 @@ function parentHTML(){
    +(datEv&&datEv.kind==='due'?' Heads-up: <b>'+esc(datEv.name)+'</b> lands the day after tomorrow, so tomorrow Pip nudges a short revision game — not a full quiz.':'')
    +(tPlan.rest?esc(restDayParentText(tPlan)):'');
   var doneList=Object.keys(sel.completed).map(function(id){ var t=topicById(id); return t.icon+' '+t.name+' ('+sel.completed[id]+'/5)'; });
+  var qp=questProgress(sel);
   var boostSection='<div class="card" style="margin-bottom:14px"><h3 style="margin-top:0">🌱 Needs a boost — '+esc(sel.name)+'</h3>'
    +(boostRecs.length?boostRecs.map(function(x){ var r=x.r||{}; var trend=(r.lastScore!=null&&r.flagScore!=null)?(r.lastScore>r.flagScore?'Getting better 🌱':(r.lastScore===r.flagScore?'About the same — steady':'Still finding it tricky')):'—'; var acc=(r.prevScore!=null&&r.lastScore!=null)?('Last two quests: '+r.prevScore+'/5 then '+r.lastScore+'/5'):('Flagged before boost records began — the next quest will fill in the scores.'); var miss=(r.missed&&r.missed.q)?('Last trip-up: “'+esc(r.missed.q)+'” — the answer is “'+esc(r.missed.a)+'”.'):'No missed example saved yet — one will appear after the next quest.'; var when=r.at?('Flagged '+esc(dateKey(r.at))):'Flagged earlier'; var lb=(r.lastBoost&&r.lastBoost.day)?(' · Last boost: '+r.lastBoost.score+'/5 on '+esc(r.lastBoost.day)+(r.lastBoost.source==='live'?' · ✨ Pip-made questions':' · 📚 bank questions')):'';
      return '<div style="padding:10px 0;border-bottom:2px solid var(--line)"><b>'+esc(x.t.name)+'</b> · '+acc+'<br><span style="font-weight:700">'+miss+'</span><br><span class="small muted" style="font-weight:700">'+when+' · Trend: '+trend+lb+'</span><br><button class="btn ghost" data-boost-dismiss="'+x.t.id+'" style="margin-top:6px">Dismiss this flag</button></div>'; }).join(''):'<p style="font-weight:700">Nothing flagged — steady, happy progress. 🎉</p>')
@@ -14415,7 +14461,7 @@ function parentHTML(){
    +'<p class="small muted" style="font-weight:700">Marks and rewards are plain code rules (lib/rules.js) — Pip explains, code decides. Skills pack: '+esc(SKILL_PACK.version)+' · 19 specialist agents (11 live, 2 ready, 6 placeholders: Muse Voice Transcribe, Muse Image + SAM 3.1, Muse Spark – vision, SAM 3.1, Muse Spark web search, Muse Spark files).</p></div>'
    +boostSection
    +liveGenExperimentHTML(sel)
-   +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+doneList.length+' of 14 quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
+   +'<div class="grid c2"><div class="card"><h3>🌙 Evening summary — '+esc(sel.name)+'</h3><p style="font-weight:700">Today: <b>'+todayMin+' min</b> in the app · <b>'+qp.done+' of '+qp.total+' quests</b> finished overall · <b>⭐ '+sel.stars+' stars</b> · badges: <b>'+sel.badges.length+'</b></p>'
    +'<p style="font-weight:700">📅 Today’s timetable: <b>'+esc(planFor(sel, new Date().getDay()).label)+'</b> · '+esc(planFor(sel, new Date().getDay()).study)+(schoolEventFor(new Date())?' · '+esc(schoolEventFor(new Date()).name):'')+' — today’s quest in the app was picked from these subjects.</p>'
    +'<p style="font-weight:700">🌈 Mood check-in today: <b>'+(sel.mood&&sel.mood[tk]?esc(sel.mood[tk]):'not tapped yet — the mood picker sits on Home, in the “My week” card')+'</b></p>'
    +'<p style="font-weight:700">'+esc(spellParentLine(sel))+'</p>'
@@ -14429,7 +14475,7 @@ function parentHTML(){
    +'<label class="flabel">Daily limit (minutes)</label><div style="display:flex;gap:8px"><input class="field" id="limitIn" type="number" min="5" max="240" value="'+DB.dailyLimit+'"><button class="btn" id="limitSave">Save</button></div>'
    +'<label class="flabel">Play limit (minutes per day)</label><div style="display:flex;gap:8px"><input class="field" id="playLimitIn" type="number" min="5" max="240" value="'+(DB.playLimit||20)+'"><button class="btn" id="playLimitSave">Save</button></div>'
    +'<label class="flabel">🎯 Focus mode</label><p style="font-weight:700">When Focus mode is on, Play and Jokes stay locked until '+esc(sel.name)+' finishes a quest today. Everything else stays open.</p><div style="display:flex;gap:8px;align-items:center"><button class="btn" id="focusToggle">'+(DB.focusMode?'🔓 Focus mode: On':'🔒 Focus mode: Off')+'</button></div>'
-   +'<h4 style="margin-top:18px">⚖️ Today’s balance</h4><p style="font-weight:700">Learning quests finished: '+doneList.length+' · Treasures unlocked: '+sel.treasures.length+' · Ask Pip chats: '+sel.threads.length+'</p>'
+   +'<h4 style="margin-top:18px">⚖️ Today’s balance</h4><p style="font-weight:700">Learning quests finished: '+qp.done+' · Treasures unlocked: '+sel.treasures.length+' · Ask Pip chats: '+sel.threads.length+'</p>'
    +'<h4>🌈 Weekend together idea</h4><p style="font-weight:700">Try a riverside walk or a hawker-centre breakfast together, then let '+esc(sel.name)+' teach you one thing Pip taught her this week — kids love being the teacher!</p></div></div>'
    +'<div class="card" style="margin-top:16px"><h3>🧑‍🤝‍🧑 Explorers on this device ('+DB.explorers.length+')</h3>'
    + DB.explorers.map(function(x){ return '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:2px solid var(--line)"><span style="font-size:1.5rem">'+x.face+'</span><b>'+esc(x.name)+'</b><span class="small muted">⭐ '+x.stars+' · '+Object.keys(x.completed).length+' quests</span><span style="flex:1"></span><button class="btn ghost" data-reset="'+x.id+'">🔑 Reset picture code</button><button class="btn coral" data-remove="'+x.id+'">Remove explorer</button></div>'; }).join('')
@@ -14470,8 +14516,8 @@ function bindParent(){
     var st=document.getElementById('syncStatus'); if(st)st.textContent='Refreshing…';
     syncFromServer({}).then(function(changed){ toast(changed?'Progress refreshed from the server.':'Already up to date with the server.'); render(); });
   };
-  document.getElementById('limitSave').onclick=function(){ var v=parseInt(document.getElementById('limitIn').value,10); if(v>=5&&v<=240){ DB.dailyLimit=v; save(); toast('Daily limit saved.'); render(); } };
-  document.getElementById('playLimitSave').onclick=function(){ var v=parseInt(document.getElementById('playLimitIn').value,10); if(v>=5&&v<=240){ DB.playLimit=v; save(); toast('Play limit saved.'); render(); } };
+  document.getElementById('limitSave').onclick=function(){ var v=parseInt(document.getElementById('limitIn').value,10); if(v>=5&&v<=240){ DB.dailyLimit=v; DB.dailyLimitUpdatedAt=new Date().toISOString(); save(); toast('Daily limit saved.'); render(); } };
+  document.getElementById('playLimitSave').onclick=function(){ var v=parseInt(document.getElementById('playLimitIn').value,10); if(v>=5&&v<=240){ DB.playLimit=v; DB.playLimitUpdatedAt=new Date().toISOString(); save(); toast('Play limit saved.'); render(); } };
   /* Focus mode toggle (2026-11-17): reads the live family record at
      click time (the global DB — never a captured copy) and stamps the
      updated-at, so the later-timestamp-wins merge in mergeFamilyDB
