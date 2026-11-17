@@ -3,8 +3,10 @@
 // admin password).
 //   (1) APP_USAGE holds the exact current + 9 Nov baseline figures read
 //       from the Vercel, Supabase and Gemini dashboards (current as of
-//       10 Nov 2026). The Monday usage check updates ONLY the "current"
-//       values and "asOf" — the baseline never changes.
+//       16 Nov 2026). The Monday usage check updates ONLY the "current"
+//       values and "asOf" — the baseline never changes. When the Monday
+//       check refreshes the figures, update the expectations in this
+//       file to match (asOf, currents, windows, rendered %/bars).
 //   (2) appUsageHTML renders all three services with current, cap,
 //       percentage (and bar) and baseline for every metric, plus the
 //       as-of date and the weekly-refresh note. No billing change, no
@@ -79,31 +81,31 @@ function metric(s, label) {
 
 /* ================= (1) exact figures ================= */
 
-test('APP_USAGE holds the exact current figures (10 Nov 2026)', function () {
+test('APP_USAGE holds the exact current figures (16 Nov 2026)', function () {
   const d = usageData();
-  assert.equal(d.asOf, '10 Nov 2026');
+  assert.equal(d.asOf, '16 Nov 2026');
   assert.equal(d.baselineDate, '9 Nov 2026');
   assert.equal(d.services.length, 3);
   const v = svc(d, 'Vercel');
   assert.equal(v.plan, 'Hobby');
-  assert.equal(metric(v, 'Fast Data Transfer').current, 5.25);
+  assert.equal(metric(v, 'Fast Data Transfer').current, 6.14);
   assert.equal(metric(v, 'Fast Data Transfer').cap, 100);
-  assert.equal(metric(v, 'Fast Origin Transfer').current, 2.86);
+  assert.equal(metric(v, 'Fast Origin Transfer').current, 3.55);
   assert.equal(metric(v, 'Fast Origin Transfer').cap, 10);
-  assert.equal(metric(v, 'Function Invocations').current, 129995);
+  assert.equal(metric(v, 'Function Invocations').current, 146439);
   assert.equal(metric(v, 'Function Invocations').cap, 1000000);
-  assert.equal(metric(v, 'CDN Requests').current, 141643);
+  assert.equal(metric(v, 'CDN Requests').current, 161878);
   assert.equal(metric(v, 'CDN Requests').cap, 1000000);
   const s = svc(d, 'Supabase');
-  assert.equal(metric(s, 'Database size').current, 26.73);
+  assert.equal(metric(s, 'Database size').current, 26.63);
   assert.equal(metric(s, 'Database size').cap, 500);
-  assert.equal(metric(s, 'Egress').current, 0.532);
+  assert.equal(metric(s, 'Egress').current, 0.788);
   assert.equal(metric(s, 'Egress').cap, 5);
   assert.equal(metric(s, 'Monthly Active Users').current, 0);
   assert.equal(metric(s, 'Monthly Active Users').cap, 50000);
   assert.equal(metric(s, 'Storage').current, 0);
   assert.equal(metric(s, 'Storage').cap, 1);
-  assert.equal(metric(s, 'Log Ingestion').current, 0.159);
+  assert.equal(metric(s, 'Log Ingestion').current, 0.177);
   assert.equal(metric(s, 'Log Ingestion').cap, 1);
   const g = svc(d, 'Gemini (AI Studio)');
   assert.equal(metric(g, 'Requests / min (peak)').current, 9);
@@ -135,9 +137,9 @@ test('APP_USAGE holds the exact 9 Nov 2026 baseline figures', function () {
 
 test('APP_USAGE carries a window per service', function () {
   const d = usageData();
-  assert.ok(svc(d, 'Vercel').window.includes('10 Oct'));
+  assert.ok(svc(d, 'Vercel').window.includes('16 Oct'));
   assert.ok(svc(d, 'Supabase').window.includes('5 Nov'));
-  assert.ok(svc(d, 'Gemini (AI Studio)').window.includes('13 Oct'));
+  assert.ok(svc(d, 'Gemini (AI Studio)').window.includes('19 Oct'));
 });
 
 /* ================= (2) rendering ================= */
@@ -155,22 +157,22 @@ test('usage section renders all three services with current, cap and %', functio
   const h = usageHTML();
   assert.ok(h.includes('📊 App usage — against the free caps'), 'heading');
   assert.ok(h.includes('As of'), 'as-of date label');
-  assert.ok(h.includes('10 Nov 2026'), 'as-of date value');
+  assert.ok(h.includes('16 Nov 2026'), 'as-of date value');
   for (const name of ['Vercel', 'Supabase', 'Gemini (AI Studio)']) {
     assert.ok(h.includes(name), 'service ' + name + ' rendered');
   }
   // Vercel
-  assert.ok(h.includes('5.25 GB of 100 GB · 5%'), 'Vercel transfer current/cap/%');
-  assert.ok(h.includes('2.86 GB of 10 GB · 29%'), 'Vercel origin current/cap/%');
-  assert.ok(h.includes('129,995 of 1,000,000 · 13%'), 'Vercel invocations current/cap/%');
-  assert.ok(h.includes('141,643 of 1,000,000 · 14%'), 'Vercel CDN current/cap/%');
+  assert.ok(h.includes('6.14 GB of 100 GB · 6%'), 'Vercel transfer current/cap/%');
+  assert.ok(h.includes('3.55 GB of 10 GB · 36%'), 'Vercel origin current/cap/%');
+  assert.ok(h.includes('146,439 of 1,000,000 · 15%'), 'Vercel invocations current/cap/%');
+  assert.ok(h.includes('161,878 of 1,000,000 · 16%'), 'Vercel CDN current/cap/%');
   assert.ok(h.includes('11 timeouts'), 'invocations timeout note');
   // Supabase
-  assert.ok(h.includes('26.73 MB of 500 MB · 5%'), 'Supabase DB current/cap/%');
-  assert.ok(h.includes('0.532 GB of 5 GB · 11%'), 'Supabase egress current/cap/%');
+  assert.ok(h.includes('26.63 MB of 500 MB · 5%'), 'Supabase DB current/cap/%');
+  assert.ok(h.includes('0.788 GB of 5 GB · 16%'), 'Supabase egress current/cap/%');
   assert.ok(h.includes('0 of 50,000 · 0%'), 'Supabase MAU current/cap/%');
   assert.ok(h.includes('0 GB of 1 GB · 0%'), 'Supabase storage current/cap/%');
-  assert.ok(h.includes('0.159 GB of 1 GB · 16%'), 'Supabase log current/cap/%');
+  assert.ok(h.includes('0.177 GB of 1 GB · 18%'), 'Supabase log current/cap/%');
   // Gemini
   assert.ok(h.includes('9 of 15 · 60%'), 'Gemini req/min current/cap/%');
   assert.ok(h.includes('5,300 of 250,000 · 2%'), 'Gemini tokens/min current/cap/%');
@@ -191,7 +193,7 @@ test('usage section shows a bar per metric and the weekly-refresh note', functio
   // One bar per metric: 12 metrics -> 12 width:% bars.
   const bars = (h.match(/width:\d+%/g) || []).length;
   assert.equal(bars, 12, 'expected 12 usage bars, got ' + bars);
-  assert.ok(h.includes('width:29%'), 'origin bar at 29%');
+  assert.ok(h.includes('width:36%'), 'origin bar at 36%');
   assert.ok(h.includes('width:60%'), 'Gemini req/min bar at 60%');
   assert.ok(h.includes('Figures refresh weekly (Mondays)'), 'weekly refresh note');
   assert.ok(h.includes('nothing here changes billing'), 'no billing change');

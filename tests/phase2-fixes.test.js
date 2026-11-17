@@ -124,6 +124,7 @@ function boardContext(day) {
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
+  loadInto(ctx, 'function levelNum(e){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
 }
@@ -137,6 +138,7 @@ test('F1: the shuffle increment survives save() and the board changes (the live 
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
+  loadInto(ctx, 'function levelNum(e){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   run("DB={explorers:[],parentPin:'2468',dailyLimit:90,playLimit:20,activeId:null,syncCode:'8SXU6S',updatedAt:null,flags:[],stageV:2};");
   run("var _e=newExplorer('Shuffle','🦊','P3'); _e.level='P3'; DB.explorers.push(_e); DB.activeId=_e.id; save();");

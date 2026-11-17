@@ -118,13 +118,17 @@ function sciTopics(lv) { return moeSubject('sci', lv).topics.map((t) => t.name);
 function subjTopicIds(lv, subj) { return moeSubject(subj, lv).topics.map((t) => t.id); }
 
 /* --- data shape ----------------------------------------------------------- */
-test('MOE data: 4 subjects per level in order, 154 topic-levels', () => {
-  for (let lv = 1; lv <= 6; lv++) {
+test('MOE data: P1/P2 show 3 subjects (no Science), P3–P6 show 4; 154 topic-levels', () => {
+  for (let lv = 1; lv <= 2; lv++) {
+    assert.deepEqual(moeSubjects(lv).map((s) => s.id), ['eng', 'math', 'chi'], 'P' + lv + ' subject order (no Science)');
+    assert.deepEqual(moeSubjects(lv).map((s) => s.name), ['English', 'Maths', 'Chinese']);
+  }
+  for (let lv = 3; lv <= 6; lv++) {
     assert.deepEqual(moeSubjects(lv).map((s) => s.id), ['eng', 'math', 'sci', 'chi'], 'P' + lv + ' subject order');
     assert.deepEqual(moeSubjects(lv).map((s) => s.name), ['English', 'Maths', 'Science', 'Chinese']);
   }
   assert.deepEqual([1, 2, 3, 4, 5, 6].map((lv) => moeSubjects(lv).map((s) => s.topics.length)),
-    [[6, 8, 0, 5], [6, 11, 0, 5], [6, 12, 4, 6], [6, 15, 5, 6], [6, 12, 5, 6], [6, 8, 4, 6]],
+    [[6, 8, 5], [6, 11, 5], [6, 12, 4, 6], [6, 15, 5, 6], [6, 12, 5, 6], [6, 8, 4, 6]],
     'topic counts per level per subject');
   const total = [1, 2, 3, 4, 5, 6].reduce((a, lv) => a + moeSubjects(lv).reduce((b, s) => b + s.topics.length, 0), 0);
   assert.equal(total, 154, '154 MOE topic-levels');
@@ -163,21 +167,27 @@ test('Science per level is the MOE list: P3 4, P4 5, P5 5, P6 4', () => {
   assert.deepEqual(sciTopics(6), ['Interaction of Forces (Frictional, Gravitational, Elastic Spring)', 'Interactions within the Environment', 'Energy Forms and Uses (Photosynthesis)', 'Energy Conversion']);
 });
 
-test('Science is not taught in P1/P2: no topics, honest note, never hidden', () => {
+test('Science is not taught in P1/P2: removed from Learn entirely (2026-11-17)', () => {
+  // Bryan 2026-11-17: P1/P2 should not have Science — remove it from
+  // Learn and quests. This reverses the old "honest note, never
+  // hidden" design: no Science card, no "Science starts in P3"
+  // explainer, no subject page. The raw MOE data still carries the
+  // notTaught placeholder (topics: []) — only the surfaces hide it.
   for (const lv of [1, 2]) {
-    const sci = moeSubject('sci', lv);
-    assert.equal(sci.topics.length, 0, 'P' + lv + ' Science has no topics');
-    assert.equal(sci.notTaught, true, 'P' + lv + ' Science flagged notTaught');
-    assert.deepEqual(moeSubjectCounts(explorer({ level: 'P' + lv }), sci, lv), { started: 0, total: 0, ready: 0, quests: 0 });
-    assert.equal(moeSessionFirst(explorer({ level: 'P' + lv }), sci, lv), null, 'no session for a subject with no topics');
+    assert.deepEqual(moeSubjects(lv).map((s) => s.id), ['eng', 'math', 'chi'], 'P' + lv + ' has no Science subject');
+    assert.equal(moeSubject('sci', lv), null, 'P' + lv + ' Science subject resolves to nothing');
+    const landing = renderLanding(explorer({ level: 'P' + lv }));
+    assert.ok(!landing.includes('data-learn-subject="sci"'), 'P' + lv + ' landing has no Science card');
+    assert.ok(!landing.includes('Science starts in P3'), 'P' + lv + ' landing has no Science explainer');
+    assert.ok(!landing.includes('Science'), 'P' + lv + ' landing mentions Science nowhere');
     const out = renderSubject(explorer({ level: 'P' + lv }), 'sci');
-    assert.ok(out.includes('Science starts in P3'), 'P' + lv + ' page says Science starts in P3');
-    assert.ok(out.includes('There is no Science subject in Primary 1 or Primary 2'), 'P' + lv + ' page explains honestly');
-    assert.ok(!out.includes('data-learn-topic'), 'no topic rows for a subject that is not taught');
+    assert.ok(!out.includes('Science starts in P3'), 'P' + lv + ' opening Science shows no explainer');
+    assert.ok(out.includes('Learn — pick a quest'), 'P' + lv + ' opening Science falls back to the subject list');
   }
-  const landing = renderLanding(explorer({ level: 'P1' }));
-  assert.ok(landing.includes('0 of 0 topics started · 0 questions ready'), 'P1 landing: Science shows 0 of 0, not a fake list');
-  assert.ok(landing.includes('Science starts in P3'), 'P1 landing Science blurb is honest');
+  // Control: P3 still has Science, card and all.
+  assert.equal(moeSubject('sci', 3).topics.length, 4, 'P3 Science keeps its 4 topics');
+  const p3landing = renderLanding(explorer({ level: 'P3' }));
+  assert.ok(p3landing.includes('data-learn-subject="sci"'), 'P3 landing still has the Science card');
 });
 
 test('P5 Science shows the P5 MOE topics, never the P3 list (the reported bug)', () => {

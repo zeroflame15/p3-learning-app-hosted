@@ -71,6 +71,7 @@ function boardContext(day) {
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
+  loadInto(ctx, 'function levelNum(e){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
 }
