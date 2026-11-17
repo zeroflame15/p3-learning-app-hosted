@@ -4405,7 +4405,7 @@ function newExplorer(name, code, level){
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
 function ex(){ return DB.explorers.find(function(e){return e.id===DB.activeId;})||null; }
-function topicById(id){ var t=TOPICS.find(function(x){return x.id===id;}); if(t)return t; return moeQuestTopic(id); }
+function topicById(id, level){ var t=TOPICS.find(function(x){return x.id===id;}); if(t)return t; return moeQuestTopic(id, level); }
 function todayKey(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 /* A stored ISO timestamp (UTC) as a local YYYY-MM-DD date — slicing
    the ISO string shows the UTC date, which is a day early for an
@@ -5379,7 +5379,7 @@ function moeBoardPool(e, todayPlan){
     if(!review&&subs.length&&subs.indexOf(s.id)<0)return;
     s.topics.forEach(function(tp){
       if(!moeInSeason(tp))return;
-      var t=moeQuestTopic(tp.id);
+      var t=moeQuestTopic(tp.id, levelNum(e));
       if(t)out.push(t);
     });
   });
@@ -9732,10 +9732,19 @@ function moeTopic(subjId, topicId, level){ var s=moeSubject(subjId,level); if(!s
    practice, so they fall back to the subject's default local quest
    when the topic has no fallback of its own — that also gives the
    server fetch time to land before the quest starts. */
-function moeQuestTopic(id){
+function moeQuestTopic(id, level){
   var found=null, lv=null;
   Object.keys(MOE_SUBJECTS_BY_LEVEL).forEach(function(k){ MOE_SUBJECTS_BY_LEVEL[k].forEach(function(s){ s.topics.forEach(function(tp){ if(tp.id===id&&!found){ found={tp:tp,s:s}; lv=+k; } }); }); });
   if(!found)return null;
+  /* The level in the blurb (2026-11-17): band-based topics (Chinese
+     Foundation P1–P4, English bands) appear under EVERY level key,
+     so the first match was always P1 and a P3 explorer's board read
+     "Singapore MOE syllabus · Primary 1 Chinese". Callers that know
+     the explorer's level pass it in and the blurb names that level;
+     without one the first match stands, as before. Only the label
+     changes — the banks, the pool and the questions never depended
+     on lv. */
+  if(typeof level==='number'&&level>=1&&level<=6)lv=level;
   var fb=found.tp.fallback?TOPICS.find(function(t){ return t.id===found.tp.fallback; })||null:null;
   var defId={eng:'eng-story',math:'math-mrt',sci:'sci-plants',chi:'chi-listen'}[found.s.id];
   var defT=defId?TOPICS.find(function(t){ return t.id===defId; })||null:null;
@@ -9868,7 +9877,7 @@ function learnHTML(){
   if(subj&&learnView.openTopic){
     openT=moeTopic(subj.id,learnView.openTopic,lvl);
     if(openT){
-      openCards=openT.quests.map(function(qid){ var t=topicById(qid); if(!t)return '';
+      openCards=openT.quests.map(function(qid){ var t=topicById(qid, lvl); if(!t)return '';
        var st=questState(e,t.id,todayKey()); var done=e.completed[t.id]; var prog=e.progress[t.id];
        var lb=(e.learnBest||{})[t.id];
        /* Boost flag for this card (twin of the home/parent checks). */
@@ -9897,7 +9906,7 @@ function learnHTML(){
   if(subj){
     var counts=moeSubjectCounts(e,subj,lvl);
     var firstQ=moeSessionFirst(e,subj,lvl);
-    var firstT=firstQ?topicById(firstQ):null;
+    var firstT=firstQ?topicById(firstQ, lvl):null;
     var sessionQ=counts.quests*5, sessionMin=counts.quests*3;
     return pageHero(subj.art,subj.icon,'P'+lvl+' '+subj.name,esc(subj.blurb)+' — every topic, every sub-topic, Singapore MOE syllabus.','🎒 P'+levelNum(e)+' · '+counts.started+' of '+counts.total+' topics started')
      +'<div class="card" style="margin-bottom:16px"><div style="display:flex;gap:10px;align-items:flex-start"><div>'+pipSVG(56,e.glow)+'</div><div><b>Today’s '+esc(subj.name)+' session</b><p style="font-weight:700;margin:6px 0 0">'+sessionQ+' questions · about '+sessionMin+' minutes · 5 questions per quest.</p><p class="small muted" style="font-weight:700;margin:6px 0 0">'+(counts.started?(firstT?'Pip suggests starting with '+esc(firstT.name)+' today.':''):'No evidence yet: your first session starts it.')+'</p></div></div>'
@@ -13545,13 +13554,21 @@ function askHTML(){
    +'<p class="small muted">Pip is a friendly practice buddy built into this app — for big questions, also check with a teacher or grown-up.</p></div>';
 }
 function bindAsk(){
+  /* Fresh explorer in every mutating handler (2026-11-17): same
+     stale-copy trap as bindCreate — save() replaces the DB copy, so
+     the `e` captured here goes stale after a tick or an auto-pull
+     and a new chat / delete / bookmark written through it is lost.
+     doSend already re-fetches (eNow/eLive); the handlers below do
+     the same. */
   var e=ex();
   var nt=document.getElementById('newThread'); if(nt)nt.onclick=function(){
+    e=ex(); if(!e)return;
     e.threadSeq++; var th={id:'t'+Date.now(), title:'New chat '+(e.threadSeq), msgs:[{who:'pip', text:'Hi '+e.name+'! 🦦 I am Pip. What shall we explore in this chat? One topic per chat keeps my otter brain tidy!'}]};
     e.threads.unshift(th); activeThread=th.id; save(); render();
   };
   var ct=document.getElementById('clearThreads'); if(ct)ct.onclick=function(){
     if(!window.confirm('Clear all chats with Pip? This deletes every Ask Pip chat for this explorer, on all linked devices. Your saved Golden Bookmark answers stay.'))return;
+    e=ex(); if(!e)return;
     e.deletedThreadIds=unionArr(e.deletedThreadIds||[], e.threads.map(function(t){ return t.id; }));
     e.threads=[]; e.threadsClearedAt=new Date().toISOString(); activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
   };
@@ -13560,17 +13577,18 @@ function bindAsk(){
      "Clear all chats". A per-chat bin uses the same deletedThreadIds
      tombstone as clear-all, so the deleted chat can never come back
      from another device's copy on the next sync. */
-  document.querySelectorAll('[data-delthread]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-delthread'); var th=e.threads.find(function(t){return t.id===id;}); if(!window.confirm('Delete this chat with Pip? “'+(th?th.title:'')+'” will be deleted on all linked devices. Your saved Golden Bookmark answers stay.'))return; e.deletedThreadIds=unionArr(e.deletedThreadIds||[],[id]); e.threads=e.threads.filter(function(t){ return t.id!==id; }); if(activeThread===id)activeThread=null; save(); render(); toast('Chat deleted 🗑'); }; });
+  document.querySelectorAll('[data-delthread]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-delthread'); var th=e.threads.find(function(t){return t.id===id;}); if(!window.confirm('Delete this chat with Pip? “'+(th?th.title:'')+'” will be deleted on all linked devices. Your saved Golden Bookmark answers stay.'))return; e=ex(); if(!e)return; e.deletedThreadIds=unionArr(e.deletedThreadIds||[],[id]); e.threads=e.threads.filter(function(t){ return t.id!==id; }); if(activeThread===id)activeThread=null; save(); render(); toast('Chat deleted 🗑'); }; });
   /* Unbookmark one saved answer (2026-11-08, Bryan): the Golden
      Bookmark list had no way to remove an answer. The text goes on
      deletedFavAnswers so the merge can never resurrect it. */
-  document.querySelectorAll('[data-unfav]').forEach(function(b){ b.onclick=function(){ var fi=parseInt(b.getAttribute('data-unfav'),10); var txt=e.favAnswers[fi]; if(txt==null)return; e.favAnswers.splice(fi,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); }; });
+  document.querySelectorAll('[data-unfav]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var fi=parseInt(b.getAttribute('data-unfav'),10); var txt=e.favAnswers[fi]; if(txt==null)return; e.favAnswers.splice(fi,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); }; });
   var back=document.getElementById('askBack'); if(back)back.onclick=function(){ activeThread=null; render(); };
   var rb=document.getElementById('askReturnBtn'); if(rb)rb.onclick=function(){ returnFromAskPip(); };
-  document.querySelectorAll('[data-listen]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); speakPip(th.msgs[parseInt(b.getAttribute('data-listen'),10)].text); }; });
-  document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ var th=e.threads.find(function(t){return t.id===activeThread;}); var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; var ix=e.favAnswers.indexOf(txt); if(ix>=0){ e.favAnswers.splice(ix,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); } else { e.favAnswers.push(txt); save(); render(); toast('Saved to your Golden Bookmark! 🔖'); } }; });
+  document.querySelectorAll('[data-listen]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var th=e.threads.find(function(t){return t.id===activeThread;}); if(!th)return; speakPip(th.msgs[parseInt(b.getAttribute('data-listen'),10)].text); }; });
+  document.querySelectorAll('[data-fav]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var th=e.threads.find(function(t){return t.id===activeThread;}); if(!th)return; var txt=th.msgs[parseInt(b.getAttribute('data-fav'),10)].text; var ix=e.favAnswers.indexOf(txt); if(ix>=0){ e.favAnswers.splice(ix,1); e.deletedFavAnswers=unionArr(e.deletedFavAnswers||[],[txt]); save(); render(); toast('Removed from your Golden Bookmark'); } else { e.favAnswers.push(txt); save(); render(); toast('Saved to your Golden Bookmark! 🔖'); } }; });
   document.querySelectorAll('[data-flag]').forEach(function(b){ b.onclick=function(){
-    var th=e.threads.find(function(t){return t.id===activeThread;}); var mi=parseInt(b.getAttribute('data-flag'),10);
+    e=ex(); if(!e)return;
+    var th=e.threads.find(function(t){return t.id===activeThread;}); if(!th)return; var mi=parseInt(b.getAttribute('data-flag'),10);
     var pipMsg=th.msgs[mi]; var kidMsg=null; for(var i=mi-1;i>=0;i--){ if(th.msgs[i].who==='kid'){ kidMsg=th.msgs[i]; break; } }
     var correction=window.prompt('What should Pip have said instead? (Leave blank if you just want to flag it — Pip will still learn from it.)','')||'';
     var sk=skillForQuestionClient(kidMsg?kidMsg.text:'');
@@ -14138,22 +14156,32 @@ function createHTML(){
    +'</div>';
 }
 function bindCreate(){
+  /* Fresh explorer in every mutating handler (2026-11-17): save()
+     replaces DB.explorers[i] with a merged copy — the 60s screen-time
+     tick and the 30s auto-pull both do it without re-rendering — so
+     the `e` captured here goes stale, and a write through it (add a
+     flashcard, tick a plan) is silently lost when save() serialises
+     the new DB. Seen live: "Flashcard added" toasted, the card never
+     appeared, not even after reload. Every handler below re-fetches
+     ex() first; the bind-time `e` is only for the field defaults. */
   var e=ex();
   if(!e.planner)e.planner=[];
   if(!e.flashcards)e.flashcards=[];
   if(!e.deletedFlashcards)e.deletedFlashcards=[];
   if(!e.deletedPlanner)e.deletedPlanner=[];
-  document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==txt; }); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
+  document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==txt; }); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
   document.querySelectorAll('[data-flip]').forEach(function(b){ b.onclick=function(){ var i=b.getAttribute('data-flip'); fcFlip[i]=!fcFlip[i]; sndPop(); render(); }; });
-  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-fcdel'),10); stampFlashcardIds(e); var _c=e.flashcards[i]; if(_c&&_c.id&&e.deletedFlashcards.indexOf(_c.id)<0)e.deletedFlashcards.push(_c.id); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
+  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var i=parseInt(b.getAttribute('data-fcdel'),10); stampFlashcardIds(e); var _c=e.flashcards[i]; if(_c&&_c.id&&e.deletedFlashcards.indexOf(_c.id)<0)e.deletedFlashcards.push(_c.id); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
   document.getElementById('fcAdd').onclick=function(){
+    e=ex(); if(!e)return;
     var f=document.getElementById('fcFront').value.trim(), bk=document.getElementById('fcBack').value.trim();
     if(!f||!bk){ toast('Write both sides of the card first!'); return; }
     e.flashcards.push({f:f,b:bk,id:'fc-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8)}); e.deletedFlashcards=e.deletedFlashcards.filter(function(k){ return k!==f+'\u0000'+bk && k!==f+bk && k!==flashcardId(f,bk,0); }); save(); sndCorrect(); toast('Flashcard added — tap it to flip! 🃏'); render();
   };
-  document.querySelectorAll('[data-plan]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-plan'),10); e.planner[i].d=!e.planner[i].d; if(e.planner[i].d)sndCorrect(); else sndPop(); save(); render(); }; });
-  document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ var i=parseInt(b.getAttribute('data-pldel'),10); var _p=e.planner[i]; if(_p&&e.deletedPlanner.indexOf(_p.t)<0)e.deletedPlanner.push(_p.t); e.planner.splice(i,1); save(); render(); }; });
+  document.querySelectorAll('[data-plan]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var i=parseInt(b.getAttribute('data-plan'),10); e.planner[i].d=!e.planner[i].d; if(e.planner[i].d)sndCorrect(); else sndPop(); save(); render(); }; });
+  document.querySelectorAll('[data-pldel]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var i=parseInt(b.getAttribute('data-pldel'),10); var _p=e.planner[i]; if(_p&&e.deletedPlanner.indexOf(_p.t)<0)e.deletedPlanner.push(_p.t); e.planner.splice(i,1); save(); render(); }; });
   document.getElementById('plAdd').onclick=function(){
+    e=ex(); if(!e)return;
     var v=document.getElementById('plNew').value.trim(); if(!v){ toast('Type a plan first!'); return; }
     e.planner.push({t:v,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==v; }); save(); sndPop(); toast('Plan added! You have got this. 📋'); render();
   };
