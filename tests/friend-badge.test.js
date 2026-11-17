@@ -32,8 +32,11 @@ test('friendBadgeHTML shows the count only when requests are pending', () => {
 
 test('the Friends nav item carries the badge in both the sidebar and the bottom nav', () => {
   const render = fnBody('function render(){');
-  assert.ok(render.includes("(n[0]==='friends'?friendBadgeHTML():'')"), 'both nav builders add the badge to Friends');
-  assert.equal((render.match(/friendBadgeHTML\(\)/g) || []).length, 2, 'sidebar and bottom nav, exactly two');
+  // Both navs share the navBtnHTML helper, so the badge call lives
+  // once in the helper — and both builders call the helper.
+  assert.ok(render.includes("(n[0]==='friends'?friendBadgeHTML():'')"), 'the nav helper adds the badge to Friends');
+  assert.ok(render.includes("navBtnHTML(n,'navbtn')"), 'the sidebar builder uses the shared helper');
+  assert.ok(render.includes("navBtnHTML(n,'')"), 'the bottom-nav builder uses the shared helper');
   assert.ok(html.includes('.frbadge{'), 'the badge has CSS');
   assert.ok(html.includes('background:#dc2626'), 'the badge is red');
 });

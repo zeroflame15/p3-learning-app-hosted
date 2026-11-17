@@ -93,9 +93,14 @@ test('ic() renders the image with an emoji fallback and the right sizes', () => 
 });
 
 test('the nav, game cards and quest cards show the custom icons, not bare emoji', () => {
+  // Both navs share the navBtnHTML helper, so the icon call lives
+  // once in the helper — and both builders call the helper.
+  const helper = html.slice(html.indexOf('function navBtnHTML('), html.indexOf('var navBtns='));
+  assert.ok(helper.includes("ic(n[3],n[1],'navic')"), 'the shared nav helper renders the custom icon');
+  assert.ok(!helper.includes("'<span class=\"nic\">'+n[1]+'</span>'"), 'no bare emoji left in the nav');
   const render = html.slice(html.indexOf('var navBtns='), html.indexOf('var btm=') + 400);
-  assert.ok(render.includes("ic(n[3],n[1],'navic')"), 'both navs render the custom icon');
-  assert.ok(!render.includes("'<span class=\"nic\">'+n[1]+'</span>'"), 'no bare emoji left in the nav');
+  assert.ok(render.includes("navBtnHTML(n,'navbtn')"), 'the sidebar uses the shared helper');
+  assert.ok(render.includes("navBtnHTML(n,'')"), 'the bottom nav uses the shared helper');
   const gameCard = html.slice(html.indexOf('function playHTML(){'));
   assert.ok(gameCard.includes("ic(g.img,g.e,'gicon')"), 'the game-card band shows the custom icon');
   const questCard = html.slice(html.indexOf('function learnHTML(){'), html.indexOf('function learnHTML(){') + 2500);

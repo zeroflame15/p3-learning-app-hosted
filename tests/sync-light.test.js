@@ -110,6 +110,7 @@ function makeFamily(plan, rev, updatedAt) {
     parentPin: '2468', dailyLimit: 30, playLimit: 20, activeId: 'e1',
     syncCode: '8SXU6S', updatedAt: updatedAt, flags: [], stageV: 2,
     parentPinUpdatedAt: '2026-11-09T00:00:00.000Z',
+    focusMode: false, focusModeUpdatedAt: null,
     familyEvents: [], deletedFamilyEvents: [],
   };
   if (plan) {
