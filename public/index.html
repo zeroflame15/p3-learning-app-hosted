@@ -16,7 +16,7 @@
      lavender/purple mascot accents, gold sparkles. */
   --bg:#eaf5e6; --bg2:#dcefd6; --panel:#ffffff; --panel2:#f0f7ec;
   --ink:#1e3a24; --ink-soft:#57705a; --line:#c9dcc6;
-  --amber:#ffc94d; --amber-d:#7d6218; --teal:#3e8e52; --teal-soft:#dff2e2;
+  --amber:#ffc94d; --amber-d:#7d6218; --teal:#3e8e52; --teal-soft:#dff2e2; --teal-d:#2f6b3a;
   --coral:#c0392b; --coral-soft:#fdeceb; --sky:#1d4ed8; --sky-soft:#dbeafe;
   --green:#2f7a3d; --green-soft:#dff2e2; --gold:#ffc94d;
   --nav:#1f4a2e; --nav-ink:#f5f1e6; --shadow:0 10px 30px rgba(30,60,35,.14);
@@ -70,7 +70,7 @@ a{color:var(--sky)}
 .small{font-size:.85rem}
 .btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#231a02;border:0;border-radius:999px;padding:11px 20px;font-weight:900;font-size:1rem;box-shadow:0 4px 0 var(--amber-d)}
 .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--amber-d)}
-.btn.teal{background:var(--teal);color:#fff;box-shadow:0 4px 0 #2f6b3a}
+.btn.teal{background:var(--teal);color:#fff;box-shadow:0 4px 0 var(--teal-d)}
 .btn.ghost{background:var(--panel);color:var(--ink);border:2px solid var(--line);box-shadow:none}
 .btn.coral{background:var(--coral);color:#fff;box-shadow:0 4px 0 #9f1239}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -403,8 +403,8 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .questcard{background:var(--card);color:var(--card-text);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
 .questcard .muted{color:#6d6899}
 .questcard .progressbar{background:#e8e2d0;border-color:#e8e2d0}
-.questcard .progressbar>div{background:#3e8e52}
-.questcard .btn{background:#3e8e52;color:#fff;box-shadow:0 4px 0 #2f6b3a;width:100%;justify-content:center}
+.questcard .progressbar>div{background:var(--teal)}
+.questcard .btn{background:var(--teal);color:#fff;box-shadow:0 4px 0 var(--teal-d);width:100%;justify-content:center}
 .diffbtn{background:#efe9dc;color:#2a2753;border:2px solid #d8d0ba;border-radius:999px;padding:8px 14px;font-weight:800;cursor:pointer}
 .diffbtn.sel{background:#2f7a3d;color:#fff;border-color:#2f7a3d}
 .boardcard.done{opacity:.55;filter:grayscale(.55)}
@@ -5150,14 +5150,21 @@ function showDoorCode(){
    WEEKLY THEMES — picking one visibly re-skins Home + accents,
    and the choice is saved per explorer.
    ============================================================ */
-/* The same five weekly themes as the Muse version: picking one tints
-   the Home terrarium scene and shows the theme's line in its glow colour. */
+/* The same five weekly themes as the Muse version. Each theme
+   carries a full palette (2026-11-17): picking one re-skins the
+   whole app — sidebar, page background, buttons, panels, borders
+   and text — not just the Home terrarium tint and the theme line.
+   Semantic colours stay fixed: green = right, coral = wrong, sky
+   = links — a theme never repaints what an answer means. Play
+   keeps its soft aqua and Treasure its soft lavender (their own
+   route backgrounds); the sidebar and buttons on those routes
+   still follow the theme. */
 var THEMES={
- 'Frog Pond':{tint:'rgba(46,160,90,.30)',glow:'#7be495',line:'Splash! This week we hop around the Frog Pond.',dots:['#bfe3c0','#7be495','#2f7a3d']},
- 'Magnet Lab':{tint:'rgba(214,64,84,.28)',glow:'#ff9d8a',line:'Snap! This week we experiment in the Magnet Lab.',dots:['#ffd9d2','#ff9d8a','#d64054']},
- 'Star Garden':{tint:'rgba(240,178,60,.30)',glow:'#ffd97a',line:'Twinkle! This week we grow ideas in the Star Garden.',dots:['#fdeecb','#ffd97a','#e0a92e']},
- 'Ocean Deep':{tint:'rgba(38,116,210,.34)',glow:'#7cc4ff',line:'Whoosh! This week we dive into the Ocean Deep.',dots:['#cfe4ff','#7cc4ff','#2674d2']},
- 'Sky Castle':{tint:'rgba(140,96,220,.30)',glow:'#c9a8ff',line:'Wheee! This week we float up to the Sky Castle.',dots:['#e3d9ff','#c9a8ff','#8c60dc']}
+ 'Frog Pond':{tint:'rgba(46,160,90,.30)',glow:'#7be495',line:'Splash! This week we hop around the Frog Pond.',dots:['#bfe3c0','#7be495','#2f7a3d'],nav:'#1f4a2e',bg:'#eaf5e6',panel2:'#f0f7ec',border:'#c9dcc6',amber:'#ffc94d','amber-d':'#7d6218',teal:'#3e8e52','teal-soft':'#dff2e2','teal-d':'#2f6b3a',ink:'#1e3a24','ink-soft':'#57705a',card:'#fffaf0'},
+ 'Magnet Lab':{tint:'rgba(214,64,84,.28)',glow:'#ff9d8a',line:'Snap! This week we experiment in the Magnet Lab.',dots:['#ffd9d2','#ff9d8a','#d64054'],nav:'#5e2230',bg:'#fce8e5',panel2:'#fdeeed',border:'#eec5bd',amber:'#ff9d8a','amber-d':'#b03a48',teal:'#c23347','teal-soft':'#fbe3e1','teal-d':'#932534',ink:'#3d1f24','ink-soft':'#6e4a4d',card:'#fff5f2'},
+ 'Star Garden':{tint:'rgba(240,178,60,.30)',glow:'#ffd97a',line:'Twinkle! This week we grow ideas in the Star Garden.',dots:['#fdeecb','#ffd97a','#e0a92e'],nav:'#5c3f0e',bg:'#fdf3dc',panel2:'#fdf6e3',border:'#e8d5a4',amber:'#ffd97a','amber-d':'#8a610d',teal:'#b07f14','teal-soft':'#f9eecb','teal-d':'#8a610d',ink:'#3d2f12','ink-soft':'#6e5f3a',card:'#fff8e2'},
+ 'Ocean Deep':{tint:'rgba(38,116,210,.34)',glow:'#7cc4ff',line:'Whoosh! This week we dive into the Ocean Deep.',dots:['#cfe4ff','#7cc4ff','#2674d2'],nav:'#14365e',bg:'#e3eefb',panel2:'#e9f2fc',border:'#b8d0ea',amber:'#7cc4ff','amber-d':'#2b5ea8',teal:'#2674d2','teal-soft':'#d9e8fb','teal-d':'#1b4f8a',ink:'#16283f','ink-soft':'#4a5f7d',card:'#eef4fd'},
+ 'Sky Castle':{tint:'rgba(140,96,220,.30)',glow:'#c9a8ff',line:'Wheee! This week we float up to the Sky Castle.',dots:['#e3d9ff','#c9a8ff','#8c60dc'],nav:'#3d2b63',bg:'#efe9fb',panel2:'#f1ebfc',border:'#d3c6ee',amber:'#c9a8ff','amber-d':'#7a54c2',teal:'#8c60dc','teal-soft':'#e7ddfb','teal-d':'#6a3fb8',ink:'#2c2140','ink-soft':'#5b4d78',card:'#f3edfd'}
 };
 /* Themes saved by older web builds keep working — they resolve to the
    matching Muse-version theme, so no saved choice is ever lost. */
@@ -5166,8 +5173,22 @@ function themeName(e){ var n=e&&e.theme; if(THEME_ALIAS[n])n=THEME_ALIAS[n]; ret
 function themeOf(e){ return THEMES[themeName(e)]; }
 function applyTheme(){
   var e=ex(); if(!e)return; var t=themeOf(e);
-  document.documentElement.style.setProperty('--tint', t.tint);
-  document.documentElement.style.setProperty('--glow', t.glow);
+  var root=document.documentElement.style;
+  root.setProperty('--tint', t.tint);
+  root.setProperty('--glow', t.glow);
+  root.setProperty('--nav', t.nav);
+  root.setProperty('--bg', t.bg);
+  root.setProperty('--panel2', t.panel2);
+  root.setProperty('--line', t.border);
+  root.setProperty('--amber', t.amber);
+  root.setProperty('--amber-d', t['amber-d']);
+  root.setProperty('--gold', t.amber);
+  root.setProperty('--teal', t.teal);
+  root.setProperty('--teal-soft', t['teal-soft']);
+  root.setProperty('--teal-d', t['teal-d']);
+  root.setProperty('--ink', t.ink);
+  root.setProperty('--ink-soft', t['ink-soft']);
+  root.setProperty('--card', t.card);
 }
 function greeting(){ var h=new Date().getHours(); return h<12?'Good morning':(h<18?'Good afternoon':'Good evening'); }
 var PIP_SAYS=['Warm up with a quick game in Play? It wakes your brain right up!','Your frog friend is waiting in Critter Lab. One good visit helps it grow!','One quest question at a time. Small hops make a big frog!','Feeling wobbly or sparkling today? A calm sound in the Vibe Zone helps.','Try today’s quest — finishing all 5 questions earns a big celebration!'];
@@ -5219,6 +5240,11 @@ function boardPicks(e, todayPlan){
   if(!pool.length)pool=unfinished.slice();
   if(!pool.length)pool=TOPICS.slice();
   pool=pool.filter(boardInSeason);
+  /* Science is not taught in P1/P2 (2026-11-17): a P1/P2 explorer
+     never sees a Science quest on the board — not on a Science plan
+     day (Tue Science + Chinese, Thu Maths + Science), not on a
+     review day, not via Shuffle. P3–P6 are unaffected. */
+  if(levelNum(e)<=2)pool=pool.filter(function(x){ return x.sub!=='sci'; });
   if(!pool.length)return [];
   var done=pool.filter(doneToday);
   var avail=pool.filter(function(x){ return !doneToday(x); });
@@ -9504,7 +9530,12 @@ function moeInSeason(tp, todayStr){
   if(!tp)return false;
   return (tp.term||1)<=schoolTermOf(todayStr||todayKey());
 }
-function moeSubjects(level){ var lv=(typeof level==='number'&&level>=1&&level<=6)?level:3; return MOE_SUBJECTS_BY_LEVEL[String(lv)]||MOE_SUBJECTS_BY_LEVEL['3']; }
+/* Science is not taught in P1/P2 (2026-11-17): the P1/P2 Science
+   entry is a placeholder (topics: [], notTaught: true) and Learn
+   must not show it at all for those levels, so it is filtered
+   here — every Learn surface reads through this function. P3–P6
+   keep all four subjects. */
+function moeSubjects(level){ var lv=(typeof level==='number'&&level>=1&&level<=6)?level:3; var ss=MOE_SUBJECTS_BY_LEVEL[String(lv)]||MOE_SUBJECTS_BY_LEVEL['3']; return lv<=2?ss.filter(function(s){ return !s.notTaught; }):ss; }
 function moeSubject(id, level){ var ss=moeSubjects(level); for(var i=0;i<ss.length;i++)if(ss[i].id===id)return ss[i]; return null; }
 function moeTopic(subjId, topicId, level){ var s=moeSubject(subjId,level); if(!s)return null; for(var i=0;i<s.topics.length;i++)if(s.topics[i].id===topicId)return s.topics[i]; return null; }
 /* moeQuestTopic(id): the quest-flow view of a MOE topic. It is NOT
@@ -10895,15 +10926,21 @@ function persistProgress(){
   var e=ex(); if(!cur||cur.phase!=='quest')return;
   e.progress[cur.topicId]={idx:cur.idx, score:cur.score, wrong:cur.wrong, picked:cur.picked, answered:cur.answered, pool:cur.pool, fresh:!!cur.fresh, elapsed:learnElapsedSecs(), fibTyped:(cur.fibTyped||''), fibCorrect:!!cur.fibCorrect, diffSwap:(cur.diffSwap||{})}; save();
 }
+/* Listen button (2026-11-17): what Pip reads aloud for a question.
+   Some Chinese stems open with a "Listen:" prompt ("Listen: mā ma
+   means…") — that is an instruction to the child, not part of the
+   question, so Pip skips it when speaking. The display is unchanged. */
+function listenTextFor(q){ return (q&&q.q?String(q.q):'').replace(/^Listen:\s*/i,''); }
 function warmupHTML(){
   var t=topicById(warm.topicId);
   if(warm.idx>=warm.order.length){
     return '<div class="card" style="text-align:center"><div style="font-size:3rem">🔥</div><h2>Warm-up complete!</h2><p style="font-weight:800">You got '+warm.correct+' of '+warm.order.length+' warm-up questions right. Your brain is warmed up and ready!</p><p class="muted" style="font-weight:700">Psst — those were practice questions. The quest has its own fresh questions!</p><button class="btn" id="wuStart">Start the quest ▶</button></div>';
   }
   var q=bankFor(t,'warm',levelNum(ex()))[warm.order[warm.idx]];
+  var _wListen=(t.sub==='chi')?'<div style="margin-top:8px"><button class="btn teal" id="wuListen">🔊 Listen to the question</button></div>':'';
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">Brain warm-up</b><div class="small muted">Fresh practice questions for '+esc(t.name)+' — the quest itself has different ones!</div></div></div>'
    +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill prog">🔥 Brain warm-up · '+esc(t.name)+'</span><span class="chip">⏱ <span id="wuTime">'+warm.left+'</span>s</span><span class="chip">Question '+(warm.idx+1)+' of '+warm.order.length+'</span></div>'
-   +'<h3 style="margin-top:14px">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'
+   +'<h3 style="margin-top:14px">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+_wListen
    +'<div id="wuOpts">'+q.o.map(function(o,i){ var cls='optbtn'; if(warm.answered){ if(i===q.a)cls+=' right'; else if(i===warm.picked)cls+=' wrong'; } else if(i===warm.picked)cls+=' picked'; return '<button class="'+cls+'" data-wopt="'+i+'" '+(warm.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>'
    +'<div style="margin-top:10px"><button class="btn ghost" id="wuAskPip">🦦 Ask Pip about this question</button></div>'
    +'<div id="wuFb">'+(warm.answered?('<div class="feedback '+(warm.picked===q.a?'ok':'no')+'">'+(warm.picked===q.a?'Correct! Warm brain, go go go! 🔥':'Not quite — the answer is “'+esc(q.o[q.a])+'”. Warm-up tries still count!')+'</div><button class="btn" id="wuNext">'+(warm.idx+1>=warm.order.length?'Finish warm-up':'Next ▶')+'</button>'):'')+'</div>'
@@ -10923,6 +10960,9 @@ function bindWarmup(){
   /* Ask Pip about this warm-up question: Pip explains it in a new
      thread, and the 60s countdown pauses while the child is away. */
   var wa=document.getElementById('wuAskPip'); if(wa)wa.onclick=function(){ var wq=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]]; askPipAbout({src:'warmup', topicId:warm.topicId, label:topicById(warm.topicId).name, question:wq.q, options:wq.o.slice(), answer:wq.o[wq.a], clue:wq.c||''}); };
+  /* Listen (2026-11-17): Chinese warm-up questions can be heard
+     aloud — Pip reads the question with a Chinese voice. */
+  var wl=document.getElementById('wuListen'); if(wl)wl.onclick=function(){ var wq=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]]; if(speakPip(listenTextFor(wq)))toast('Listen… now say it out loud like Pip!'); };
   var st=document.getElementById('wuStart'); if(st)st.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
 }
 function beginQuest(topicId){
@@ -11057,6 +11097,11 @@ function quizHTML(){
   }
   var q=list[cur.idx];
   var _hint=(cur.hintForIdx!=null&&cur.hintForIdx===cur.idx&&!cur.answered)?'<div class="speech" style="margin:12px 0 0"><b>💡 Pip’s hint:</b> '+esc(diffHintText(q))+'</div>':'';
+  /* Listen (2026-11-17): every Chinese question in Learn gets a
+     Listen button — Pip reads the question aloud with a Chinese
+     voice (speakPip picks one, and says how to add one if the
+     phone has none). Other subjects keep no button. */
+  var _listen=(t.sub==='chi')?'<div style="margin-top:8px"><button class="btn teal" id="qListen">🔊 Listen to the question</button></div>':'';
   var left=list.length-cur.idx-1;
   var _fib=isFibQuestion(q);
   var _ok=_fib?!!cur.fibCorrect:(cur.picked===q.a);
@@ -11070,7 +11115,7 @@ function quizHTML(){
   return '<div class="flowhero">'+ic(t.img,t.icon,'heroart')+'<div><b style="font-family:\'Fredoka\'">'+esc(t.name)+'</b><div class="small muted">'+(cur.phase==='boost'?'Pip’s Boost — 5 quick practice questions, nice and gentle!':(cur.phase==='retry'?'Second Chance round — cousin questions, you can do this!':(cur.fresh?'🌅 Today’s fresh set — new questions pulled this morning for this finished quest!':'Quest time — one question at a time, superstar!')))+'</div></div></div>'
    +'<div class="card"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px"><span class="pill '+t.sub+'">'+ic(t.img,t.icon,'ic-sm')+' '+esc(t.name)+(cur.phase==='boost'?' · Pip’s Boost':(cur.phase==='retry'?' · Second Chance':''))+'</span>'+((cur.liveGenSource==='live'||cur.boostSource==='live')?'<span class="chip">✨ Fresh from Pip</span>':(cur.liveGenSource==='server'?'<span class="chip">📚 Pip’s shelf</span>':''))+'<span class="chip">Question '+(cur.idx+1)+' of '+list.length+'</span><span class="chip timechip" id="quizTime">⏱ '+fmtPlaySecs(learnElapsedSecs())+'</span>'+(left>0?'<span class="chip">Just '+left+' more to go!</span>':'<span class="chip">Last one!</span>')+'</div>'
    +'<div class="progressbar" style="margin:12px 0"><div style="width:'+Math.round(cur.idx/list.length*100)+'%"></div></div>'
-   +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+_hint
+   +'<h3 style="font-size:1.3rem">'+esc(q.q).replace(/\n/g,'<br>')+'</h3>'+_hint+_listen
    +(_fib
      ?'<div><input class="field" id="qFibInput" type="text" placeholder="Type your answer…" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="60" value="'+esc(cur.answered?(cur.fibTyped||''):'')+'" '+(cur.answered?'disabled':'')+' style="max-width:340px;font-weight:800"><div style="margin-top:10px"><button class="btn" id="qFibCheck" '+(cur.answered?'disabled':'')+'>Check my answer ✓</button></div>'+(cur.answered?'<p class="small muted" style="font-weight:700;margin:8px 0 0">Your answer: “'+esc(cur.fibTyped||'')+'”</p>':'')+'</div>'
      :'<div>'+q.o.map(function(o,i){ var cls='optbtn'; if(cur.answered){ if(i===q.a)cls+=' right'; else if(i===cur.picked)cls+=' wrong'; } else if(i===cur.picked)cls+=' picked'; return '<button class="'+cls+'" data-qopt="'+i+'" '+(cur.answered?'disabled':'')+'>'+esc(o)+'</button>'; }).join('')+'</div>')
@@ -11123,6 +11168,9 @@ function bindQuiz(){
   /* Ask Pip about this quest question: Pip explains it in a new
      thread, and the answer-only clock pauses while the child is away. */
   var qa=document.getElementById('qAskPip'); if(qa)qa.onclick=function(){ askPipAbout({src:'quest', topicId:cur.topicId, label:t.name, question:q.q, options:(Array.isArray(q.o)?q.o.slice():[]), answer:questAnswerText(q), clue:q.c||''}); };
+  /* Listen (2026-11-17): Chinese quest questions can be heard
+     aloud — Pip reads the question with a Chinese voice. */
+  var ql=document.getElementById('qListen'); if(ql)ql.onclick=function(){ if(speakPip(listenTextFor(q)))toast('Listen… now say it out loud like Pip!'); };
   /* Phase 2 difficulty buttons: how the question felt. Honoured at
      once — the next question shifts a level and "Too hard" also
      shows Pip's hint first on the next question. */
