@@ -155,3 +155,30 @@ test('sidebar and bottom nav read the theme variables', () => {
   assert.ok(html.includes('body{font-family:"Nunito",system-ui,sans-serif;background:var(--bg);'), 'page background is the theme background');
   assert.ok(html.includes('.topbar{display:flex;align-items:center;gap:10px;padding:12px 20px;position:sticky;top:0;background:var(--bg);'), 'top bar is the theme background');
 });
+
+test('theme follows the active explorer on sign-in and on creation (2026-11-17)', () => {
+  assert.ok(html.includes('DB.activeId=target.id; save(); applyTheme();'), 'door-code sign-in applies the new explorer theme');
+  assert.ok(html.includes("DB.activeId=e.id; doorMode='pick'; doorCode=[]; doorLevel='P3'; save(); applyTheme();"), 'new-explorer creation applies the new explorer theme');
+  const renderStart = html.indexOf('function render(){');
+  const renderEnd = html.indexOf('function renderTop()', renderStart);
+  assert.ok(renderStart >= 0 && renderEnd > renderStart, 'render() must exist');
+  const renderSrc = html.slice(renderStart, renderEnd);
+  assert.ok(renderSrc.includes("if(typeof applyTheme==='function')applyTheme();"), 'render() re-applies the theme on every render, so it can never go stale');
+});
+
+test('switching the active explorer changes the applied theme variables', () => {
+  var setProps = {};
+  var document = { documentElement: { style: { setProperty: function (k, v) { setProps[k] = v; } } } }; // eslint-disable-line no-unused-vars
+  var active = { theme: 'Frog Pond' };
+  function ex() { return active; } // eslint-disable-line no-unused-vars
+  var src = [THEME_ALIAS_SRC, grabFn('themeName'), grabFn('themeOf'), grabFn('applyTheme')].join('\n');
+  eval(src + '\n; applyTheme();');
+  assert.equal(setProps['--nav'], THEMES['Frog Pond'].nav, 'first explorer gets Frog Pond');
+  assert.equal(setProps['--bg'], THEMES['Frog Pond'].bg, 'first explorer background is Frog Pond');
+  active = { theme: 'Ocean Deep' };
+  setProps = {};
+  eval(src + '\n; applyTheme();');
+  assert.equal(setProps['--nav'], THEMES['Ocean Deep'].nav, 'switching explorer re-applies to Ocean Deep');
+  assert.equal(setProps['--bg'], THEMES['Ocean Deep'].bg, 'switching explorer background is Ocean Deep');
+  assert.notEqual(setProps['--nav'], THEMES['Frog Pond'].nav, 'the old theme does not stick');
+});

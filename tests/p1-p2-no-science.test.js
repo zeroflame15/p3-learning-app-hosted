@@ -11,8 +11,8 @@
 // P3–P6 are completely unchanged. The quest engine itself
 // (startQuestFlow) is untouched: with both surfaces gated, no UI
 // path can start a Science quest for P1/P2. Trivia Science
-// questions and the study-plan day labels ("Science + Chinese")
-// are out of scope and deliberately left alone.
+// questions and the study-plan day labels are covered separately
+// in p1-p2-no-science-trivia-planner.test.js.
 'use strict';
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -71,11 +71,17 @@ function boardContext() {
   ctx._day = TODAY;
   ctx.todayKey = function () { return ctx._day; };
   ctx.TOPICS = BOARD_TOPICS;
+  // The real MOE data: the board now picks from it, so the gate
+  // tests exercise the real pool, not the stub list.
+  vm.runInContext(extractFn('var MOE_SUBJECTS_BY_LEVEL='), ctx);
   loadInto(ctx, 'function schoolTermOf(dateKey){');
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
+  loadInto(ctx, 'function moeSubjects(level){');
+  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
 }
@@ -124,6 +130,10 @@ test('board: a P3 explorer CAN still get a Science quest (control)', () => {
 test('gates live in the page: boardPicks drops sci for lv<=2, moeSubjects drops notTaught', () => {
   const boardSrc = extractFn('function boardPicks(e, todayPlan){');
   assert.ok(boardSrc.indexOf("if(levelNum(e)<=2)pool=pool.filter(function(x){ return x.sub!=='sci'; });") >= 0, 'boardPicks gates Science out for P1/P2');
+  assert.ok(boardSrc.indexOf('moeBoardPool(e, todayPlan)') >= 0, 'boardPicks builds its pool from the level MOE topics');
+  const poolSrc = extractFn('function moeBoardPool(e, todayPlan){');
+  assert.ok(poolSrc.indexOf('moeSubjects(levelNum(e))') >= 0, 'the pool is built at the explorer\'s level');
+  assert.ok(poolSrc.indexOf('moeQuestTopic(tp.id)') >= 0, 'pool topics are quest-flow topics');
   const moeSrc = extractFn('function moeSubjects(level){');
   assert.ok(moeSrc.indexOf('!s.notTaught') >= 0, 'moeSubjects filters notTaught subjects');
   assert.ok(moeSrc.indexOf('lv<=2') >= 0, 'the filter applies to levels 1–2 only');

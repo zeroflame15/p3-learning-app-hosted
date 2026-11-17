@@ -54,24 +54,31 @@ function loadInto(ctx, marker) { vm.runInContext(extractFn(marker), ctx); }
 
 const BOARD_TOPICS = [
   { id: 'math-ntuc', sub: 'math', subName: 'Maths', name: 'NTUC FairPrice', moe: false, term: 1 },
-  { id: 'eng-story', sub: 'english', subName: 'English', name: 'Story Time', moe: false, term: 1 },
-  { id: 'chi-listen', sub: 'chinese', subName: 'Chinese', name: 'Listening', moe: false, term: 1 },
-  { id: 'sci-plants', sub: 'science', subName: 'Science', name: 'Plants', moe: false, term: 1 },
+  { id: 'eng-story', sub: 'eng', subName: 'English', name: 'Story Time', moe: false, term: 1 },
+  { id: 'chi-listen', sub: 'chi', subName: 'Chinese', name: 'Listening', moe: false, term: 1 },
+  { id: 'sci-plants', sub: 'sci', subName: 'Science', name: 'Plants', moe: false, term: 1 },
   { id: 'math-fractions', sub: 'math', subName: 'Maths', name: 'Fractions', moe: true, term: 4 },
-  { id: 'sci-magnets', sub: 'science', subName: 'Science', name: 'Magnets', moe: true, term: 4 },
+  { id: 'sci-magnets', sub: 'sci', subName: 'Science', name: 'Magnets', moe: true, term: 4 },
 ];
-const ALL_SUBS_PLAN = { rest: false, review: false, subs: ['math', 'english', 'chinese', 'science'] };
+const ALL_SUBS_PLAN = { rest: false, review: false, subs: ['math', 'eng', 'chi', 'sci'] };
 
 function boardContext(day) {
   const ctx = vm.createContext({ console });
   ctx._day = day;
   ctx.todayKey = function () { return ctx._day; };
   ctx.TOPICS = BOARD_TOPICS;
+  // The real MOE data: the board now picks from it, so these tests
+  // exercise the real pool (the stub list is only the legacy
+  // fallback behind it).
+  vm.runInContext(extractFn('var MOE_SUBJECTS_BY_LEVEL='), ctx);
   loadInto(ctx, 'function schoolTermOf(dateKey){');
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
+  loadInto(ctx, 'function moeSubjects(level){');
+  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
 }
@@ -139,6 +146,84 @@ test('board: completing ANY one of the three counts for the streak', () => {
     const e = { streak: 0, streakLongest: 0, streakLastDate: null, streakFreezes: 1, streakFreezeWeek: null, streakLost: 0, streakRepairUntil: null, streakFreezeUsedDay: null, completed: {}, completedDay: {} };
     sctx.recordStreak(e, TODAY); // finishing the board quest "t"
     assert.equal(e.streak, 1, 'finishing board quest ' + t.id + ' lights the streak to 1');
+  });
+});
+
+test('board: a P6 explorer gets P6 Science topics (forces etc.), never Magnet Lab', () => {
+  // 2026-11-17: the board picks from the explorer's own level MOE
+  // topics. A P6 explorer offered 'Magnet Lab' (a P3 topic) got
+  // P4-difficulty magnet questions — the server has no level-6
+  // magnet rows. P6 Science is forces, environment, photosynthesis
+  // and energy conversion.
+  const ctx = boardContext(TODAY); // Term 4 — all four P6 Science topics in season
+  const sciDay = { rest: false, review: false, subs: ['sci'] };
+  const p6sci = ctx.moeSubjects(6).find(function (s) { return s.id === 'sci'; }).topics.map(function (t) { return t.id; });
+  // Array.from: the ids come back as a vm-realm array, and strict
+  // deepEqual rejects those — copy them into a host array first.
+  assert.deepEqual(Array.from(p6sci).sort(), ['sci-energy-conversion', 'sci-forces', 'sci-interactions-environment', 'sci-photosynthesis'].sort(), 'P6 Science is forces, environment, photosynthesis, energy');
+  for (let swap = 0; swap < 6; swap++) {
+    const picks = ctx.boardPicks(boardExplorer({ level: 'P6', swapIdx: swap }), sciDay);
+    assert.ok(picks.length > 0, 'P6 Science day still offers quests');
+    picks.forEach(function (t) {
+      assert.ok(p6sci.indexOf(t.id) >= 0, 'P6 Science pick is a P6 Science topic, got ' + t.id);
+      assert.notEqual(t.id, 'sci-magnets', 'Magnet Lab (P3) is never offered to P6');
+      assert.notEqual(t.id, 'sci-magnet', 'the legacy Magnet Lab is never offered either');
+    });
+  }
+  // And on a full day, no rotation ever surfaces magnets for P6.
+  for (let swap = 0; swap < 6; swap++) {
+    const picks = ctx.boardPicks(boardExplorer({ level: 'P6', swapIdx: swap }), ALL_SUBS_PLAN);
+    assert.ok(picks.every(function (t) { return t.id !== 'sci-magnets'; }), 'no Magnet Lab on a P6 board at any rotation');
+  }
+});
+
+test('board: a P3 explorer gets Magnets only in Term 4 (season gating)', () => {
+  const sciDay = { rest: false, review: false, subs: ['sci'] };
+  const term1 = boardContext(TERM1);
+  for (let swap = 0; swap < 6; swap++) {
+    const picks = term1.boardPicks(boardExplorer({ level: 'P3', swapIdx: swap }), sciDay);
+    picks.forEach(function (t) {
+      assert.notEqual(t.id, 'sci-magnets', 'Term 1: Magnets is not taught yet');
+    });
+  }
+  // Term 4: Magnets is in season and appears on the board.
+  const term4 = boardContext(TODAY);
+  let sawMagnets = false;
+  for (let swap = 0; swap < 6; swap++) {
+    const picks = term4.boardPicks(boardExplorer({ level: 'P3', swapIdx: swap }), sciDay);
+    if (picks.some(function (t) { return t.id === 'sci-magnets'; })) sawMagnets = true;
+  }
+  assert.ok(sawMagnets, 'Term 4: Magnets appears on a P3 Science board at some rotation');
+});
+
+test('board: a review day offers MOE topics across subjects', () => {
+  const ctx = boardContext(TODAY);
+  const review = { rest: false, review: true, subs: [] };
+  const p3ids = new Set();
+  ctx.moeSubjects(3).forEach(function (s) { s.topics.forEach(function (tp) { p3ids.add(tp.id); }); });
+  const picks = ctx.boardPicks(boardExplorer({ level: 'P3' }), review);
+  assert.equal(picks.length, 3, 'three choices on a review day');
+  picks.forEach(function (t) {
+    assert.ok(p3ids.has(t.id), 'review pick is a P3 MOE topic, got ' + t.id);
+    assert.ok(t.moe, 'review pick is an MOE topic: ' + t.id);
+  });
+  const subs = new Set(picks.map(function (t) { return t.sub; }));
+  assert.ok(subs.size >= 2, 'the review board spans subjects: ' + Array.from(subs).join(', '));
+});
+
+test('board: when every in-season topic is done-before, the board still offers fresh replays', () => {
+  const ctx = boardContext(TODAY);
+  const sciDay = { rest: false, review: false, subs: ['sci'] };
+  const e = boardExplorer({ level: 'P3' });
+  e.completedDay = {};
+  // Finish every in-season P3 Science topic on a previous day.
+  const pool = ctx.moeBoardPool(e, sciDay);
+  assert.ok(pool.length > 0, 'there is an in-season P3 Science pool');
+  pool.forEach(function (t) { e.completed[t.id] = 5; e.completedDay[t.id] = '2026-11-09'; });
+  const picks = ctx.boardPicks(e, sciDay);
+  assert.equal(picks.length, 3, 'three fresh replays still offered');
+  picks.forEach(function (t) {
+    assert.ok(pool.some(function (p) { return p.id === t.id; }), 'replay pick is from the same MOE pool: ' + t.id);
   });
 });
 
@@ -344,7 +429,7 @@ test('difficulty: the choice persists through a merge and shapes the next quest'
   // (a) merge: the later preference wins, and a merge never invents
   //     a preference on a legacy explorer that has none.
   const mctx = vm.createContext({ console, todayKey: function () { return TODAY; } });
-  ['unionArr', 'unionObjMax', 'unionObjLatest', 'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer'].forEach(function (name) {
+  ['unionArr', 'unionObjMax', 'unionObjLatest', 'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer'].forEach(function (name) {
     loadInto(mctx, 'function ' + name + '(');
   });
   function mexplorer(over) {
@@ -371,7 +456,7 @@ test('difficulty: the choice persists through a merge and shapes the next quest'
 
 function mergeContext() {
   const ctx = vm.createContext({ console, todayKey: function () { return TODAY; } });
-  ['unionArr', 'unionObjMax', 'unionObjLatest', 'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'mergeExplorer'].forEach(function (name) {
+  ['unionArr', 'unionObjMax', 'unionObjLatest', 'mergeThreads', 'pickCritterName', 'mergeCare', 'mergeLetters', 'hashStr', 'flashcardId', 'stampFlashcardIds', 'bridgeFlashcardTombstones', 'mergeExplorer'].forEach(function (name) {
     loadInto(ctx, 'function ' + name + '(');
   });
   return ctx;

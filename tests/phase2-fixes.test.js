@@ -60,7 +60,7 @@ const SYNC_FNS = [
   'function postToServer(key){', 'function syncToServer(){', 'function uploadAfterPull(){',
   'function unionArr(a,b){', 'function unionObjMax(a,b){', 'function unionObjLatest(a,b){',
   'function mergeThreads(aThreads,bThreads){', 'function pickCritterName(a,b){',
-  'function mergeCare(a,b){', 'function mergeExplorer(a,b){',
+  'function mergeCare(a,b){', 'function hashStr(s){', 'function flashcardId(f, b, n){', 'function stampFlashcardIds(e){', 'function bridgeFlashcardTombstones(e){', 'function mergeExplorer(a,b){',
   'function mergeFamilyDB(local, server){', 'function syncFromServer(opts){',
   'function mergeStoredIntoDB(){', 'function save(){', 'function load(){',
   'function migrateStages(){', 'function newExplorer(name, code, level){',
@@ -108,23 +108,30 @@ function makeSaveCtx(extra) {
 
 const BOARD_TOPICS = [
   { id: 'math-ntuc', sub: 'math', subName: 'Maths', name: 'NTUC FairPrice', moe: false, term: 1 },
-  { id: 'eng-story', sub: 'english', subName: 'English', name: 'Story Time', moe: false, term: 1 },
-  { id: 'chi-listen', sub: 'chinese', subName: 'Chinese', name: 'Listening', moe: false, term: 1 },
-  { id: 'sci-plants', sub: 'science', subName: 'Science', name: 'Plants', moe: false, term: 1 },
+  { id: 'eng-story', sub: 'eng', subName: 'English', name: 'Story Time', moe: false, term: 1 },
+  { id: 'chi-listen', sub: 'chi', subName: 'Chinese', name: 'Listening', moe: false, term: 1 },
+  { id: 'sci-plants', sub: 'sci', subName: 'Science', name: 'Plants', moe: false, term: 1 },
   { id: 'math-fractions', sub: 'math', subName: 'Maths', name: 'Fractions', moe: true, term: 4 },
-  { id: 'sci-magnets', sub: 'science', subName: 'Science', name: 'Magnets', moe: true, term: 4 },
+  { id: 'sci-magnets', sub: 'sci', subName: 'Science', name: 'Magnets', moe: true, term: 4 },
 ];
-const ALL_SUBS_PLAN = { rest: false, review: false, subs: ['math', 'english', 'chinese', 'science'] };
+const ALL_SUBS_PLAN = { rest: false, review: false, subs: ['math', 'eng', 'chi', 'sci'] };
 function boardContext(day) {
   const ctx = vm.createContext({ console });
   ctx._day = day;
   ctx.todayKey = function () { return ctx._day; };
   ctx.TOPICS = BOARD_TOPICS;
+  // The real MOE data: the board now picks from it, so these tests
+  // exercise the real pool (the stub list is only the legacy
+  // fallback behind it).
+  vm.runInContext(extractBlock('var MOE_SUBJECTS_BY_LEVEL='), ctx);
   loadInto(ctx, 'function schoolTermOf(dateKey){');
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
+  loadInto(ctx, 'function moeSubjects(level){');
+  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
 }
@@ -134,11 +141,15 @@ test('F1: the shuffle increment survives save() and the board changes (the live 
   // the board, because swapIdx was in the defaults but never merged —
   // save() silently reverted the increment. Drive the REAL save() path.
   const { ctx, store, run } = makeSaveCtx();
+  vm.runInContext(extractBlock('var MOE_SUBJECTS_BY_LEVEL='), ctx);
   loadInto(ctx, 'function schoolTermOf(dateKey){');
   loadInto(ctx, 'function moeInSeason(tp, todayStr){');
   loadInto(ctx, 'function boardInSeason(t){');
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
+  loadInto(ctx, 'function moeSubjects(level){');
+  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   run("DB={explorers:[],parentPin:'2468',dailyLimit:90,playLimit:20,activeId:null,syncCode:'8SXU6S',updatedAt:null,flags:[],stageV:2};");
   run("var _e=newExplorer('Shuffle','🦊','P3'); _e.level='P3'; DB.explorers.push(_e); DB.activeId=_e.id; save();");
@@ -188,7 +199,10 @@ test('F2: a quest completed today stays on the board as a done card with Replay'
   assert.equal(after.length, 3, 'the board is still three cards');
   assert.equal(new Set(after).size, 3, 'the three cards are distinct');
   // The rendered card for it is the greyed-out done card with Replay.
-  const topic = BOARD_TOPICS.find(function (t) { return t.id === first; });
+  // The pick is a level MOE topic now, so resolve it through the
+  // real moeQuestTopic, not the stub legacy list.
+  const topic = ctx.moeQuestTopic(first);
+  assert.ok(topic, 'the finished pick resolves to a real topic: ' + first);
   const card = ctx.boardCardHTML(e, topic, false, ALL_SUBS_PLAN);
   assert.ok(card.includes('✔ Done today'), 'the card says Done today');
   assert.ok(card.includes('streak safe'), 'the card says the streak is safe');
