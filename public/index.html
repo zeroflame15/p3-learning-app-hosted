@@ -42,6 +42,8 @@ a{color:var(--sky)}
 .navbtn .nic{font-size:2rem;width:40px;text-align:center}
 .navbtn:hover{background:rgba(255,255,255,.08)}
 .navbtn.active{background:var(--amber);color:#231a02}
+.navbtn.locked,.bottomnav button.locked{opacity:.45}
+.navmore{font-size:.72rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--nav-ink);opacity:.55;padding:12px 12px 6px}
 .sidebar .spacer{flex:1}
 .doorlink{font-size:.8rem;opacity:.85;text-align:center;padding:8px}
 .main{flex:1;min-width:0;display:flex;flex-direction:column}
@@ -4086,6 +4088,7 @@ function mergeFamilyDB(local, server){
     _l.deletedExplorers=unionArr(server.deletedExplorers||[], (local&&local.deletedExplorers)||[]);
     _l.explorers=(_l.explorers||[]).filter(function(e){ return _l.deletedExplorers.indexOf(e.id)<0; });
     if(!_l.explorers.length)_l.activeId=null;
+    if(_l.focusMode==null)_l.focusMode=false;
     return _l;
   }
   var merged=JSON.parse(JSON.stringify(server));
@@ -4100,6 +4103,14 @@ function mergeFamilyDB(local, server){
   if(_ppAtL>_ppAtS||(_ppAtL===_ppAtS&&_ppAtL>0)){ merged.parentPin=local.parentPin||null; merged.parentPinUpdatedAt=local.parentPinUpdatedAt; }
   else if(_ppAtS>_ppAtL){ merged.parentPin=server.parentPin||null; merged.parentPinUpdatedAt=server.parentPinUpdatedAt; }
   else { merged.parentPin=server.parentPin||local.parentPin||null; merged.parentPinUpdatedAt=server.parentPinUpdatedAt||local.parentPinUpdatedAt||null; }
+  /* Focus mode (2026-11-17): per-family toggle, off by default.
+     Later timestamp wins, mirroring the parent PIN rule — a
+     parent-page change is not reverted by the server's older copy,
+     and a change from another device still propagates. */
+  var _fmAtS=Date.parse(server.focusModeUpdatedAt||'')||0, _fmAtL=Date.parse(local.focusModeUpdatedAt||'')||0;
+  if(_fmAtL>_fmAtS||(_fmAtL===_fmAtS&&_fmAtL>0)){ merged.focusMode=!!local.focusMode; merged.focusModeUpdatedAt=local.focusModeUpdatedAt; }
+  else if(_fmAtS>_fmAtL){ merged.focusMode=!!server.focusMode; merged.focusModeUpdatedAt=server.focusModeUpdatedAt; }
+  else { merged.focusMode=!!(server.focusMode!=null?server.focusMode:local.focusMode); merged.focusModeUpdatedAt=server.focusModeUpdatedAt||local.focusModeUpdatedAt||null; }
   merged.dailyLimit=(server.dailyLimit!=null?server.dailyLimit:(local.dailyLimit!=null?local.dailyLimit:90));
   merged.playLimit=(server.playLimit!=null?server.playLimit:(local.playLimit!=null?local.playLimit:20));
   merged.stageV=server.stageV||local.stageV||null;
@@ -4321,6 +4332,12 @@ function mergeStoredIntoDB(){
       DB.familyPlanRev=_spRevS;
       changed=true;
     }
+    /* Focus mode (2026-11-17): converge from the store with the same
+       later-timestamp-wins rule as the server merge, so a stale tab's
+       routine save never wipes a toggle change another tab just made
+       (the same wipe that bit the family timetable in 2026-11-09). */
+    var _fmAtD=Date.parse(DB.focusModeUpdatedAt||'')||0, _fmAtS2=Date.parse(stored.focusModeUpdatedAt||'')||0;
+    if(_fmAtS2>_fmAtD){ DB.focusMode=!!stored.focusMode; DB.focusModeUpdatedAt=stored.focusModeUpdatedAt||null; changed=true; }
     /* School events: union by id, with the deleted-events tombstone
        (exactly like the server merge), so an event added in another
        tab is never lost and a deleted event never comes back. */
@@ -4361,7 +4378,7 @@ function mergeStoredIntoDB(){
 function save(){ if(!DB)return; DB.updatedAt=new Date().toISOString(); mergeStoredIntoDB(); if(typeof stripNulDeep==='function')stripNulDeep(DB); saveLocal(); syncToServer(); }
 function load(){
   try{ var raw=localStorage.getItem(LSKEY); if(raw){ DB=JSON.parse(raw); if(!DB.flags)DB.flags=[]; if(!DB.deletedExplorers)DB.deletedExplorers=[]; if(!syncCodeValid(DB.syncCode))DB.syncCode=makeSyncCode(); migrateStages(); return; } }catch(e){}
-  DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:90, playLimit:20, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
+  DB={explorers:[], deletedExplorers:[], parentPin:null, dailyLimit:90, playLimit:20, focusMode:false, focusModeUpdatedAt:null, activeId:null, syncCode:makeSyncCode(), updatedAt:null, flags:[]};
   save();
 }
 /* One-time, in-place remap: the Critter Lab now uses the Muse version's
@@ -4643,14 +4660,35 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['play','✨','Play','icons/nav-play.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['create','🎨','Create','icons/nav-create.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['jokes','😂','Jokes','icons/nav-jokes.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
+var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['play','✨','Play','icons/nav-play.webp'],['create','🎨','Create','icons/nav-create.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['jokes','😂','Jokes','icons/nav-jokes.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
+/* Sidebar regroup (2026-11-17): the first NAV_CORE items are the
+   core tabs; the rest sit under a "More" heading in the sidebar.
+   Vibe stays last overall. Create is core — flashcards, planner and
+   school schedule are daily study tools, never buried, never locked. */
+var NAV_CORE=6;
 /* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
    replacing the flat emoji in the nav, game cards and quest cards.
    ic() renders the image, and falls back to the emoji if the file
    ever fails to load, so a missing file never leaves a blank hole. */
 function ic(src,emo,cls){ return src?'<img class="'+(cls||'ic-sm')+'" src="'+src+'" alt="" onerror="this.outerHTML=\''+emo+'\'">':emo; }
 var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',jokes:'Classroom Jokes',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
-function go(r){ if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
+function focusLocked(r){
+  /* Focus mode (2026-11-17): when the family toggle is on, Play and
+     Jokes (and the games inside Play) stay locked until the active
+     explorer has done a quest today — streakLastDate is set by
+     recordStreak on the first quest of a new day, on the same local
+     (Singapore) date todayKey() returns. Moving inside Play (a game
+     back to the arcade list, the arcade list into a game) is allowed,
+     so a child mid-game is never stranded when a parent turns Focus
+     mode on. */
+  if(!DB||!DB.focusMode) return false;
+  if(r!=='play'&&r!=='jokes'&&r!=='game') return false;
+  var e=ex(); if(!e) return false;
+  if((e.streakLastDate||'')===todayKey()) return false;
+  if((route==='play'||route==='game')&&(r==='play'||r==='game')) return false;
+  return true;
+}
+function go(r){ if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
      progress, not a stale copy from this device. */
@@ -4729,8 +4767,9 @@ function render(){
      parent without one gets a minimal shell instead. */
   if(route==='door'||(!ex()&&route!=='parent')){ root.innerHTML=doorHTML(); bindDoor(); restoreScrollY(_sy); return; }
   if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); restoreScrollY(_sy); return; }
-  var navBtns=NAV.map(function(n){ return '<button class="navbtn '+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
-  var btm=NAV.map(function(n){ return '<button class="'+(route===n[0]?'active':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }).join('');
+  function navBtnHTML(n, cls){ var locked=focusLocked(n[0]); return '<button class="'+cls+' '+(route===n[0]?'active':'')+(locked?' locked':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+(locked?'🔒 ':'')+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }
+  var navBtns=NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('')+'<div class="navmore">More</div>'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('');
+  var btm=NAV.map(function(n){ return navBtnHTML(n,''); }).join('');
   /* Route class on the shell: the mint world has two departures (myKx
      review) — the Play Arcade stays dark navy/neon and the Treasure
      Realm stays a purple crystal cave. The 'game' route is arcade. */
@@ -14363,6 +14402,7 @@ function parentHTML(){
    +'<svg viewBox="0 0 330 122" style="width:100%;max-width:330px" role="img" aria-label="Last 7 days screen time chart"><line x1="4" y1="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" x2="326" y2="'+(100-Math.round(DB.dailyLimit/maxV*90))+'" stroke="#ffc94d" stroke-width="2" stroke-dasharray="5 4"/>'+bars+'</svg><p class="small muted">Dashed line = daily limit. This counts time in the app across linked devices.</p>'
    +'<label class="flabel">Daily limit (minutes)</label><div style="display:flex;gap:8px"><input class="field" id="limitIn" type="number" min="5" max="240" value="'+DB.dailyLimit+'"><button class="btn" id="limitSave">Save</button></div>'
    +'<label class="flabel">Play limit (minutes per day)</label><div style="display:flex;gap:8px"><input class="field" id="playLimitIn" type="number" min="5" max="240" value="'+(DB.playLimit||20)+'"><button class="btn" id="playLimitSave">Save</button></div>'
+   +'<label class="flabel">🎯 Focus mode</label><p style="font-weight:700">When Focus mode is on, Play and Jokes stay locked until '+esc(sel.name)+' finishes a quest today. Everything else stays open.</p><div style="display:flex;gap:8px;align-items:center"><button class="btn" id="focusToggle">'+(DB.focusMode?'🔓 Focus mode: On':'🔒 Focus mode: Off')+'</button></div>'
    +'<h4 style="margin-top:18px">⚖️ Today’s balance</h4><p style="font-weight:700">Learning quests finished: '+doneList.length+' · Treasures unlocked: '+sel.treasures.length+' · Ask Pip chats: '+sel.threads.length+'</p>'
    +'<h4>🌈 Weekend together idea</h4><p style="font-weight:700">Try a riverside walk or a hawker-centre breakfast together, then let '+esc(sel.name)+' teach you one thing Pip taught her this week — kids love being the teacher!</p></div></div>'
    +'<div class="card" style="margin-top:16px"><h3>🧑‍🤝‍🧑 Explorers on this device ('+DB.explorers.length+')</h3>'
@@ -14406,6 +14446,11 @@ function bindParent(){
   };
   document.getElementById('limitSave').onclick=function(){ var v=parseInt(document.getElementById('limitIn').value,10); if(v>=5&&v<=240){ DB.dailyLimit=v; save(); toast('Daily limit saved.'); render(); } };
   document.getElementById('playLimitSave').onclick=function(){ var v=parseInt(document.getElementById('playLimitIn').value,10); if(v>=5&&v<=240){ DB.playLimit=v; save(); toast('Play limit saved.'); render(); } };
+  /* Focus mode toggle (2026-11-17): reads the live family record at
+     click time (the global DB — never a captured copy) and stamps the
+     updated-at, so the later-timestamp-wins merge in mergeFamilyDB
+     keeps the change on the next pull. */
+  document.getElementById('focusToggle').onclick=function(){ DB.focusMode=!DB.focusMode; DB.focusModeUpdatedAt=new Date().toISOString(); save(); toast(DB.focusMode?'Focus mode on — Play and Jokes unlock after today’s quest. 🎯':'Focus mode off.'); render(); };
   document.querySelectorAll('[data-reset]').forEach(function(b){ b.onclick=function(){
     var target=DB.explorers.find(function(x){return x.id===b.getAttribute('data-reset');}); var picks=[];
     var area=document.getElementById('resetArea');
