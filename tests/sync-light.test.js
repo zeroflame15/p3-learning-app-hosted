@@ -107,7 +107,7 @@ const TEST_PLAN = { 1: { label: 'English + Science', subs: ['eng', 'sci'], study
 function makeFamily(plan, rev, updatedAt) {
   const f = {
     explorers: [makeExplorer('e1', 'TestVerify1'), makeExplorer('e2', 'TestVerify2')],
-    parentPin: '2468', dailyLimit: 30, playLimit: 20, activeId: 'e1',
+    parentPin: '2468', dailyLimit: 30, dailyLimitUpdatedAt: null, playLimit: 20, playLimitUpdatedAt: null, activeId: 'e1',
     syncCode: '8SXU6S', updatedAt: updatedAt, flags: [], stageV: 2,
     parentPinUpdatedAt: '2026-11-09T00:00:00.000Z',
     focusMode: false, focusModeUpdatedAt: null,

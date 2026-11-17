@@ -171,7 +171,13 @@ test('save() merges the stored copy before writing, so a stale tab cannot wipe a
   assert.ok(m.includes('mergeExplorer('), 'shared explorers are union-merged, not overwritten');
   assert.ok(m.includes('DB.explorers.push(JSON.parse(JSON.stringify(se)))'), 'stored-only explorers are added');
   assert.ok(!m.includes('parentPin'), 'the stored merge must not touch the parent PIN (the server merge is the authority for that)');
-  assert.ok(!m.includes('dailyLimit'), 'the stored merge must not touch the daily limit either');
+  /* Daily / Play limits (2026-11-17): the stored merge DOES converge
+     them now — by timestamp only, mirroring Focus mode — so a stale
+     tab's routine save cannot wipe a newer limit another tab just
+     saved. It never takes a limit from the store without a newer
+     timestamp. */
+  assert.ok(m.includes('dailyLimitUpdatedAt'), 'the stored merge converges the daily limit by timestamp');
+  assert.ok(m.includes('playLimitUpdatedAt'), 'the stored merge converges the play limit by timestamp');
 });
 
 test('a storage event merges the other tab explorers into this tab', () => {

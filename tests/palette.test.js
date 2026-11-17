@@ -89,7 +89,7 @@ test('theme chips render the 3-dot preview', () => {
 test('Home quest card frames today as part of Frog Quest', () => {
   const home = html.slice(html.indexOf('function homeHTML()'), html.indexOf('function bindHome()'));
   assert.ok(home.includes('Frog Quest'), 'quest card mentions Frog Quest');
-  assert.ok(home.includes("quest '+(doneCount+1)+' of 14"), 'quest number comes from the completed count');
+  assert.ok(home.includes("quest '+Math.min(qp.done+1,qp.total)+' of '+qp.total"), 'quest number comes from the completed count (capped at the total)');
 });
 
 test('Learn hero ties the quests to the same frog story', () => {

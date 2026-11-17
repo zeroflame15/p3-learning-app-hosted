@@ -114,6 +114,7 @@ const mykxSessionFirst = eval('(' + grabFn('mykxSessionFirst(') + ')');
 const schoolTermOf = eval('(' + grabFn('schoolTermOf(') + ')');
 const moeInSeason = eval('(' + grabFn('moeInSeason(') + ')');
 const moeSubjects = eval('(' + grabFn('moeSubjects(') + ')');
+const questProgress = eval('(' + grabFn('questProgress(') + ')'); // Learn header counter (2026-11-17): learnHTML calls it
 const moeSubject = eval('(' + grabFn('moeSubject(') + ')');
 const moeTopic = eval('(' + grabFn('moeTopic(') + ')');
 const moeTopicPool = eval('(' + grabFn('moeTopicPool(') + ')');
