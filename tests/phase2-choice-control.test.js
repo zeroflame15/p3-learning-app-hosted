@@ -77,7 +77,7 @@ function boardContext(day) {
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
   loadInto(ctx, 'function moeSubjects(level){');
-  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeQuestTopic(id, level){');
   loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;

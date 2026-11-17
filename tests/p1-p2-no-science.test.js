@@ -80,7 +80,7 @@ function boardContext() {
   loadInto(ctx, 'function planTopics(plan){');
   loadInto(ctx, 'function levelNum(e){');
   loadInto(ctx, 'function moeSubjects(level){');
-  loadInto(ctx, 'function moeQuestTopic(id){');
+  loadInto(ctx, 'function moeQuestTopic(id, level){');
   loadInto(ctx, 'function moeBoardPool(e, todayPlan){');
   loadInto(ctx, 'function boardPicks(e, todayPlan){');
   return ctx;
@@ -133,7 +133,7 @@ test('gates live in the page: boardPicks drops sci for lv<=2, moeSubjects drops 
   assert.ok(boardSrc.indexOf('moeBoardPool(e, todayPlan)') >= 0, 'boardPicks builds its pool from the level MOE topics');
   const poolSrc = extractFn('function moeBoardPool(e, todayPlan){');
   assert.ok(poolSrc.indexOf('moeSubjects(levelNum(e))') >= 0, 'the pool is built at the explorer\'s level');
-  assert.ok(poolSrc.indexOf('moeQuestTopic(tp.id)') >= 0, 'pool topics are quest-flow topics');
+  assert.ok(poolSrc.indexOf('moeQuestTopic(tp.id, levelNum(e))') >= 0, 'pool topics are quest-flow topics at the explorer\'s level — the card blurb names her level, not P1');
   const moeSrc = extractFn('function moeSubjects(level){');
   assert.ok(moeSrc.indexOf('!s.notTaught') >= 0, 'moeSubjects filters notTaught subjects');
   assert.ok(moeSrc.indexOf('lv<=2') >= 0, 'the filter applies to levels 1–2 only');
