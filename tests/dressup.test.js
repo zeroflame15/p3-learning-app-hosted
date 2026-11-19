@@ -1,6 +1,7 @@
 // Dress-up expansion for "Change my name & look" (2026-11-07):
-//  1. MORE ANIMALS: a "My animal friend" picker row with 25 cute
-//     flat kawaii animals from the parent's reference sheet
+//  1. MORE ANIMALS: a "My animal friend" picker row with 26 cute
+//     flat kawaii animals — 25 from the parent's reference sheet,
+//     plus a snake drawn in the same style (2026-11-19)
 //     (round 5: the otter and butterfly are gone, they are not on
 //     the sheet); tapping one writes the DRAFT face (round 4:
 //     Cancel must revert — picks never write to the live explorer
@@ -57,7 +58,7 @@ const glowHandler = modal.slice(modal.indexOf("document.querySelectorAll('.glowP
 const badgeHandler = modal.slice(modal.indexOf("document.querySelectorAll('.badgePick')"), modal.indexOf("document.getElementById('lkSave')"));
 const saveHandler = modal.slice(modal.indexOf("document.getElementById('lkSave')"));
 
-const ANIMALS25 = ['🐤', '🐴', '🐧', '🐻', '🐢', '🐼', '🦁', '🐱', '🐷', '🦊', '🐸', '🐘', '🦒', '🐰', '🦉', '🦝', '🐵', '🐯', '🐊', '🐶', '🦥', '🦆', '🦛', '🐑', '🐨'];
+const ANIMALS26 = ['🐤', '🐴', '🐧', '🐻', '🐢', '🐼', '🦁', '🐱', '🐷', '🦊', '🐸', '🐘', '🦒', '🐰', '🦉', '🦝', '🐵', '🐯', '🐊', '🐶', '🦥', '🦆', '🦛', '🐑', '🐨', '🐍'];
 const GLOWS12 = ['#ffb020', '#2dd4bf', '#fb7185', '#7db4ff', '#4ade80', '#facc15', '#c084fc', '#f97316', '#84cc16', '#38bdf8', '#f472b6', '#a3e635'];
 const BADGES16 = ['⭐', '🦦', '🌈', '🚀', '🍓', '⚡', '🐸', '🦋', '🌟', '💎', '🎨', '🏆', '🌸', '🍀', '🎵', '❤️'];
 
@@ -69,11 +70,11 @@ function arrayLiteralIn(src, startMarker) {
   return eval(src.slice(open, close + 1)); // eslint-disable-line no-eval
 }
 
-test('25 animals render in the "My animal friend" row', () => {
+test('26 animals render in the "My animal friend" row', () => {
   assert.ok(modal.includes('My animal friend'), 'modal must label the animal row');
   const animals = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
-  assert.deepEqual(animals, ANIMALS25, 'exactly the 25 animals from the sheet, in sheet order');
-  assert.ok(modal.includes('LOOK_FACES.map'), 'the animal row renders from the 25-animal list');
+  assert.deepEqual(animals, ANIMALS26, 'exactly the 26 animals, in sheet order (25 from the sheet, plus the snake)');
+  assert.ok(modal.includes('LOOK_FACES.map'), 'the animal row renders from the 26-animal list');
   assert.ok(modal.includes("class=\"iconbtn facePick\""), 'animals must use the same iconbtn style as glow/badge');
   assert.ok(modal.includes("data-f=\"'+a+'\""), 'each animal button must carry its animal in data-f');
   assert.ok(modal.includes("(e.face===a?'outline:3px solid var(--ink)':'')"), 'the current animal must be outlined like the current glow');

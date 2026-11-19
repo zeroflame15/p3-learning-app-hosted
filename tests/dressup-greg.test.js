@@ -148,12 +148,12 @@ test('look merge: the merged look is a copy, not an alias of either side', () =>
   assert.ok(merge.includes('JSON.parse(JSON.stringify(b.look))'), 'the winning look must be deep-copied');
 });
 
-test('the look modal renders a full-body preview, a 25-animal grid and a background picker — no colour, no hair, no accessories', () => {
+test('the look modal renders a full-body preview, a 26-animal grid and a background picker — no colour, no hair, no accessories', () => {
   assert.ok(modal.includes('My full-body look'), 'modal must label the preview');
   assert.ok(modal.includes('id="lookPreview"'), 'the preview must have an id so taps can refresh it in place');
   assert.ok(modal.includes('avatarLookHTML(e.face,e.look,e.glow)'), 'the preview must render from the live face, look and glow');
   assert.ok(modal.includes('My animal friend'), 'modal must label the animal row');
-  assert.ok(modal.includes('LOOK_FACES.map'), 'the animal row renders from the 25-animal list');
+  assert.ok(modal.includes('LOOK_FACES.map'), 'the animal row renders from the 26-animal list');
   assert.ok(modal.includes('My background'), 'modal must label the background section');
   assert.ok(modal.includes('class="iconbtn bgShapePick"'), 'background shapes must be picker buttons');
   assert.ok(modal.includes('class="iconbtn bgColorPick"'), 'background colours must be swatch buttons');
@@ -182,7 +182,7 @@ test('the look modal renders a full-body preview, a 25-animal grid and a backgro
   assert.ok(!html.includes('AVATAR_ACCS'), 'the accessory drawings are gone from the page');
   assert.ok(!html.includes('AV_ACC_OFF'), 'the per-animal accessory offsets are gone from the page');
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
-  assert.equal(faces.length, 25, '25 animals from the sheet, got ' + faces.length);
+  assert.equal(faces.length, 26, '26 animals, got ' + faces.length);
   assert.equal(faces[0], '🐤', 'the chick is first — it is the fallback for an otter or butterfly');
   assert.ok(!faces.includes('🦦'), 'the otter is not on the sheet, so it is not in the picker');
   assert.ok(!faces.includes('🦋'), 'the butterfly is not on the sheet, so it is not in the picker');
@@ -196,7 +196,7 @@ test('the look modal renders a full-body preview, a 25-animal grid and a backgro
   assert.deepEqual(effects, ['plain', 'glitter', 'glow', 'shine', 'twinkle', 'bubbles', 'petals'], 'seven background effects — the three animated ones joined the four static ones');
 });
 
-test('avatarLookHTML: 25 copied pictures, no colour, no accessories, backgrounds, ground shadow', () => {
+test('avatarLookHTML: 26 animal pictures, no colour, no accessories, backgrounds, ground shadow', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const render = (face, look, glow) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',' + JSON.stringify(look === undefined ? { background: { shape: 'circle', color: 'mint', effect: 'plain', pattern: '' } } : look) + ',' + JSON.stringify(glow || '#ffb020') + ')');
@@ -253,7 +253,7 @@ test('avatarLookHTML: 25 copied pictures, no colour, no accessories, backgrounds
   // recognition marker is the picture itself.
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
   const faceEmoji = eval(grabObj('AVATAR_FACE_EMOJI') + '\n;AVATAR_FACE_EMOJI');
-  assert.equal(faces.length, 25, '25 animals');
+  assert.equal(faces.length, 26, '26 animals');
   for (const face of faces) {
     const key = faceEmoji[face];
     assert.ok(key, face + ' maps to an animal key');
@@ -448,7 +448,7 @@ test('still life: the animals are static pictures — no bob, no blink, no signa
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const render = (face) => eval(consts + '\n' + fn + '\n;avatarLookHTML(' + JSON.stringify(face) + ',{},"#ffb020")');
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
-  assert.equal(faces.length, 25, '25 animals');
+  assert.equal(faces.length, 26, '26 animals');
   for (const face of faces) {
     const s = render(face);
     assert.ok(!s.includes('av-bob'), face + ' never bobs');
@@ -469,7 +469,7 @@ test('still life: the animals are static pictures — no bob, no blink, no signa
   assert.ok(html.includes('var AVATAR_5_CSS='), 'the CSS also lives in the AVATAR_5_CSS variable (single source for the preview)');
 });
 
-test('all 25 animals render their copied picture, static, with the tap-to-play sparkles', () => {
+test('all 26 animals render their picture, static, with the tap-to-play sparkles', () => {
   const consts = html.slice(html.indexOf('var AV_INK='), html.indexOf('function avatarLookHTML('));
   const fn = fnText('function avatarLookHTML(face,look,glow,w){');
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
@@ -486,7 +486,7 @@ test('all 25 animals render their copied picture, static, with the tap-to-play s
     assert.ok(s.includes('onclick="avatarPlay(this)"'), 'every animal is tappable: ' + f);
     n++;
   }
-  assert.equal(n, 25, '25 animals');
+  assert.equal(n, 26, '26 animals');
 });
 
 test('look taps write to the draft only: no live write, no save, typed name kept, preview refreshed in place', () => {
