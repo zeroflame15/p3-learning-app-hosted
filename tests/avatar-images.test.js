@@ -1,7 +1,7 @@
-// The 26 animal friends are pictures served with the app — 25 are
+// The 27 animal friends are pictures served with the app — 25 are
 // the parent's own pictures, copied straight from the sheet he
-// provided (2026-11-14), plus a snake drawn in the same style
-// (2026-11-19): the picker shows the pictures, and the avatar
+// provided (2026-11-14), plus a snake and an axolotl drawn in the
+// same style (2026-11-19): the picker shows the pictures, and the avatar
 // renders the picture. The
 // files live under public/animals/ and are served with the app —
 // a missing file would render as a broken picture, so the suite
@@ -30,11 +30,11 @@ function grabObj(name) {
   return html.slice(start, end + 2);
 }
 
-test('all 26 animal pictures exist on disk, as transparent PNGs', () => {
+test('all 27 animal pictures exist on disk, as transparent PNGs', () => {
   const faceEmoji = eval(grabObj('AVATAR_FACE_EMOJI') + '\n;AVATAR_FACE_EMOJI');
   const keys = Object.values(faceEmoji);
-  assert.equal(keys.length, 26, '26 animals');
-  assert.equal(new Set(keys).size, 26, 'every animal has its own picture');
+  assert.equal(keys.length, 27, '27 animals');
+  assert.equal(new Set(keys).size, 27, 'every animal has its own picture');
   for (const key of keys) {
     const file = path.join(animalsDir, key + '.png');
     assert.ok(fs.existsSync(file), 'animals/' + key + '.png exists');
@@ -55,7 +55,7 @@ test('the "My animal friend" row shows the copied pictures, one per animal', () 
   assert.ok(modal.includes('My animal friend'), 'modal must label the animal row');
   const faces = eval(grabVar('LOOK_FACES') + '\n;LOOK_FACES');
   const faceEmoji = eval(grabObj('AVATAR_FACE_EMOJI') + '\n;AVATAR_FACE_EMOJI');
-  assert.equal(faces.length, 26, '26 animals');
+  assert.equal(faces.length, 27, '27 animals');
   // The row maps each face to its picture; the stored value is
   // still the emoji in data-f, so picking and saving are unchanged.
   assert.ok(modal.includes('AVATAR_FACE_EMOJI[a]'), 'the row maps each face to its animal key');
