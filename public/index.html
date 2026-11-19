@@ -5046,13 +5046,14 @@ function bgPetalsSVG(){
   for(var i=0;i<spots.length;i++){ s+='<g transform="translate('+spots[i][0]+' '+spots[i][1]+')"><path class="av-pet" style="animation-delay:'+(-i*1.15)+'s" d="M0,-9 C5,-3 5,5 0,9 C-5,5 -5,-3 0,-9 Z" fill="#f7a8b8"/></g>'; }
   return s;
 }
-/* The 25 animals, in sheet order (row by row). The picker
+/* The 26 animals — the 25 from the sheet, in sheet order (row by row),
+   plus the snake at the end (drawn in the same style, 2026-11-19). The picker
    shows this list — each button shows the animal's copied
    picture (animals/<key>.png), while the stored face stays the
    emoji. The first animal (chick) is the fallback for any
    stored face that is not on the sheet. */
-var LOOK_FACES=['🐤','🐴','🐧','🐻','🐢','🐼','🦁','🐱','🐷','🦊','🐸','🐘','🦒','🐰','🦉','🦝','🐵','🐯','🐊','🐶','🦥','🦆','🦛','🐑','🐨'];
-var AVATAR_FACE_EMOJI={'🐤':'chick','🐴':'horse','🐧':'penguin','🐻':'bear','🐢':'turtle','🐼':'panda','🦁':'lion','🐱':'cat','🐷':'pig','🦊':'fox','🐸':'frog','🐘':'elephant','🦒':'giraffe','🐰':'rabbit','🦉':'owl','🦝':'raccoon','🐵':'monkey','🐯':'tiger','🐊':'crocodile','🐶':'dog','🦥':'sloth','🦆':'duck','🦛':'hippo','🐑':'sheep','🐨':'koala'};
+var LOOK_FACES=['🐤','🐴','🐧','🐻','🐢','🐼','🦁','🐱','🐷','🦊','🐸','🐘','🦒','🐰','🦉','🦝','🐵','🐯','🐊','🐶','🦥','🦆','🦛','🐑','🐨','🐍'];
+var AVATAR_FACE_EMOJI={'🐤':'chick','🐴':'horse','🐧':'penguin','🐻':'bear','🐢':'turtle','🐼':'panda','🦁':'lion','🐱':'cat','🐷':'pig','🦊':'fox','🐸':'frog','🐘':'elephant','🦒':'giraffe','🐰':'rabbit','🦉':'owl','🦝':'raccoon','🐵':'monkey','🐯':'tiger','🐊':'crocodile','🐶':'dog','🦥':'sloth','🦆':'duck','🦛':'hippo','🐑':'sheep','🐨':'koala','🐍':'snake'};
 /* (Accessories were dropped by the parent, 2026-11-08 — a stored
    e.look.accessory is never read. There is no accessory code
    left in this file.) */
@@ -5195,7 +5196,7 @@ var AVATAR_5_CSS=[
 // just closes the modal and the draft is thrown away, so the stored
 // look is untouched. (Round-4 live check: Cancel genuinely reverts.)
 // What changed in round 5:
-//   • 25 animals (LOOK_FACES, from the avatar block) — the otter
+//   • 26 animals (LOOK_FACES, from the avatar block) — the otter
 //     and butterfly are gone, they are not on the reference sheet.
 //   • NO colour picker section — animals keep their own colours
 //     from the sheet. A stored colour value is ignored.
