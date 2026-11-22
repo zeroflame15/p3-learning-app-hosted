@@ -64,6 +64,14 @@ a{color:var(--sky)}
 .view.active{display:block;animation:fadein .25s ease}
 @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion: reduce){.view.active{animation:none}}
+/* Route transition (UI polish 2026-11-22): the fadein keyframe above
+   was dead code — nothing used class "view", so every navigation
+   snapped. go() now stamps .route-in on #content only when the
+   route actually changes; plain render() calls (30s auto-pull,
+   ticks, saves) never set it, so background re-renders never
+   replay the transition. */
+.content.route-in{animation:fadein .22s ease}
+@media (prefers-reduced-motion: reduce){.content.route-in{animation:none}}
 
 /* ---------- Generic ---------- */
 .card{background:var(--panel);border:2px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
@@ -72,6 +80,16 @@ a{color:var(--sky)}
 .small{font-size:.85rem}
 .btn{display:inline-flex;align-items:center;gap:8px;background:var(--amber);color:#231a02;border:0;border-radius:999px;padding:11px 20px;font-weight:900;font-size:1rem;box-shadow:0 4px 0 var(--amber-d)}
 .btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--amber-d)}
+/* ---------- Shared press feedback (UI polish 2026-11-22) ----------
+   Only .btn had a press state — every other tappable gave zero
+   immediate feedback on touch. One shared system: a smooth
+   .08s press/release plus a small scale + brightness dip on
+   :active, and no default grey tap flash on mobile. .btn keeps
+   its own translateY press (above); .parkcar keeps its left/top
+   slide transition, so it is in the :active list only. */
+button{-webkit-tap-highlight-color:transparent}
+.navbtn,.bottomnav button,.tilebtn,.optbtn,.themechip,.picbtn,.lvlbtn,.explorerchip,.flashcard,.threadrow,.learn-topic-row,.stage,.sorttile,.scrtile,.sbtile,.memcard,.iconbtn,.keypad button,.tickbtn,.delbtn,.sidecritter,.avatarbtn,.chip,.menu button.mitem,.xwclue,.scrslot,.sbslot,.balloon{transition:transform .08s ease}
+.navbtn:active,.bottomnav button:active,.tilebtn:active,.optbtn:active,.themechip:active,.picbtn:active,.lvlbtn:active,.explorerchip:active,.flashcard:active,.threadrow:active,.learn-topic-row:active,.stage:active,.sorttile:active,.scrtile:active,.sbtile:active,.memcard:active,.iconbtn:active,.keypad button:active,.tickbtn:active,.delbtn:active,.sidecritter:active,.avatarbtn:active,.chip:active,.menu button.mitem:active,.xwclue:active,.scrslot:active,.sbslot:active,.parkcar:active,.balloon:active{transform:scale(.97);filter:brightness(.96)}
 .btn.teal{background:var(--teal);color:#fff;box-shadow:0 4px 0 var(--teal-d)}
 .btn.ghost{background:var(--panel);color:var(--ink);border:2px solid var(--line);box-shadow:none}
 .btn.coral{background:var(--coral);color:#fff;box-shadow:0 4px 0 #9f1239}
@@ -321,8 +339,25 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 @keyframes pipYawn{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(-2deg) scale(1.02,.98)}}
 .pip-zzz{position:absolute;top:-6px;right:-14px;font-size:1.6rem;animation:fxFloatUp 2.4s ease-in-out infinite}
 .overlay.open{display:flex}
+@keyframes overlayFade{from{opacity:0}to{opacity:1}}
+@keyframes modalPop{from{opacity:0;transform:scale(.96) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+/* Modal entrance (UI polish 2026-11-22): modals used to snap open
+   — the overlay faded in nothing and the card just appeared.
+   The backdrop fades and the card pops/slides in (~180ms).
+   Closing still snaps (display:none); only the entrance animates. */
+.overlay.open{animation:overlayFade .18s ease}
+.overlay.open .modal{animation:modalPop .18s ease}
+@media (prefers-reduced-motion: reduce){.overlay.open,.overlay.open .modal{animation:none}}
 .modal{background:var(--panel);border-radius:20px;max-width:480px;width:100%;padding:22px;max-height:90vh;overflow-y:auto;border:2px solid var(--line);box-shadow:var(--shadow)}
 .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:var(--nav);color:#fff;padding:11px 20px;border-radius:999px;font-weight:900;z-index:95;display:none;box-shadow:var(--shadow)}
+/* Toast entrance/exit (UI polish 2026-11-22): toasts used to snap
+   in and out. They now slide up + fade in, and fade out before
+   hiding — toast() drives the .show/.hide classes. */
+.toast.show{animation:toastIn .25s ease}
+.toast.hide{animation:toastOut .2s ease forwards}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastOut{from{opacity:1;transform:translate(-50%,0)}to{opacity:0;transform:translate(-50%,10px)}}
+@media (prefers-reduced-motion: reduce){.toast.show,.toast.hide{animation:none}}
 .bottomnav{display:none}
 /* Mobile "More" popup (2026-11-17): on phones the sidebar is hidden
    and the bottom bar is the whole nav — the bar shows the core six
@@ -331,7 +366,9 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
    the bar itself (40) but below the modal overlay (80) and toasts
    (95). The sheet is a child of the fixed bottom nav, so it is
    hidden on desktop along with the bar. */
-.btmmore{position:absolute;left:8px;right:8px;bottom:calc(100% + 8px);background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:10px;z-index:45}
+.btmmore{position:absolute;left:8px;right:8px;bottom:calc(100% + 8px);background:var(--panel);border:2px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:10px;z-index:45;animation:sheetUp .18s ease}
+@keyframes sheetUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion: reduce){.btmmore{animation:none}}
 .bottomnav .btmmore button{display:flex;flex-direction:row;gap:10px;align-items:center;width:100%;background:var(--panel2);border:0;border-radius:12px;padding:12px;font-weight:900;font-size:.95rem;color:var(--ink);margin-bottom:6px;text-align:left}
 .bottomnav .btmmore button:last-child{margin-bottom:0}
 .bottomnav .btmmore button .nic{font-size:1.4rem}
@@ -513,9 +550,9 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 .plannerow{display:flex;gap:10px;align-items:center;background:var(--panel2);border:2px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-weight:800}
 .plannerow .ptext{flex:1}
 .plannerow.done .ptext{text-decoration:line-through;opacity:.65}
-.tickbtn{width:34px;height:34px;border-radius:50%;border:2.5px solid var(--amber-d);background:transparent;color:var(--amber-d);font-weight:900;flex:0 0 auto;font-size:1rem;line-height:1}
+.tickbtn{width:44px;height:44px;border-radius:50%;border:2.5px solid var(--amber-d);background:transparent;color:var(--amber-d);font-weight:900;flex:0 0 auto;font-size:1rem;line-height:1}
 .tickbtn.done{background:var(--teal);border-color:var(--teal);color:#fff}
-.delbtn{background:transparent;border:0;color:var(--ink-soft);font-size:1.05rem;flex:0 0 auto;padding:4px}
+.delbtn{background:transparent;border:0;color:var(--ink-soft);font-size:1.05rem;flex:0 0 auto;padding:4px 10px;min-width:44px;min-height:44px}
 @media (max-width:820px){
   .bottomnav button{font-size:.6rem}
   .bottomnav button .nic{font-size:1.7rem}
@@ -525,7 +562,7 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
 @media (max-width:820px){
   .sidebar{display:none}
   .bottomnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--nav);z-index:40;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-  .bottomnav button{flex:1;background:transparent;border:0;color:var(--nav-ink);font-size:.66rem;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:10px}
+  .bottomnav button{flex:1;background:transparent;border:0;color:var(--nav-ink);font-size:.72rem;font-weight:800;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;border-radius:10px}
   .bottomnav button .nic{font-size:1.7rem}
   .bottomnav button.active{background:var(--amber);color:#231a02}
   .content{padding:16px 14px 96px}
@@ -621,6 +658,33 @@ function sndMystery(){
   celesta(987.77,0,0.5,0.12); celesta(1318.5,0.09,0.55,0.1);
   celesta(1567.98,0.18,0.45,0.06);
 }
+/* UI polish (2026-11-22): one short nav blip for every route change,
+   played from go() itself — the old per-binding sounds (mystery on
+   the nav, pop on tiles) are gone, so it can never double-fire.
+   Gated at ~150ms so rapid taps never stack overlapping notes.
+   sndMystery stays for the Grand Door only (explorer-chip tap). */
+var _navSndAt=0;
+function sndNav(){ var now=Date.now(); if(now-_navSndAt<150)return; _navSndAt=now; celesta(1318.5,0,0.2,0.1); }
+/* UI polish (2026-11-22): the quiet quest-flow sounds — a rising
+   three-note cue when a quest starts, one soft advance blip for the
+   in-between taps (Next / Skip / Start / Quit), and a per-choice
+   tone for the difficulty buttons. All built on tone()/celesta(),
+   so isMuted() is respected like every other sound. */
+function sndQuestStart(){ tone(523,0,0.12,'sine',0.09); tone(784,0.09,0.14,'sine',0.09); tone(1046,0.18,0.18,'sine',0.08); }
+function sndAdvance(){ tone(740,0,0.08,'sine',0.07); }
+function sndDiff(felt){ if(felt==='easy')tone(1046,0,0.12,'sine',0.08); else if(felt==='hard')tone(523,0,0.14,'sine',0.08); else tone(784,0,0.1,'sine',0.08); }
+/* UI polish (2026-11-22): Ask Pip sounds — a soft send blip and a
+   gentle two-note reply chime. Quiet on purpose: this is a chat
+   screen, not a game. */
+function sndSend(){ tone(880,0,0.08,'sine',0.06); }
+function sndReply(){ celesta(880,0,0.3,0.07); celesta(1174.66,0.12,0.35,0.07); }
+/* UI polish (2026-11-22): a single short celesta note for each
+   Grand Door picture tap — the full mystery arpeggio stacked on
+   every tap (three taps = three overlapping phrases). The full
+   phrase is reserved for the door opening itself (sndEntrance). */
+function sndDoorTap(){ celesta(1174.66,0,0.18,0.09); }
+/* UI polish (2026-11-22): a soft low blip for deleting a flashcard. */
+function sndDel(){ tone(300,0,0.14,'sine',0.09); }
 /* Magical grand entrance: a soft low pad, then a dreamy music-box
    phrase that rises and falls like a little lullaby, then a high
    sparkle shimmer — the Grand Door opening. About 2.3 seconds. */
@@ -4683,7 +4747,12 @@ function playLimit(){ return DB.playLimit||20; }
 function playMinutesToday(e){ return (e&&e.playDaily&&e.playDaily[todayKey()])||0; }
 function canPlay(e){ return playMinutesToday(e)<playLimit(); }
 function awardBadge(id,label){ var e=ex(); if(!e||e.badges.indexOf(id)>=0)return false; e.badges.push(id); toast('New badge: '+label); return true; }
-function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; t.style.display='block'; setTimeout(function(){t.style.display='none';},2600); }
+/* Toast (UI polish 2026-11-22): toasts slide up + fade in, and fade
+   out before hiding — the .show/.hide classes drive the CSS
+   animations. A fresh toast clears any pending hide so a quick
+   second toast never gets cut off by the first one's timer. */
+var _toastTimer=null, _toastHideTimer=null;
+function toast(msg){ var t=document.getElementById('toast'); t.textContent=msg; if(_toastTimer)clearTimeout(_toastTimer); if(_toastHideTimer)clearTimeout(_toastHideTimer); t.classList.remove('hide'); t.style.display='block'; void t.offsetWidth; t.classList.add('show'); _toastTimer=setTimeout(function(){ t.classList.remove('show'); t.classList.add('hide'); _toastHideTimer=setTimeout(function(){ t.style.display='none'; t.classList.remove('hide'); },200); },2600); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function confettiStars(){
   var c=document.getElementById('confetti'); c.innerHTML='';
@@ -4710,6 +4779,12 @@ var NAV_CORE=6;
    (go() clears it); tapping More toggles it; tapping outside it
    closes it (document listener installed once at boot). */
 var btmMoreOpen=false;
+/* Route transition flag (UI polish 2026-11-22): go() sets navAnim
+   only when the route actually changes; render() consumes it once
+   to stamp .route-in on #content. Plain render() calls (30s
+   auto-pull, ticks, saves) never set it, so background re-renders
+   never replay the transition. */
+var navAnim=false;
 /* Custom icon art (2026-11-07): glossy 3D icons in public/icons/,
    replacing the flat emoji in the nav, game cards and quest cards.
    ic() renders the image, and falls back to the emoji if the file
@@ -4732,7 +4807,13 @@ function focusLocked(r){
   if((route==='play'||route==='game')&&(r==='play'||r==='game')) return false;
   return true;
 }
-function go(r){ if(typeof btmMoreOpen!=='undefined')btmMoreOpen=false; if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } window.scrollTo(0,0); render();
+/* One nav sound + route transition (UI polish 2026-11-22): go()
+   itself plays the single short nav blip (sndNav, gated ~150ms)
+   and stamps the route-in animation — but only when the route
+   actually changes. The old per-binding sounds are gone, so a tap
+   can never play two nav sounds. silent=true skips both (the
+   Grand Door opening already plays the 2.3s entrance phrase). */
+function go(r, silent){ if(typeof btmMoreOpen!=='undefined')btmMoreOpen=false; if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } if(_prevRoute!==r){ navAnim=true; if(!silent&&typeof sndNav==='function')sndNav(); } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
      progress, not a stale copy from this device. */
@@ -4783,6 +4864,10 @@ function render(){
      go() scrolls to 0 before calling render(), so a navigation
      still captures 0 and lands at the top. */
   var _sy=(typeof window!=='undefined'&&typeof window.scrollY==='number')?window.scrollY:0;
+  /* Route transition (UI polish 2026-11-22): consume the flag go()
+     set — exactly once, so a later background render never replays
+     the animation. */
+  var _anim=navAnim; navAnim=false;
   ensureFriendCode();
   /* Theme backstop (2026-11-17): the theme follows the ACTIVE
      explorer, and the active explorer can change without a boot or a
@@ -4810,7 +4895,7 @@ function render(){
      reach the parent page. The shell below needs an explorer, so a
      parent without one gets a minimal shell instead. */
   if(route==='door'||(!ex()&&route!=='parent')){ root.innerHTML=doorHTML(); bindDoor(); restoreScrollY(_sy); return; }
-  if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); restoreScrollY(_sy); return; }
+  if(route==='parent'&&!ex()){ root.innerHTML='<div class="app"><div class="main"><div class="content'+(_anim?' route-in':'')+'" id="content"></div></div></div>'; var pc=document.getElementById('content'); pc.innerHTML=parentHTML(); bindParent(); restoreScrollY(_sy); return; }
   function navBtnHTML(n, cls){ var locked=focusLocked(n[0]); return '<button class="'+cls+' '+(route===n[0]?'active':'')+(locked?' locked':'')+'" data-go="'+n[0]+'"><span class="nic">'+ic(n[3],n[1],'navic')+'</span>'+(locked?'🔒 ':'')+n[2]+(n[0]==='friends'?friendBadgeHTML():'')+'</button>'; }
   var navBtns=NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('')+'<div class="navmore">More</div>'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); }).join('');
   var moreActive=NAV.slice(NAV_CORE).some(function(n){ return n[0]===route; });
@@ -4832,9 +4917,9 @@ function render(){
    +'<button class="iconbtn '+(vibeId?'on':'')+'" id="tbMusic" title="Background music" aria-label="Toggle background music">🎵</button>'
    +'<button class="avatarbtn" id="tbProfile" aria-label="Open profile menu">'+pipSVG(40,ex().glow)+'</button>'
    +'<div id="menuHolder"></div></div>'
-   +'<div class="content" id="content"></div></div></div>'
+   +'<div class="content'+(_anim?' route-in':'')+'" id="content"></div></div></div>'
    +'<nav class="bottomnav">'+btm+'</nav>';
-  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ sndMystery(); go(b.getAttribute('data-go')); }); });
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ go(b.getAttribute('data-go')); }); });
   /* Mobile "More" button (2026-11-17): toggles the More sheet above
      the bottom bar. onclick (not addEventListener) like the critter
      card — render() rebuilds the button every time, so a fresh
@@ -4846,12 +4931,12 @@ function render(){
      on the Home route. onclick (not addEventListener) so bindHome's
      document-wide [data-go2] pass on Home overwrites it with the
      identical handler instead of firing twice. */
-  var sc=document.getElementById('sideCritterBtn'); if(sc)sc.onclick=function(){ sndPop(); go('critter'); };
+  var sc=document.getElementById('sideCritterBtn'); if(sc)sc.onclick=function(){ go('critter'); };
   /* The star count in the top bar jumps to the Treasure Realm
      (requested 2026-11-07) — tapping your stars shows what they buy. */
-  var tbStars=document.getElementById('tbStars'); if(tbStars)tbStars.addEventListener('click',function(){ sndPop(); go('treasure'); });
-  var tbMute=document.getElementById('tbMute'); if(tbMute)tbMute.addEventListener('click',function(){ toggleMute(); renderTop(); });
-  document.getElementById('tbMusic').addEventListener('click',function(){ var e=ex(); if(vibeId){ stopVibe(); if(e){ e.musicPref='mute'; e.musicPrefAt=new Date().toISOString(); save(); } } else { var pref=(e&&e.musicPref)||'bg-music'; var id=(pref==='mute')?lastVibeId:pref; startVibe(id); if(e){ e.musicPref=id; e.musicPrefAt=new Date().toISOString(); save(); } } renderTop(); });
+  var tbStars=document.getElementById('tbStars'); if(tbStars)tbStars.addEventListener('click',function(){ go('treasure'); });
+  var tbMute=document.getElementById('tbMute'); if(tbMute)tbMute.addEventListener('click',function(){ var _m=toggleMute(); if(!_m)sndPop(); renderTop(); });
+  document.getElementById('tbMusic').addEventListener('click',function(){ sndPop(); var e=ex(); if(vibeId){ stopVibe(); if(e){ e.musicPref='mute'; e.musicPrefAt=new Date().toISOString(); save(); } } else { var pref=(e&&e.musicPref)||'bg-music'; var id=(pref==='mute')?lastVibeId:pref; startVibe(id); if(e){ e.musicPref=id; e.musicPrefAt=new Date().toISOString(); save(); } } renderTop(); });
   document.getElementById('tbProfile').addEventListener('click',toggleMenu);
   var c=document.getElementById('content');
   if(route==='home')c.innerHTML=homeHTML(),bindHome();
@@ -4889,7 +4974,7 @@ function toggleMenu(){
   document.getElementById('mSwitch').onclick=function(){ DB.activeId=null; save(); parentUnlocked=false; go('door'); };
   document.getElementById('mAdd').onclick=function(){ DB.activeId=null; save(); doorMode='create'; go('door'); };
   document.getElementById('mParent').onclick=function(){ h.innerHTML=''; go('parent'); };
-  document.getElementById('mLook').onclick=function(){ h.innerHTML=''; openLookModal(); };
+  document.getElementById('mLook').onclick=function(){ h.innerHTML=''; sndPop(); openLookModal(); };
   var fc=document.getElementById('mFriendCode'); if(fc)fc.onclick=function(){ var live=ex(); var code=live&&live.friendCode?live.friendCode:''; if(!code)return; function done(){ toast('Friend code copied — share it so a friend can add '+live.name+'!'); } if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(done,function(){ toast('Friend code: '+code); }); } else { var ta=document.createElement('textarea'); ta.value=code; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(err){ toast('Friend code: '+code); } document.body.removeChild(ta); } };
 }
 
@@ -5261,11 +5346,11 @@ function openLookModal(){
   document.querySelectorAll('.bgEffectPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var ef=b.getAttribute('data-e'); if((draft.look.background||{}).effect!==ef){ draft.look.background.effect=ef; refreshLookPreview(); } document.querySelectorAll('.bgEffectPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.glowPick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var g=b.getAttribute('data-g'); if(draft.glow!==g){ draft.glow=g; refreshLookPreview(); } document.querySelectorAll('.glowPick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--ink)':''); }); if(keepEl)keepEl.value=keep; }; });
   document.querySelectorAll('.badgePick').forEach(function(b){ b.onclick=function(){ var keepEl=document.getElementById('lkName'); var keep=keepEl?keepEl.value:''; var bd=b.getAttribute('data-b'); if(draft.badge!==bd){ draft.badge=bd; } document.querySelectorAll('.badgePick').forEach(function(x){ x.style.outline=(x===b?'3px solid var(--amber)':''); }); if(keepEl)keepEl.value=keep; }; });
-  document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; live.face=draft.face; live.glow=draft.glow; live.badge=draft.badge; live.look={background:{shape:draft.look.background.shape, color:draft.look.background.color, pattern:draft.look.background.pattern, effect:draft.look.background.effect}}; live.lookAt=new Date().toISOString(); var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
+  document.getElementById('lkSave').onclick=function(){ var live=ex(); if(!live)return; live.face=draft.face; live.glow=draft.glow; live.badge=draft.badge; live.look={background:{shape:draft.look.background.shape, color:draft.look.background.color, pattern:draft.look.background.pattern, effect:draft.look.background.effect}}; live.lookAt=new Date().toISOString(); var v=document.getElementById('lkName').value.trim(); if(v&&v!==live.name){ live.name=v; live.nameAt=new Date().toISOString(); } save(); sndPop(); closeModal(); render(); toast('Looking great, '+live.name+'!'); };
 }
 function openModal(html){
   var o=document.getElementById('overlay'); if(!o){ o=document.createElement('div'); o.className='overlay'; o.id='overlay'; document.body.appendChild(o); }
-  o.innerHTML='<div class="modal">'+html+'</div>'; o.classList.add('open');
+  o.innerHTML='<div class="modal">'+html+'</div>'; o.classList.remove('open'); void o.offsetWidth; o.classList.add('open');
   o.onclick=function(ev){ if(ev.target===o)closeModal(); };
 }
 function closeModal(){ var o=document.getElementById('overlay'); if(o)o.classList.remove('open'); }
@@ -5330,7 +5415,7 @@ function bindDoor(){
   /* Grown-ups entry (fix 6c): straight to the PIN screen, no picture
      code needed — the PIN is the grown-up gate. */
   var dg=document.getElementById('doorGrownups');
-  if(dg)dg.onclick=function(){ sndPop(); go('parent'); };
+  if(dg)dg.onclick=function(){ go('parent'); };
   var da=document.getElementById('doorAbout');
   if(da)da.onclick=function(){ sndPop(); openModal(aboutHTML()); };
   /* Back must work on EVERY door screen. It used to be bound after
@@ -5348,17 +5433,20 @@ function bindDoor(){
   if(doorMode==='create'){
     renderBubbles(document.getElementById('newBubbles'), doorCode);
     document.querySelectorAll('[data-lvl]').forEach(function(b){ b.onclick=function(){ doorLevel=b.getAttribute('data-lvl'); document.querySelectorAll('[data-lvl]').forEach(function(x){ x.classList.toggle('sel',x===b); }); sndPop(); }; });
-    document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndMystery(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
+    document.querySelectorAll('[data-pic]').forEach(function(b){ b.onclick=function(){ sndDoorTap(); if(doorCode.length<3){ doorCode.push(b.getAttribute('data-pic')); } else { doorCode=[b.getAttribute('data-pic')]; } renderBubbles(document.getElementById('newBubbles'), doorCode); }; });
     document.getElementById('createBtn').onclick=function(){
       var name=document.getElementById('newName').value.trim();
       if(!name){ toast('Pick a magic name first!'); return; }
       if(doorCode.length!==3){ toast('Pick exactly 3 pictures for your code!'); return; }
       var e=newExplorer(name, doorCode.slice(), doorLevel);
       DB.explorers.push(e); DB.activeId=e.id; doorMode='pick'; doorCode=[]; doorLevel='P3'; save(); applyTheme();
-      sndEntrance(); autoVibe(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home');
+      sndEntrance(); autoVibe(); toast('Welcome, '+name+'! The Grand Door opens! 🚪✨'); go('home', true);
     };
   } else {
-    document.querySelectorAll('[data-ex]').forEach(function(b){ b.onclick=function(){ doorSel=b.getAttribute('data-ex'); doorCode=[]; showDoorCode(); }; });
+    /* Explorer-chip tap (UI polish 2026-11-22): the mystery twinkle
+       now lives here only — the Grand Door — after leaving
+       navigation (go() plays the single nav blip instead). */
+    document.querySelectorAll('[data-ex]').forEach(function(b){ b.onclick=function(){ sndMystery(); doorSel=b.getAttribute('data-ex'); doorCode=[]; showDoorCode(); }; });
   }
 }
 function showDoorCode(){
@@ -5370,10 +5458,10 @@ function showDoorCode(){
    +'<button class="btn ghost" id="loginCancel">Cancel</button>';
   renderBubbles(document.getElementById('loginBubbles'), doorCode);
   document.querySelectorAll('[data-lpic]').forEach(function(b){ b.onclick=function(){
-    sndMystery(); doorCode.push(b.getAttribute('data-lpic'));
+    sndDoorTap(); doorCode.push(b.getAttribute('data-lpic'));
     renderBubbles(document.getElementById('loginBubbles'), doorCode);
     if(doorCode.length===3){
-      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); applyTheme(); doorSel=null; doorCode=[]; sndEntrance(); autoVibe(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home'); }
+      if(JSON.stringify(doorCode)===JSON.stringify(target.code)){ DB.activeId=target.id; save(); applyTheme(); doorSel=null; doorCode=[]; sndEntrance(); autoVibe(); toast('The Grand Door opens! Welcome back, '+target.name+'!'); go('home', true); }
       else { sndWrong(); toast('Hmm, those pictures don’t match. Try again!'); doorCode=[]; setTimeout(showDoorCode,600); }
     }
   }; });
@@ -5665,7 +5753,7 @@ function bindHome(){
   document.querySelectorAll('[data-home-lvl]').forEach(function(b){ b.onclick=function(){ var e=ex(); e.level=b.getAttribute('data-home-lvl'); e.levelAt=Date.now(); save(); sndCorrect(); toast('Primary level set to '+e.level+' — quests and games will fit you now!'); render(); }; });
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
   document.querySelectorAll('[data-boost]').forEach(function(b){ b.onclick=function(){ startBoostFlow(b.getAttribute('data-boost')); }; });
-  document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ sndPop(); go(b.getAttribute('data-go2')); }; });
+  document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ go(b.getAttribute('data-go2')); }; });
   /* Egg wiggle (2026-11-17): at Egg stage only, tapping the hero card
      wiggles the eggs and plays a bubble sound first, then opens
      Critter Lab after a short delay so the wiggle is actually seen —
@@ -10107,7 +10195,7 @@ function bindLearn(){
   document.querySelectorAll('[data-learn-topic]').forEach(function(b){ b.onclick=function(){ var id=b.getAttribute('data-learn-topic'); var opening=learnView.openTopic!==id; learnView.openTopic=(opening?id:null); sndPop(); render(); if(opening)scrollToLearnTopic(id); }; });
   document.querySelectorAll('[data-learn-start]').forEach(function(b){ b.onclick=function(){ var s=moeSubject(b.getAttribute('data-learn-start'),levelNum(ex())); var q=s?moeSessionFirst(ex(),s,levelNum(ex())):null; if(q)startQuestFlow(q); }; });
   var sa=document.getElementById('spAddBtn'); if(sa)sa.onclick=function(){ sndPop(); openSpellAddModal(); };
-  document.querySelectorAll('[data-spellopen]').forEach(function(b){ b.onclick=function(){ spellOpenId=b.getAttribute('data-spellopen'); spellTest=null; sndPop(); go('spelltest'); }; });
+  document.querySelectorAll('[data-spellopen]').forEach(function(b){ b.onclick=function(){ spellOpenId=b.getAttribute('data-spellopen'); spellTest=null; go('spelltest'); }; });
   document.querySelectorAll('[data-spelldel]').forEach(function(b){ b.onclick=function(){ deleteSpellTest(b.getAttribute('data-spelldel')); }; });
   /* Friends quest times refresh like the arcade boards do, and the
      board's own "Add a friend" row is wired here. */
@@ -10267,6 +10355,7 @@ function diffButtonsHTML(){
 }
 function applyDifficultyChoice(felt){
   if(!cur)return;
+  sndDiff(felt);
   var e=ex(); if(!e)return;
   var t=topicById(cur.topicId); if(!t)return;
   var level=levelNum(e);
@@ -11195,6 +11284,7 @@ function recordLearnBest(e, topicId){
 }
 function startQuestFlow(topicId){
   var _gt=topicById(topicId); if(_gt&&_gt.moe&&!moeInSeason(_gt)){ toast('Pip will bring that one in Term '+_gt.term+' — school has not taught it yet!'); return; }
+  sndQuestStart();
   var e=ex();
   /* Phase 2: pre-fetch the adjacent levels in the background
      (session-only — never the main server-bank cache) so a "Too
@@ -11261,15 +11351,15 @@ function bindWarmup(){
     var i=parseInt(b.getAttribute('data-wopt'),10); var q=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]];
     warm.picked=i; warm.answered=true; if(i===q.a){ warm.correct++; sndCorrect(); } else sndWrong(); render();
   }; });
-  var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ warm.idx++; warm.picked=null; warm.answered=false; render(); };
-  var sk=document.getElementById('wuSkip'); if(sk)sk.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
+  var nx=document.getElementById('wuNext'); if(nx)nx.onclick=function(){ sndAdvance(); warm.idx++; warm.picked=null; warm.answered=false; render(); };
+  var sk=document.getElementById('wuSkip'); if(sk)sk.onclick=function(){ sndAdvance(); if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
   /* Ask Pip about this warm-up question: Pip explains it in a new
      thread, and the 60s countdown pauses while the child is away. */
   var wa=document.getElementById('wuAskPip'); if(wa)wa.onclick=function(){ var wq=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]]; askPipAbout({src:'warmup', topicId:warm.topicId, label:topicById(warm.topicId).name, question:wq.q, options:wq.o.slice(), answer:wq.o[wq.a], clue:wq.c||''}); };
   /* Listen (2026-11-17): Chinese warm-up questions can be heard
      aloud — Pip reads the question with a Chinese voice. */
   var wl=document.getElementById('wuListen'); if(wl)wl.onclick=function(){ var wq=bankFor(topicById(warm.topicId),'warm',levelNum(ex()))[warm.order[warm.idx]]; if(speakPip(listenTextFor(wq)))toast('Listen… now say it out loud like Pip!'); };
-  var st=document.getElementById('wuStart'); if(st)st.onclick=function(){ if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
+  var st=document.getElementById('wuStart'); if(st)st.onclick=function(){ sndAdvance(); if(warm.timer)clearInterval(warm.timer); beginQuest(warm.topicId); };
 }
 function beginQuest(topicId){
   var e=ex(), t=topicById(topicId);
@@ -11463,7 +11553,7 @@ function bindQuiz(){
   }
   /* Pip's Boost tip screen: Start begins the drill, and "Maybe
      later" drops back to Learn without touching the flag. */
-  var bs=document.getElementById('boostStart'); if(bs)bs.onclick=function(){ cur.tipSeen=true; render(); };
+  var bs=document.getElementById('boostStart'); if(bs)bs.onclick=function(){ sndAdvance(); cur.tipSeen=true; render(); };
   var bl=document.getElementById('boostLater'); if(bl)bl.onclick=function(){ cur=null; go('learn'); };
   /* The quest clock ticks live while a question is open — the
      interval clears itself the moment the chip is gone. */
@@ -11509,13 +11599,14 @@ function bindQuiz(){
     try{ fibIn.focus(); }catch(err){}
   }
   var nx=document.getElementById('qNext'); if(nx)nx.onclick=function(){
+    sndAdvance();
     cur.idx++; cur.picked=null; cur.answered=false; cur.fibTyped=''; cur.fibCorrect=false;
     if(cur.idx<list.length)resumeLearnTimer();
     if(cur.idx>=list.length){ finishRound(t); }
     if(cur.phase==='quest'&&cur.idx<list.length)persistProgress();
     render();
   };
-  var qt=document.getElementById('qQuit'); if(qt)qt.onclick=function(){ if(cur.phase==='quest'){ persistProgress(); toast('Saved! This quest will resume right where you stopped.'); } else if(cur.phase==='boost'){ toast('No problem — Pip’s Boost will be here whenever you’re ready.'); } else { toast('Saved! This quest will resume right where you stopped.'); } cur=null; go('learn'); };
+  var qt=document.getElementById('qQuit'); if(qt)qt.onclick=function(){ sndAdvance(); if(cur.phase==='quest'){ persistProgress(); toast('Saved! This quest will resume right where you stopped.'); } else if(cur.phase==='boost'){ toast('No problem — Pip’s Boost will be here whenever you’re ready.'); } else { toast('Saved! This quest will resume right where you stopped.'); } cur=null; go('learn'); };
 }
 function finishRound(t){
   var e=ex();
@@ -12110,8 +12201,8 @@ function friendRequestsCardHTML(sel){
   return '<div class="card" style="margin-top:16px"><h3 style="margin-top:0">👥 Friend requests</h3>'
    +'<p style="font-weight:700;margin:6px 0">'+esc(sel.name)+'’s friend code: <b style="font-size:1.3rem;letter-spacing:3px">'+esc(code||'—')+'</b></p>'
    +'<p class="small muted" style="font-weight:700">Share this code with the other family — their child types it in Play Arcade to send a request. This is NOT the family sync code: it identifies only '+esc(sel.name)+', and friends see only stars and fastest times, never chats or full progress.</p>'
-   +'<h4>Requests waiting for you</h4><div id="frPending"><p style="font-weight:700">Loading…</p></div>'
-   +'<h4 style="margin-top:14px">Friends</h4><div id="frFriends"><p style="font-weight:700">Loading…</p></div></div>';
+   +'<h4>Requests waiting for you</h4><div id="frPending"><div style="text-align:center;padding:10px"><div style="font-size:2rem">🦦</div><p style="font-weight:800;margin:6px 0 0">Finding your friends…</p></div></div>'
+   +'<h4 style="margin-top:14px">Friends</h4><div id="frFriends"><div style="text-align:center;padding:10px"><div style="font-size:2rem">🦦</div><p style="font-weight:800;margin:6px 0 0">Finding your friends…</p></div></div></div>';
 }
 /* Parent-side friends panel: fills the placeholders parentHTML()
    renders in the "👥 Friend requests" card. Called from bindParent.
@@ -13683,7 +13774,7 @@ function bindAsk(){
     e.deletedThreadIds=unionArr(e.deletedThreadIds||[], e.threads.map(function(t){ return t.id; }));
     e.threads=[]; e.threadsClearedAt=new Date().toISOString(); activeThread=null; save(); render(); toast('All chats cleared 🧹 Fresh start — ask Pip anything!');
   };
-  document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ activeThread=b.getAttribute('data-thread'); render(); }; });
+  document.querySelectorAll('[data-thread]').forEach(function(b){ b.onclick=function(){ sndPop(); activeThread=b.getAttribute('data-thread'); render(); }; });
   /* Delete ONE chat (2026-11-08, Bryan): the list used to offer only
      "Clear all chats". A per-chat bin uses the same deletedThreadIds
      tombstone as clear-all, so the deleted chat can never come back
@@ -13718,6 +13809,7 @@ function bindAsk(){
        another device), do not crash silently on th.msgs — send the
        user back to the chat list instead of doing nothing. */
     if(!th){ toast('That chat is gone — start a new chat first.'); activeThread=null; render(); return; }
+    sndSend();
     th.msgs.push({who:'kid', text:v});
     if(th.title.indexOf('New chat')===0)th.title=v.length>34?v.slice(0,34)+'…':v;
     var hist=th.msgs.slice(-8).map(function(m){return {role:m.who,text:m.text};});
@@ -13726,7 +13818,7 @@ function bindAsk(){
        bubble, always correct. pipHelp returns null for everything
        else, so school questions still go live exactly as before. */
     var help=pipHelp(v);
-    if(help){ th.msgs.push({who:'pip', text:help, live:false}); save(); render(); var logH=document.getElementById('chatlog'); if(logH)logH.scrollTop=logH.scrollHeight; return; }
+    if(help){ th.msgs.push({who:'pip', text:help, live:false}); save(); render(); sndReply(); var logH=document.getElementById('chatlog'); if(logH)logH.scrollTop=logH.scrollHeight; return; }
     /* The thinking bubble is UI state only (asking[threadId]): it is
        rendered, never stored in the thread, never saved, never
        synced. The old code stored it as a message, so a sync merge
@@ -13746,7 +13838,7 @@ function bindAsk(){
       if(!th2){ save(); render(); return; }
       if(live){ th2.msgs.push({who:'pip', text:live.reply, skill:live.skillName||'', skillId:live.skillId||'', agent:live.agentName||'', agentId:live.agentId||'', signature:live.signature||'', hintFirst:!!live.hintFirst, live:true}); }
       else { var sk2=skillForQuestionClient(v); th2.msgs.push({who:'pip', text:pipReply(v), skill:sk2?sk2.name:'', skillId:sk2?sk2.id:'', live:false}); }
-      save(); render();
+      save(); render(); sndReply();
       var log2=document.getElementById('chatlog'); if(log2)log2.scrollTop=log2.scrollHeight;
     }).catch(function(){
       /* Any failure in the reply path still gets Pip's built-in
@@ -13756,7 +13848,7 @@ function bindAsk(){
         delete asking[th.id];
         var eLive2=ex(); var th3=eLive2?eLive2.threads.find(function(t){return t.id===th.id;}):null;
         if(th3){ th3.msgs.push({who:'pip', text:pipReply(v), live:false}); }
-        save(); render();
+        save(); render(); if(th3)sndReply();
       }catch(e2){}
     });
   }
@@ -14106,7 +14198,7 @@ function bindCritter(){
   }
   document.querySelectorAll('[data-care]').forEach(function(b){ b.onclick=function(){ startCareActivity(b.getAttribute('data-care')); }; });
   document.querySelectorAll('[data-food]').forEach(function(b){ b.onclick=function(){ var f=FOODS.find(function(x){return x.name===b.getAttribute('data-food');}); if(!f)return; recordCare('feed','Yum! '+ex().critterName+' gobbled the '+f.e+' '+f.name+'! 😋'); }; });
-  var cc=document.getElementById('careCancel'); if(cc)cc.onclick=function(){ pondMode=null; dirtLeft=null; if(playTimer){ clearInterval(playTimer); playTimer=null; } stopPlayChase(); render(); };
+  var cc=document.getElementById('careCancel'); if(cc)cc.onclick=function(){ sndPop(); pondMode=null; dirtLeft=null; if(playTimer){ clearInterval(playTimer); playTimer=null; } stopPlayChase(); render(); };
   /* The live frog: it wanders the pond on its own, can be dragged
      directly, and a tap (a press without dragging) says hello.
      The drag is handled at DOCUMENT level (like the play chase):
@@ -14243,7 +14335,7 @@ function createHTML(){
    ? e.flashcards.map(function(f,i){
        var back=!!fcFlip[i];
        return '<div style="margin-bottom:10px"><button type="button" class="flashcard '+(back?'back':'')+'" data-flip="'+i+'"><span class="fside">'+(back?'Answer — tap to flip back':'Question — tap to flip')+'</span>'+esc(back?f.b:f.f)+'</button>'
-        +'<div style="text-align:right;margin-top:4px"><button type="button" class="delbtn" data-fcdel="'+i+'" aria-label="Delete this flashcard">🗑 Delete card</button></div></div>';
+        +'<div style="text-align:right;margin-top:4px"><button type="button" class="delbtn" data-fcdel="'+i+'" aria-label="Delete this flashcard">🗑</button></div></div>';
      }).join('')
    : '<div class="feedback ok" style="font-weight:700">No flashcards yet — make your first one below! Try a tricky times table (7 × 8 = ?), a spelling word, or a 华文 word you want to remember.</div>';
   var planRows=e.planner.length
@@ -14282,7 +14374,7 @@ function bindCreate(){
   if(!e.deletedPlanner)e.deletedPlanner=[];
   document.querySelectorAll('[data-addplan]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var txt=b.getAttribute('data-addplan'); if(!e.planner.some(function(p){return p.t===txt;})){ e.planner.push({t:txt,d:false}); e.deletedPlanner=e.deletedPlanner.filter(function(t){ return t!==txt; }); save(); sndCorrect(); toast('Added to your planner 📋'); render(); } }; });
   document.querySelectorAll('[data-flip]').forEach(function(b){ b.onclick=function(){ var i=b.getAttribute('data-flip'); fcFlip[i]=!fcFlip[i]; sndPop(); render(); }; });
-  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var i=parseInt(b.getAttribute('data-fcdel'),10); stampFlashcardIds(e); var _c=e.flashcards[i]; if(_c&&_c.id&&e.deletedFlashcards.indexOf(_c.id)<0)e.deletedFlashcards.push(_c.id); e.flashcards.splice(i,1); fcFlip={}; save(); toast('Flashcard removed.'); render(); }; });
+  document.querySelectorAll('[data-fcdel]').forEach(function(b){ b.onclick=function(){ e=ex(); if(!e)return; var i=parseInt(b.getAttribute('data-fcdel'),10); stampFlashcardIds(e); var _c=e.flashcards[i]; if(_c&&_c.id&&e.deletedFlashcards.indexOf(_c.id)<0)e.deletedFlashcards.push(_c.id); e.flashcards.splice(i,1); fcFlip={}; save(); sndDel(); toast('Flashcard removed.'); render(); }; });
   document.getElementById('fcAdd').onclick=function(){
     e=ex(); if(!e)return;
     var f=document.getElementById('fcFront').value.trim(), bk=document.getElementById('fcBack').value.trim();
