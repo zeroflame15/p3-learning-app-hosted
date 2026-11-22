@@ -33,7 +33,7 @@ test('modal overlay blurs the page behind it so the card pops forward', () => {
 });
 
 test('modal card carries a soft drop shadow', () => {
-  const rule = html.match(/\.modal\{[^}]*\}/);
+  const rule = html.match(/^\.modal\{[^}]*\}/m); // anchored: .overlay.open .modal{...} must not match first
   assert.ok(rule, '.modal rule exists');
   assert.ok(rule[0].includes('box-shadow:var(--shadow)'), 'modal uses the app shadow');
 });

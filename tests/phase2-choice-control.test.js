@@ -265,6 +265,7 @@ function diffContext() {
   ctx.toast = function (m) { ctx.toasts.push(m); };
   ctx.render = function () {};
   ctx.save = function () { ctx.saved++; };
+  ctx.sndDiff = function () {}; // applyDifficultyChoice plays one tone per choice
   ctx.persistProgress = function () { ctx.persisted++; };
   ctx.syncKey = function () { return 'ABCDEF'; };
   ctx.fetch = function () { return Promise.resolve({ ok: false, json: async function () { return null; } }); };

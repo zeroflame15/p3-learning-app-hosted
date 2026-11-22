@@ -605,6 +605,7 @@ test('draft editor: picks never save, Save commits the draft, Cancel changes not
   var saved = 0, closed = 0, rendered = 0, toasted = '';
   var ex = function () { return live; };
   var save = function () { saved++; };
+  var sndPop = function () {}; // Save pops (UI polish top 5)
   var closeModal = function () { closed++; };
   var render = function () { rendered++; };
   var toast = function (m) { toasted = m; };

@@ -71,7 +71,7 @@ test('tone() returns early when muted, and the topbar carries a mute button', ()
   assert.ok(toneSrc.indexOf('isMuted()') >= 0, 'tone() checks isMuted before playing anything');
   assert.ok(html.indexOf('id="tbMute"') >= 0, 'topbar has the #tbMute button');
   assert.ok(html.indexOf("isMuted()?'🔇':'🔊'") >= 0, 'the button shows 🔇 when muted, 🔊 when sound is on');
-  assert.ok(html.indexOf('toggleMute(); renderTop();') >= 0, 'tapping it flips the mute and re-renders the topbar');
+  assert.ok(html.indexOf("var _m=toggleMute(); if(!_m)sndPop(); renderTop();") >= 0, 'tapping it flips the mute, blips when unmuting, and re-renders the topbar');
 });
 
 // ------------------------------------------------------- sound variety

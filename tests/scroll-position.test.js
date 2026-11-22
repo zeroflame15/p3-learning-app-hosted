@@ -93,7 +93,7 @@ test('restoreScrollY is a no-op where there is no window (node / SSR-safe)', () 
 });
 
 test('go() still scrolls to the top before render(), so navigation lands at the top', () => {
-  const goSrc = fnBody('function go(r){');
+  const goSrc = fnBody('function go(r, silent){');
   assert.ok(goSrc.includes('window.scrollTo(0,0)'), 'go() still scrolls to the top');
   assert.ok(goSrc.indexOf('window.scrollTo(0,0)') < goSrc.indexOf('render()'),
     'go() scrolls first, so render() captures 0 and restores 0');
