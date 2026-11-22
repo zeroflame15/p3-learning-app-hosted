@@ -1,7 +1,8 @@
 // Sidebar regroup + Focus mode (Bryan approved 2026-11-17):
 //  1. NAV regroup — core six first (Home, Learn, Ask Pip, Critter
-//     Lab, Play, Create), then a "More" heading, then Trivia,
-//     Treasure, Jokes, Friends, Vibe. Create is core (flashcards,
+//     Lab, Play, Create), then a "More" heading, then Jokes,
+//     Trivia, Riddle, Treasure, Friends, Vibe (Riddle added and
+//     More reordered 2026-11-22). Create is core (flashcards,
 //     planner, school schedule are daily study tools) and is NEVER
 //     locked. Vibe stays last overall.
 //  2. Focus mode — a per-family toggle on the Grown-ups page, OFF
@@ -49,11 +50,11 @@ function loadInto(ctx, marker) { vm.runInContext(fnText(marker), ctx); }
 
 const NAV = eval(html.slice(html.indexOf('var NAV=['), html.indexOf('];', html.indexOf('var NAV=[')) + 2) + '\n;NAV');
 
-test('NAV regroup: core six first in order, then the five More items, Vibe last', () => {
+test('NAV regroup: core six first in order, then the six More items, Vibe last', () => {
   assert.deepEqual(NAV.map(function (n) { return n[0]; }),
-    ['home', 'learn', 'ask', 'critter', 'play', 'create', 'trivia', 'treasure', 'jokes', 'friends', 'vibe'],
-    'nav order is core six then More five');
-  assert.equal(NAV.length, 11, 'still 11 nav items');
+    ['home', 'learn', 'ask', 'critter', 'play', 'create', 'jokes', 'trivia', 'riddle', 'treasure', 'friends', 'vibe'],
+    'nav order is core six then More six');
+  assert.equal(NAV.length, 12, 'still 12 nav items');
   assert.equal(NAV[NAV.length - 1][0], 'vibe', 'Vibe stays last overall');
   assert.equal(NAV[NAV.length - 2][0], 'friends', 'Friends stays second-to-last');
   assert.ok(html.includes('var NAV_CORE=6;'), 'the core/more split point is a named constant');

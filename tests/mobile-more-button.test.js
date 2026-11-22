@@ -61,17 +61,17 @@ function extractFn(marker) {
 
 const NAV = eval(html.slice(html.indexOf('var NAV=['), html.indexOf('];', html.indexOf('var NAV=[')) + 2) + '\n;NAV');
 const CORE = ['home', 'learn', 'ask', 'critter', 'play', 'create'];
-const MORE = ['trivia', 'treasure', 'jokes', 'friends', 'vibe'];
+const MORE = ['jokes', 'trivia', 'riddle', 'treasure', 'friends', 'vibe'];
 
-test('bottom bar renders the six core items plus a More button — never the five More items directly', () => {
+test('bottom bar renders the six core items plus a More button — never the six More items directly', () => {
   const render = fnBody('function render(){');
-  assert.ok(!render.includes('var btm=NAV.map('), 'the old flat 11-item bar is gone');
+  assert.ok(!render.includes('var btm=NAV.map('), 'the old flat 12-item bar is gone');
   assert.ok(render.includes("NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,''); })"), 'the bar builds the core six through the shared helper');
   assert.ok(render.includes('id="btmMoreBtn"'), 'a More button sits on the bar');
   assert.ok(render.includes('<span class="nic">⋯</span>More'), 'the More button reads "⋯ More"');
-  assert.ok(render.includes("btmMoreOpen?'<div class=\"btmmore\" id=\"btmMorePop\">'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,''); }).join('')+'</div>':''"), 'the five More items live only in the sheet, shown when btmMoreOpen');
+  assert.ok(render.includes("btmMoreOpen?'<div class=\"btmmore\" id=\"btmMorePop\">'+NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,''); }).join('')+'</div>':''"), 'the six More items live only in the sheet, shown when btmMoreOpen');
   assert.deepEqual(NAV.slice(0, 6).map(function (n) { return n[0]; }), CORE, 'the bar core is the regroup core');
-  assert.deepEqual(NAV.slice(6).map(function (n) { return n[0]; }), MORE, 'the sheet holds the regroup More five in order');
+  assert.deepEqual(NAV.slice(6).map(function (n) { return n[0]; }), MORE, 'the sheet holds the regroup More six in order');
 });
 
 test('the More sheet reuses navBtnHTML, so Focus locks and the friend badge carry over', () => {
@@ -92,7 +92,7 @@ test('desktop sidebar is unchanged by the mobile bar work', () => {
   const render = fnBody('function render(){');
   assert.ok(render.includes("NAV.slice(0,NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); })"), 'sidebar still builds the core section');
   assert.ok(render.includes("'<div class=\"navmore\">More</div>'"), 'sidebar still has its More heading');
-  assert.ok(render.includes("NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); })"), 'sidebar still lists the More five after the heading');
+  assert.ok(render.includes("NAV.slice(NAV_CORE).map(function(n){ return navBtnHTML(n,'navbtn'); })"), 'sidebar still lists the More six after the heading');
 });
 
 test('the More sheet has its own styles above the bar, below modals', () => {

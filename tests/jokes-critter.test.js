@@ -21,7 +21,7 @@ function grabVar(name) {
 
 test('Jokes is in the sidebar and Vibe is the last item', () => {
   const NAV = eval(grabVar('NAV') + '\n;NAV');
-  assert.equal(NAV.length, 11, '11 nav items, got ' + NAV.length);
+  assert.equal(NAV.length, 12, '12 nav items, got ' + NAV.length);
   const jokes = NAV.find(function (n) { return n[0] === 'jokes'; });
   assert.ok(jokes, 'Jokes in NAV');
   assert.equal(jokes[1], '😂', 'Jokes uses the laughing emoji');

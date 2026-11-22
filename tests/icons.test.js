@@ -37,7 +37,7 @@ test('every nav item, game and quest has an icon: a custom file, or an emoji fal
   NAV.forEach(function (n) { wanted.push(['nav ' + n[0], n[3], n[1]]); });
   GAMES.forEach(function (g) { wanted.push(['game ' + g.id, g.img]); });
   TOPICS.forEach(function (t) { wanted.push(['quest ' + t.id, t.img, t.icon]); });
-  assert.equal(wanted.length, 51, '11 nav + 9 games + 31 quests');
+  assert.equal(wanted.length, 52, '12 nav + 9 games + 31 quests');
   let wired = 0, fallback = 0;
   for (const [label, file, emo] of wanted) {
     if (file) {
@@ -62,10 +62,10 @@ test('every nav item, game and quest has an icon: a custom file, or an emoji fal
       assert.ok(emo, label + ' has an emoji fallback icon');
     }
   }
-  assert.equal(wired, 51, '51 wired icons: 11 nav + 9 games + 31 quests');
+  assert.equal(wired, 52, '52 wired icons: 12 nav + 9 games + 31 quests');
   assert.equal(fallback, 0, '0 emoji-fallback entries — every nav, game and quest has 3D art');
   const onDisk = fs.readdirSync(ICONS_DIR).filter(function (f) { return f.endsWith('.webp'); });
-  assert.equal(onDisk.length, 51, 'exactly the 51 wired icons on disk, no strays');
+  assert.equal(onDisk.length, 52, 'exactly the 52 wired icons on disk, no strays');
 });
 
 test('ic() renders the image with an emoji fallback and the right sizes', () => {
@@ -120,6 +120,7 @@ test('every section top shows the same big artwork, not the old flat emoji', () 
     ['Treasure', 'icons/nav-treasure.webp', '💎'],
     ['Vibe', 'icons/nav-vibe.webp', '🎵'],
     ['Jokes', 'icons/nav-jokes.webp', '😂'],
+    ['Riddle', 'icons/nav-riddle.webp', '❓'],
     ['Create', 'icons/nav-create.webp', '🎨'],
   ];
   for (const [name, art, emo] of sections) {
