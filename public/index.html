@@ -575,6 +575,18 @@ table.ledger th,table.ledger td{padding:9px 10px;border-bottom:2px solid var(--l
   .tbChar{display:inline-flex!important}
   .topbar .page-title{font-size:1.1rem}
 }
+/* Topbar overflow fix (2026-11-22): at phone widths the bar held
+   the 43px avatar + the full page title + five pills (~470px) in
+   ~360px of space, so the profile button was clipped off the
+   right edge (Bryan's iPhone screenshot). On narrow screens the
+   route title hides — the bottom nav already shows the active
+   route — and the pills shrink. Every control stays; nothing is
+   removed. Desktop is untouched. */
+@media (max-width:560px){
+  .topbar{padding:10px 10px;gap:6px}
+  .topbar .page-title{display:none}
+  .topbar .chip{padding:4px 8px;font-size:.8rem}
+}
 </style>
 </head>
 <body>
@@ -4767,7 +4779,7 @@ function confettiStars(){
    ROUTER / SHELL
    ============================================================ */
 var route='door', parentUnlocked=false, sessionStart=Date.now();
-var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['play','✨','Play','icons/nav-play.webp'],['create','🎨','Create','icons/nav-create.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['jokes','😂','Jokes','icons/nav-jokes.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
+var NAV=[['home','🏠','Home','icons/nav-home.webp'],['learn','📚','Learn','icons/nav-learn.webp'],['ask','💬','Ask Pip','icons/nav-ask.webp'],['critter','🐸','Critter Lab','icons/nav-critter.webp'],['play','✨','Play','icons/nav-play.webp'],['create','🎨','Create','icons/nav-create.webp'],['jokes','😂','Jokes','icons/nav-jokes.webp'],['trivia','🎲','Trivia','icons/nav-trivia.webp'],['riddle','❓','Riddle','icons/nav-riddle.webp'],['treasure','💎','Treasure','icons/nav-treasure.webp'],['friends','👥','Friends','icons/nav-friends.webp'],['vibe','🎵','Vibe','icons/nav-vibe.webp']];
 /* Sidebar regroup (2026-11-17): the first NAV_CORE items are the
    core tabs; the rest sit under a "More" heading in the sidebar.
    Vibe stays last overall. Create is core — flashcards, planner and
@@ -4790,10 +4802,10 @@ var navAnim=false;
    ic() renders the image, and falls back to the emoji if the file
    ever fails to load, so a missing file never leaves a blank hole. */
 function ic(src,emo,cls){ return src?'<img class="'+(cls||'ic-sm')+'" src="'+src+'" alt="" onerror="this.outerHTML=\''+emo+'\'">':emo; }
-var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',jokes:'Classroom Jokes',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
+var PAGE_TITLES={home:'My Terrarium',learn:'Learn',spelling:'Spelling Routine',ask:'Ask Pip',play:'Play Arcade',trivia:'Trivia Time',riddle:'Riddle Time',friends:'My Friends',create:'Create Studio',critter:'Critter Lab',treasure:'Treasure Realm',vibe:'Vibe Zone',jokes:'Classroom Jokes',parent:'Grown-ups',quiz:'Quest Time',warmup:'Brain Warm-up',game:'Arcade'};
 function focusLocked(r){
   /* Focus mode (2026-11-17): when the family toggle is on, Play and
-     Jokes (and the games inside Play) stay locked until the active
+     Jokes and Riddle (and the games inside Play) stay locked until the active
      explorer has done a quest today — streakLastDate is set by
      recordStreak on the first quest of a new day, on the same local
      (Singapore) date todayKey() returns. Moving inside Play (a game
@@ -4801,7 +4813,7 @@ function focusLocked(r){
      so a child mid-game is never stranded when a parent turns Focus
      mode on. */
   if(!DB||!DB.focusMode) return false;
-  if(r!=='play'&&r!=='jokes'&&r!=='game') return false;
+  if(r!=='play'&&r!=='jokes'&&r!=='riddle'&&r!=='game') return false;
   var e=ex(); if(!e) return false;
   if((e.streakLastDate||'')===todayKey()) return false;
   if((route==='play'||route==='game')&&(r==='play'||r==='game')) return false;
@@ -4813,7 +4825,7 @@ function focusLocked(r){
    actually changes. The old per-binding sounds are gone, so a tap
    can never play two nav sounds. silent=true skips both (the
    Grand Door opening already plays the 2.3s entrance phrase). */
-function go(r, silent){ if(typeof btmMoreOpen!=='undefined')btmMoreOpen=false; if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } if(_prevRoute!==r){ navAnim=true; if(!silent&&typeof sndNav==='function')sndNav(); } window.scrollTo(0,0); render();
+function go(r, silent){ if(typeof btmMoreOpen!=='undefined')btmMoreOpen=false; if(focusLocked(r)){ toast(r==='jokes'?"Finish today's quest first to unlock Jokes! 😂":r==='riddle'?"Finish today's quest first to unlock Riddles! ❓":"Finish today's quest first to unlock Play! 🎮"); return; } if(r!=='ask')askReturn=null; var _prevRoute=route; route=r; if(r==='learn'&&_prevRoute!=='learn'&&typeof learnView!=='undefined'){ learnView.subject=null; learnView.openTopic=null; } if(_prevRoute!==r){ navAnim=true; if(!silent&&typeof sndNav==='function')sndNav(); } window.scrollTo(0,0); render();
   /* Parent page: pull the latest family record first, so a parent
      opening the app on their own phone sees the child's newest
      progress, not a stale copy from this device. */
@@ -4944,6 +4956,7 @@ function render(){
   else if(route==='spelltest')c.innerHTML=spellTestHTML(),bindSpellTest();
   else if(route==='play')c.innerHTML=playHTML(),bindPlay();
   else if(route==='trivia')c.innerHTML=triviaHTML(),bindTrivia();
+  else if(route==='riddle')c.innerHTML=riddleHTML(),bindRiddle();
   else if(route==='jokes')c.innerHTML=jokesHTML(),bindJokes();
   else if(route==='friends')c.innerHTML=friendsListHTML(),bindFriends();
   else if(route==='ask')c.innerHTML=askHTML(),bindAsk();
@@ -11873,6 +11886,96 @@ function bindJokes(){
     if(jokeState.idx>=jokeState.order.length){ jokeState.order=jokeOrder(); jokeState.idx=0; }
     sndPop(); render();
   };
+}
+
+/* ============================================================ RIDDLES (requested 2026-11-22) — a
+   break section like Classroom Jokes: one riddle at a time, an
+   8-second countdown, then the answer reveals itself. "Show the
+   answer" skips the wait for a child who already knows it;
+   "Next riddle" deals a fresh one. Order is shuffled per visit,
+   no repeats until all 36 have been told. Session-only state,
+   nothing is saved — exactly the Jokes mechanism. The countdown
+   ticks once a second (riddleTick, same pattern as the game
+   timer): it updates the countdown text and bar in place, and
+   clears itself the moment the riddle card is gone. */
+var RIDDLES=[
+ {q:'I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?',a:'An echo!'},
+ {q:'What has keys but can\'t open a single lock?',a:'A piano!'},
+ {q:'What has a face and two hands but no arms or legs?',a:'A clock!'},
+ {q:'What gets wetter the more it dries?',a:'A towel!'},
+ {q:'What has a neck but no head?',a:'A bottle!'},
+ {q:'I\'m tall when I\'m young and short when I\'m old. What am I?',a:'A candle!'},
+ {q:'What has many teeth but can\'t bite?',a:'A comb!'},
+ {q:'What runs all around the garden but never moves?',a:'A fence!'},
+ {q:'What has a thumb and four fingers but is not alive?',a:'A glove!'},
+ {q:'What can you catch but never throw?',a:'A cold!'},
+ {q:'What has words but never speaks?',a:'A book!'},
+ {q:'What gets bigger the more you take away?',a:'A hole!'},
+ {q:'What has a bed but never sleeps, and a mouth but never eats?',a:'A river!'},
+ {q:'What goes up but never comes down?',a:'Your age!'},
+ {q:'What has a head and a tail but no body?',a:'A coin!'},
+ {q:'The more of me you take, the more you leave behind. What am I?',a:'Footsteps!'},
+ {q:'What can fill a room without taking up any space?',a:'Light!'},
+ {q:'What has cities but no houses, forests but no trees, and rivers but no fish?',a:'A map!'},
+ {q:'What belongs to you, but everyone else uses it more than you do?',a:'Your name!'},
+ {q:'What is full of holes but still holds water?',a:'A sponge!'},
+ {q:'What has one eye but cannot see?',a:'A needle!'},
+ {q:'What kind of tree fits in your hand?',a:'A palm tree!'},
+ {q:'What can you break without ever touching it?',a:'A promise!'},
+ {q:'What has four legs but can\'t walk?',a:'A table!'},
+ {q:'What comes once in a minute, twice in a moment, but never in a thousand years?',a:'The letter M!'},
+ {q:'What has a ring but no finger?',a:'A telephone!'},
+ {q:'What is always in front of you but you can never see it?',a:'The future!'},
+ {q:'I\'m as light as a feather, yet the strongest person can\'t hold me for more than a few minutes. What am I?',a:'Your breath!'},
+ {q:'What flies without wings?',a:'Time!'},
+ {q:'What has a tongue but cannot talk?',a:'A shoe!'},
+ {q:'What kind of band never plays music?',a:'A rubber band!'},
+ {q:'What has bark but never bites?',a:'A tree!'},
+ {q:'What is easy to get into but hard to get out of?',a:'Trouble!'},
+ {q:'What comes down but never goes up?',a:'Rain!'},
+ {q:'What has many needles but never sews?',a:'A Christmas tree!'},
+ {q:'What can you hold in your left hand but never in your right hand?',a:'Your right elbow!'}
+];
+var riddleState=null, riddleTimer=null;
+function riddleOrder(){ var idx=[]; RIDDLES.forEach(function(r,i){ idx.push(i); }); return shuffle(idx); }
+function riddleTick(){
+  if(!riddleState||riddleState.revealed||!document.getElementById('ridCount')){ if(riddleTimer){clearInterval(riddleTimer);riddleTimer=null;} return; }
+  riddleState.left--;
+  if(riddleState.left<=0){
+    riddleState.left=0; riddleState.revealed=true;
+    if(riddleTimer){clearInterval(riddleTimer);riddleTimer=null;}
+    sndPop(); render(); return;
+  }
+  var el=document.getElementById('ridCount'); if(el)el.textContent='⏳ '+riddleState.left+'s';
+  var bar=document.getElementById('ridBar'); if(bar)bar.style.width=Math.round(riddleState.left/8*100)+'%';
+  sndTick(riddleState.left);
+}
+function riddleStartTimer(){ if(riddleTimer)clearInterval(riddleTimer); riddleTimer=setInterval(riddleTick,1000); }
+function riddleHTML(){
+  if(!riddleState)riddleState={order:riddleOrder(), idx:0, revealed:false, seen:0, left:8};
+  var r=RIDDLES[riddleState.order[riddleState.idx]];
+  var out=pageHero('icons/nav-riddle.webp','❓','Riddle Time','A brain teaser break — read the riddle, think fast! The answer pops up in 8 seconds… unless you already know it.','❓ '+RIDDLES.length+' riddles')
+   +'<div class="card" style="text-align:center;max-width:640px;margin:0 auto">'
+   +'<span class="chip">Riddle #'+(riddleState.seen+1)+'</span>'
+   +'<h2 style="margin:18px 0 6px;font-size:1.4rem">'+esc(r.q)+'</h2>';
+  if(riddleState.revealed){
+    out+='<div class="feedback ok" style="font-size:1.15rem">💡 '+esc(r.a)+'</div><button class="btn" id="ridNext" style="margin-top:14px">Next riddle! ❓</button>';
+  } else {
+    out+='<div style="margin:16px auto 4px;max-width:320px"><div class="progressbar"><div id="ridBar" style="width:'+Math.round(riddleState.left/8*100)+'%"></div></div></div>'
+     +'<p style="font-weight:900;font-size:1.3rem;margin:8px 0" id="ridCount">⏳ '+riddleState.left+'s</p>'
+     +'<button class="btn" id="ridShow" style="margin-top:8px">Show the answer 👀</button>';
+  }
+  out+='<p class="small muted" style="font-weight:700;margin-top:14px">Take a breather — puzzling is learning too. When you are ready, hop back to Learn for your next quest!</p></div>';
+  return out;
+}
+function bindRiddle(){
+  var sh=document.getElementById('ridShow'); if(sh)sh.onclick=function(){ riddleState.revealed=true; if(riddleTimer){clearInterval(riddleTimer);riddleTimer=null;} sndPop(); render(); };
+  var nx=document.getElementById('ridNext'); if(nx)nx.onclick=function(){
+    riddleState.idx++; riddleState.seen++; riddleState.revealed=false; riddleState.left=8;
+    if(riddleState.idx>=riddleState.order.length){ riddleState.order=riddleOrder(); riddleState.idx=0; }
+    sndPop(); render();
+  };
+  if(!riddleState.revealed)riddleStartTimer();
 }
 
 /* ============================================================ PLAY ARCADE */
