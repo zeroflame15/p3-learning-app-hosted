@@ -263,7 +263,7 @@ test('Home prompt shows only when the explorer has no level, and never blocks na
      streak strip + frog hero + quest board. The prompt is prepended
      to that whole stack, so Home still renders everything with or
      without it. */
-  assert.ok(homeSrc.indexOf('return lvlPrompt+hero') >= 0, 'Home still renders its hero, streak, frog and quest board with or without the prompt');
+  assert.ok(homeSrc.indexOf('return lvlPrompt+arcBanner+hero') >= 0, 'Home still renders its hero, streak, frog and quest board with or without the prompt — the Starlight Pond banner sits above the hero');
   assert.ok(homeSrc.indexOf('+ boardSection') >= 0, 'the quest board follows the prompt in the Home return');
 });
 
