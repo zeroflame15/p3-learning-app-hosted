@@ -314,6 +314,12 @@ label.flabel{display:block;font-weight:900;margin:12px 0 6px;text-align:left}
 .stage.sel{border-color:var(--teal);background:var(--teal-soft)}
 .treasure{display:flex;gap:14px;align-items:flex-start}
 .treasure .te{font-size:2.4rem;flex:0 0 auto}
+/* Starlight Pond (week-4 refresh, 2026-11-26): pond pieces are dim
+   until their arc chapter is finished, then lit gold. */
+.pondpiece{text-align:center;padding:10px 6px;border-radius:14px;background:#ffffff14}
+.pondpiece .pe{font-size:2rem;filter:grayscale(1);opacity:.45}
+.pondpiece.lit{background:#fff7d6;color:#2a2753}
+.pondpiece.lit .pe{filter:none;opacity:1}
 
 /* ---------- Parent ---------- */
 table.ledger{width:100%;border-collapse:collapse}
@@ -4162,6 +4168,15 @@ function mergeExplorer(a,b){
     var _wA=a.windDownDay||'', _wB=b.windDownDay||'';
     e.windDownDay=_wB>_wA?_wB:(_wA||null);
   }
+  /* Starlight Pond arc (week-4 refresh, 2026-11-26): the day the
+     "New world unlocked" banner was seen. Later date wins, guarded
+     like windDownDay so a merge never invents it on a legacy
+     explorer — a stale device must never re-show a banner she
+     already dismissed. */
+  if(a.arcSeenDay!==undefined||b.arcSeenDay!==undefined){
+    var _aA=a.arcSeenDay||'', _aB=b.arcSeenDay||'';
+    e.arcSeenDay=_aB>_aA?_aB:(_aA||null);
+  }
   return e;
 }
 function mergeFamilyDB(local, server){
@@ -4531,7 +4546,7 @@ function ensureFriendCode(e){
 function newExplorer(name, code, level){
   return { id:'e'+Date.now()+Math.floor(Math.random()*999), name:name, code:code, codeAt:null, level:(level||'P3'), levelAt:Date.now(), friendCode:genFriendCode(), friends:[], nameAt:null, lookAt:null,
     face:'🐤', glow:'#ffb020', badge:'⭐', look:{background:{shape:'circle',color:'mint',effect:'plain',pattern:''}}, stars:0, starsEarned:0, starsSpent:0, badges:[], completed:{}, completedDay:{}, progress:{},
-    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, musicPref:'bg-music', musicPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null, windDownDay:null,
+    playProgress:{}, playFresh:{}, playDoneDay:{}, playDaily:{}, playSeen:{}, critterName:'Splash', critterNameAt:null, critterStage:0, critterStageDays:0, care:{}, careGrewDay:null, discoveredCritters:[], visitedStages:[], critterResetAt:null, theme:'Frog Pond', themeAt:null, treasures:[], diffPref:0, diffPrefAt:null, musicPref:'bg-music', musicPrefAt:null, streak:0, streakLongest:0, streakLastDate:null, streakFreezes:1, streakFreezeWeek:null, streakLost:0, streakRepairUntil:null, streakFreezeUsedDay:null, windDownDay:null, arcSeenDay:null,
     threads:[], deletedThreadIds:[], threadSeq:0, daily:{}, totalMinutes:0, lastTopic:null, favAnswers:[], deletedFavAnswers:[], swapIdx:0, mood:{}, stuckCount:{}, boost:{},
     flashcards:[], deletedFlashcards:[], deletedPlanner:[], spellingTests:[], deletedSpellingTests:[], planner:[{t:'Finish today’s quest',d:false},{t:'Read a story for 10 minutes',d:false}], flags:[], created:Date.now() };
 }
@@ -5748,10 +5763,16 @@ function homeHTML(){
      get one drill per topic per day. Inline so the page functions
      stay self-contained for the standalone test harnesses. */
   var boostCard=boostTopics.length?'<div class="card" style="margin-bottom:16px;background:#e5f4e3"><h3 style="margin-top:0">🌱 Pip’s Boost — a little extra practice, Pip’s idea!</h3>'+boostTopics.map(function(t){ var r=(e.boost||{})[t.id]; var _can=(t.sub==='math'||(((r&&r.lastBoost)||{}).day||'')!==todayKey()); return '<p style="font-weight:700;margin:6px 0">'+ic(t.img,t.icon,'ic-sm')+' <b>'+esc(t.name)+'</b>'+(r&&r.lastScore!=null&&r.prevScore!=null?' — last two quests '+r.prevScore+'/5 then '+r.lastScore+'/5':'')+' — the tricky bits need a few more tries, and that’s okay! Pip has 5 quick questions ready.</p>'+(_can?'<button class="btn" data-boost="'+t.id+'" style="margin-bottom:8px">▶ Start my boost</button>':'<p class="small muted" style="font-weight:700;margin:6px 0">Boost done for today — Pip will have fresh questions tomorrow! 🌙</p>'); }).join('')+'<p class="small muted" style="font-weight:700;margin:4px 0 0">Just 5 quick questions — no big quest, and it never blocks your normal quests.</p></div>':'';
-  return lvlPrompt+hero
+  /* Starlight Pond arc (week-4 refresh, 2026-11-26): the "New world
+     unlocked" banner sits above the hero until seen; the arc card
+     follows the quest board once seen. Both hide before Dec 1. */
+  var arcBanner=arcBannerHTML(e);
+  var arcCard=arcCardHTML(e);
+  return lvlPrompt+arcBanner+hero
    + streakStripHTML(e, quest?quest.id:null)
    + critterHeroCard
    + boardSection
+   + arcCard
    + boostCard
    + planSectionHTML(e, todayPlan, todayEvent)
    +'<div class="cardrow two">'+treasureCard+creativeCard+'</div>'
@@ -5766,6 +5787,12 @@ function bindHome(){
   document.querySelectorAll('[data-home-lvl]').forEach(function(b){ b.onclick=function(){ var e=ex(); e.level=b.getAttribute('data-home-lvl'); e.levelAt=Date.now(); save(); sndCorrect(); toast('Primary level set to '+e.level+' — quests and games will fit you now!'); render(); }; });
   document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ startQuestFlow(b.getAttribute('data-quest')); }; });
   document.querySelectorAll('[data-boost]').forEach(function(b){ b.onclick=function(){ startBoostFlow(b.getAttribute('data-boost')); }; });
+  /* Starlight Pond arc (week-4 refresh, 2026-11-26): either banner
+     button stamps the day she saw the new world, so the banner
+     never pops again — Explore opens the pond, Later just closes it.
+     Explore plays no pop of its own: go() plays the one nav sound. */
+  document.querySelectorAll('[data-arc-explore]').forEach(function(b){ b.onclick=function(){ var e=ex(); e.arcSeenDay=todayKey(); save(); go('treasure'); }; });
+  document.querySelectorAll('[data-arc-later]').forEach(function(b){ b.onclick=function(){ var e=ex(); e.arcSeenDay=todayKey(); save(); sndPop(); render(); }; });
   document.querySelectorAll('[data-go2]').forEach(function(b){ b.onclick=function(){ go(b.getAttribute('data-go2')); }; });
   /* Egg wiggle (2026-11-17): at Egg stage only, tapping the hero card
      wiggles the eggs and plays a bubble sound first, then opens
@@ -11551,7 +11578,10 @@ function quizDoneHTML(t){
   var retryBtn=cur.wrong.length?'<button class="btn teal" id="retryBtn">🔁 Second Chance round ('+cur.wrong.length+' cousin question'+(cur.wrong.length>1?'s':'')+')</button>':'';
   var earned=(typeof cur.starsEarned==='number')?cur.starsEarned:cur.score;
   var starsLine=earned>0?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' and earned ⭐ '+earned+' stars!':(cur.firstToday===false?'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — a replay, so no extra stars this time. You already earned them today!':'You scored '+cur.score+' / '+(cur.pool?cur.pool.length:bankFor(t,'quest',levelNum(e)).length)+' — no stars this time, but finishing the whole quest takes courage! Have another go — the stars will come.');
-  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2>'+(cur.streakCelebrate?'<p style="font-weight:900;font-size:1.3rem;color:#d97706;margin:12px 0 0">🔥 '+cur.streakCelebrate+' days in a row! '+(cur.streakCelebrate===7?'One whole week — Pip is so proud!':cur.streakCelebrate===14?'Two whole weeks — unstoppable!':cur.streakCelebrate===30?'A whole month — legendary!':'100 days — a true streak legend!')+'</p>':'')+(cur.streakRepaired?'<p style="font-weight:800;color:#2f7a3d;margin:8px 0 0">🔧 Streak repaired — welcome back! Your '+e.streak+'-day streak is safe.</p>':'')+'<div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>'+(cur.windDown?windDownHTML(e):'');
+  return '<div class="card" style="text-align:center"><div class="bouncy" style="display:inline-block">'+pipSVG(110,e.glow)+'</div><div class="speech" style="max-width:420px;margin:8px auto">'+esc(msg)+'</div><div class="trophy">🏆</div><h2 style="margin:4px 0">Quest complete!</h2>'+(cur.streakCelebrate?'<p style="font-weight:900;font-size:1.3rem;color:#d97706;margin:12px 0 0">🔥 '+cur.streakCelebrate+' days in a row! '+(cur.streakCelebrate===7?'One whole week — Pip is so proud!':cur.streakCelebrate===14?'Two whole weeks — unstoppable!':cur.streakCelebrate===30?'A whole month — legendary!':'100 days — a true streak legend!')+'</p>':'')+(cur.streakRepaired?'<p style="font-weight:800;color:#2f7a3d;margin:8px 0 0">🔧 Streak repaired — welcome back! Your '+e.streak+'-day streak is safe.</p>':'')
+  +(cur.arcComplete?'<p style="font-weight:900;font-size:1.2rem;color:#5b21b6;margin:12px 0 0">🌟 The Starlight Pond is fully lit! Every light is glowing — you did it, explorer!</p><p style="margin:10px 0 0"><button class="btn" id="arcPondBtn">See the glowing pond ✨</button></p>':'')
+  +(cur.arcChapterDone?'<p style="font-weight:900;font-size:1.1rem;color:#5b21b6;margin:12px 0 0">✨ Chapter lit: '+esc(cur.arcChapterDone.title)+' — the '+esc(cur.arcChapterDone.piece)+'!</p>':'')
+  +'<div class="starsRow">'+starsHtml+'</div><p style="font-weight:900;font-size:1.1rem">'+starsLine+'</p>'+(cur.lastSecs?'<p style="font-weight:800">⏱ Your time: '+fmtPlaySecs(cur.lastSecs)+'</p>':'')+(cur.newBest?'<p style="font-weight:900">🏅 New fastest time!</p>':'')+'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn" id="doneHome">Back to Learn 📚</button>'+retryBtn+'</div></div>'+(cur.windDown?windDownHTML(e):'');
 }
 function bindQuiz(){
   var e=ex(), t=topicById(cur.topicId);
@@ -11560,6 +11590,7 @@ function bindQuiz(){
   if(done){
     var dh=document.getElementById('doneHome'); if(dh)dh.onclick=function(){ cur=null; go('learn'); };
     var wd=document.getElementById('windDownDismiss'); if(wd)wd.onclick=function(){ cur.windDown=false; render(); };
+    var ap=document.getElementById('arcPondBtn'); if(ap)ap.onclick=function(){ cur=null; go('treasure'); };
     var br=document.getElementById('boostRetry'); if(br)br.onclick=function(){ startBoostFlow(cur.topicId); };
     var rb=document.getElementById('retryBtn'); if(rb)rb.onclick=function(){ var rIdx=seededShuffle(bankFor(t,'retry',levelNum(e)).map(function(_,i){ return i; }), Date.now()>>>0).slice(0,3); cur={topicId:cur.topicId, phase:'retry', idx:0, score:0, wrong:[], picked:null, answered:false, questWrong:cur.wrong, retryPool:rIdx, answerSecs:0, startedAt:Date.now()}; awardBadge('brave','🦁 Brave Tryer'); save(); render(); };
     return;
@@ -11623,6 +11654,12 @@ function bindQuiz(){
 }
 function finishRound(t){
   var e=ex();
+  /* Starlight Pond arc (week-4 refresh, 2026-11-26): snapshot the
+     arc before this finish is recorded, so the results screen can
+     celebrate a chapter (or the whole pond) lit by THIS quest —
+     not one lit days ago. Guarded like streakTick: standalone test
+     harnesses eval finishRound without the arc helpers. */
+  var _arcBefore=(typeof arcAvailable==='function'&&arcAvailable()&&typeof arcProgress==='function')?arcProgress(e):null;
   if(cur.phase==='quest'){
     var prev=e.completed[cur.topicId]||0;
     e.completed[cur.topicId]=Math.max(prev,cur.score);
@@ -11678,6 +11715,18 @@ function finishRound(t){
        per day: e.windDownDay stamps the day it showed, so a
        save/sync can never re-show it today. */
     if(_st&&_st.incremented&&e.windDownDay!==todayKey()){ cur.windDown=true; e.windDownDay=todayKey(); }
+    /* Starlight Pond arc: this quest just lit a pond piece — or the
+       whole pond. Only when the chapter was NOT already lit before
+       this finish (a replay of an already-lit chapter is still a
+       good quest, just not a new light). */
+    if(_arcBefore&&typeof arcProgress==='function'){
+      var _ap=arcProgress(e);
+      var _ch=_ap.chapters.find(function(c){ return c.topicId===cur.topicId; });
+      var _was=_arcBefore.chapters.find(function(c){ return c.topicId===cur.topicId; });
+      if(_ch&&_ch.done&&(!_was||!_was.done)){
+        if(_ap.complete)cur.arcComplete=true; else cur.arcChapterDone=_ch;
+      }
+    }
     save(); sndFanfare(); confettiStars();
   } else if(cur.phase==='boost'){
     /* Boost drill finished: stars once per topic per day (a replay
@@ -14366,6 +14415,128 @@ function bindCritter(){
   if(e.visitedStages.length>=4)awardBadge('critter','🐸 Critter Friend');
 }
 
+/* ============================================================ STARLIGHT POND — WEEK-4 NOVELTY REFRESH (2026-11-26)
+   Master plan Pillar 6 / Phase 2: at week 4 (early December) a
+   planned refresh lands — a new world area and a new quest arc —
+   exactly when the research says engagement dips (Rodrigues et al.
+   2022). Greg's Starlight Pond: the pond lights went out just
+   before the December holidays. Four chapters, one per subject, in
+   story order — each chapter is ONE quest on a level-aware MOE
+   topic (the first in-season topic with a local question bank, so
+   the quest always has questions ready, even offline). Finishing a
+   chapter lights one piece of the pond. Finishing all four lights
+   the whole pond.
+   Gating: the pond surfaces from 2026-12-01 (ARC_START) and NEVER
+   disappears — no time bomb. Progress is derived from the existing
+   e.completedDay record: a chapter counts when its topic was
+   finished on or after ARC_START, so a quest finished on the board
+   counts too, and a replay of a topic finished in November still
+   lights its piece (the board already replays finished quests as
+   a fresh set). No stars are involved anywhere: the pond is
+   mastery-tied, never star-gated (plan §3.1/§3.2). The frog is
+   untouched — no evolution, no new stages (Bryan parked the
+   critter evolution design 2026-11-17). New state is ONE field,
+   arcSeenDay (the day the "New world unlocked" banner was seen),
+   merged later-date-wins like windDownDay. All helpers take an
+   explicit today so standalone test harnesses can drive them. */
+var ARC_START='2026-12-01';
+var ARC_NAME='Greg’s Starlight Pond';
+var ARC_CHAPTERS=[
+ {sub:'eng',title:'The Story Lantern',emoji:'🏮',piece:'Lily Pads Bloom',pieceEmoji:'🪷',blurb:'Pip found a lantern that only lights for a good story. Read, listen and answer — and the lily pads will bloom.'},
+ {sub:'math',title:'The Counting Fireflies',emoji:'✨',piece:'Fireflies Arrive',pieceEmoji:'✨',blurb:'The fireflies lost count of their own lights! Count with them, and they will come home to the pond.'},
+ {sub:'sci',title:'The Waterfall Mystery',emoji:'💧',piece:'Waterfall Wakes',pieceEmoji:'🌊',blurb:'Something is blocking the little waterfall. Use what you know about living things to set the water flowing again.'},
+ {sub:'chi',title:'The Star Bridge Words',emoji:'🌉',piece:'Star Bridge Rises',pieceEmoji:'🌉',blurb:'The last piece of the pond is a bridge made of star-words. Read them right, and the bridge rises over the water.'}
+];
+function arcAvailable(todayStr){ var d=todayStr||todayKey(); return d>=ARC_START; }
+/* The chapter's quest topic: the first in-season MOE topic in the
+   subject at the explorer's level that has a local question bank
+   (tp.fallback) — so the quest is always playable, even offline.
+   Fallbacks: first in-season topic regardless of bank, then the
+   first topic of the subject. Null when the level does not teach
+   the subject at all (Science in P1/P2) — the chapter is skipped. */
+function arcTopicFor(e, subjId, todayStr){
+  var s=moeSubject(subjId, levelNum(e)); if(!s||!s.topics||!s.topics.length)return null;
+  var day=todayStr||todayKey(), i, tp;
+  for(i=0;i<s.topics.length;i++){ tp=s.topics[i]; if(moeInSeason(tp, day)&&tp.fallback)return tp.id; }
+  for(i=0;i<s.topics.length;i++){ tp=s.topics[i]; if(moeInSeason(tp, day))return tp.id; }
+  return s.topics[0].id;
+}
+function arcChapters(e, todayStr){
+  var out=[];
+  ARC_CHAPTERS.forEach(function(ch){
+    var topicId=arcTopicFor(e, ch.sub, todayStr);
+    if(!topicId)return;
+    out.push({n:out.length+1, sub:ch.sub, topicId:topicId, title:ch.title, emoji:ch.emoji, piece:ch.piece, pieceEmoji:ch.pieceEmoji, blurb:ch.blurb});
+  });
+  return out;
+}
+function arcChapterDone(e, ch){
+  if(!e||!ch)return false;
+  var d=(e.completedDay||{})[ch.topicId];
+  return !!d&&d>=ARC_START;
+}
+function arcProgress(e, todayStr){
+  var chs=arcChapters(e, todayStr);
+  var done=0, next=null;
+  chs.forEach(function(c){ c.done=arcChapterDone(e, c); if(c.done)done++; else if(!next)next=c; });
+  return {chapters:chs, done:done, total:chs.length, complete:chs.length>0&&done===chs.length, next:next};
+}
+/* The "New world unlocked" moment: a banner at the top of Home,
+   shown from Dec 1 until she taps Explore or Maybe later (either
+   stamps arcSeenDay). Never shown before Dec 1, never again after. */
+function arcBannerHTML(e, todayStr){
+  if(!arcAvailable(todayStr)||!e||e.arcSeenDay)return '';
+  var name=((e.critterName||'Greg')+'').split(' ')[0];
+  return '<div class="card" style="margin-bottom:16px;text-align:center;background:linear-gradient(160deg,#1b2a5e,#274b8f);color:#fff">'
+   +'<div style="font-size:2.6rem">🌟</div>'
+   +'<h2 style="margin:4px 0;color:#fff">NEW WORLD UNLOCKED — '+esc(ARC_NAME)+'!</h2>'
+   +'<p style="font-weight:700;margin:8px 0">The pond lights went out just before the December holidays — and '+esc(name)+' needs your help! Finish one quest in each subject to relight the pond, piece by piece.</p>'
+   +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px"><button class="btn" data-arc-explore>Explore the new pond ✨</button><button class="btn ghost" data-arc-later style="background:#ffffff22;color:#fff">Maybe later</button></div>'
+   +'</div>';
+}
+/* The arc card on Home, once the banner has been seen: the next
+   chapter, its quest, and how many pond pieces are lit. A finished
+   arc becomes a small "fully lit" card. Hidden before Dec 1. */
+function arcCardHTML(e, todayStr){
+  if(!arcAvailable(todayStr)||!e||!e.arcSeenDay)return '';
+  var ap=arcProgress(e, todayStr);
+  if(ap.complete){
+    return '<div class="card" style="margin-top:16px;text-align:center;background:linear-gradient(160deg,#1b2a5e,#274b8f);color:#fff"><h3 style="margin-top:0;color:#fff">🌟 '+esc(ARC_NAME)+' — fully lit!</h3><p style="font-weight:700;margin:6px 0">Every chapter is done and the pond is glowing. Go and see it shine!</p><button class="btn" data-go2="treasure">See the glowing pond ✨</button></div>';
+  }
+  var nx=ap.next;
+  var t=topicById(nx.topicId);
+  var wasDoneBefore=!!(e.completed||{})[nx.topicId];
+  return '<div class="card" style="margin-top:16px"><div class="themeslabel" style="color:#5b4a8a">🌟 '+esc(ARC_NAME)+' — Chapter '+nx.n+' of '+ap.total+'</div>'
+   +'<h3 style="margin:8px 0 2px">'+nx.emoji+' '+esc(nx.title)+'</h3>'
+   +'<p class="muted" style="font-weight:700;margin:4px 0">'+esc(nx.blurb)+'</p>'
+   +'<p style="font-weight:800;margin:8px 0">Quest: <b>'+esc(t?t.name:nx.topicId)+'</b> · 5 questions · about 15 minutes</p>'
+   +'<div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(ap.done/ap.total*100)+'%"></div></div>'
+   +'<p class="small muted" style="font-weight:700;margin:8px 0 0">'+ap.done+' of '+ap.total+' pond pieces lit'+(ap.done?' — '+ap.chapters.filter(function(c){return c.done;}).map(function(c){return c.pieceEmoji+' '+c.piece;}).join(' · '):'')+'</p>'
+   +'<div style="margin-top:12px"><button class="btn" data-quest="'+nx.topicId+'">'+(wasDoneBefore?'↻ Replay to light it up':'▶ Start this chapter')+'</button></div>'
+   +'</div>';
+}
+/* The new world area inside Treasure Realm: the pond itself, with
+   one tile per chapter — dim until its chapter is finished, lit
+   gold after. The next chapter starts from here too. No stars
+   anywhere: pieces light by mastery, never by spending. */
+function starlightPondHTML(e, todayStr){
+  if(!arcAvailable(todayStr)||!e)return '';
+  var ap=arcProgress(e, todayStr);
+  var pieces=ap.chapters.map(function(c){
+    return '<div class="pondpiece'+(c.done?' lit':'')+'"><div class="pe">'+c.pieceEmoji+'</div><div style="font-weight:800;font-size:.85rem">'+esc(c.piece)+'</div><div style="font-weight:700;font-size:.75rem;opacity:.75">'+(c.done?'✔ Lit by Chapter '+c.n:'Chapter '+c.n+' — '+esc(c.title))+'</div></div>';
+  }).join('');
+  var nextBit=ap.complete
+    ?'<p style="font-weight:900;font-size:1.1rem;margin:12px 0 0">🌟 The pond is fully lit — every light is glowing!</p>'
+    :'<p style="font-weight:800;margin:12px 0 0">Next: Chapter '+ap.next.n+' — '+esc(ap.next.title)+' ('+esc(SUBJECTS[ap.next.sub]||ap.next.sub)+')</p><div style="margin-top:10px"><button class="btn" data-quest="'+ap.next.topicId+'">▶ Start Chapter '+ap.next.n+'</button></div>';
+  return '<div class="card" style="background:linear-gradient(160deg,#1b2a5e,#274b8f);color:#fff;margin-bottom:16px"><div class="themeslabel" style="color:#bcd0ff">🌟 A brand-new corner of the frog’s world</div>'
+   +'<h3 style="margin:8px 0 2px;color:#fff;font-size:1.4rem">'+esc(ARC_NAME)+'</h3>'
+   +'<p style="font-weight:700;margin:6px 0">The pond lights went out just before the December holidays. Finish one quest in each subject to relight the pond, piece by piece — no stars needed, just quests.</p>'
+   +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-top:12px">'+pieces+'</div>'
+   +'<div style="margin-top:14px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem"><span>Pond lights</span><span>'+ap.done+' / '+ap.total+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(ap.done/ap.total*100)+'%"></div></div></div>'
+   +nextBit
+   +'</div>';
+}
+
 /* ============================================================ TREASURE REALM */
 function treasureHTML(){
   var e=ex();
@@ -14379,6 +14550,7 @@ function treasureHTML(){
   }).join('');
   var next=TREASURES.filter(function(t){return e.treasures.indexOf(t.id)<0;}).sort(function(a,b){return a.cost-b.cost;})[0];
   return pageHero('icons/nav-treasure.webp','💎','Treasure Realm','Every treasure DOES something — no collecting just for collecting! Treasures are sorted into categories below. Spend quest stars to unlock each one, then tap “Use it” to use its power.', '⭐ '+e.stars+' stars · '+e.treasures.length+' of '+TREASURES.length+' unlocked')
+   + starlightPondHTML(e)
    +'<div class="card"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:.85rem"><span>Treasure collection — '+TREASURE_CATS.length+' categories, '+TREASURES.length+' treasures</span><span>'+e.treasures.length+' / '+TREASURES.length+'</span></div><div class="progressbar" style="margin-top:6px"><div style="width:'+Math.round(e.treasures.length/TREASURES.length*100)+'%"></div></div>'
    +(next?'<p class="small muted" style="font-weight:700;margin:10px 0 0">Next closest treasure: <b>'+next.e+' '+esc(next.name)+'</b> in '+esc((TREASURE_CATS.find(function(c){return c.id===next.cat;})||{}).name||'')+' — '+next.cost+' ⭐ ('+(e.stars>=next.cost?'you can unlock it now!':(next.cost-e.stars)+' more stars to go')+'). More treasures are in every category below — keep questing to collect them all!</p>':'<p class="small" style="font-weight:800;margin:10px 0 0">You collected every treasure in every category. Legendary explorer! 🏆</p>')
    +'<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'+TREASURE_CATS.map(function(cat){ var list=TREASURES.filter(function(t){return t.cat===cat.id;}); var ownedN=list.filter(function(t){return e.treasures.indexOf(t.id)>=0;}).length; return '<span class="pill '+(ownedN===list.length?'done':'prog')+'">'+cat.e+' '+esc(cat.name)+': '+ownedN+'/'+list.length+'</span>'; }).join('')+'</div></div>'
@@ -14387,6 +14559,11 @@ function treasureHTML(){
 function bindTreasure(){
   document.querySelectorAll('[data-treasure]').forEach(function(b){ b.onclick=function(){ var e=ex(); var t=TREASURES.find(function(x){return x.id===b.getAttribute('data-treasure');}); if(e.stars>=t.cost&&e.treasures.indexOf(t.id)<0){ spendStars(e,t.cost); e.treasures.push(t.id); save(); sndFanfare(); confettiStars(); toast(t.name+' unlocked! '+t.purpose); render(); } }; });
   document.querySelectorAll('[data-use]').forEach(function(b){ b.onclick=function(){ var t=TREASURES.find(function(x){return x.id===b.getAttribute('data-use');}); openModal('<div style="text-align:center;font-size:3rem">'+t.e+'</div><h3 style="margin:6px 0;text-align:center">'+esc(t.name)+'</h3><p style="font-weight:700">'+esc(t.use||t.purpose)+'</p><div style="text-align:center;margin-top:14px"><button class="btn" onclick="closeModal()">Lovely! ✨</button></div>'); sndPop(); }; });
+  /* Starlight Pond arc (week-4 refresh, 2026-11-26): the pond's
+     chapter buttons start a quest like the board's do. Tapping one
+     means she has seen the new world, so stamp arcSeenDay — the
+     Home banner must not pop later for a pond she already visited. */
+  document.querySelectorAll('[data-quest]').forEach(function(b){ b.onclick=function(){ var e=ex(); if(e&&!e.arcSeenDay){ e.arcSeenDay=todayKey(); save(); } startQuestFlow(b.getAttribute('data-quest')); }; });
 }
 
 /* ============================================================ VIBE */
